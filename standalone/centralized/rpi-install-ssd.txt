@@ -20,7 +20,7 @@ What to buy:
 
 For the installation you got two options:
 1. Install a raspberry from scratch - here you will need to install the growautomation software via script or manually
-(coming soon) 2. Install the preconfigured rasperry pi image from growautomation-at
+(coming soon) 2. Install the preconfigured rasperry pi image from growautomation-at https://drive.google.com/drive/folders/13h_biNff48wl57pGMRRq12_9LUGLisES?usp=sharing
 
 Raspberry basic installation on ssd
 1. Format ssd to have one partition
