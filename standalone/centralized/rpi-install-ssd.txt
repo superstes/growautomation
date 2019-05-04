@@ -17,6 +17,11 @@ What to buy:
   heat sink + fans ~10€ 
   sum = ~80€
 
+
+For the installation you got two options:
+1. Install a raspberry from scratch - here you will need to install the growautomation software via script or manually
+(coming soon) 2. Install the preconfigured rasperry pi image from growautomation-at
+
 Raspberry basic installation on ssd
 1. Format ssd to have one partition
 2. Download latest raspbian: https://www.raspberrypi.org/downloads/raspbian/
