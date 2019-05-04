@@ -2,7 +2,7 @@ GA standalone controller
 Growautomation controller - based on a raspberry pi
 
 
-Setup type:
+Setup types:
 
 centralized setup
   rpi processess sensor data and hosts log database (and will host webserver)
