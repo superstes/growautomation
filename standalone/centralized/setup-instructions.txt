@@ -1,5 +1,5 @@
 # Manual setup
-There is also a bash setup-script available
+FYI: There is also a bash setup-script available
 
 ## Bash
 
@@ -11,14 +11,17 @@ ls -l /usr/bin/pyth*
 	#if not
 	sudo apt-get install python3
 
-sudo apt-get install python3-pip python3-dev mysql-server mysql-client git
+- sudo apt-get install python3-pip python3-dev mysql-server mysql-client git
+- sudo python3 -m pip install mysql-connector-python pyserial Adafruit_DHT RPi.GPIO spidev
 
 
-sudo python3 -m pip install mysql-connector-python pyserial Adafruit_DHT RPi.GPIO spidev
 
 
-sudo mysql_secure_installation
-(PW,Y,Y,Y,Y,Y)
+- sudo mkdir -p /etc/growautomation-at/download 
+- cd !$
+- sudo git clone https://github.com/growautomation-at/controller.git
+- sudo mysql_secure_installation
 
-sudo mkdir -p /etc/growautomation-at/download 
-cd !$
+## Note:
+This setup if not finished.
+Do not try this at home!
