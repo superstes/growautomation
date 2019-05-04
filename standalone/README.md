@@ -13,5 +13,5 @@ Growautomation controller - based on a raspberry pi
   - rpi only processess sensor data
   - seperate operating systems host the database and webserver
   - controller and webserver are easily exchangeable
-  - setup could scale up from standalone to multiple controllers
+  - setup could scale up from standalone to multiple (rpi-) controllers
   - database should be backed up
