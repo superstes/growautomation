@@ -6,7 +6,6 @@ Growautomation controller - based on a raspberry pi
 
 ### centralized setup
   - rpi processess sensor data and hosts the database and webserver
-  - for small setups
   - database/rpi should be backed up
   - rpi must be connected via network for website and other remote management options
   
