@@ -29,6 +29,6 @@ Raspberry basic installation on ssd
 9. Add "Enable USB Bootprogram_usb_boot_mode=1" as last line in the file
 10. Connect the ssd, ethernet and power to the rpi
 11. Find it on the local network with a tool linke a portscan: https://www.heise.de/download/product/portscan-70308
-12. Connect to it via ssh.
+12. Connect to it via ssh with an application like putty: https://www.putty.org/
 13. Change the administrative password with "passwd pi".
 14. You are good to go!
