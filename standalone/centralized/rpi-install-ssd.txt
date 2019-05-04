@@ -1,12 +1,21 @@
 Basic raspberry pi setup on ssd
 
-What to buy:
-1. A 2,5" ssd with around 120gb should be enough
-2. A usb to sata chassis for 2,5" disks
-3. RPI heat sinks
-4. RPI 5V mini-fan for cooling
+What to buy: 
+(only for rpi setup)
+1. Raspberry Pi
+2. A 2,5" ssd with around 120gb should be enough
+3. A usb to sata chassis for 2,5" disks
+4. RPI heat sinks
+5. RPI 5V mini-fan for cooling
   When using an usb-ssd you should consider cooling your rpi with a fan since it consumes more power than normally.
   The most heat will be produced in the area where the micro-usb cable for power-supply gots plugged in.
+  
+2019-05-04 Prices on amazon: 
+  rpi 3B+ ~35€
+  ssd ~25€
+  ssd chassis ~10€
+  heat sink + fans ~10€ 
+  sum = ~80€
 
 Raspberry basic installation on ssd
 1. Format ssd to have one partition
