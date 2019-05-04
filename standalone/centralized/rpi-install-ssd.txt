@@ -1,0 +1,25 @@
+Basic raspberry pi setup on ssd
+
+What to buy:
+1. A 2,5" ssd with around 120gb should be enough
+2. A usb to sata chassis for 2,5" disks
+3. RPI heat sinks
+4. RPI 5V mini-fan for cooling
+  When using an usb-ssd you should consider cooling your rpi with a fan since it consumes more power than normally.
+  The most heat will be produced in the area where the micro-usb cable for power-supply gots plugged in.
+
+Raspberry basic installation on ssd
+1. Format ssd to have one partition
+2. Download latest raspbian: https://www.raspberrypi.org/downloads/raspbian/
+3. Write .img file to ssd with a tool like "Win32DiskImager"
+4. Unplug the ssd
+5. Replug the ssd to your computer
+6. Go to the new "boot" partition
+7. Create empty "ssh" file on it
+8. Edit config.txt file (with Notepad++)
+9. Add "Enable USB Bootprogram_usb_boot_mode=1" as last line in the file
+10. Connect the ssd, ethernet and power to the rpi
+11. Find it on the local network with a tool linke a portscan: https://www.heise.de/download/product/portscan-70308
+12. Connect to it via ssh.
+13. Change the administrative password with "passwd pi".
+14. You are good to go!
