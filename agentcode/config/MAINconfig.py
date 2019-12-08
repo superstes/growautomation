@@ -20,6 +20,7 @@ BACKUPtime = "20:00"
 #Logs
 LOGlevel = 0	#2=debug/1=default/0=none
 LOGbackup = "YES"   #YES/NO -> If Logs should be included into the backup
+LOGactiontodb = "YES"
 
 
 #############################  SENSORS  #############################
