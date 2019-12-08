@@ -85,7 +85,6 @@ def actioncheck(action, ACTIONblocknr):
 	if ACTIONstate < ACTIONpoint:
 		# Action
 		scriptstartpath = getattr(PATHconfig, action + "actionstartpath")
-		#scriptstoppath = getattr(PATHconfig, action + "actionstoppath")
 
 		if MAINconfig.LOGlevel > 0:
 			CODEbase.CHECKlogtime()
@@ -93,56 +92,9 @@ def actioncheck(action, ACTIONblocknr):
 
 		os.system("/usr/bin/python3 " + scriptstartpath + " " + ACTIONblocknr)
 
-		#if MAINconfig.LOGlevel >= 2:
-		#	CODEbase.CHECKlogtime()
-		#	logfile.write("Script " + currentscript + ".\n")
-		#	CODEbase.CHECKlogtime()
-		#	logfile.write("Action will be reversed after " + str(ACTIONtime) + " seconds.\n")
-
-		#sleep(ACTIONtime)
-
-		#if MAINconfig.LOGlevel > 0:
-		#	CODEbase.CHECKlogtime()
-		#	logfile.write("Reversing Action - starting script  " + scriptstoppath + ".\n")
-
-		#os.system("/usr/bin/python3 " + scriptstoppath)
-
-		#if MAINconfig.LOGlevel >= 2:
-		#	CODEbase.CHECKlogtime()
-		#	logfile.write("Script " + currentscript + ".\n")
-
-		#if MAINconfig.LOGactiontodb == "YES":
-			# Log to DB
-
-		#	DBcursor = DB.cursor()
-
-		#	if MAINconfig.LOGlevel >= 2:
-		#		CODEbase.CHECKlogtime()
-		#		logfile.write("Connected to database " + MAINconfig.ACTIONdatabase + ".\n")
-
-		#	sql = "INSERT INTO ACTIONS (DATE, TIME, CONTROLLER, SENSOR, ACTIONTAKEN, ACTIONSTATE, ACTIONPOINT) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-		#	val = (
-		#		CODEbase.date01, CODEbase.time01, MAINconfig.controller, sys.argv[1], action, ACTIONstate,
-		#		MAINconfig.PUMPactivation)
-		#	DBcursor.execute(sql, val)
-		#	DB.commit()
-
-		#	if MAINconfig.LOGlevel >= 2:
-		#		CODEbase.CHECKlogtime()
-		#		logfile.write(
-		#			str(DBcursor.rowcount) + " line was inserted into the Database " + MAINconfig.ACTIONdatabase + ".\n")
-		#		CODEbase.CHECKlogtime()
-		#		logfile.write("Row-ID:" + str(DBcursor.lastrowid) + ".\n")
-
-		#	DBcursor.close()
-		#	DB.close()
-
-		#	if MAINconfig.LOGlevel >= 2:
-		#		CODEbase.CHECKlogtime()
-		#		logfile.write("Database connection was closed.\n")
-			if MAINconfig.LOGlevel > 0:
-				CODEbase.SENSORlogtime()
-				logfile.write("Check was processed.\n")
+		if MAINconfig.LOGlevel > 0:
+			CODEbase.SENSORlogtime()
+			logfile.write("Check was processed.\n")
 
 	else:
 		if MAINconfig.LOGlevel > 0:
