@@ -15,6 +15,6 @@ Paths can be modified in the config files
 
 /etc/growautomation/backup				#Backup Scripts
 
-/etc/growautomation/logs				#Log directory
+/var/log/growautomation/				#Log directory
 
-/etc/growautomation/backup				#Backup directory
+/mnt/growautomation/backup				#Backup directory
