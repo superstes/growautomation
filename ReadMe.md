@@ -21,5 +21,5 @@ And provide code samples to the diy community.
 - implementation of 3d-printable window openers (with dc motors)
 - troubleshooing script to gather bug logs
 - checking clean solutions to implement analog sensors on the raspberry pi (p.e. ADS1115)
-- 
+- testing a standalone solution with higher quality hardware
 
