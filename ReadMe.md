@@ -5,6 +5,8 @@ Making it easier and optimizing the process.
 And provide code samples to the diy community.
 
 
+## !!! The code is currently not in a stable state !!! ##
+
 ## Currently active projects
 - writing installation manual / scripting installation
 - implementing systemd timers to replace cronjobs
@@ -19,3 +21,5 @@ And provide code samples to the diy community.
 - implementation of 3d-printable window openers (with dc motors)
 - troubleshooing script to gather bug logs
 - checking clean solutions to implement analog sensors on the raspberry pi (p.e. ADS1115)
+- 
+

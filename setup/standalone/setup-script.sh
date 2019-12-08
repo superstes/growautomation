@@ -4,19 +4,22 @@
 #also use output.write(input.read(  ).replace(stext, rtext)) to replace config in MAINconfig and PATHconfig
 
 apt-get update && apt-get upgrade
-apt-get install python3 python3-pip python3-dev mariadb-server mariadb-client git
+apt-get install python3 python3-pip python3-dev python-smbus mariadb-server mariadb-client git
 
 #Basemodules
-python3 -m pip install mysql-connector-python RPi.GPIO schedule 
+python3 -m pip install mysql-connector-python RPi.GPIO schedule
 
 #Module for Adafruit DHT22 sensor
 python3 -m pip install Adafruit_DHT
 
-#Module for communication with arduino
+#Mdule for Adafruit ADS1115 (analog to digital converter)
+python3 -m pip install adafruit-ads1x15
+
+#Module for communication with arduino over usb
 #python3 -m pip install pyserial
 
 #Module for communication with powerstrip web-consoles
-#python3 -m pip install selenium pyvirtualdisplay
+python3 -m pip install selenium pyvirtualdisplay
 
 #GA code
 cd /tmp
