@@ -152,8 +152,7 @@ def actioncheck(action, ACTIONblocknr):
 
 
 if SENSORSenabled > 0:
-	#with open(PATHconfig.root + "config/MAINconfig.py", 'r') as MAINconfigfile:
-	with open("C:/Users/Administrator/git/controller/agentcode/config/MAINconfig.py", 'r') as MAINconfigfile:
+	with open(PATHconfig.root + "config/MAINconfig.py", 'r') as MAINconfigfile:
 		whilecount = MAINconfigfile.read().count("ACTIONblock")
 	while whilecount > 0:
 		#Check if sensor is in the current actionblock
