@@ -13,7 +13,7 @@ And provide code samples to the diy community.
         - being able to add new sensormodels and actions without changing the main code
     - to provide a simplified configuration for users
 
-<img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" width="40%" style="float:middle;width:50%;height:50%" border="2" alt="actionblock example">
+<img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" width="40%" style="float:middle;width:50%;height:50%" border="4" alt="actionblock example">
 
 ## On hold projects
 - writing installation manual / scripting installation
