@@ -10,7 +10,7 @@ from GA import pathconfig
 from GA import codebase
 
 
-# logs
+# Logs
 logfile = codebase.logopen("check")
 if mainconfig.loglevel > 0:
 currentscript = currentfile = inspect.getfile(inspect.currentframe())
@@ -19,21 +19,21 @@ currentscript = currentfile = inspect.getfile(inspect.currentframe())
 
 # System arguments
 if "eh" in sys.argv:
-	sensorconnected = getattr(mainconfig, "ehabconnected")
-	sensordisabled = getattr(mainconfig, "ehabdisabled")
+	sensorsconnected = getattr(mainconfig, "ehabconnected")
+	sensorsdisabled = getattr(mainconfig, "ehabdisabled")
 
 elif "aht" in sys.argv:
-	sensorconnected = getattr(mainconfig, "ahtaconnected")
-	sensordisabled = getattr(mainconfig, "ahtadisabled")
+	sensorsconnected = getattr(mainconfig, "ahtaconnected")
+	sensorsdisabled = getattr(mainconfig, "ahtadisabled")
 else:
 	sys.exit("\nInput Error. Sensortype has to be provided as system argument.\n\nExample:\npython3 " + currentscript + " EH")
 
 sensorsenabled = 0
-for x in sensorconnected:
-	if x not in sensordisabled:
+for x in sensorsconnected:
+	if x not in sensorsdisabled:
 		sensorsenabled += 1
 
-
+# Check function
 def actioncheck(action, actionblocknr):
 	# DB Info
 	db = mysql.connector.connect(
@@ -44,12 +44,12 @@ def actioncheck(action, actionblocknr):
 	)
 	# Data Query
 	dbcursor = db.cursor()
+	
 	if mainconfig.loglevel >= 2:
 		codebase.logtime("check")
 		logfile.write("Connected to database.\n")
 
-	dbdataquery = "SELECT * FROM " + sys.argv[1] + " ORDER BY ID DESC LIMIT " + str(
-		sensorsenabled * mainconfig.checkrange)
+	dbdataquery = "SELECT * FROM " + sys.argv[1] + " ORDER BY ID DESC LIMIT " + str(sensorsenabled * mainconfig.checkrange)
 	dbcursor.execute(dbdataquery)
 	dbdata = []
 	for row in dbcursor:
@@ -74,18 +74,21 @@ def actioncheck(action, actionblocknr):
 		codebase.logtime("check")
 		logfile.write("Current activationpoint is: " + actionpoint + ".\n")
 
-	if actionstate < actionpoint:
+	if int(actionstate) > actionpoint:
 		# action
-		scriptstartpath = getattr(pathconfig, action + "actionstartpath")
+		scriptpath = getattr(pathconfig, action + "action")
+
+		if mainconfig.loglevel >= 2:
+			codebase.logtime("check")
+			logfile.write("Action needed - starting script " + scriptpath + " for actionblock "+ actionblocknr + ".\n")
+		elif mainconfig.loglevel > 0:
+			codebase.logtime("check")
+			logfile.write("Action needed - starting script " + scriptpath + ".\n")
+
+		os.system("/usr/bin/python3 " + scriptpath + " " + actionblocknr)
 
 		if mainconfig.loglevel > 0:
 			codebase.logtime("check")
-			logfile.write("Action needed - starting script " + scriptstartpath + ".\n")
-
-		os.system("/usr/bin/python3 " + scriptstartpath + " " + actionblocknr)
-
-		if mainconfig.loglevel > 0:
-			codebase.sensorlogtime()
 			logfile.write("Check was processed.\n")
 
 	else:
@@ -96,35 +99,61 @@ def actioncheck(action, actionblocknr):
 
 
 if sensorsenabled > 0:
-	with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
-		whilecount = mainconfigfile.read().count("actionblock")
-	while whilecount > 0:
-		#check if sensor is in the current actionblock
-		actionblock = getattr(mainconfig, "actionblock{:02d}".format(whilecount))
-		actionblocknr = "actionblock{:02d}".format(whilecount)
-		whilecount -= 1
-		#print(whilecount + " " + actionblock)
-		sensorcount = str(actionblock).count(sys.argv[1])-1
-		if sensorcount > 0:
-			#check if action is required
-			#check which actions are linked to the current sensor
-			actiontypes = mainconfig.actiontypes.get(sys.argv[1])
-			actiontypecount = len(actiontypes.split())
-			if actiontypecount > 1:
-				for action in actiontypes:
-					sensoractioncount = str(actionblock).count(action)
-					#check if actions are in the current actionblock
-					if sensoractioncount > 0:
-						actioncheck(action, actionblocknr)
-					else:
-						print("action " + action + " isn't in the current actionblock")
-			else:
-				sensoractioncount = str(actionblock).count(actiontypes)
-				#check if action is in the current actionblock
-				if sensoractioncount > 0:
-					actioncheck(actiontypes, actionblocknr)
-				else:
-					print("action " + actiontypes + " isn't in the current actionblock")
+	# check if actioncheck is required
+	# check which actions are linked to the current sensor
+	actiontypes = mainconfig.actiontypes.get(sys.argv[1])
+	actiontypecount = len(actiontypes.split())
 
-		else:
-			print("The sensor isn't in the current actionblock")
+	if actiontypecount > 1:
+
+		with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+			actionblockcount = mainconfigfile.read().count("actionblock")
+
+		if actionblockcount	> 0:
+
+			while actionblockcount > 0:
+				#check if sensor is in the current actionblock
+				actionblocknr = "actionblock{:02d}".format(actionblockcount)
+				actionblock = getattr(mainconfig, actionblocknr)
+				sensorcount = str(actionblock).count(sys.argv[1])
+				actionblockcount -= 1
+
+				if sensorcount > 1:
+
+					for action in actiontypes:
+						# check if actions are in the current actionblock
+						sensoractioncount = str(actionblock).count(action)
+
+						if sensoractioncount > 0:
+
+							if mainconfig.loglevel > 0:
+								codebase.logtime("check")
+								logfile.write("Starting check for action " + action + " in actionblock " + actionblocknr + ".\n")
+
+							actioncheck(action, actionblocknr)
+
+						elif mainconfig.loglevel >= 2:
+							codebase.logtime("check")
+							logfile.write("The action " + action + "isn't in the current actionblock " + actionblocknr + ".\n")
+
+				elif mainconfig.loglevel >= 2:
+					codebase.logtime("check")
+					logfile.write("The sensor " + sys.argv[1] + "isn't in the current actionblock " + actionblocknr + ".\n")
+
+		elif mainconfig.loglevel > 0:
+			codebase.logtime("check")
+			logfile.write("No actionblocks could be found in the configuration.\nConfiguration file:\n" + pathconfig.config + "mainconfig.py\n")
+
+	else:
+		if mainconfig.loglevel >= 2:
+			codebase.logtime("check")
+			logfile.write("The sensor " + sys.argv[1] + " has no actiontypes linked.\nActiontypes:\n" + actiontypes + "\n")
+
+		sys.exit("\nThe sensor " + sys.argv[1] + " has no actiontypes linked.")
+
+else:
+	if mainconfig.loglevel > 0:
+		codebase.logtime("check")
+		logfile.write("None of the " + sys.argv[1] + " sensors are enabled.\nConnected Sensors: " + sensorsconnected + "\nDisabled Sensors: "+ sensorsdisabled + "\n")
+
+	sys.exit("\nNone of the " + sys.argv[1] + " sensors are enabled.")
