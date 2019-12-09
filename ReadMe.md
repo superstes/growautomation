@@ -4,16 +4,20 @@ Making it easier and optimizing the process.
 
 And provide code samples to the diy community.
 
-
-## !!! The code is currently not in a stable state !!! ##
+ !!! __The code is currently not in a stable state__ !!!
 
 ## Currently active projects
-- writing installation manual / scripting installation
-- implementing systemd timers to replace cronjobs
-- implementing log-level
-- updating sensor code to use functions and be more scalable without human interaction
-- centralizing the configuration and implementing the config change into the setup script
+- centralizing the configuration
+- implementing actionblocks and actiontypes
+    - to provide custom linking of sensors and actions
+        - being able to add new sensormodels and actions without changing the main code
+    - to provide a simplified configuration for users
 
+<img src="https://github.com/growautomation-at/controller/blob/master" width="40%" style="float:middle;width:50%;height:50%" alt="actionblock example">
+
+## On hold projects
+- writing installation manual / scripting installation
+- implementing the main config changes into the setup script
 
 ## Planned projects
 - webserver for observation and manual actions
