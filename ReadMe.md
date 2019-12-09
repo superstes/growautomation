@@ -1,5 +1,5 @@
 # Growautomation
-We want to make an easy solution for anybody to automate everything around growing plants.
+We want to make an easy solution for anybody to automate everything around growing plants. <br />
 Making it easier and optimizing the process.
 
 And provide code samples to the diy community.
@@ -12,8 +12,8 @@ And provide code samples to the diy community.
     - to provide custom linking of sensors and actions
         - being able to add new sensormodels and actions without changing the main code
     - to provide a simplified configuration for users
-
-<img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" width="40%" style="float:middle;width:50%;height:50%" border="4" alt="actionblock example">
+    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" width="40%" style="float:middle;width:50%;height:50%" border="4" alt="actionblock example">
+    
 
 ## On hold projects
 - writing installation manual / scripting installation
