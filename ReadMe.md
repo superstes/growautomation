@@ -12,7 +12,7 @@ And provide code samples to the diy community.
     - to provide custom linking of sensors and actions
         - being able to add new sensormodels and actions without changing the main code
     - to provide a simplified configuration for users
-    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" style="float:middle;width:50%;height:50%" border="4" alt="actionblock example">
+    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/manual/actionblocks.jpg" float="middle" width="50%" height="50%" border="4" alt="actionblock example">
     
 
 ## On hold projects
