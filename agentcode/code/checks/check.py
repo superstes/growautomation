@@ -1,138 +1,130 @@
 #!/usr/bin/python3
 
 import mysql.connector
-from time import sleep
 import os
 import inspect
 import sys
 
-from GA import MAINconfig
-from GA import PATHconfig
-from GA import CODEbase
+from GA import mainconfig
+from GA import pathconfig
+from GA import codebase
 
 
-# Logs
-logfile = CODEbase.CHECKlogfile
-if MAINconfig.LOGlevel > 0:
+# logs
+logfile = codebase.logopen("check")
+if mainconfig.loglevel > 0:
 currentscript = currentfile = inspect.getfile(inspect.currentframe())
-	CODEbase.CHECKlogtime()
+	codebase.logtime("check")
 	logfile.write("Script " + currentscript + ".\n")
 
-if MAINconfig.LOGlevel >= 2:
-	CODEbase.CHECKlogtime()
-	logfile.write("Connecting to database " + MAINconfig.SENSORdatabase + ".\n")
+# System arguments
+if "eh" in sys.argv:
+	sensorconnected = getattr(mainconfig, "ehabconnected")
+	sensordisabled = getattr(mainconfig, "ehabdisabled")
 
-# DB Data
-DB = mysql.connector.connect(
-	host=MAINconfig.DATABASEserver,
-	user=MAINconfig.DATABASEuser,
-	passwd=MAINconfig.DATABASEpassword,
-	database=MAINconfig.SENSORdatabase
-)
-
-
-if "EH" in sys.argv:
-	SENSORconnected = getattr(MAINconfig, "EHABconnected")
-	SENSORdisabled = getattr(MAINconfig, "EHABdisabled")
-
-elif "AHT" in sys.argv:
-	SENSORconnected = getattr(MAINconfig, "AHTAconnected")
-	SENSORdisabled = getattr(MAINconfig, "AHTAdisabled")
+elif "aht" in sys.argv:
+	sensorconnected = getattr(mainconfig, "ahtaconnected")
+	sensordisabled = getattr(mainconfig, "ahtadisabled")
 else:
 	sys.exit("\nInput Error. Sensortype has to be provided as system argument.\n\nExample:\npython3 " + currentscript + " EH")
 
-SENSORSenabled = 0
-for x in SENSORconnected:
-	if x not in SENSORdisabled:
-		SENSORSenabled += 1
+sensorsenabled = 0
+for x in sensorconnected:
+	if x not in sensordisabled:
+		sensorsenabled += 1
 
 
-def actioncheck(action, ACTIONblocknr):
+def actioncheck(action, actionblocknr):
+	# DB Info
+	db = mysql.connector.connect(
+		host=mainconfig.dbserver,
+		user=mainconfig.dbuser,
+		passwd=mainconfig.dbpassword,
+		database=mainconfig.sensordb
+	)
 	# Data Query
-	DBcursor = DB.cursor()
-	if MAINconfig.LOGlevel >= 2:
-		CODEbase.CHECKlogtime()
+	dbcursor = db.cursor()
+	if mainconfig.loglevel >= 2:
+		codebase.logtime("check")
 		logfile.write("Connected to database.\n")
 
-	DBdataquery = "SELECT * FROM " + sys.argv[1] + " ORDER BY ID DESC LIMIT " + str(
-		SENSORSenabled * MAINconfig.CHECKrange)
-	DBcursor.execute(DBdataquery)
-	DBdata01 = []
-	for row in DBcursor:
-		DBdata01.append(float(row[MAINconfig.CHECKdbdatacolumn]))
-	ACTIONstate = str((sum(dbdata01)) / MAINconfig.CHECKrange)
+	dbdataquery = "SELECT * FROM " + sys.argv[1] + " ORDER BY ID DESC LIMIT " + str(
+		sensorsenabled * mainconfig.checkrange)
+	dbcursor.execute(dbdataquery)
+	dbdata = []
+	for row in dbcursor:
+		dbdata.append(float(row[mainconfig.checkdbdatacolumn]))
+	actionstate = str((sum(dbdata)) / mainconfig.checkrange)
 
-	GAdbcursor.close()
-	GAdb.close()
+	dbcursor.close()
+	db.close()
 
-	if MAINconfig.LOGlevel >= 2:
-		CODEbase.CHECKlogtime()
-		logfile.write("Data from database collected.\n")
-		CODEbase.CHECKlogtime()
+	if mainconfig.loglevel >= 2:
+		codebase.logtime("check")
+		logfile.write("Data from database was collected.\n")
+		codebase.logtime("check")
 		logfile.write("Database connection was closed.\n")
 
-	# Action Check
-	print("DO multiple " + action + " ACTION NAUW")
-	ACTIONpoint = getattr(MAINconfig, action + "activation")
-	ACTIONtime = getattr(MAINconfig, action + "time")
+	# action check
+	actionpoint = getattr(mainconfig, action + "activation")
 
-	if MAINconfig.LOGlevel >= 2:
-		CODEbase.CHECKlogtime()
-		logfile.write("Current state is: " + ACTIONstate + ".\n")
-		CODEbase.CHECKlogtime()
-		logfile.write("Current activationpoint is: " + ACTIONpoint + ".\n")
+	if mainconfig.loglevel >= 2:
+		codebase.logtime("check")
+		logfile.write("Current state is: " + actionstate + ".\n")
+		codebase.logtime("check")
+		logfile.write("Current activationpoint is: " + actionpoint + ".\n")
 
-	if ACTIONstate < ACTIONpoint:
-		# Action
-		scriptstartpath = getattr(PATHconfig, action + "actionstartpath")
+	if actionstate < actionpoint:
+		# action
+		scriptstartpath = getattr(pathconfig, action + "actionstartpath")
 
-		if MAINconfig.LOGlevel > 0:
-			CODEbase.CHECKlogtime()
+		if mainconfig.loglevel > 0:
+			codebase.logtime("check")
 			logfile.write("Action needed - starting script " + scriptstartpath + ".\n")
 
-		os.system("/usr/bin/python3 " + scriptstartpath + " " + ACTIONblocknr)
+		os.system("/usr/bin/python3 " + scriptstartpath + " " + actionblocknr)
 
-		if MAINconfig.LOGlevel > 0:
-			CODEbase.SENSORlogtime()
+		if mainconfig.loglevel > 0:
+			codebase.sensorlogtime()
 			logfile.write("Check was processed.\n")
 
 	else:
-		if MAINconfig.LOGlevel > 0:
-			CODEbase.CHECKlogtime()
+		if mainconfig.loglevel > 0:
+			codebase.logtime("check")
 			logfile.write("No action needed.\n")
 
 
 
-if SENSORSenabled > 0:
-	with open(PATHconfig.root + "config/MAINconfig.py", 'r') as MAINconfigfile:
-		whilecount = MAINconfigfile.read().count("ACTIONblock")
+if sensorsenabled > 0:
+	with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+		whilecount = mainconfigfile.read().count("actionblock")
 	while whilecount > 0:
-		#Check if sensor is in the current actionblock
-		ACTIONblock = getattr(MAINconfig, "ACTIONblock{:02d}".format(whilecount))
-		ACTIONblocknr = "ACTIONblock{:02d}".format(whilecount)
+		#check if sensor is in the current actionblock
+		actionblock = getattr(mainconfig, "actionblock{:02d}".format(whilecount))
+		actionblocknr = "actionblock{:02d}".format(whilecount)
 		whilecount -= 1
-		#print(whilecount + " " + ACTIONblock)
-		SENSORcount = str(ACTIONblock).count(sys.argv[1])-1
-		if SENSORcount > 0:
-			#Check if action is required
-			#Check which actions are linked to the current sensor
-			ACTIONtypes = MAINconfig.ACTIONtypes.get(sys.argv[1])
-			ACTIONtypecount = len(ACTIONtypes.split())
-			if ACTIONtypecount > 1:
-				for action in ACTIONtypes:
-					SENSORactioncount = str(ACTIONblock).count(action)
-					#Check if actions are in the current actionblock
-					if SENSORactioncount > 0:
-						actioncheck(action, ACTIONblocknr)
+		#print(whilecount + " " + actionblock)
+		sensorcount = str(actionblock).count(sys.argv[1])-1
+		if sensorcount > 0:
+			#check if action is required
+			#check which actions are linked to the current sensor
+			actiontypes = mainconfig.actiontypes.get(sys.argv[1])
+			actiontypecount = len(actiontypes.split())
+			if actiontypecount > 1:
+				for action in actiontypes:
+					sensoractioncount = str(actionblock).count(action)
+					#check if actions are in the current actionblock
+					if sensoractioncount > 0:
+						actioncheck(action, actionblocknr)
 					else:
-						print("Action " + action + " isn't in the current actionblock")
+						print("action " + action + " isn't in the current actionblock")
 			else:
-				SENSORactioncount = str(ACTIONblock).count(ACTIONtypes)
-				#Check if action is in the current actionblock
-				if SENSORactioncount > 0:
-					actioncheck(ACTIONtypes, ACTIONblocknr)
+				sensoractioncount = str(actionblock).count(actiontypes)
+				#check if action is in the current actionblock
+				if sensoractioncount > 0:
+					actioncheck(actiontypes, actionblocknr)
 				else:
-					print("Action " + ACTIONtypes + " isn't in the current actionblock")
+					print("action " + actiontypes + " isn't in the current actionblock")
 
 		else:
 			print("The sensor isn't in the current actionblock")

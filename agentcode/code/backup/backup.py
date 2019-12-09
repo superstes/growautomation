@@ -3,43 +3,44 @@
 import os
 import inspect
 
-from GA import MAINconfig
-from GA import PATHconfig
-from GA import CODEbase
+from GA import mainconfig
+from GA import pathconfig
+from GA import codebase
 
-#Log Setup
-logfile = CODEbase.BACKUPlogfile
+#log Setup
+logfile = codebase.logopen("backup")
 
-if MAINconfig.LOGlevel > 0:
+if mainconfig.loglevel > 0:
     currentscript = inspect.getfile(inspect.currentframe())
 
-    CODEbase.SENSORlogtime()
+    codebase.logtime("backup")
     logfile.write("\nScript " + currentscript + ".\n")
 
-#Backup if enabled
-if MAINconfig.BACKUPenabled == "YES":
-    if MAINconfig.LOGlevel > 0:
-        CODEbase.BACKUPlogtime()
-        logfile.write("Starting Backup.\n")
+#backup if enabled
+if mainconfig.backupenabled == "yes":
+    backupdir = pathconfig.backup + codebase.date02 + "/" + codebase.date03 + "/" + codebase.date01
+    if mainconfig.loglevel > 0:
+        codebase.logtime("backup")
+        logfile.write("Starting backup.\n")
 
-    #Backup Preperations
-    if os.path.exists(PATHconfig.BACKUPdir) is False:
-        os.system("mkdir -p " + Backupdir)
+    #backup Preperations
+    if os.path.exists(pathconfig.backupdir) is False:
+        os.system("mkdir -p " + backupdir)
 
-    if MAINconfig.LOGlevel >= 2:
-        CODEbase.BACKUPlogtime()
+    if mainconfig.loglevel >= 2:
+        codebase.logtime("backup")
         logfile.write("Backup directories exist/were created.\n")
 
-    #Backup
-    os.system("cp -r " + PATHconfig.root + " " + backupfolder)
+    #backup
+    os.system("cp -r " + pathconfig.root + " " + backupdir)
 
-    if MAINconfig.LOGbackup == "YES":
-        os.system("cp -r " + PATHconfig.logs + " " + backupfolder)
+    if mainconfig.logbackup == "yes":
+        os.system("cp -r " + pathconfig.logs + " " + backupdir)
 
-    if MAINconfig.LOGlevel >= 2:
-        CODEbase.BACKUPlogtime()
+    if mainconfig.loglevel >= 2:
+        codebase.logtime("backup")
         logfile.write("Backup Finished.\n\n")
 
-elif MAINconfig.BACKUPenabled == "NO" and MAINconfig.LOGlevel >= 0:
-    CODEbase.BACKUPlogtime()
+elif mainconfig.backupenabled == "no" and mainconfig.loglevel >= 0:
+    codebase.logtime("backup")
     logfile.write("Backup was disabled.\n\n")

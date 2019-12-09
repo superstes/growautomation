@@ -4,69 +4,67 @@ import inspect
 import mysql.connector
 import Adafruit_DHT
 
-from GA import MAINconfig
-from GA import CODEbase
+from GA import mainconfig
+from GA import codebase
 
 
-#Log Setup
-logfile = CODEbase.SENSORlogfile
-if MAINconfig.LOGlevel > 0:
+#log Setup
+logfile = codebase.logopen("sensor")
+if mainconfig.loglevel > 0:
         currentscript = currentfile = inspect.getfile(inspect.currentframe())
-        CODEbase.SENSORlogtime()
+        codebase.logtime("sensor")
         logfile.write("Script " + currentscript + ".\n")
 
-#print(MAINconfig.AHTAconnected)
-
-for sensor, pin in MAINconfig.AHTAconnected.items():
-        if sensor in MAINconfig.AHTAdisabled:
-            if MAINconfig.LOGlevel > 0:
-                   CODEbase.SENSORlogtime()
+for sensor, pin in mainconfig.ahtaconnected.items():
+        if sensor in mainconfig.ahtadisabled:
+            if mainconfig.loglevel > 0:
+                   codebase.logtime("sensor")
                    logfile.write("Sensor " + sensor + " was disabled.\n")
             # print(sensor + " on pin " + pin + " is disabled")
         else:
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("\nProcessing sensor: " + sensor + "\n")
             # print(sensor + " on pin " + pin + " is enabled")
 
             datahumi, datatemp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, pin)
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
-                logfile.write("Sensor data received. Connecting to database " + MAINconfig.SENSORdatabase + ".\n")
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
+                logfile.write("Sensor data received. Connecting to database " + mainconfig.sensordb + ".\n")
 
-            GAdb = mysql.connector.connect(
-                host=MAINconfig.DATABASEserver,
-                user=MAINconfig.DATABASEuser,
-                passwd=MAINconfig.DATABASEpassword,
-                database=MAINconfig.SENSORdatabase
+            db = mysql.connector.connect(
+                host=mainconfig.dbserver,
+                user=mainconfig.dbuser,
+                passwd=mainconfig.dbpassword,
+                database=mainconfig.sensordb
             )
-            GAdbcursor = GAdb.cursor()
+            dbcursor = db.cursor()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("Connected to database.\n")
 
             # DB Data Insert
-            sql = "INSERT INTO AHT (DATE, TIME, CONTROLLER, SENSOR, TEMPERATURE, HUMIDITY) VALUES (%s, %s, %s, %s, %s, %s)"
-            val = (CODEbase.date01, CODEbase.time02, MAINconfig.controller, sensor, datatemp, datahumi)
-            GAdbcursor.execute(sql, val)
-            GAdb.commit()
+            sql = "INSERT INTO aht (DATE, TIME, CONTROLLER, SENSOR, TEMPERATURE, HUMIDITY) VALUES (%s, %s, %s, %s, %s, %s)"
+            val = (codebase.date01, codebase.time02, mainconfig.controller, sensor, datatemp, datahumi)
+            dbcursor.execute(sql, val)
+            db.commit()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
-                logfile.write(str(GAdbcursor.rowcount) + " line was inserted into the Database " + MAINconfig.SENSORdatabase + ".\n")
-                CODEbase.SENSORlogtime()
-                logfile.write("Row-ID:" + str(GAdbcursor.lastrowid) + ".\n")
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
+                logfile.write(str(dbcursor.rowcount) + " line was inserted into the Database " + mainconfig.sensordb + ".\n")
+                codebase.logtime("sensor")
+                logfile.write("Row-ID:" + str(dbcursor.lastrowid) + ".\n")
 
             # DB Close
-            GAdbcursor.close()
-            GAdb.close()
+            dbcursor.close()
+            db.close()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("Database connection was closed.\n")
 
-            if MAINconfig.LOGlevel > 0:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel > 0:
+                codebase.logtime("sensor")
                 logfile.write("Sensor was processed: " + sensor + "\n")

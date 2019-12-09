@@ -4,67 +4,67 @@
 
 #############################  General  #############################
 
-controller = "CON01"
+controller = "con01"
 
-DATABASEserver = "IP"
-DATABASEuser = "GA-0101-CON01"
-DATABASEpassword = "PASSWORD"
-SENSORdatabase = "GA0101SENSORS"
-ACTIONdatabase = "GA0101ACTIONS"
-
-
-#Backup
-BACKUPenabled = "YES" #YES/NO -> If Backup should be created
-BACKUPtime = "20:00"
-
-#Logs
-LOGlevel = 0	#2=debug/1=default/0=none
-LOGbackup = "YES"   #YES/NO -> If Logs should be included into the backup
-LOGactiontodb = "YES"
+dbserver = "IP"
+dbuser = "con01"
+dbpassword = "PASSWORD"
+sensordb = "sensors"
+actiondb = "actions"
 
 
-#############################  SENSORS  #############################
+#backup
+backupenabled = "yes" #yes/no -> If backup should be created
+backuptime = "20:00"
+
+#logs
+loglevel = 0	#2=debug/1=default/0=none
+logbackup = "yes"   #yes/no -> If logs should be included into the backup
+logactiontodb = "yes" #yes/no -> If taken actions should be logged into the database
+
+
+#############################  sensorS  #############################
 
 #General Settings
-SENSORtime = "10"		        #How often should the sensordata be written to the database (minutes)
-SENSORahtdisabled = "NO"
-SENSORehdisabled = "NO"
+sensortime = "10"		        #How often should the sensordata be written to the database (minutes)
+sensorahtdisabled = "no"
+sensorehdisabled = "no"
 
 #Analog to Digital Converters
-ADCdisabled = ["ADC02"]
+adcdisabled = ["adc02"]
 
 #Which i2c bus the adc is connected to
-ADCconnected = {"ADC01": "i2c-1", "ADC02": "i2c-2"}
+adcconnected = {"adc01": "i2c-1", "adc02": "i2c-2"}
 
 
 #Air Humidity Temperature
-#AHTA = Adafruit DHT22
-AHTAdisabled = ["AHTA02"]
+#ahta = Adafruit DHT22
+ahtadisabled = ["ahta02"]
 
 #Format:
 #       {
-#       "AHTANR": "PIN",
-#       "AHTANR": "PIN"
+#       "ahtaNR": "PIN",
+#       "ahtaNR": "PIN"
 #       }
-AHTAconnected = {"AHTA01": "26", "AHTA02": "19"}
+ahtaconnected = {"ahta01": "26", "ahta02": "19"}
 
 #Earth Humidity
-#EHA = generic analog china humidity sensor
-#EHB = analog capacitive soil moisture sensor v1.2 (find on amazon)
+#eha = generic analog china humidity sensor
+#ehb = analog capacitive soil moisture sensor v1.2 (find on amazon)
 
-#Format ["EHxNR", "EHxNR"]
-EHABdisabled = ["EHB02"]
+#Format ["ehxNR", "ehxNR"]
+ehabdisabled = ["ehb02"]
 
 #Format:
 #       {
-#       "EHxNR": {
-#           "AnalogToDigitalConverterNR": "ADCpinNR"
+#       "ehxNR": {
+#           "AnalogToDigitalConverterNR": "adcpinNR"
 #           },
-#       "EHxNR": {
-#           "ADCNR": "ADCpinNR"
+#       "ehxNR": {
+#           "adcNR": "adcpinNR"
 #           }
 #       }
-EHABconnected = {"EHB01": {"ADC01": "0"}, "EHB02": {"ADC02": "1"}}
+ehabconnected = {"ehb01": {"adc01": "0"}, "ehb02": {"adc02": "1"}}
 
 
 ############################# CHECKS #############################
@@ -75,71 +75,71 @@ CHECKrange = 6
 CHECKdbdatacolumn = 4
 
 
-#############################  ACTIONS  #############################
+#############################  actions  #############################
 
-#Actiontypes
+#actiontypes
 #Which action should react to which sensortype
-ACTIONtypes = {"EH": ("PUMP"), "AHT": ("WIN")}
+actiontypes = {"eh": ("pump"), "aht": ("win")}
 
 
-#Actionblocks
+#actionblocks
 #Links sensors and actions -> simplifies configuration and processing
 #Use '*' as wildcard if all enabled sensors in the category should be used
 #Format:
 #       {
-#       "SENSORS": {
-#           "EH": ("*"),
-#           "AHT": ("*")
+#       "sensorS": {
+#           "eh": ("*"),
+#           "aht": ("*")
 #           },
-#       "ACTIONS": {
-#           "PUMP": ("*"),
-#           "WIN": ("*")
+#       "actions": {
+#           "pump": ("*"),
+#           "win": ("*")
 #           }
 #       }
-ACTIONblock01 = {"SENSORS": {"EH": ("EHB01", "EHB02"), "AHT": ("AHT01", "AHT02")}, "ACTIONS": {"WIN": ("*")}}
-ACTIONblock02 = {"SENSORS": {"EH": ("EHB01", "EHB02")}, "ACTIONS": {"PUMP": ("PUMP01")}}
+actionblock01 = {"sensorS": {"eh": ("ehb01", "ehb02"), "aht": ("aht01", "aht02")}, "actions": {"win": ("*")}}
+actionblock02 = {"sensorS": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pump01")}}
 
 
-#Water Pumps
+#Water pumps
 #Generic water pumps -> are controlled via network attached power strip
-PUMPdisabled = []
+pumpdisabled = []
 
 #Format:
 #       {
-#       "PUMPNR": {
-#           "PowerStripNR": "PSUsocketNR"
+#       "pumpNR": {
+#           "PowerStripNR": "psusocketNR"
 #           },
-#       "PUMPNR": {
-#           "PSUNR": "PSUsocketNR"
+#       "pumpNR": {
+#           "psuNR": "psusocketNR"
 #           }
 #       }
-PUMPconnected = {"PUMP01": {"PSU01": "1"}}
+pumpconnected = {"pump01": {"psu01": "1"}}
 
-PUMPactivation = "60"		#The pump will be activated if the humidity falls under this value
-PUMPtime = 600		#Runtime in seconds
+pumpactivation = "60"		#The pump will be activated if the humidity falls under this value
+pumptime = 600		#Runtime in seconds
 
-#Window-Openers
+#window-Openers
 #12V DC motors with 3d-printed window-opener attachments
 #DC motor driver L298N Dual-H-Bridge
-WINdisabled = {}
+windisabled = {}
 
 #Format:
 #       {
-#       "WINNR": {
+#       "winNR": {
 #           "FWD": "PINForward",
 #           "REV": "PINReverse"
 #           },
-#       "WINNR": {
+#       "winNR": {
 #           "FWD": "PINForward,
 #           "REV": "PINReverse"
 #           }
 #       }
-WINconnected = {"WIN01": {"FWD": "20", "REV": "21"}, "WIN02": {"FWD": "16", "REV": "12"}}
-WINopentime = 5
+winconnected = {"win01": {"FWD": "20", "REV": "21"}, "win02": {"FWD": "16", "REV": "12"}}
+winopentime = 5
 
 #Power Strips
-#PSUA: Gembird Energenie EG-PMS2-LAN (trashy hard- and firmware) -> would not recommend buying it
-#PSUB: Coming soon (:
-PSUA01password = "PASSWORD"
-PSUA01ip = "IP"
-PSUA01port = "PORT"
+#psua: Gembird Energenie EG-PMS2-LAN (trashy hard- and firmware) -> would not recommend buying it
+#psub: Coming soon (:
+psua01password = "PASSWORD"
+psua01ip = "IP"
+psua01port = "PORT"

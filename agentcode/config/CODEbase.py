@@ -1,15 +1,14 @@
 #!/usr/bin/python3
 
 from datetime import datetime
-from time import strftime
 import os
-import inspect
 import sys
 
-from GA import PATHconfig
+from GA import pathconfig
 
 
 #Time
+
 time01 = datetime.now().strftime("%H-%M-%S")
 time02 = datetime.now().strftime("%H:%M:%S")
 time03 = datetime.now().strftime("%H-%M")
@@ -19,45 +18,52 @@ date02 = datetime.now().strftime("%Y")
 date03 = datetime.now().strftime("%m")
 date04 = datetime.now().strftime("%d")
 
-
 #Logs
 
-##Sensors
-if os.path.exists(PATHconfig.SENSORlogs02) is False:
-    os.system("mkdir -p " + PATHconfig.SENSORlogs02)
+def logpath(scripttype, output):
+    scripttype = scripttype.lower()
+    logdir = pathconfig.logs + scripttype + "/" + date02 + "/" + date03 + "/"
+    if "dir" in output:
+        return logdir
+    elif "file" in output:
+        return logdir + date04 + "_" + scripttype + ".log"
+    else:
+        return sys.exit("\nInput Error. Either provide dir or file as second system argument.\nMust be exactly one.")
 
-SENSORlogfile = open(PATHconfig.SENSORlogs,'a')
+def logopen(scripttype):
+    scripttype = scripttype.lower()
+    logdir = logpath(scripttype, "dir")
+    logfile = logpath(scripttype, "file")
 
-def SENSORlogtime():
-    SENSORlogtime01 = datetime.now().strftime("%H:%M:%S:%f")
-    SENSORlogfile.write(SENSORlogtime01 + " ")
+    if os.path.exists(logdir) is False:
+        os.system("mkdir -p " + logdir)
+        return open(logfile, 'a')
+    else:
+        return open(logfile, 'a')
 
-##Checks
-if os.path.exists(PATHconfig.CHECKlogs02) is False:
-    os.system("mkdir -p " + PATHconfig.CHECKlogs02)
+def logtime(scripttype):
+    scripttype = scripttype.lower()
+    logfile = logopen(scripttype)
+    logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
 
-CHECKlogfile = open(PATHconfig.CHECKlogs,'a')
+#actions
 
-def CHECKlogtime():
-    CHECKlogtime01 = datetime.now().strftime("%H:%M:%S:%f")
-    CHECKlogfile.write(CHECKlogtime01 + " ")
+def actionblocksysargcheck(sysarg):
+    # Check if actionblock was provided as system argument
+    with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+        actionblockcount = mainconfigfile.read().count("actionblock")
+    actionblocksysarglist = []
+    while actionblockcount > 0:
+        actionblocknr = "actionblock{:02d}".format(actionblockcount)
+        actionblockcount -= 1
+        if actionblocknr in sysarg:
+            actionblocksysarglist.append("actionblock{:02d}".format(actionblockcount))
+            actionblock = actionblocknr
 
-##Actions
-if os.path.exists(PATHconfig.ACTIONlogs02) is False:
-    os.system("mkdir -p " + PATHconfig.ACTIONlogs02)
-
-ACTIONlogfile = open(PATHconfig.ACTIONlogs,'a')
-
-def ACTIONlogtime():
-    ACTIONlogtime01 = datetime.now().strftime("%H:%M:%S:%f")
-    ACTIONlogfile.write(ACTIONlogtime01 + " ")
-
-##Backups
-if os.path.exists(PATHconfig.BACKUPlogs02) is False:
-    os.system("mkdir -p " + PATHconfig.BACKUPlogs02)
-
-BACKUPlogfile = open(PATHconfig.BACKUPlogs,'a')
-
-def BACKUPlogtime():
-    BACKUPlogtime01 = datetime.now().strftime("%H:%M:%S:%f")
-    BACKUPlogfile.write(BACKUPlogtime01 + " ")
+    # Throw errors if system arguments were provided wrong
+    if len(actionblocksysarglist) > 1:
+        return sys.exit("\nInput Error. More than one actionblock was provided as system argument.\nMust be exactly one.")
+    elif len(actionblocksysarglist) < 1:
+        return sys.exit("\nInput Error. No actionblock was provided as system argument.\nMust be exactly one.")
+    else:
+        return print(actionblock)

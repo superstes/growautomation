@@ -4,79 +4,77 @@ import inspect
 import mysql.connector
 import Adafruit_ADS1x15
 
-from GA import MAINconfig
-from GA import CODEbase
+from GA import mainconfig
+from GA import codebase
 
 
-#Log Setup
-logfile = CODEbase.SENSORlogfile
-if MAINconfig.LOGlevel > 0:
+#log Setup
+logfile = codebase.logopen("sensor")
+if mainconfig.loglevel > 0:
         currentscript = currentfile = inspect.getfile(inspect.currentframe())
-        CODEbase.SENSORlogtime()
+        codebase.logtime("sensor")
         logfile.write("Script " + currentscript + ".\n")
 
-#print(MAINconfig.EHABconnected)
-
-for sensor, adc in MAINconfig.EHABconnected.items():
+for sensor, adc in mainconfig.ehabconnected.items():
         for adctmp in adc:
             adcnr = adctmp
             adcpin = adc[adctmp]
 
-        if sensor in MAINconfig.EHABdisabled:
-            if MAINconfig.LOGlevel > 0:
-                CODEbase.SENSORlogtime()
-                logfile.write("Sensor " + sensor + " on ADC " + adc + " was disabled.\n")
-            #print(sensor + " on ADC " + adcnr + " is disabled")
-        elif adcnr in MAINconfig.ADCdisabled:
-            if MAINconfig.LOGlevel > 0:
-                CODEbase.SENSORlogtime()
-                logfile.write("ADC " + adc + " was disabled.\n")
-            #print("ADC " + adcnr + " for sensor " + sensor + " is disabled")
+        if sensor in mainconfig.ehabdisabled:
+            if mainconfig.loglevel > 0:
+                codebase.logtime("sensor")
+                logfile.write("Sensor " + sensor + " on adc " + adc + " was disabled.\n")
+            #print(sensor + " on adc " + adcnr + " is disabled")
+        elif adcnr in mainconfig.adcdisabled:
+            if mainconfig.loglevel > 0:
+                codebase.logtime("sensor")
+                logfile.write("adc " + adc + " was disabled.\n")
+            #print("adc " + adcnr + " for sensor " + sensor + " is disabled")
         else:
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("Processing sensor: " + sensor + "\n")
-                logfile.write("Sensor is connected to " + adcpin + " on ADC " + adcnr + "\n")
-            #print(sensor + " on ADC " + adcnr + " is enabled")
+                logfile.write("Sensor is connected to " + adcpin + " on adc " + adcnr + "\n")
+            #print(sensor + " on adc " + adcnr + " is enabled")
 
             datahumi = Adafruit_ADS1x15.ADS1115().read_adc(adcpin)
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
-                logfile.write("Sensor data received. Connecting to database " + MAINconfig.SENSORdatabase + ".\n")
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
+                logfile.write("Sensor data received. Connecting to database " + mainconfig.sensordb + ".\n")
 
-            GAdb = mysql.connector.connect(
-                host=MAINconfig.DATABASEserver,
-                user=MAINconfig.DATABASEuser,
-                passwd=MAINconfig.DATABASEpassword,
-                database=MAINconfig.SENSORdatabase
+            db = mysql.connector.connect(
+                host=mainconfig.dbserver,
+                user=mainconfig.dbuser,
+                passwd=mainconfig.dbpassword,
+                database=mainconfig.sensordb
             )
-            GAdbcursor = GAdb.cursor()
+            dbcursor = db.cursor()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("Connected to database.\n")
 
             # DB Data Insert
-            sql = "INSERT INTO EH (DATE, TIME, CONTROLLER, SENSOR, HUMIDITY) VALUES (%s, %s, %s, %s, %s)"
-            val = (CODEbase.date01, CODEbase.time02, MAINconfig.controller, sensor, datahumi)
-            GAdbcursor.execute(sql, val)
-            GAdb.commit()
+            sql = "INSERT INTO eh (DATE, TIME, CONTROLLER, SENSOR, HUMIDITY) VALUES (%s, %s, %s, %s, %s)"
+            val = (codebase.date01, codebase.time02, mainconfig.controller, sensor, datahumi)
+            dbcursor.execute(sql, val)
+            db.commit()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
-                logfile.write(str(GAdbcursor.rowcount) + " line was inserted into the Database " + MAINconfig.SENSORdatabase + ".\n")
-                CODEbase.SENSORlogtime()
-                logfile.write("Row-ID:" + str(GAdbcursor.lastrowid) + ".\n")
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
+                logfile.write(str(dbcursor.rowcount) + " line was inserted into the Database " + mainconfig.sensordb + ".\n")
+                codebase.logtime("sensor")
+                logfile.write("Row-ID:" + str(dbcursor.lastrowid) + ".\n")
 
             # DB Close
-            GAdbcursor.close()
-            GAdb.close()
+            dbcursor.close()
+            db.close()
 
-            if MAINconfig.LOGlevel >= 2:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel >= 2:
+                codebase.logtime("sensor")
                 logfile.write("Database connection was closed.\n")
 
-            if MAINconfig.LOGlevel > 0:
-                CODEbase.SENSORlogtime()
+            if mainconfig.loglevel > 0:
+                codebase.logtime("sensor")
                 logfile.write("Sensor was processed: " + sensor + "\n")
