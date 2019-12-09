@@ -17,6 +17,8 @@ sensors = code + "sensors/"
 
 #Acions
 actions = code + "actions/"
+pumpaaction = actions + "psua.py"
+winaaction = actions + "wina.py"
 
 #Checks
 checks = code + "checks/"

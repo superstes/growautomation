@@ -70,9 +70,9 @@ ehabconnected = {"ehb01": {"adc01": "0"}, "ehb02": {"adc02": "1"}}
 ############################# CHECKS #############################
 
 #How many sensor data records should be checked to determine if an action should be taken
-CHECKrange = 6
+checkrange = 6
 #row containing the sensor data	-> counted from left without counting the ID row
-CHECKdbdatacolumn = 4
+checkdbdatacolumn = 4
 
 
 #############################  actions  #############################
@@ -96,8 +96,8 @@ actiontypes = {"eh": ("pump"), "aht": ("win")}
 #           "win": ("*")
 #           }
 #       }
-actionblock01 = {"sensorS": {"eh": ("ehb01", "ehb02"), "aht": ("aht01", "aht02")}, "actions": {"win": ("*")}}
-actionblock02 = {"sensorS": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pump01")}}
+actionblock01 = {"sensorS": {"eh": ("ehb01", "ehb02"), "ahta": ("ahta01", "ahta02")}, "actions": {"win": ("*")}}
+actionblock02 = {"sensorS": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01")}}
 
 
 #Water pumps
@@ -113,7 +113,7 @@ pumpdisabled = []
 #           "psuNR": "psusocketNR"
 #           }
 #       }
-pumpconnected = {"pump01": {"psu01": "1"}}
+pumpconnected = {"pumpa01": {"psua01": "1"}}
 
 pumpactivation = "60"		#The pump will be activated if the humidity falls under this value
 pumptime = 600		#Runtime in seconds

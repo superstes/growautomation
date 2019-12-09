@@ -46,13 +46,13 @@ def logtime(scripttype):
     logfile = logopen(scripttype)
     logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
 
-#actions
+#Actions
 
 def actionblocksysargcheck(sysarg):
     # Check if actionblock was provided as system argument
     with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
         actionblockcount = mainconfigfile.read().count("actionblock")
-    actionblocksysarglist = []
+        actionblocksysarglist = []
     while actionblockcount > 0:
         actionblocknr = "actionblock{:02d}".format(actionblockcount)
         actionblockcount -= 1
