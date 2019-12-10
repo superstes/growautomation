@@ -30,17 +30,8 @@ if mainconfig.loglevel > 0:
 # System arguments
 sensortype = sys.argv[1]
 
-with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
-	sensorsenabled = 0
-	sensornamelist = codebase.namegenletters(sensortype)
-	for sensorname in sensornamelist:
-		try:
-			tmpsensorconnected = len(getattr(mainconfig, sensorname + "connected").keys())
-			sensorsenabled += tmpsensorconnected
-			tmpsensordisabled = len(getattr(mainconfig, sensorname + "disabled"))
-			sensorsenabled -= tmpsensordisabled
-		except AttributeError:
-			pass
+# Sensors enabled
+sensorsenabled = codebase.sensorenabledcheck(sensortype)
 
 # Check function
 def actioncheck(actionblockcurrent, actionsinblock):

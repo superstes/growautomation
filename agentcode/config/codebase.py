@@ -83,8 +83,24 @@ def dictnestsearch(dict, tosearch):
                 return k
     return None
 
+# Sensors
 
-#Actions
+def sensorenabledcheck(sensortype):
+    with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+        sensorsenabled = 0
+        sensornamelist = namegenletters(sensortype)
+        for sensorname in sensornamelist:
+            try:
+                tmpsensorconnected = len(getattr(mainconfig, sensorname + "connected").keys())
+                sensorsenabled += tmpsensorconnected
+                tmpsensordisabled = len(getattr(mainconfig, sensorname + "disabled"))
+                sensorsenabled -= tmpsensordisabled
+            except AttributeError:
+                pass
+        return sensorsenabled
+
+
+# Actions
 
 def actionblocksysargcheck(sysarg):
     # Check if actionblock was provided as system argument
