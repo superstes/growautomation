@@ -21,9 +21,9 @@ from GA import codebase
 #						if no errors found -> it executes the check function
 
 # Logs
-currentscript = currentfile = inspect.getfile(inspect.currentframe())
 if mainconfig.loglevel > 0:
 	logfile = codebase.logopen("check")
+	currentscript = currentfile = inspect.getfile(inspect.currentframe())
 	codebase.logtime("check")
 	logfile.write("Script " + currentscript + ".\n")
 
@@ -31,14 +31,14 @@ if mainconfig.loglevel > 0:
 sensortype = sys.argv[1]
 
 with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
-	sensorenabled = 0
+	sensorsenabled = 0
 	sensornamelist = codebase.namegenletters(sensortype)
 	for sensorname in sensornamelist:
 		try:
 			tmpsensorconnected = len(getattr(mainconfig, sensorname + "connected").keys())
-			sensorenabled += tmpsensorconnected
+			sensorsenabled += tmpsensorconnected
 			tmpsensordisabled = len(getattr(mainconfig, sensorname + "disabled"))
-			sensorenabled -= tmpsensordisabled
+			sensorsenabled -= tmpsensordisabled
 		except AttributeError:
 			pass
 
