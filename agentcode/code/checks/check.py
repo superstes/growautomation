@@ -164,12 +164,9 @@ if sensorsenabled > 0:
 							actionsinblock.append(actiontypes)
 						except AttributeError:
 							for action in actiontypes:
-								if len(action) < 3:
-									print(action + " too short")
-								else:
-									actioncount = str(actionblock).count(action)
-									if actioncount > 1:
-										actionsinblock.append(action)
+								actioncount = str(actionblock).count(action)
+								if actioncount > 1:
+									actionsinblock.append(action)
 
 						actioncheck(actionblockcurrent, actionsinblock)
 						#print(actionblockcurrent, actionsinblock)
