@@ -4,7 +4,7 @@ Making it easier and optimizing the process.
 
 And provide code samples to the diy community.
 
- !!! __The code is currently not in a stable state__ !!!
+<span style="color: orange; font-weight: bold"> The code is currently not in a stable state ! </span>
 
 ## Currently active projects
 - centralizing the configuration

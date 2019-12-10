@@ -16,10 +16,10 @@ actiondb = "actions"
 #backup
 backupenabled = "yes" #yes/no -> If backup should be created
 backuptime = "20:00"
+backuplogs = "yes"   #yes/no -> If logs should be included into the backup
 
 #logs
 loglevel = 0	#2=debug/1=default/0=none
-logbackup = "yes"   #yes/no -> If logs should be included into the backup
 logactiontodb = "yes" #yes/no -> If taken actions should be logged into the database
 
 
@@ -79,12 +79,11 @@ checkdbdatacolumn = 4
 
 #actiontypes
 #Which action should react to which sensortype
-actiontypes = {"eh": ("pump"), "aht": ("win")}
+actiontypes = {"eh": ("pump", "win"), "aht": ("win")}
 
 
 #actionblocks
 #Links sensors and actions -> simplifies configuration and processing
-#Use '*' as wildcard if all enabled sensors in the category should be used
 #Format:
 #       {
 #       "sensorS": {
@@ -96,8 +95,8 @@ actiontypes = {"eh": ("pump"), "aht": ("win")}
 #           "win": ("*")
 #           }
 #       }
-actionblock01 = {"sensors": {"eh": ("ehb01", "ehb02"), "aht": ("ahta01", "ahta02")}, "actions": {"win": ("*")}}
-actionblock02 = {"sensors": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01", "pumpa03"), "win": ("*")}}
+actionblock01 = {"sensors": {"eh": ("ehb01", "ehb02"), "aht": ("ahta01", "ahta02")}, "actions": {"win": ("wina02")}}
+actionblock02 = {"sensors": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01", "pumpa04"), "win": ("wina01")}}
 
 
 #Water pumps
@@ -105,18 +104,15 @@ actionblock02 = {"sensors": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pu
 pumpdisabled = []
 
 #Format:
-#       {
-#       "pumpNR": {
-#           "PowerStripNR": "psusocketNR"
-#           },
-#       "pumpNR": {
-#           "psuNR": "psusocketNR"
-#           }
-#       }
-pumpconnected = ("pumpa01")
+#       (
+#       "pumpxNR",
+#       "pumpxNR"
+#       )
+
+pumpconnected = ("pumpa01", "pumpa04")
 
 pumpactivation = "60"		#The pump will be activated if the humidity falls under this value
-pumptime = 600		#Runtime in seconds
+pumptime = 10 #600		    #Runtime in seconds
 
 #window-Openers
 #12V DC motors with 3d-printed window-opener attachments
@@ -143,6 +139,16 @@ winopentime = 5
 psua01password = "PASSWORD"
 psua01ip = "IP"
 psua01webport = 8080
+
+#Format:
+#       {
+#       "outletNR": "actionobjectxNR",
+#       "outletNR": "actionobjectxNR"
+#       }
 psua01outlets = {"1": "pumpa01", "2": "pumpa02", "3": "pumpa03", "4": ""}
+psua02password = "PASSWORD"
+psua02ip = "IP"
+psua02webport = 8080
+psua02outlets = {"1": "pumpa04", "2": "", "3": "", "4": ""}
 
 #psub: Coming soon (:

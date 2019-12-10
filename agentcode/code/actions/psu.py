@@ -21,9 +21,18 @@ from GA import pathconfig
 #sys.argv[1] = actionblock (pe actionblock01)
 #sys.argv[2] = actiontype (pe pump)
 
+# Functionality
+# Gets executed from check.py - it passes the actionblock and actiontype
+# 1. Check objects      lists all actionobjects in the actionblock which should be processed
+# 2. Check outlets      links the actionobjects and their psu outlets for further processing
+# 3. Action             changes powerstate for every actionobject found in 1.
+#                       uses the information from 2. to know which outletstatus should be changed
+# 4. Action timer       times the action like configured (on/off seconds)
+
 # Logs
-logfile = codebase.logopen("action")
+
 if mainconfig.loglevel > 0:
+    logfile = codebase.logopen("action")
     currentscript = currentfile = inspect.getfile(inspect.currentframe())
     codebase.logtime("action")
     logfile.write("Script " + currentscript + ".\n")
@@ -33,48 +42,38 @@ actionblocknr = sys.argv[1]
 #actionblocknr = codebase.actionblocksysargcheck(sys.argv)
 actiontype = sys.argv[2]
 
-# Check actionobjects
+# Check objects
 
 actionblock = getattr(mainconfig, actionblocknr)
 actionobjectlist = []
 for key, actionobject in actionblock.items():
-# Splitting actionblock into key parts
     if "actions" in key:
-    # Getting rid of the sensor key part
         for subkey, actionsubobject in actionobject.items():
-        # Splitting the action part into key and value
             for item in actionsubobject:
-            # Splitting the nested value into key and value
                 if item.find(actiontype) >= 0:
-                # Checking if the found actionobject should be processed
                     actionobjectlist.append(item)
-                    # Getting a list of the actionobjects in the actionblock which we need to process
+#print(actionobjectlist)
 
-# Check which outlets are used for the actionobjects
-
+# Check outlets
 psulist = codebase.namegen("psu")
-# Getting list of possible outlets
-
 actioninfo = {}
 for psu in psulist:
     psuoutlet = psu + "outlets"
     with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
         outletcount = mainconfigfile.read().count(psuoutlet)
-        # Checking if a outlet exists in the configuration
         if outletcount > 0:
             outletinfo = getattr(mainconfig, psuoutlet)
             objectcount = 1
             for obj in actionobjectlist:
-            # Splitting up actionobjects
                 objectcount += 1
                 for outlet, outletuse in outletinfo.items():
-                # Splitting up outets
                     if obj in outletuse:
                         actioninfo.update({obj: {psu: outlet}})
+#print(actioninfo)
 
 # Action
 # Note: will be optimized in future (first loop per psu than loop per outlet for better performance)
-for obj, val in actioninfo.items():
+def psuaction(obj, val):
     for psu, outlet in val.items():
         psuip = getattr(mainconfig, psu + "ip")
         psuwebport = getattr(mainconfig, psu + "webport")
@@ -92,7 +91,7 @@ for obj, val in actioninfo.items():
             if mainconfig.loglevel >= 2:
                 codebase.logtime("action")
                 logfile.write("PSU webserver " + psuip + " is listening on port " + psuwebport + ".\n")
-        
+
         else:
             if mainconfig.loglevel >= 2:
                 codebase.logtime("action")
@@ -197,3 +196,19 @@ for obj, val in actioninfo.items():
             if mainconfig.loglevel >= 2:
                 codebase.logtime("action")
                 logfile.write("Database connection was closed.\n")
+
+# Action timer
+for obj, val in actioninfo.items():
+    for action in mainconfig.actiontypes.values():
+        if action in actiontype:
+            psusleep = getattr(mainconfig, action + "time")
+            if psusleep > 0:
+                psuaction(obj, val)
+                sleep(psusleep)
+                psuaction(obj, val)
+            else:
+                if mainconfig.loglevel > 0:
+                    codebase.logtime("action")
+                    logfile.write("Configuration error. " + action + "time: No time provided or wrong format.\n")
+
+                sys.exit("\nConfiguration error. Var " + action + "time: no time provided or wrong format.\nData: " + str(psusleep) + "\n")

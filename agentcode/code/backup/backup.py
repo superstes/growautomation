@@ -35,7 +35,7 @@ if mainconfig.backupenabled == "yes":
     os.system("cp -r " + pathconfig.root + " " + backupdir)
 
     # Backup logs if enabled
-    if mainconfig.logbackup == "yes" and pathconfig.logs.find(pathconfig.root) < 0:
+    if mainconfig.backuplogs == "yes" and pathconfig.logs.find(pathconfig.root) < 0:
         os.system("cp -r " + pathconfig.logs + " " + backupdir)
 
     if mainconfig.loglevel >= 2:
