@@ -96,8 +96,8 @@ actiontypes = {"eh": ("pump"), "aht": ("win")}
 #           "win": ("*")
 #           }
 #       }
-actionblock01 = {"sensorS": {"eh": ("ehb01", "ehb02"), "ahta": ("ahta01", "ahta02")}, "actions": {"win": ("*")}}
-actionblock02 = {"sensorS": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01")}}
+actionblock01 = {"sensors": {"eh": ("ehb01", "ehb02"), "aht": ("ahta01", "ahta02")}, "actions": {"win": ("*")}}
+actionblock02 = {"sensors": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01", "pumpa03"), "win": ("*")}}
 
 
 #Water pumps
@@ -113,7 +113,7 @@ pumpdisabled = []
 #           "psuNR": "psusocketNR"
 #           }
 #       }
-pumpconnected = {"pumpa01": {"psua01": "1"}}
+pumpconnected = ("pumpa01")
 
 pumpactivation = "60"		#The pump will be activated if the humidity falls under this value
 pumptime = 600		#Runtime in seconds
@@ -134,12 +134,15 @@ windisabled = {}
 #           "REV": "PINReverse"
 #           }
 #       }
-winconnected = {"win01": {"FWD": "20", "REV": "21"}, "win02": {"FWD": "16", "REV": "12"}}
+winconnected = {"win01": {"fwd": "20", "rev": "21"}, "win02": {"fwd": "16", "rev": "12"}}
 winopentime = 5
 
 #Power Strips
 #psua: Gembird Energenie EG-PMS2-LAN (trashy hard- and firmware) -> would not recommend buying it
-#psub: Coming soon (:
+
 psua01password = "PASSWORD"
 psua01ip = "IP"
-psua01port = "PORT"
+psua01webport = 8080
+psua01outlets = {"1": "pumpa01", "2": "pumpa02", "3": "pumpa03", "4": ""}
+
+#psub: Coming soon (:

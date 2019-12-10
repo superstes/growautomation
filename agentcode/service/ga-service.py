@@ -36,6 +36,7 @@ if "__main__" == __name__:
     if "reload" in sys.argv:
         reload(GA.PATHconfig)
         reload(GA.MAINconfig)
+        sys.exit("Service configuration was reloaded.")
 
 while True:
     schedule.run_pending()

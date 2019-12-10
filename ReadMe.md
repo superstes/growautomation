@@ -20,6 +20,7 @@ And provide code samples to the diy community.
 - implementing the main config changes into the setup script
 
 ## Planned projects
+- plaintext config file for users -> mainconfig should format it as needed
 - webserver for observation and manual actions
 - implementation of an air speed sensor
 - implementation of 3d-printable window openers (with dc motors)

@@ -3,12 +3,10 @@
 #Growautomation File-Path Configuration
 
 #General
-#root = "/etc/growautomation/"
-root = "C:/users/Administrator/git/controller/agentcode/"
-#logs = "/var/log/growautomation/"
-logs = "C:/users/Administrator/git/logs/"
-#backup = "/mnt/growautomation/backup/"
-backup = "C:/users/Administrator/git/backup/"
+root = "/etc/growautomation/"
+logs = "/var/log/growautomation/"
+backup = "/mnt/growautomation/backup/"
+
 code = root + "code/"
 config = root + "config/"
 
