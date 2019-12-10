@@ -31,7 +31,7 @@ def logpath(scripttype, output):
     elif "file" in output:
         return logdir + date04 + "_" + scripttype + ".log"
     else:
-        return sys.exit("\nInput Error. Either provide dir or file as second system argument.\nMust be exactly one.")
+        return sys.exit("\nInput Error. Either provide dir or file as second system argument.\nMust be exactly one.\n")
 
 def logopen(scripttype):
     scripttype = scripttype.lower()
@@ -51,29 +51,20 @@ def logtime(scripttype):
 
 # General
 
-def namegenletters(basename, letterrange = mainconfig.namemaxletters):
+def namegenletters(basename):
     namelist = []
-    for letter in range(0, letterrange):
+    for letter in range(0, mainconfig.namemaxletters):
         tmpletter = string.ascii_lowercase[letter]
         namelist.append(basename + tmpletter)
     return namelist
 
-def namegen(basename, addon = "", letterrange = mainconfig.namemaxletters, numberrange = mainconfig.namemaxnumbers):
+def namegen(basename, addon = ""):
     namelist = []
-    for letter in range(0, letterrange):
+    for letter in range(0, mainconfig.namemaxletters):
         tmpletter = string.ascii_lowercase[letter]
-        for number in range(1, numberrange):
+        for number in range(1, mainconfig.namemaxnumbers):
             namelist.append(basename + tmpletter + "{:02d}".format(number) + addon)
     return namelist
-
-#def dictnestupdate( ):
-#    def update(d, u):
-#        for k, v in u.items():
-#            if isinstance(v, collections.abc.Mapping):
-#                d[k] = update(d.get(k, {}), v)
-#            else:
-#                d[k] = v
-#        return d
 
 # Searches nested keys for values -> gives back the name of the nested keys
 def dictnestsearch(dict, tosearch):
@@ -125,7 +116,7 @@ def actionblocksysargcheck(sysarg):
             codebase.logtime("check")
             logfile.write("No actionblocks could be found in the configuration.\nConfiguration file:\n" + pathconfig.config + "mainconfig.py\n")
 
-        sys.exit("\nNo actionblocks could be found in the configuration.")
+        sys.exit("\nNo actionblocks could be found in the configuration.\n")
 
     # Throw errors if system arguments were provided wrong
     if len(actionblocksysarglist) > 1:
@@ -133,14 +124,14 @@ def actionblocksysargcheck(sysarg):
             codebase.logtime("action")
             logfile.write("Input Error. More than one actionblock was provided as system argument.\nMust be exactly one.\n")
 
-        return sys.exit("\nInput Error. More than one actionblock was provided as system argument.\nMust be exactly one.")
+        return sys.exit("\nInput Error. More than one actionblock was provided as system argument.\nMust be exactly one.\n")
 
     elif len(actionblocksysarglist) < 1:
         if mainconfig.loglevel > 0:
             codebase.logtime("action")
             logfile.write("Input Error. No actionblock was provided as system argument.\nMust be exactly one.\n")
 
-        return sys.exit("\nInput Error. No actionblock was provided as system argument.\nMust be exactly one.")
+        return sys.exit("\nInput Error. No actionblock was provided as system argument.\nMust be exactly one.\n")
 
     else:
         return print(actionblock)
