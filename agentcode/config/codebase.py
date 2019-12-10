@@ -7,6 +7,7 @@ import string
 import collections.abc
 
 from GA import pathconfig
+from GA import mainconfig
 
 
 #Time
@@ -50,7 +51,14 @@ def logtime(scripttype):
 
 # General
 
-def namegen(basename, addon = "", letterrange = 3, numberrange = 100):
+def namegenletters(basename, letterrange = mainconfig.namemaxletters):
+    namelist = []
+    for letter in range(0, letterrange):
+        tmpletter = string.ascii_lowercase[letter]
+        namelist.append(basename + tmpletter)
+    return namelist
+
+def namegen(basename, addon = "", letterrange = mainconfig.namemaxletters, numberrange = mainconfig.namemaxnumbers):
     namelist = []
     for letter in range(0, letterrange):
         tmpletter = string.ascii_lowercase[letter]

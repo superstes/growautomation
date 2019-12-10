@@ -28,26 +28,19 @@ if mainconfig.loglevel > 0:
 	logfile.write("Script " + currentscript + ".\n")
 
 # System arguments
-if "eh" in sys.argv:
-	sensorsconnected = getattr(mainconfig, "ehabconnected")
-	sensorsdisabled = getattr(mainconfig, "ehabdisabled")
-
-elif "aht" in sys.argv:
-	sensorsconnected = getattr(mainconfig, "ahtaconnected")
-	sensorsdisabled = getattr(mainconfig, "ahtadisabled")
-else:
-	if mainconfig.loglevel > 0:
-		codebase.logtime("check")
-		logfile.write("Input Error. Sensortype has to be provided as system argument.\n")
-
-	sys.exit("\nInput Error. Sensortype has to be provided as system argument.\n\nExample:\npython3 " + currentscript + " eh\n")
-
-sensorsenabled = 0
-for x in sensorsconnected:
-	if x not in sensorsdisabled:
-		sensorsenabled += 1
 sensortype = sys.argv[1]
 
+with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+	sensorenabled = 0
+	sensornamelist = codebase.namegenletters(sensortype)
+	for sensorname in sensornamelist:
+		try:
+			tmpsensorconnected = len(getattr(mainconfig, sensorname + "connected").keys())
+			sensorenabled += tmpsensorconnected
+			tmpsensordisabled = len(getattr(mainconfig, sensorname + "disabled"))
+			sensorenabled -= tmpsensordisabled
+		except AttributeError:
+			pass
 
 # Check function
 def actioncheck(actionblockcurrent, actionsinblock):
@@ -168,8 +161,8 @@ if sensorsenabled > 0:
 								if actioncount > 1:
 									actionsinblock.append(action)
 
-						actioncheck(actionblockcurrent, actionsinblock)
-						#print(actionblockcurrent, actionsinblock)
+						#actioncheck(actionblockcurrent, actionsinblock)
+						print(actionblockcurrent, actionsinblock)
 
 					elif mainconfig.loglevel >= 2:
 						codebase.logtime("check")

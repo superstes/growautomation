@@ -6,6 +6,11 @@
 
 controller = "con01"
 
+# Naming context
+namemaxletters = 10
+namemaxnumbers = 100
+
+# DB
 dbserver = "IP"
 dbuser = "con01"
 dbpassword = "PASSWORD"
@@ -13,14 +18,14 @@ sensordb = "sensors"
 actiondb = "actions"
 
 
-#backup
-backupenabled = "yes" #yes/no -> If backup should be created
+# Backup
+backupenabled = "yes"   #yes/no -> If backup should be created
 backuptime = "20:00"
-backuplogs = "yes"   #yes/no -> If logs should be included into the backup
+backuplogs = "yes"      #yes/no -> If logs should be included into the backup
 
-#logs
-loglevel = 0	#2=debug/1=default/0=none
-logactiontodb = "yes" #yes/no -> If taken actions should be logged into the database
+# Logs
+loglevel = 0	        #2=debug/1=default/0=none
+logactiontodb = "yes"   #yes/no -> If taken actions should be logged into the database
 
 
 #############################  sensorS  #############################
@@ -53,7 +58,7 @@ ahtaconnected = {"ahta01": "26", "ahta02": "19"}
 #ehb = analog capacitive soil moisture sensor v1.2 (find on amazon)
 
 #Format ["ehxNR", "ehxNR"]
-ehabdisabled = ["ehb02"]
+ehbdisabled = ["ehb02"]
 
 #Format:
 #       {
@@ -64,7 +69,7 @@ ehabdisabled = ["ehb02"]
 #           "adcNR": "adcpinNR"
 #           }
 #       }
-ehabconnected = {"ehb01": {"adc01": "0"}, "ehb02": {"adc02": "1"}}
+ehbconnected = {"ehb01": {"adc01": "0"}, "ehb02": {"adc02": "1"}}
 
 
 ############################# CHECKS #############################
