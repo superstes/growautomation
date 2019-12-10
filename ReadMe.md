@@ -4,7 +4,7 @@ Making it easier and optimizing the process.
 
 And provide code samples to the diy community.
 
-<span style="color: orange; font-weight: bold"> The code is currently not in a stable state ! </span>
+__The code is currently not in a stable state !__
 
 ## Currently active projects
 - centralizing the configuration
@@ -27,4 +27,5 @@ And provide code samples to the diy community.
 - troubleshooing script to gather bug logs
 - checking clean solutions to implement analog sensors on the raspberry pi (p.e. ADS1115)
 - testing a standalone solution with higher quality hardware
+- create config format checker
 
