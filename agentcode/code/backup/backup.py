@@ -14,16 +14,16 @@ if mainconfig.loglevel > 0:
     currentscript = inspect.getfile(inspect.currentframe())
 
     codebase.logtime("backup")
-    logfile.write("\nScript " + currentscript + ".\n")
+    logfile.write("Script " + currentscript + ".\n")
 
-#backup if enabled
+# Backup if enabled
 if mainconfig.backupenabled == "yes":
     backupdir = pathconfig.backup + codebase.date02 + "/" + codebase.date03 + "/" + codebase.date01
     if mainconfig.loglevel > 0:
         codebase.logtime("backup")
         logfile.write("Starting backup.\n")
 
-    #backup Preperations
+    # Backup preparations
     if os.path.exists(pathconfig.backupdir) is False:
         os.system("mkdir -p " + backupdir)
 
@@ -31,16 +31,17 @@ if mainconfig.backupenabled == "yes":
         codebase.logtime("backup")
         logfile.write("Backup directories exist/were created.\n")
 
-    #backup
+    # Backup
     os.system("cp -r " + pathconfig.root + " " + backupdir)
 
-    if mainconfig.logbackup == "yes":
+    # Backup logs if enabled
+    if mainconfig.logbackup == "yes" and pathconfig.logs.find(pathconfig.root) < 0:
         os.system("cp -r " + pathconfig.logs + " " + backupdir)
 
     if mainconfig.loglevel >= 2:
         codebase.logtime("backup")
-        logfile.write("Backup Finished.\n\n")
+        logfile.write("Backup Finished.\n")
 
 elif mainconfig.backupenabled == "no" and mainconfig.loglevel >= 0:
     codebase.logtime("backup")
-    logfile.write("Backup was disabled.\n\n")
+    logfile.write("Backup was disabled.\n")
