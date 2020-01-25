@@ -3,11 +3,15 @@
 #add if elif else for config changes
 #also use output.write(input.read(  ).replace(stext, rtext)) to replace config in MAINconfig and PATHconfig
 
-apt-get update && apt-get upgrade
-apt-get install python3 python3-pip python3-dev python-smbus mariadb-server mariadb-client git
+echo "Want to choose a custom install path? (Default: /etc/growautomation"
+read GAINSTPATH
+
+
+apt-get update && apt-get dist-upgrade && apt-get upgrade
+apt-get install python3 python3-pip python3-dev python-smbus mariadb-server mariadb-client git supervisor
 
 #Basemodules
-python3 -m pip install mysql-connector-python RPi.GPIO schedule
+python3 -m pip install mysql-connector-python RPi.GPIO
 
 #Module for Adafruit DHT22 sensor
 python3 -m pip install Adafruit_DHT
@@ -25,10 +29,15 @@ python3 -m pip install selenium pyvirtualdisplay
 cd /tmp
 git clone https://github.com/growautomation-at/controller.git 
 useradd growautomation
-mkdir -p /etc/growautomation && cp -r /tmp/controller/agentcode/* !$ && chown -R growautomation !$
-ln -s /etc/growautomation/config /usr/local/lib/python3.5/dist-packages/GA
-mkdir -p /var/log/growautomation && chown -R growautomation !$´
-mkdir -p /mnt/growautomation/backup && chown -R growautomation !$
+mkdir -p /etc/growautomation
+cp -r /tmp/controller/agentcode/* !$
+chown -R growautomation:growautomation !$
+PYVER=$(python3 --version | cut -c8-10)
+ln -s /etc/growautomation/config /usr/local/lib/python$PYVER/dist-packages/GA
+mkdir -p /var/log/growautomation
+chown -R growautomation:growautomation !$
+mkdir -p /mnt/growautomation/backup
+chown -R growautomation:growautomation !$
 cp /tmp/controller/setup/standalone/services/growautomation.service /etc/systemd/system/ && systemctl enable growautomation.service
 
 
