@@ -237,7 +237,8 @@ if ga_setuptype == "server" or ga_setuptype == "standalone":
     os.system("echo \"UPDATE mysql.user SET Password=PASSWORD('" + ga_sqlbackuppwd + "') WHERE User='gabackup';\" | mysql -u root" + ga_setuplogredirect)
     os.system("echo \"FLUSH PRIVILEGES\" | mysql -u root" + ga_setuplogredirect)
     os.system("mysql_secure_installation" + ga_setuplogredirect)
-    os.system("cp /tmp/controller/setup/server/ga.mysqldump.cnf /etc/mysql/conf.d/ && \"password=" + ga_sqlbackuppwd + "\" >> /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
+    os.system("cp /tmp/controller/setup/server/ga.mysqldump.cnf /etc/mysql/conf.d/")
+    os.system("echo '\"\npassword=" + ga_sqlbackuppwd + "\"' >> /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
 
 
 #check fstab for growautomation shares and replace them (ask user)
