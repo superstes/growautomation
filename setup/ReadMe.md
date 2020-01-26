@@ -10,7 +10,7 @@ Sensordata is gathered, processed and stored on the same device.
 - Lifetime of the agent hardware may be abbreviated
 0 Agents are most often exposed to high humidity and heat
 
-## 2. Client-Server
+## 2. Agent-Server Setup
 Sensordata is gathered on the agent.
 Sensordata and logs are stored on the server.
 The agent fetches data from the server database for the action processing.

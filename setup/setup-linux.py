@@ -3,6 +3,8 @@ import os
 import sys
 import getpass
 from datetime import datetime
+import random
+import string
 
 #shell output
 def ga_shelloutputheader(output):
@@ -21,6 +23,10 @@ def ga_setuplogfile(output):
 def ga_setuplogfileplain(output):
     tmplog = open(ga_setuplog, "a")
     tmplog.write(output + "\n")
+
+def ga_pwdgen(stringLength):
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 ga_setuplogredirect = " 2>&1 | tee -a " + ga_setuplog
@@ -63,8 +69,9 @@ if ga_backup == "yes":
             if ga_backupmnttype == "cifs":
                 ga_backupmntusr = str(input("Provide username for share authentication. "
                                             "(Poss: 'user',exit - Default: gabackup)\n").lower() or "gabackup")
+                ga_backupmnttmppwd = ga_pwdgen(20)
                 ga_backupmntpwd = getpass.getpass(prompt="Provide password for share authentication. "
-                                                         "(Poss: 'password',exit - Default: 56XPOWPeM6dL)\n") or "56XPOWPeM6dL"
+                                                         "(Poss: 'password',exit - Default: " + ga_backupmnttmppwd + ")\n") or ga_backupmnttmppwd
                 ga_backupmntdom = str(input("Provide domain for share authentication. "
                                             "(Poss: 'domain',exit - Default: workgroup)\n").lower() or "workgroup")
         else:
@@ -106,8 +113,9 @@ if ga_logmnt == "yes":
             else:
                 ga_logmntusr = str(input("Provide username for share authentication. "
                                          "(Poss: 'user',exit - Default: galog)\n").lower() or "gabackup")
+                ga_logmnttmppwd = ga_pwdgen(20)
                 ga_logmntpwd = getpass.getpass(prompt="Provide password for share authentication. "
-                                                      "(Poss: 'password',exit - Default: 56XPOWPeM6dL)\n") or "56XPOWPeM6dL"
+                                                      "(Poss: 'password',exit - Default: " + ga_logmnttmppwd + ")\n") or ga_logmnttmppwd
                 ga_logmntdom = str(input("Provide domain for share authentication. "
                                          "(Poss: 'domain',exit - Default: workgroup)\n").lower() or "workgroup")
         else:
@@ -122,6 +130,8 @@ if ga_logmnt == "yes":
         print("Not mounting remote share for logs!\nCause: No sharetype, serverip or sharename provided.\n")
 else:
     ga_logmnttype = "exit"
+
+ga_sqlbackuppwd = ga_pwdgen(20)
 
 ga_setuplogfile("Setup information received:\n")
 ga_setuplogfileplain("Basic vars: setuptype " + ga_setuptype + ", internalca " + ga_internalca + ", garootpath " + ga_rootpath + ",backup " + ga_backup + "\n")
@@ -215,7 +225,7 @@ elif ga_backup == "no" or ga_backupmnt == "no":
 ga_shelloutputheader("Setting up growautomation code")
 ga_setuplogfile("Setting up growautomation code")
 os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git" + ga_setuplogredirect)
-os.system("cp -r /tmp/controller/agentcode/* " + ga_rootpath +
+os.system("cp -r /tmp/controller/code/agent/* " + ga_rootpath +
           " && PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/config "
           "/usr/local/lib/python$PYVER/dist-packages/GA" + ga_setuplogredirect)
 
@@ -224,7 +234,11 @@ if ga_setuptype == "server" or ga_setuptype == "standalone":
     ga_shelloutputheader("Setting up database.\nSet a secure password and answer all other questions with Y/yes.")
     ga_setuplogfile("Setting up database.")
     os.system("mysql -u root < /tmp/controller/setup/server/ga-databases.sql" + ga_setuplogredirect)
+    os.system("echo \"UPDATE mysql.user SET Password=PASSWORD('" + ga_sqlbackuppwd + "') WHERE User='gabackup';\" | mysql -u root" + ga_setuplogredirect)
+    os.system("echo \"FLUSH PRIVILEGES\" | mysql -u root" + ga_setuplogredirect)
     os.system("mysql_secure_installation" + ga_setuplogredirect)
+    os.system("cp /tmp/controller/setup/server/ga.mysqldump.cnf /etc/mysql/conf.d/ && \"password=" + ga_sqlbackuppwd + "\" >> /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
+
 
 #check fstab for growautomation shares and replace them (ask user)
 #supervisor setup for agents
