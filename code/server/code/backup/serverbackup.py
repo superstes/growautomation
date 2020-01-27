@@ -32,11 +32,7 @@ if mainconfig.backupenabled == "yes":
         logfile.write("Backup directories exist/were created.\n")
 
     # Backup
-    os.system("mysqldump -u gabackup --all-databases > " + backupdir + "/ga_databases_dump.sql")
-
-    # Backup logs if enabled
-    if mainconfig.backuplogs == "yes" and pathconfig.logs.find(pathconfig.root) < 0:
-        os.system("cp -r " + pathconfig.logs + " " + backupdir)
+    os.system("mysqldump -u gabackup --all-databases | gzip -9 > " + backupdir + "/ga_databases_dump.sql.gz")
 
     if mainconfig.loglevel >= 2:
         codebase.logtime("backup")

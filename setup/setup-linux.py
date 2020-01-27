@@ -1,6 +1,5 @@
 #!/bin/python
 import os
-import sys
 import getpass
 from datetime import datetime
 import random
@@ -18,7 +17,7 @@ def ga_shelloutputheader(output):
 ga_setuplog = "/var/log/growautomation-setup.log"
 def ga_setuplogfile(output):
     tmplog = open(ga_setuplog, "a")
-    tmplog.write("\n--------------------------\n" + output + "\n")
+    tmplog.write("\n------------------------------------------\n" + output + "\n")
 
 def ga_setuplogfileplain(output):
     tmplog = open(ga_setuplog, "a")
@@ -28,16 +27,30 @@ def ga_pwdgen(stringLength):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(stringLength))
 
+def ga_fstabcheck():
+    with open("/etc/fstab", 'r') as readfile:
+        stringcount = readfile.read().count("Growautomation")
+        if stringcount > 0:
+            shellhight, shellwidth = os.popen('stty size', 'r').read().split()
+            print('#' * (int(shellwidth) - 1))
+            print("WARNING!\n"
+                  "You already have one or more remote shares configured.\n"
+                  "If you want to install new ones you should disable the old ones by editing the '/etc/fstab' file.\n"
+                  "Just add a '#' in front of the old shares or delete those lines to disable them.\n"
+                  "WARNING!")
+            print('#' * (int(shellwidth) - 1) + "\n")
+
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 ga_setuplogredirect = " 2>&1 | tee -a " + ga_setuplog
 
 #check for root privileges
 if os.getuid() != 0:
-    sys.exit("This script needs to be run with root privileges!")
+    raise SystemExit("This script needs to be run with root privileges!")
 else:
     ga_shelloutputheader("Starting Growautomation installation script.\n"
                    "The newest versions can be found at: https://git.growautomation.at")
 
+#getting user inputs
 ga_setuptype = str(input("Setup as growautomation standalone, agent or server?"
                          "(Poss: agent,standalone,server - Default: standalone)\n").lower() or "standalone")
 
@@ -54,11 +67,13 @@ ga_rootpath = str(input("Want to choose a custom install path? "
 ga_backup = str(input("Want to enable backup? "
                       "(Poss: yes,no - Default: yes)\n").lower() or "yes")
 if ga_backup == "yes":
+
     ga_backuppath = str(input("Want to choose a custom backup path? "
                               "(Default: /mnt/growautomation/backup/)\n").lower() or "/mnt/growautomation/backup/")
     ga_backupmnt = str(input("Want to mount remote share as backup destination? Smb and nfs available. "
                              "(Poss: yes,no - Default: yes)\n").lower() or "yes")
     if ga_backupmnt == "yes":
+        ga_fstabcheck()
         ga_backupmnttype = str(input("Mount nfs or smb/cifs share as backup destination? "
                                      "(Poss: nfs,cifs,exit - Default: nfs)\n").lower() or "exit")
         ga_backupmntserver = str(input("Provide the server ip. "
@@ -82,6 +97,7 @@ ga_logpath = str(input("Want to choose a custom log path? "
 ga_logmnt = str(input("Want to mount remote share as log destination? Smb and nfs available. "
                       "(Poss: yes,no - Default: no)\n").lower() or "no")
 if ga_logmnt == "yes":
+    ga_fstabcheck()
     if ga_backup == "yes":
         if ga_backupmnt == "yes":
             ga_samemount = str(input("Use same server as for remote backup? "
@@ -158,7 +174,7 @@ if ga_linuxupgrade == "yes":
     os.system("apt-get -y dist-upgrade && apt-get -y upgrade" + ga_setuplogredirect)
 
 if ga_setuptype == "agent" or ga_setuptype == "standalone":
-    os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git supervisor" + ga_setuplogredirect)
+    os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git" + ga_setuplogredirect)
     if ga_internalca == "yes":
         os.system("git config --global http.sslCAInfo " + ga_internalcapath +
                   " && python3 -m pip config set global.cert " + ga_internalcapath + ga_setuplogredirect)
@@ -181,29 +197,10 @@ ga_shelloutputheader("Setting up directories")
 ga_setuplogfile("Setting up directories")
 os.system("useradd growautomation" + ga_setuplogredirect)
 os.system("mkdir -p " + ga_rootpath + " && chown -R growautomation:growautomation " + ga_rootpath + ga_setuplogredirect)
-os.system("mkdir -p " + ga_logpath + " && chown -R growautomation:growautomation " + ga_logpath + ga_setuplogredirect)
-
-# setting up backup
-if ga_logmnt == "yes":
-    if ga_logmnttype != "exit":
-        ga_shelloutputheader("Mounting log share")
-        ga_setuplogfile("Mounting log share")
-        if ga_logmnttype == "cifs":
-            ga_logmntcreds = "username=" + ga_logmntusr + ",password=" + ga_logmntpwd + ",domain=" + ga_logmntdom
-        else:
-            ga_logmntcreds = "auto"
-        ga_fstab = open("/etc/fstab", 'a')
-        ga_fstab.write("#Growautomation log mount\n"
-                       "//" + ga_logmntserver + "/" + ga_logmntshare + " " + ga_logpath + " " +
-                       ga_logmnttype + " " + ga_logmntcreds + " 0 0\n\n")
-        ga_fstab.close()
-        os.system("mount -a" + ga_setuplogredirect)
-elif ga_logmnt == "no":
-    print("If you want to have a remote/an external log destination - you must configure it on your own.\n")
-
-os.system("mkdir -p " + ga_backuppath + " && chown -R growautomation:growautomation " + ga_backuppath + ga_setuplogredirect)
 
 #setting up backup
+os.system("mkdir -p " + ga_backuppath + " && chown -R growautomation:growautomation " + ga_backuppath + ga_setuplogredirect)
+
 if ga_backup == "yes" and ga_backupmnt == "yes":
     if ga_backupmnttype != "exit":
         ga_shelloutputheader("Mounting backup share")
@@ -221,6 +218,26 @@ if ga_backup == "yes" and ga_backupmnt == "yes":
 elif ga_backup == "no" or ga_backupmnt == "no":
     print("If you want to have a remote/an external backup destination - you must configure it on your own.\n")
 
+# setting up logs
+os.system("mkdir -p " + ga_logpath + " && chown -R growautomation:growautomation " + ga_logpath + ga_setuplogredirect)
+
+if ga_logmnt == "yes":
+    if ga_logmnttype != "exit":
+        ga_shelloutputheader("Mounting log share")
+        ga_setuplogfile("Mounting log share")
+        if ga_logmnttype == "cifs":
+            ga_logmntcreds = "username=" + ga_logmntusr + ",password=" + ga_logmntpwd + ",domain=" + ga_logmntdom
+        else:
+            ga_logmntcreds = "auto"
+        ga_fstab = open("/etc/fstab", 'a')
+        ga_fstab.write("#Growautomation log mount\n"
+                       "//" + ga_logmntserver + "/" + ga_logmntshare + " " + ga_logpath + " " +
+                       ga_logmnttype + " " + ga_logmntcreds + " 0 0\n\n")
+        ga_fstab.close()
+        os.system("mount -a" + ga_setuplogredirect)
+elif ga_logmnt == "no":
+    print("If you want to have a remote/an external log destination - you must configure it on your own.\n")
+
 #setting up growautomation code
 ga_shelloutputheader("Setting up growautomation code")
 ga_setuplogfile("Setting up growautomation code")
@@ -237,9 +254,13 @@ if ga_setuptype == "server" or ga_setuptype == "standalone":
     os.system("echo \"UPDATE mysql.user SET Password=PASSWORD('" + ga_sqlbackuppwd + "') WHERE User='gabackup';\" | mysql -u root" + ga_setuplogredirect)
     os.system("echo \"FLUSH PRIVILEGES\" | mysql -u root" + ga_setuplogredirect)
     os.system("mysql_secure_installation" + ga_setuplogredirect)
-    os.system("cp /tmp/controller/setup/server/ga.mysqldump.cnf /etc/mysql/conf.d/")
-    os.system("echo '\"\npassword=" + ga_sqlbackuppwd + "\"' >> /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
+    os.system("cp /tmp/controller/setup/server/ga.mysqldump.cnf /etc/mysql/conf.d/ && "
+              "chmod 600 /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
+    os.system("echo '\npassword=" + ga_sqlbackuppwd + "' >> /etc/mysql/conf.d/ga.mysqldump.cnf" + ga_setuplogredirect)
 
 
-#check fstab for growautomation shares and replace them (ask user)
-#supervisor setup for agents
+ga_shelloutputheader("Setup finished! Please reboot the system.")
+#delete old fstab entries and replace them (ask user)
+#systemd timer setup for agentdata and serverbackup
+    #ga service check for python path /usr/bin/python3 and growautomation root -> change execstart execstop etc
+    #add [Unit]After=mysqld.service to service if standalone installation

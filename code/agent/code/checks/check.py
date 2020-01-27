@@ -163,16 +163,16 @@ if sensorsenabled > 0:
 				codebase.logtime("check")
 				logfile.write("No actionblocks could be found in the configuration.\nConfiguration file:\n" + pathconfig.config + "mainconfig.py\n")
 
-			sys.exit("\nNo actionblocks could be found in the configuration.")
+			raise SystemExit("\nNo actionblocks could be found in the configuration.")
 	else:
 		if mainconfig.loglevel >= 2:
 			codebase.logtime("check")
 			logfile.write("The sensor " + sensortype + " has no actiontypes linked.\nActiontypes:\n" + actiontypes + "\n")
 
-		sys.exit("\nThe sensor " + sensortype + " has no actiontypes linked.")
+		raise SystemExit("\nThe sensor " + sensortype + " has no actiontypes linked.")
 else:
 	if mainconfig.loglevel > 0:
 		codebase.logtime("check")
 		logfile.write("None of the " + sensortype + " sensors are enabled.\nConnected Sensors: " + sensorsconnected + "\nDisabled Sensors: "+ sensorsdisabled + "\n")
 
-	sys.exit("\nNone of the " + sensortype + " sensors are enabled.")
+	raise SystemExit("\nNone of the " + sensortype + " sensors are enabled.")

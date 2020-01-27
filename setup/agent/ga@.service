@@ -1,0 +1,16 @@
+[Unit]
+Description=Growautomation Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py start '%i'
+ExecStop=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py stop '%i'
+ExecReload=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py reload '%i'
+User=growautomation
+Group=growautomation
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

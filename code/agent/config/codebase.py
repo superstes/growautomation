@@ -2,9 +2,8 @@
 
 from datetime import datetime
 import os
-import sys
 import string
-import collections.abc
+from functools import lru_cache
 
 from GA import pathconfig
 from GA import mainconfig
@@ -21,7 +20,7 @@ date02 = datetime.now().strftime("%Y")
 date03 = datetime.now().strftime("%m")
 date04 = datetime.now().strftime("%d")
 
-# Logs
+#Logs
 
 def logpath(scripttype, output):
     scripttype = scripttype.lower()
@@ -31,7 +30,7 @@ def logpath(scripttype, output):
     elif "file" in output:
         return logdir + date04 + "_" + scripttype + ".log"
     else:
-        return sys.exit("\nInput Error. Either provide dir or file as second system argument.\nMust be exactly one.\n")
+        raise SystemExit("\nInput Error. Either provide dir or file as second system argument.\nMust be exactly one.\n")
 
 def logopen(scripttype):
     scripttype = scripttype.lower()
@@ -49,8 +48,34 @@ def logtime(scripttype):
     logfile = logopen(scripttype)
     logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
 
-# General
+#File operations
+def deleteline(file, delete, backup = "no"):
+    if backup == "yes":
+        backupfile = "_" + date01 + "_" + time03 + ".bak
+        backupdir = pathconfig.backup + codebase.date02 + "/" + codebase.date03 + "/" + codebase.date01
+        os.system("sed -i" + backupfile + " '/" + delete + "/d' " + file + " && mv " + file + backupfile + " " + backupdir)
+    else:
+        os.system("sed -i '/" + delete + "/d' " + file)
 
+def replaceline(file, replace, insert, backup = "no"):
+    if backup == "yes":
+        backupfile = "_" + date01 + "_" + time03 + ".bak
+        backupdir = pathconfig.backup + codebase.date02 + "/" + codebase.date03 + "/" + codebase.date01
+        os.system("sed -i" + backupfile + " 's/" + replace + "/" + insert + "/p' " + file + " && mv " + file + backupfile + " " + backupdir)
+    else:
+        os.system("sed -i 's/" + replace + "/" + insert + "/p' " + file)
+
+def addline(file, linenr, insert, backup = "no"):
+    #insert after linenr
+    if backup == "yes":
+        backupfile = "_" + date01 + "_" + time03 + ".bak
+        backupdir = pathconfig.backup + codebase.date02 + "/" + codebase.date03 + "/" + codebase.date01
+        os.system("sed -i" + backupfile + " '" + linenr + " a " + insert + "' " + file + " && mv " + file + backupfile + " " + backupdir)
+    else:
+        os.system("sed -i '" + linenr + " a " + insert + "' " + file)
+
+#General
+@lru_cache(maxsize=32)
 def namegenletters(basename):
     namelist = []
     for letter in range(0, mainconfig.namemaxletters):
@@ -58,6 +83,7 @@ def namegenletters(basename):
         namelist.append(basename + tmpletter)
     return namelist
 
+@lru_cache(maxsize=32)
 def namegen(basename, addon = ""):
     namelist = []
     for letter in range(0, mainconfig.namemaxletters):
@@ -66,7 +92,7 @@ def namegen(basename, addon = ""):
             namelist.append(basename + tmpletter + "{:02d}".format(number) + addon)
     return namelist
 
-# Searches nested keys for values -> gives back the name of the nested keys
+#Searches nested keys for values -> gives back the name of the nested keys
 def dictnestsearch(dict, tosearch):
     for k in dict:
         for v in dict[k]:
@@ -74,7 +100,7 @@ def dictnestsearch(dict, tosearch):
                 return k
     return None
 
-# Sensors
+#Sensors
 
 def sensorenabledcheck(sensortype):
     with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
@@ -91,10 +117,10 @@ def sensorenabledcheck(sensortype):
         return sensorsenabled
 
 
-# Actions
+#Actions
 
 def actionblocksysargcheck(sysarg):
-    # Check if actionblock was provided as system argument
+    #Check if actionblock was provided as system argument
     logfile = codebase.logopen("action")
     if mainconfig.loglevel >= 2:
         currentscript = currentfile = inspect.getfile(inspect.currentframe())
@@ -116,22 +142,22 @@ def actionblocksysargcheck(sysarg):
             codebase.logtime("check")
             logfile.write("No actionblocks could be found in the configuration.\nConfiguration file:\n" + pathconfig.config + "mainconfig.py\n")
 
-        sys.exit("\nNo actionblocks could be found in the configuration.\n")
+        raise SystemExit("\nNo actionblocks could be found in the configuration.\n")
 
-    # Throw errors if system arguments were provided wrong
+    #Throw errors if system arguments were provided wrong
     if len(actionblocksysarglist) > 1:
         if mainconfig.loglevel > 0:
             codebase.logtime("action")
             logfile.write("Input Error. More than one actionblock was provided as system argument.\nMust be exactly one.\n")
 
-        return sys.exit("\nInput Error. More than one actionblock was provided as system argument.\nMust be exactly one.\n")
+        raise SystemExit("\nInput Error. More than one actionblock was provided as system argument.\nMust be exactly one.\n")
 
     elif len(actionblocksysarglist) < 1:
         if mainconfig.loglevel > 0:
             codebase.logtime("action")
             logfile.write("Input Error. No actionblock was provided as system argument.\nMust be exactly one.\n")
 
-        return sys.exit("\nInput Error. No actionblock was provided as system argument.\nMust be exactly one.\n")
+        raise SystemExit("\nInput Error. No actionblock was provided as system argument.\nMust be exactly one.\n")
 
     else:
         return print(actionblock)

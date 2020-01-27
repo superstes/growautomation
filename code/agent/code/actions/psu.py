@@ -97,7 +97,7 @@ def psuaction(obj, val):
                 codebase.logtime("action")
                 logfile.write("PSU webserver " + psuip + " port " + psuwebport + " seems to be closed.\n")
 
-            sys.exit("\nPSU webserver not reachable.")
+            raise SystemExit("\nPSU webserver not reachable.")
 
         websock.close()
 
@@ -211,4 +211,4 @@ for obj, val in actioninfo.items():
                     codebase.logtime("action")
                     logfile.write("Configuration error. " + action + "time: No time provided or wrong format.\n")
 
-                sys.exit("\nConfiguration error. Var " + action + "time: no time provided or wrong format.\nData: " + str(psusleep) + "\n")
+                raise SystemExit("\nConfiguration error. Var " + action + "time: no time provided or wrong format.\nData: " + str(psusleep) + "\n")
