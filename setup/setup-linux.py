@@ -5,6 +5,9 @@ from datetime import datetime
 import random
 import string
 
+ga_version = "0.2.1"
+ga_versionfile = "/etc/growautomation.version"
+
 #shell output
 def ga_shelloutputheader(output):
     shellhight, shellwidth = os.popen('stty size', 'r').read().split()
@@ -50,8 +53,30 @@ else:
     ga_shelloutputheader("Starting Growautomation installation script.\n"
                    "The newest versions can be found at: https://git.growautomation.at")
 
+#check if growautomation is already installed
+if os.path.exists(ga_versionfile) = True:
+    tmpfile = open(ga_versionfile)
+    tmplines = tmpfile.readlines()
+    for line in tmplines:
+        if line.find("gaversion=") != -1:
+            print("A version of growautomation is/was already installed on this system!\n\n"
+                  "Installed version: " + line[11:] +
+                  "\nReplace version: " + ga_version)
+            ga_versionreplace = str(input("Do you want to replace it? (Poss: yes,no - Default: no)\n").lower()or "no")
+#            if ga_versionreplace == "yes":
+#                ga_versionreplaceconfig = str(input("Do you want to keep your old configuration? "
+#                                                    "(Poss: yes,no - Default: no)\n").lower()or "no")
+            if ga_versionreplace == "yes":
+                ga_versionreplacebackup = str(input("Do you want to backup your old growautomation installation? "
+                                                    "(Poss: yes,no - Default: yes)\n").lower()or "yes")
+            elif ga_versionreplace == "no":
+                raise SystemExit("Stopping installation script!")
+        if line.fine("garoot=") != -1 and ga_versionreplace == "yes":
+            ga_versionoldpath = line[8:]
+
+
 #getting user inputs
-ga_setuptype = str(input("Setup as growautomation standalone, agent or server?"
+ga_setuptype = str(input("Setup as growautomation standalone, agent or server? "
                          "(Poss: agent,standalone,server - Default: standalone)\n").lower() or "standalone")
 
 ga_internalca = str(input("Need to import internal ca? Mainly needed if your firewall uses ssl inspection.\n"
@@ -62,8 +87,12 @@ if ga_internalca == "yes":
 
 ga_linuxupgrade = str(input("Want to upgrade your software and distribution before growautomation installation? "
                             "(Poss: yes,no - Default: yes)\n").lower() or "yes")
-ga_rootpath = str(input("Want to choose a custom install path? "
-                        "(Default: /etc/growautomation)\n").lower() or "/etc/growautomation")
+if ga_versionreplace == "yes":
+    ga_rootpath = str(input("Want to choose a custom install path? "
+                            "(Default: " + ga_versionoldpath + ")\n").lower() or ga_versionoldpath)
+else:
+    ga_rootpath = str(input("Want to choose a custom install path? "
+                            "(Default: /etc/growautomation)\n").lower() or "/etc/growautomation")
 ga_backup = str(input("Want to enable backup? "
                       "(Poss: yes,no - Default: yes)\n").lower() or "yes")
 if ga_backup == "yes":
@@ -196,10 +225,16 @@ if (ga_backup == "yes" and ga_backupmnt == "yes") or (ga_logmnt == "yes"):
 ga_shelloutputheader("Setting up directories")
 ga_setuplogfile("Setting up directories")
 os.system("useradd growautomation" + ga_setuplogredirect)
+os.system("mkdir -p " + ga_backuppath + " && chown -R growautomation:growautomation " + ga_backuppath + ga_setuplogredirect)
+if ga_versionreplace == "yes":
+    os.system("echo 'gaversion=" + ga_version + "\ngaroot=" + ga_rootpath + "\n' > " + ga_versionfile + ga_setuplogredirect)
+    if ga_versionreplacebackup == "yes":
+        ga_versionoldbackup = ga_backuppath + "/install"
+        os.system("mkdir " + ga_versionoldbackup + " && cp -r " + ga_versionoldpath + " " + ga_versionoldbackup + ga_setuplogredirect)
 os.system("mkdir -p " + ga_rootpath + " && chown -R growautomation:growautomation " + ga_rootpath + ga_setuplogredirect)
+os.system("mkdir -p " + ga_logpath + " && chown -R growautomation:growautomation " + ga_logpath + ga_setuplogredirect)
 
 #setting up backup
-os.system("mkdir -p " + ga_backuppath + " && chown -R growautomation:growautomation " + ga_backuppath + ga_setuplogredirect)
 
 if ga_backup == "yes" and ga_backupmnt == "yes":
     if ga_backupmnttype != "exit":
@@ -219,7 +254,6 @@ elif ga_backup == "no" or ga_backupmnt == "no":
     print("If you want to have a remote/an external backup destination - you must configure it on your own.\n")
 
 # setting up logs
-os.system("mkdir -p " + ga_logpath + " && chown -R growautomation:growautomation " + ga_logpath + ga_setuplogredirect)
 
 if ga_logmnt == "yes":
     if ga_logmnttype != "exit":
