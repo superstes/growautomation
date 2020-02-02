@@ -15,7 +15,7 @@ Version: 0.2.1
 - writing installation manual / scripting installation
     - implementing the main config changes into the setup script
 - designing a clean plug&play alternative for connecting sensors
-    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/images/cable-topology.jpg" float="middle" width="50%" height="50%" border="4" alt="cable topology example">
+    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/images/cable-topology.jpg" float="middle" width="75%" height="75%" border="4" alt="cable topology example">
 
 ## On hold projects
 - implementing actionblocks and actiontypes
