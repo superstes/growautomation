@@ -9,9 +9,9 @@ __The code is currently not in a stable state !__
 Version: 0.2.1
 
 ## Currently active projects
-- centralizing the configuration
-    - plaintext config file for users -> mainconfig should format it as needed
-    - create config format checker
+- centralizing the configuration (_v0.2.2_)
+    - in sql database -> mainconfig will be changed to retrieve config from sql db
+    - build-in config format checker
 - writing installation manual / scripting installation
     - implementing the main config changes into the setup script
 - designing a clean plug&play alternative for connecting sensors
