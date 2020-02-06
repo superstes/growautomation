@@ -1,4 +1,4 @@
-_ga_version0.2.1_
+_ga_version0.2.2
 
 ## Installation options:
 1. Install a raspberry from scratch<br>
@@ -16,7 +16,7 @@ Download coming soon
 
 ### Install manually
 + apt-get -y install python3 python3-pip git
-+ python3 -m pip install mysql-connector-python
++ python3 -m pip install mysql-connector-python + python3 -m pip install mysql-connector-python --default-timeout=100
 + you may need to install other python3 modules for your needed sensors<br>
  you can find information to some sensors in the [sensor guide](https://git.growautomation.at/blob/master/manual/hardware/sensors.md)
 + cd /tmp && git clone https://github.com/growautomation-at/controller.git && mkdir /etc/growautomation.at && cp -r /tmp/controller/code/agent/* /etc/growautomation

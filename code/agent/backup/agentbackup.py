@@ -34,6 +34,7 @@ if mainconfig.backupenabled == "yes":
 
     # Backup
     os.system("tar -czvf " + backupfile + ".tar.gz " + pathconfig.root)
+    os.system("mysqldump -u gabackup --all-databases | gzip -9 > " + backupdir + "/ga_databases_dump.sql.gz")
 
     # Backup logs if enabled
     if mainconfig.backuplogs == "yes" and pathconfig.logs.find(pathconfig.root) < 0:

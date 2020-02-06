@@ -3,10 +3,10 @@
     #if not -> create and enable it
     #if yes
         #add sensortype
-            #add to main config file
-            #default template -> ask user for config input?
+            #add to main main file
+            #default template -> ask user for main input?
             #add systemd timer
 
 #remove sensortype
-#migrate sensortype -> save config, remove, add, apply config
+#migrate sensortype -> save main, remove, add, apply main
 

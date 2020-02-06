@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-#import mysql.connector
+import mysql.connector
 import os
 import inspect
 import sys

@@ -8,7 +8,7 @@ logs = "/var/log/growautomation/"
 backup = "/mnt/growautomation/backup/"
 
 code = root + "code/"
-config = root + "config/"
+config = root + "main/"
 
 #Sensors
 sensors = code + "sensors/"
