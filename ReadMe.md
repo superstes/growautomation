@@ -10,8 +10,9 @@ Version: 0.2.1
 
 ## Currently active projects
 - centralizing the configuration (_v0.2.2_)
-    - in sql database -> mainconfig will be changed to retrieve config from sql db
+    - in sql database -> mainconfig will be changed to sql-configparser
     - build-in config format checker
+    - changing database design
 - writing installation manual / scripting installation
     - implementing the main config changes into the setup script
 - designing a clean plug&play alternative for connecting sensors

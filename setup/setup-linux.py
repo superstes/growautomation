@@ -58,6 +58,7 @@ def yesno(prompt):
         except KeyError:
             print("Invalid input please enter True or False!")
 
+
 # prechecks
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
