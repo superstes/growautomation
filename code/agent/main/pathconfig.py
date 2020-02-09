@@ -7,16 +7,15 @@ root = "/etc/growautomation/"
 logs = "/var/log/growautomation/"
 backup = "/mnt/growautomation/backup/"
 
-code = root + "code/"
 config = root + "main/"
 
 #Sensors
-sensors = code + "sensors/"
+sensors = root + "sensors/"
 
 #Acions
-actions = code + "actions/"
-pumpaction = actions + "psu.py"
-winaaction = actions + "wina.py"
+actions = root + "actions/"
+#pumpaction = actions + "psu.py"
+#winaaction = actions + "wina.py"
 
 #Checks
-checks = code + "checks/"
+checks = root + "checks/"
