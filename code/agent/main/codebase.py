@@ -92,6 +92,10 @@ def namegen(basename, addon = ""):
             namelist.append(basename + tmpletter + "{:02d}".format(number) + addon)
     return namelist
 
+def pwdgen(stringLength):
+    chars = string.ascii_letters + string.digits + "!#-_"
+    return ''.join(random.choice(chars) for i in range(stringLength))
+
 #Searches nested keys for values -> gives back the name of the nested keys
 def dictnestsearch(dict, tosearch):
     for k in dict:

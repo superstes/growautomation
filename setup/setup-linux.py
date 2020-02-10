@@ -33,8 +33,8 @@ def ga_setuplogfileplain(output):
 
 
 def ga_pwdgen(stringLength):
-    letters = string.ascii_letters
-    return ''.join(random.choice(letters) for i in range(stringLength))
+    chars = string.ascii_letters + string.digits + "!#-_"
+    return ''.join(random.choice(chars) for i in range(stringLength))
 
 
 def ga_fstabcheck():
