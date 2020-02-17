@@ -72,6 +72,7 @@ log_error = /var/log/mysql/error.log
 #       other settings you may need to change.
 server-id              = 1
 log_bin                = /var/log/mysql/mysql-bin.log
+relay-log              = /var/log/mysql/mysql-relay-bin.log
 #expire_logs_days       = 30
 max_binlog_size        = 100M
 #binlog_do_db           = include_database_name

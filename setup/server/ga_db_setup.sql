@@ -262,8 +262,6 @@ create table IF NOT EXISTS ServerConfigAgents (
 	controller varchar(10) not null,
 	description varchar(50) null,
 	enabled tinyint unsigned not null default 1,
-	name varchar(30) not null,
-	data varchar(100) not null,
 	primary key (id)
 )engine innodb,
  character set utf8,

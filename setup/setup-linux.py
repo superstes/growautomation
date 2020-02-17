@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -24,6 +24,7 @@ import getpass
 from datetime import datetime
 import random
 import string
+import mysql.connector
 
 # basic vars
 ga_version = "0.2.1.2"
@@ -32,6 +33,7 @@ ga_setuplog = "/var/log/growautomation-setup.log"
 ga_setuplogredirect = "2>&1 | tee -a %s" % ga_setuplog
 
 ########################################################################################################################
+
 
 # shell output
 def ga_shelloutputheader(output):
@@ -55,9 +57,9 @@ def ga_setuplogfileplain(output):
     tmplog.close()
 
 
-def ga_pwdgen(stringLength):
+def ga_pwdgen(stringlength):
     chars = string.ascii_letters + string.digits + "!#-_"
-    return ''.join(random.choice(chars) for i in range(stringLength))
+    return ''.join(random.choice(chars) for i in range(stringlength))
 
 
 def ga_fstabcheck():
@@ -82,14 +84,14 @@ def ga_input(prompt, default, poss="", intype=""):
                 return {"true": True, "false": False, "yes": True, "no":False, "y": True, "n": False,
                         "": default}[input(prompt).lower()]
             except KeyError:
-                print("Invalid input please enter True or False!")
+                print("Invalid input please enter True or False!\n")
     elif type(default) == str:
         if intype == "pass":
             getpass.getpass(prompt="%s (Random: %s)\n" % (prompt, default)) or "%s" % default
         elif intype == "passgen":
             while tmpinput < 8 or tmpinput > 99:
                 if tmpinput < 8 or tmpinput > 99:
-                    print("Input error. Value should be between 8 and 99.")
+                    print("Input error. Value should be between 8 and 99.\n")
                 tmpinputstr = input("%s (Poss: %s - Default: %s)\n" % (prompt, poss, default)).lower() or "%s" % default
                 tmpinput = int(tmpinputstr)
             return tmpinput
@@ -112,7 +114,17 @@ def ga_replaceline(file, replace, insert):
     os.system("sed -i 's/" + replace + "/" + insert + "/p' " + file)
 
 
+def ga_mysql(dbserver="", dbuser, dbpwd="", command):
+    db = mysql.connector.connect(host=dbserver, user=dbuser, passwd=dbpwd, database="ga")
+    dbcursor = db.cursor()
+    dbcursor.execute(command)
+    tmpvar = dbcursor.fetchall()
+    dbcursor.close()
+    db.close()
+    return tmpvar
+
 ########################################################################################################################
+
 
 # prechecks
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
@@ -135,7 +147,7 @@ else:
         raise SystemExit("Stopped growautomation installation.")
 
 # check if growautomation is already installed
-if os.path.exists(ga_versionfile) is True:
+if os.path.exists(ga_versionfile) is True or os.path.exists("/etc/growautomation"):
     tmpfile = open(ga_versionfile)
     tmplines = tmpfile.readlines()
     for line in tmplines:
@@ -159,22 +171,24 @@ if os.path.exists(ga_versionfile) is True:
 
 ########################################################################################################################
 
+
 # setup vars
-ga_setuppwdlength = ga_input("This setup will generate random passwords for you.\nPlease define the length of these random passwords!", "12", "8-99", "passgen")
-ga_sqlrootpwd = ga_pwdgen(ga_setuppwdlength)
-ga_sqlbackuppwd = ga_pwdgen(ga_setuppwdlength)
+ga_setuppwdlength = ga_input("This setup will generate random passwords for you.\nPlease define the length of these "
+                             "random passwords!", "12", "8-99", "passgen")
+
 # getting user inputs
 ga_setuptype = ga_input("Setup as growautomation standalone, agent or server? (Poss: agent,standalone,server -",
                         "standalone")
 
 if ga_setuptype == "agent":
     ga_setup_yousure = ga_input("You should install the growautomation server component before installing the agent.\n"
-          "Proceed with 'yes' if you have already installed the ga server or type 'no' to stop the installation.", "no", "yes/no")
+                                "Proceed with 'yes' if you have already installed the ga server or type 'no' to "
+                                "stop the installation.", "no", "yes/no")
     if ga_setup_yousure is False:
         raise SystemExit("Stopped growautomation agent installation.")
 
-ga_internalca = ga_input("Need to import internal ca for git/pip? Mainly needed if your firewall uses ssl inspection.\n",
-                         "no", "yes/no")
+ga_internalca = ga_input("Need to import internal ca for git/pip? Mainly needed if your firewall uses ssl inspection.\n"
+                         , "no", "yes/no")
 if ga_internalca is True:
     ga_internalcapath = ga_input("Provide path to the ca file.", "/etc/ssl/certs/internalca.cer")
 
@@ -244,23 +258,26 @@ if ga_setuptype == "agent":
     print("If you haven't created this agent on the server -> this is you last chance.\n"
           "Find more information about the creation of new agents at: "
           "https://git.growautomation.at/tree/master/manual/agent\n\n")
+    ga_agentname = ga_input("Provide the name of this growautomation agent as configured on the server.", "gacon01")
     ga_sqlagentpwd = ga_pwdgen(ga_setuppwdlength)
     ga_serverip = ga_input("Provide the ip address of the growautomation server.", "192.168.0.201")
     ga_serversqlport = ga_input("Provide the mysql port of the growautomation server.", "3306")
-    ga_serversqlusr = ga_input("Please provide the user used to connect to the database.", "gacon01")
-    ga_serversqlpwd = ga_input("Please provide the password used to connect to the database.", ga_sqlagentpwd, intype="pass")
-    ga_serverca = ga_input("Provide the path to the ca-certificate from your ga-server.\n"
-                           "It can be found on the server $garoot/ca/certs/ca.cer.pem", "%s/ssl/ca.cer.pem"
+    print("The following credentials can be found in the serverfile '$garoot/main/db.conf'\n")
+    ga_serversqlusr = ga_input("Please provide the user used to connect to the database.", ga_agentname)
+    ga_serversqlpwd = ga_input("Please provide the password used to connect to the database.", ga_sqlagentpwd,
+                               intype="pass")
+    ga_serversqlrepl = ga_input("Please provide sql replication user.", ga_agentname + "replica")
+    ga_serversqlreplpwd = ga_input("Please provide sql replication password.", ga_serversqlpwd)
+    print("The following certificates can be found in the serverpath '$garoot/ca/certs/'\n")
+    ga_serverca = ga_input("Provide the path to the ca-certificate from your ga-server.", "%s/ssl/ca.cer.pem"
                            % ga_rootpath)
-    ga_servercert = ga_input("Provide the path to the agent server certificate.\n"
-                             "It can be found on the server $garoot/ca/certs/conXX.cer.pem", "%s/ssl/con01.cer.pem"
-                             % ga_rootpath)
-    ga_serverkey = ga_input("Provide the path to the agent server key.\n"
-                            "It can be found on the server $garoot/ca/private/conXX.key.pem", "%s/ssl/con01.key.pem"
-                            % ga_rootpath)
+    ga_servercert = ga_input("Provide the path to the agent server certificate.", "%s/ssl/%s.cer.pem"
+                             % (ga_rootpath, ga_agentname))
+    ga_serverkey = ga_input("Provide the path to the agent server key.", "%s/ssl/%s.key.pem"
+                            % (ga_rootpath, ga_agentname))
 
-ga_ufw = ga_input("Do you want to install the linux software firewall?\nIt will be configured for growautomation via this script",
-         "yes", "yes/no")
+ga_ufw = ga_input("Do you want to install the linux software firewall?\nIt will be configured for growautomation via "
+                  "this script", "yes", "yes/no")
 
 ########################################################################################################################
 
@@ -288,6 +305,7 @@ ga_shelloutputheader("Thank you for providing the setup information.\nThe instal
 
 ########################################################################################################################
 
+
 # functions
 def ga_foldercreate(tmppath):
     os.system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (tmppath, tmppath, ga_setuplogredirect))
@@ -313,14 +331,16 @@ def ga_openssl_setup():
     os.system("chmod 770 %s/ca/private" % ga_rootpath)
     ga_replaceline("%s/ca/openssl.cnf", "dir               = /root/ca", "dir               = %s/ca"
                    ) % (ga_rootpath, ga_rootpath)
-    print("Creating root certificate.")
+    print("Creating root certificate\n")
     os.system("openssl genrsa -aes256 -out %s/ca/private/ca.key.pem 4096 && chmod 400 %s/ca/private/ca.key.pe %s"
               % (ga_rootpath, ga_rootpath, ga_setuplogredirect))
     os.system("openssl req -config %s/ca/openssl.cnf -key %s/ca/private/ca.key.pem -new -x509 -days 7300 -sha256 "
               "-extensions v3_ca -out %s/ca/certs/ca.cer.pem %s"
               % (ga_rootpath, ga_rootpath, ga_rootpath, ga_setuplogredirect))
 
+
 def ga_openssl_server_cert(tmpname):
+    print("Generating server certificate\n")
     os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_rootpath, tmpname))
     os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem "
               "-new -sha256 -out %s/ca/csr/%s.csr.pem" % (ga_rootpath, ga_rootpath, tmpname, ga_rootpath, tmpname))
@@ -330,72 +350,187 @@ def ga_openssl_server_cert(tmpname):
 
 
 def ga_dball():
-    os.system("echo \"UPDATE mysql.user SET Password=PASSWORD('%s') WHERE User='gabackup';\" | mysql -u root %s"
-              % (ga_sqlbackuppwd, ga_setuplogredirect))
-    os.system("echo \"FLUSH PRIVILEGES\" | mysql -u root %s" % ga_setuplogredirect)
+    ga_sqlbackuppwd = ga_pwdgen(ga_setuppwdlength)
+    print("Creating mysql backup user\n")
+    ga_mysql(dbuser="root", command="CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';"
+                                    "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO "
+                                    "'gabackup'@'localhost' IDENTIFIED BY '%s';"
+                                    "FLUSH PRIVILEGES;" % (ga_sqlbackuppwd, ga_sqlbackuppwd))
+
     ga_shelloutputheader("Set a secure password and answer all other questions with Y/yes.")
-    ga_shelloutputheader("Example random password: %s\nMySql will not ask for the password if you start it (mysql -u root) locally"
-                         " with sudo/root privileges. (set & forget)" % ga_sqlrootpwd)
+    ga_shelloutputheader("Example random password: %s\nMySql will not ask for the password if you start it "
+                         "(mysql -u root) locally with sudo/root privileges. (set & forget)"
+                         % ga_pwdgen(ga_setuppwdlength))
     ga_setuplogfile("Setting up database.")
     os.system("mysql_secure_installation %s" % ga_setuplogredirect)
+
     tmpfile = open("/etc/mysql/conf.d/ga.mysqldump.cnf", 'a')
     tmpfile.write("[mysqldump]\nuser=gabackup\npassword=%s" % ga_sqlbackuppwd)
     tmpfile.close()
+
     os.system("usermod -a -G growautomation mysql")
     ga_foldercreate("/etc/mysql/ssl")
+
 
 def ga_dbsrv():
     os.system("mysql -u root < /tmp/controller/setup/server/ga_db_setup.sql %s" % ga_setuplogredirect)
     if ga_setuptype == "server":
         os.system("cp /tmp/controller/setup/server/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_setuplogredirect)
     elif ga_setuptype == "standalone":
-        os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_setuplogredirect)
-    print("Creating mysql server certificate")
+        os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s"
+                  % ga_setuplogredirect)
+
+    print("Creating mysql admin user\n")
+    ga_mysql(dbuser="root", command="CREATE USER 'gadmin'@'localhost' IDENTIFIED BY '%s';"
+                                    "GRANT ALL ON ga.* TO 'gadmin'@'localhost' IDENTIFIED BY '%s';"
+                                    "FLUSH PRIVILEGES;"
+                                    % (ga_sqladmpwd, ga_sqladmpwd))
+
+    tmpfile = open("%s/main/db.conf", 'w' % ga_rootpath)
+    tmpfile.write("[growautomation-database]\nuser=gadmin\npassword=%s" % ga_sqladmpwd)
+    tmpfile.close()
+    os.system("chown growautomation:growautomation %s/main/db.conf && chmod 440 %s/main/db.conf"
+              % (ga_rootpath, ga_rootpath))
+
+    print("Creating mysql server certificate\n")
     ga_openssl_server_cert("mysql")
     os.system("ln -s %s/ca/certs/ca.cer.pem /etc/mysql/ssl/cacert.pem && "
               "ln -s %s/ca/certs/mysql.cer.pem /etc/mysql/ssl/server-cert.pem && "
               "ln -s %s/ca/private/mysql.key.pem /etc/mysql/ssl/server-key.pem %s"
               % (ga_rootpath, ga_rootpath, ga_rootpath, ga_setuplogredirect))
 
+
 def ga_dbag():
-    os.system("mysql -u root < /tmp/controller/setup/agent/ga_db_setup.sql %s" % ga_setuplogredirect)
+    ga_sqlconpwd = ga_pwdgen(ga_setuppwdlength)
+    print("Configuring mysql master-slave setup\n")
+    print("Replicating server db to agent for the first time.\n")
+    os.system("mysqldump -h %s -u %s -p %s ga > /tmp/ga.dbdump.sql && mysql -u root ga < /tmp/ga.dbdump.sql %s"
+              % (ga_serverip, ga_serversqlusr, ga_serversqlpwd, ga_setuplogredirect))
+
+    tmpfile = open("/tmp/ga.dbdump.sql", 'r')
+    tmplines = tmpfile.readlines()[:500]
+    for line in tmplines:
+        if line.find("Master_Log_File: ") != -1:
+            ga_serversqlreplfile = line.split("Master_Log_File: ")[1].split("\n", 1)[0]
+        elif line.find("Master_Log_Pos: ") != -1:
+            ga_serversqlreplpos = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
+
     os.system("cp /tmp/controller/setup/agent/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_setuplogredirect)
+    ga_sqlserver_conid = int(ga_mysql(dbuser=ga_serversqlusr, dbpwd=ga_serversqlpwd, dbserver=ga_serverip,
+                                      command="SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;"
+                                              % ga_agentname)) + 100
+    ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1",
+                   "server-id              = %s" % ga_sqlserver_conid)
+    os.system("systemctl restart mysql")
+    ga_mysql(dbuser="root", command="CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s',"
+                                    " MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s; START SLAVE; SHOW SLAVE STATUS\G"
+                                    % (ga_serverip, ga_serversqlrepl, ga_serversqlreplpwd, ga_serversqlreplfile,
+                                       ga_serversqlreplpos))
+
+    print("Creating local mysql controller user (read only)\n")
+    ga_mysql(dbuser="root", command="CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';"
+                                    "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';"
+                                    "FLUSH PRIVILEGES;"
+                                    % (ga_sqlconpwd, ga_sqlconpwd))
+
+    tmpfile = open("%s/main/db.conf", 'w')
+    tmpfile.write("[local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s"
+                  % (ga_sqlconpwd, ga_serversqlusr, ga_serversqlpwd, ga_serverip))
+    tmpfile.close()
+    os.system("chown growautomation:growautomation %s/main/db.conf && chmod 440 %s/main/db.conf"
+              % (ga_rootpath, ga_rootpath))
+
+    print("Linking mysql certificate\n")
     os.system("ln -s %s /etc/mysql/ssl/cacert.pem && "
               "ln -s %s /etc/mysql/ssl/server-cert.pem && "
               "ln -s %s /etc/mysql/ssl/server-key.pem %s"
               % (ga_serverca, ga_servercert, ga_serverkey, ga_setuplogredirect))
 
+
 def ga_dbsrv_create_agent():
     ga_create_agent = ga_input("Do you want to register an agent to the ga-server?", "yes", "yes/no")
     if ga_create_agent is True:
-        ga_create_agentname = ga_input("Provide agent name.", "gacon01", poss="max. 10 characters long")
-        if len(ga_create_agentname) > 10:
-            print("Agent could not be created due to a too long name.\nMax 10 characters supported.\nProvided: %s"
-                  % len(ga_create_agentname))
-        #else:
-            #check if name in db
-                #error
-            #else:
-                #register to database
-                #create agent db user -> function
-                #ga_openssl_server_cert(ga_create_agentname)
+        ga_sqlserver_conlist = ga_mysql(dbuser="gadmin", dbpwd=ga_sqladmpwd,
+                                        command="SELECT controller FROM ga.ServerConfigAgents WHERE"
+                                                "enabled = 1;")
+        if len(ga_sqlserver_conlist) > 0:
+            print("List of registered agents:\n%s\n\n" % ga_sqlserver_conlist)
+        else:
+            print("No agents are registered/enabled yet.\n\n")
+
+        ga_create_namelen = 0
+        while ga_create_namelen > 10:
+            if ga_create_namelen > 10:
+                print("Agent could not be created due to a too long name.\nMax 10 characters supported.\nProvided: %s"
+                      % ga_create_namelen)
+            ga_create_agentname = ga_input("Provide agent name.", "gacon01", poss="max. 10 characters long")
+            if ga_create_agentname in ga_sqlserver_conlist:
+                print("Controllername already registered to server. Choose a diffent name.\n")
+                ga_create_agentname = "-----------"
+            ga_create_namelen = len(ga_create_agentname)
+
+        ga_create_pwdlen = 0
+        while ga_create_pwdlen > 99 or ga_create_pwdlen < 8:
+            if ga_create_pwdlen > 99 or ga_create_pwdlen < 8:
+                    print("Input error. Value should be between 8 and 99.\n")
+            ga_create_agentpwd = ga_input("Provide agent password.", ga_pwdgen(ga_setuppwdlength),
+                                          poss="between 8 and 99 characters")
+            ga_create_pwdlen = len(ga_create_agentpwd)
+
+        print("Creating mysql controller user\n")
+        ga_create_desclen = 0
+        while ga_create_desclen > 50:
+            if ga_create_desclen > 50:
+                print("Description longer than 50 characters. Try again.\n")
+            ga_create_agentdesc = ga_input("Do you want to add a description to the agent?", poss="String up to 50 characters")
+            ga_create_desclen = len(ga_create_agentdesc)
+
+        ga_mysql(dbuser="gadmin", dbpwd=ga_sqladmpwd,
+                 command="CREATE USER '%s'@'%s' IDENTIFIED BY '%s';"
+                         "GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';"
+                         "FLUSH PRIVILEGES;"
+                         "INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
+                         % (ga_create_agentname, "%", ga_create_agentpwd, ga_create_agentname, "%", ga_create_agentpwd,
+                            "gasetup", ga_create_agentname, ga_create_agentdesc))
+
+        ga_create_replusr = ga_create_agentname + "replica"
+        ga_create_replpwd = ga_pwdgen(ga_setuppwdlength)
+        ga_mysql(dbuser="gadmin", dbpwd=ga_sqladmpwd,
+                 command="CREATE USER '%s'@'%s' IDENTIFIED BY '%s';"
+                         "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';"
+                         "FLUSH PRIVILEGES;"
+                         % (ga_create_replusr, "%", ga_create_replpwd, ga_create_replusr, "%", ga_create_replpwd))
+
+        tmpfile = open("%s/main/db.conf", 'a')
+        tmpfile.write("[agent]\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
+                      % (ga_create_agentname, ga_create_agentpwd, ga_create_replusr, ga_create_replpwd))
+        tmpfile.close()
+        os.system("chown growautomation:growautomation %s/main/db.conf && chmod 440 %s/main/db.conf"
+                  % (ga_rootpath, ga_rootpath))
+
+        print("Creating mysql agent certificate\n")
+        ga_openssl_server_cert(ga_create_agentname)
+
+
 
 def ga_ufw_setup():
     os.system("ufw default deny outgoing && ufw default deny incoming && "
               "ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && "
               "ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
-              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && ufw allow 22/tcp from 10.0.0.0/10 && "
-              "ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 "
-              "%s" % ga_setuplogredirect)
+              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 &&"
+              " ufw allow 22/tcp from 10.0.0.0/10")
+    if ga_setuptype == "server" or ga_setuptype == "agent":
+              os.system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && "
+                        "ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_setuplogredirect)
     ga_ufw_enable = ga_input("Firewall rules were configured. Do you want to enable them?\n"
                              "SSH and MySql connections from public ip ranges will be denied!", "yes", "yes/no")
     if ga_ufw_enable is True:
         os.system("ufw enable %s" % ga_setuplogredirect)
 
 
-
-
 ########################################################################################################################
+
+
 # install packages
 ga_setuplogfile("Starting installation.")
 
@@ -477,6 +612,7 @@ if ga_setuptype == "server" or ga_setuptype == "standalone":
 ga_dball()
 
 if ga_setuptype == "server" or "standalone":
+    ga_sqladmpwd = ga_pwdgen(ga_setuppwdlength)
     ga_dbsrv()
     ga_dbsrv_create_agent()
 
@@ -485,12 +621,6 @@ elif ga_setuptype == "agent":
 
 if ga_ufw is True:
     ga_ufw_setup()
-
-
-#openssl generate ca (on server) and server certs
-#ssl-ca = /etc/mysql/ssl/cacert.pem
-#ssl-cert = /etc/mysql/ssl/server-cert.pem
-#ssl-key = /etc/mysql/ssl/server-key.pem
 
 ga_shelloutputheader("Setup finished! Please reboot the system.")
 # delete old fstab entries and replace them (ask user)
