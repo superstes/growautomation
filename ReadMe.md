@@ -27,7 +27,6 @@ Version: 0.2.1
     - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/images/actionblocks.jpg" float="middle" width="50%" height="50%" border="4" alt="actionblock example">
 
 ## Planned projects
-- plaintext config file for users -> mainconfig should format it as needed
 - webserver for observation and manual actions
 - implementation of an air speed sensor
 - implementation of 3d-printable window openers (with dc motors)
