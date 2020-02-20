@@ -18,19 +18,25 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-
-import os
-import getpass
-from datetime import datetime
-import random
-import string
-import mysql.connector
+########################################################################################################################
 
 # basic vars
 ga_version = "0.2.1.2"
 ga_versionfile = "/etc/growautomation.version"
 ga_setuplog = "/var/log/growautomation-setup.log"
 ga_setuplogredirect = "2>&1 | tee -a %s" % ga_setuplog
+
+import os
+from datetime import datetime
+import getpass
+import random
+import string
+
+print("Installing setup dependencies.\n")
+
+os.system("apt-get install python3-pip && python3 -m pip install mysql-connector-python")
+import mysql.connector
+
 
 ########################################################################################################################
 
@@ -114,7 +120,7 @@ def ga_replaceline(file, replace, insert):
     os.system("sed -i 's/" + replace + "/" + insert + "/p' " + file)
 
 
-def ga_mysql(dbserver="", dbuser, dbpwd="", command):
+def ga_mysql(dbuser, command, dbserver="", dbpwd="", ):
     db = mysql.connector.connect(host=dbserver, user=dbuser, passwd=dbpwd, database="ga")
     dbcursor = db.cursor()
     dbcursor.execute(command)
@@ -134,13 +140,13 @@ if os.getuid() != 0:
     raise SystemExit("This script needs to be run with root privileges!")
 else:
     ga_shelloutputheader("Starting Growautomation installation script.\n"
-                         "The newest versions can be found at: https://git.growautomation.at\n\n")
+                         "The newest versions can be found at: https://git.growautomation.at")
     ga_setupwarning = ga_input("WARNING!\nWe recommend using this installation script on dedicated systems.\n"
                                "This installation script won't check your already installed programs for compatibility "
                                "problems.\nIf you already use web-/database or other complex software on this system "
                                "you should back it up before installing this software.\nWe assume no liability for "
                                "problems that may be caused by this installation!\nPress y/yes if you want to "
-                               "continue.", "no", "yes/no")
+                               "continue.", "no", "yes/no\n")
     if ga_setupwarning is False:
         print("You can also install this software manually through the setup manual.\n"
               "It can be found at: https://git.growautomation.at/tree/master/manual\n\n")
