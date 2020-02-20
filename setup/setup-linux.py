@@ -32,11 +32,6 @@ import getpass
 import random
 import string
 
-print("Installing setup dependencies.\n")
-
-os.system("apt-get install python3-pip && python3 -m pip install mysql-connector-python")
-import mysql.connector
-
 
 ########################################################################################################################
 
@@ -82,29 +77,30 @@ def ga_fstabcheck():
             print('#' * (int(shellwidth) - 1) + "\n")
 
 
-def ga_input(prompt, default, poss="", intype=""):
-    if type(default) == bool or (type(default) == str and (default == "yes" or default == "no"
-                                                           or default == "n" or default == "y")):
+def ga_input(prompt, default, poss=" ", intype=" "):
+    if type(default) == bool:
         while True:
             try:
                 return {"true": True, "false": False, "yes": True, "no":False, "y": True, "n": False,
-                        "": default}[input(prompt).lower()]
+                        "": default}[input("%s (Poss: yes/true/no/false - Default: %s)\n > "
+                                           % (prompt, default)).lower()]
             except KeyError:
-                print("Invalid input please enter True or False!\n")
+                print("WARNING: Invalid input please enter True or False!\n")
     elif type(default) == str:
         if intype == "pass":
-            getpass.getpass(prompt="%s (Random: %s)\n" % (prompt, default)) or "%s" % default
+            getpass.getpass(prompt="%s (Random: %s)\n > " % (prompt, default)) or "%s" % default
         elif intype == "passgen":
             while tmpinput < 8 or tmpinput > 99:
                 if tmpinput < 8 or tmpinput > 99:
                     print("Input error. Value should be between 8 and 99.\n")
-                tmpinputstr = input("%s (Poss: %s - Default: %s)\n" % (prompt, poss, default)).lower() or "%s" % default
+                tmpinputstr = str(input("%s (Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower()
+                                  or "%s" % default)
                 tmpinput = int(tmpinputstr)
             return tmpinput
-        elif poss != "":
-            return str(input("%s (Poss: %s - Default: %s)\n").lower() or "%s") % (prompt, poss, default, default)
+        elif poss != " ":
+            return str(input("%s (Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
         else:
-            return str(input("%s (Default: %s)\n").lower() or "%s") % (prompt, default, default)
+            return str(input("%s (Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
 
 
 def ga_mountcreds(outtype, inputstr=""):
@@ -133,6 +129,11 @@ def ga_mysql(dbuser, command, dbserver="", dbpwd="", ):
 
 
 # prechecks
+ga_shelloutputheader("Installing setup dependencies.\n")
+
+os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python")
+import mysql.connector
+
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
 # check for root privileges
@@ -146,14 +147,14 @@ else:
                                "problems.\nIf you already use web-/database or other complex software on this system "
                                "you should back it up before installing this software.\nWe assume no liability for "
                                "problems that may be caused by this installation!\nPress y/yes if you want to "
-                               "continue.", "no", "yes/no\n")
+                               "continue.", False)
     if ga_setupwarning is False:
         print("You can also install this software manually through the setup manual.\n"
               "It can be found at: https://git.growautomation.at/tree/master/manual\n\n")
         raise SystemExit("Stopped growautomation installation.")
 
 # check if growautomation is already installed
-if os.path.exists(ga_versionfile) is True or os.path.exists("/etc/growautomation"):
+if os.path.exists(ga_versionfile) is True or os.path.exists("/etc/growautomation") is True:
     tmpfile = open(ga_versionfile)
     tmplines = tmpfile.readlines()
     for line in tmplines:
@@ -189,28 +190,28 @@ ga_setuptype = ga_input("Setup as growautomation standalone, agent or server? (P
 if ga_setuptype == "agent":
     ga_setup_yousure = ga_input("You should install the growautomation server component before installing the agent.\n"
                                 "Proceed with 'yes' if you have already installed the ga server or type 'no' to "
-                                "stop the installation.", "no", "yes/no")
+                                "stop the installation.", False)
     if ga_setup_yousure is False:
         raise SystemExit("Stopped growautomation agent installation.")
 
 ga_internalca = ga_input("Need to import internal ca for git/pip? Mainly needed if your firewall uses ssl inspection.\n"
-                         , "no", "yes/no")
+                         , False)
 if ga_internalca is True:
     ga_internalcapath = ga_input("Provide path to the ca file.", "/etc/ssl/certs/internalca.cer")
 
 ga_linuxupgrade = ga_input("Want to upgrade your software and distribution before growautomation installation?",
-                           "yes", "yes/no")
+                           True)
 if ga_versionreplace is True:
     ga_rootpath = ga_input("Want to choose a custom install path?", ga_versionoldpath)
 else:
     ga_rootpath = ga_input("Want to choose a custom install path?", "/etc/growautomation")
-ga_backup = ga_input("Want to enable backup?", "yes", "yes/no")
+ga_backup = ga_input("Want to enable backup?", True)
 
 
 if ga_backup is True:
     ga_backuppath = ga_input("Want to choose a custom backup path? (", "/mnt/growautomation/backup/")
     ga_backupmnt = ga_input("Want to mount remote share as backup destination? Smb and nfs available.",
-                            "yes", "yes/no")
+                            True)
     if ga_backupmnt is True:
         ga_fstabcheck()
         ga_backupmnttype = ga_input("Mount nfs or smb/cifs share as backup destination?", "nfs", "nfs/cifs")
@@ -228,11 +229,11 @@ else:
     ga_backupmnttype = "none"
 
 ga_logpath = ga_input("Want to choose a custom log path?", "/var/log/growautomation")
-ga_logmnt = ga_input("Want to mount remote share as log destination? Smb and nfs available.", "no", "yes/no")
+ga_logmnt = ga_input("Want to mount remote share as log destination? Smb and nfs available.", False)
 if ga_logmnt is True:
     ga_fstabcheck()
     if ga_backupmnt is True:
-        ga_samemount = ga_input("Use same server as for remote backup?", "yes", "yes/no")
+        ga_samemount = ga_input("Use same server as for remote backup?", True)
         if ga_samemount is True:
             ga_logmnttype = ga_backupmnttype
             ga_logmntserver = ga_backupmntserver
@@ -244,7 +245,7 @@ if ga_logmnt is True:
     if ga_logmnttype == "cifs":
         ga_logmnttmppwd = ga_pwdgen(ga_setuppwdlength)
         if ga_backupmnt is True and ga_backupmnttype == "cifs" and ga_samemount is True:
-            ga_samemountcreds = ga_input("Use same share credentials as for remote backup?", "yes", "yes/no")
+            ga_samemountcreds = ga_input("Use same share credentials as for remote backup?", True)
             if ga_samemountcreds is True:
                 ga_logmntusr = ga_backupmntusr
                 ga_logmntpwd = ga_backupmntpwd
@@ -283,7 +284,7 @@ if ga_setuptype == "agent":
                             % (ga_rootpath, ga_agentname))
 
 ga_ufw = ga_input("Do you want to install the linux software firewall?\nIt will be configured for growautomation via "
-                  "this script", "yes", "yes/no")
+                  "this script", True)
 
 ########################################################################################################################
 
@@ -454,7 +455,7 @@ def ga_dbag():
 
 
 def ga_dbsrv_create_agent():
-    ga_create_agent = ga_input("Do you want to register an agent to the ga-server?", "yes", "yes/no")
+    ga_create_agent = ga_input("Do you want to register an agent to the ga-server?", True)
     if ga_create_agent is True:
         ga_sqlserver_conlist = ga_mysql(dbuser="gadmin", dbpwd=ga_sqladmpwd,
                                         command="SELECT controller FROM ga.ServerConfigAgents WHERE"
@@ -518,18 +519,17 @@ def ga_dbsrv_create_agent():
         ga_openssl_server_cert(ga_create_agentname)
 
 
-
 def ga_ufw_setup():
     os.system("ufw default deny outgoing && ufw default deny incoming && "
               "ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && "
               "ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
-              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 &&"
-              " ufw allow 22/tcp from 10.0.0.0/10")
+              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && "
+              "ufw allow 22/tcp from 10.0.0.0/10")
     if ga_setuptype == "server" or ga_setuptype == "agent":
               os.system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && "
                         "ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_setuplogredirect)
     ga_ufw_enable = ga_input("Firewall rules were configured. Do you want to enable them?\n"
-                             "SSH and MySql connections from public ip ranges will be denied!", "yes", "yes/no")
+                             "SSH and MySql connections from public ip ranges will be denied!", True)
     if ga_ufw_enable is True:
         os.system("ufw enable %s" % ga_setuplogredirect)
 
