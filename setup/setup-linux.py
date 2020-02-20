@@ -131,7 +131,7 @@ def ga_mysql(dbuser, command, dbserver="", dbpwd="", ):
 # prechecks
 ga_shelloutputheader("Installing setup dependencies.")
 
-os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python %s") % ga_setuplogredirect
+os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python %s" % ga_setuplogredirect)
 import mysql.connector
 
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
