@@ -129,29 +129,31 @@ def ga_mysql(dbuser, command, dbserver="", dbpwd="", ):
 
 
 # prechecks
-ga_shelloutputheader("Installing setup dependencies.\n")
+ga_shelloutputheader("Installing setup dependencies.")
 
-os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python")
+os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python %s") % ga_setuplogredirect
 import mysql.connector
 
 ga_setuplogfile(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
 # check for root privileges
 if os.getuid() != 0:
+    ga_setuplogfile("Exit. Script not started as root.")
     raise SystemExit("This script needs to be run with root privileges!")
 else:
     ga_shelloutputheader("Starting Growautomation installation script.\n"
                          "The newest versions can be found at: https://git.growautomation.at")
-    ga_setupwarning = ga_input("WARNING!\nWe recommend using this installation script on dedicated systems.\n"
+    ga_setupwarning = ga_input("WARNING!\n\nWe recommend using this installation script on dedicated systems.\n"
                                "This installation script won't check your already installed programs for compatibility "
                                "problems.\nIf you already use web-/database or other complex software on this system "
                                "you should back it up before installing this software.\nWe assume no liability for "
-                               "problems that may be caused by this installation!\nPress y/yes if you want to "
+                               "problems that may be caused by this installation!\nAccept the risk if you want to "
                                "continue.", False)
     if ga_setupwarning is False:
-        print("You can also install this software manually through the setup manual.\n"
-              "It can be found at: https://git.growautomation.at/tree/master/manual\n\n")
-        raise SystemExit("Stopped growautomation installation.")
+        ga_setuplogfile("Exit. Setupwarning not accepted.")
+        ga_shelloutputheader("Setup cancelled!\nYou can also install this software manually through the setup manual.\n"
+                             "It can be found at: https://git.growautomation.at/tree/master/manual")
+        raise SystemExit("Script stopped")
 
 # check if growautomation is already installed
 if os.path.exists(ga_versionfile) is True or os.path.exists("/etc/growautomation") is True:
@@ -170,6 +172,7 @@ if os.path.exists(ga_versionfile) is True or os.path.exists("/etc/growautomation
                 ga_versionreplacebackup = ga_input("Do you want to backup your old growautomation installation?"
                                                    " (Poss: true,false -", True)
             elif ga_versionreplace is False:
+                ga_setuplogfile("Exit. Already installed ga should not be overwritten.")
                 raise SystemExit("Stopping installation script!")
             if line.find("garoot=") != -1 and ga_versionreplace is True:
                 ga_versionoldpath = line[8:]
@@ -189,9 +192,10 @@ ga_setuptype = ga_input("Setup as growautomation standalone, agent or server? (P
 
 if ga_setuptype == "agent":
     ga_setup_yousure = ga_input("You should install the growautomation server component before installing the agent.\n"
-                                "Proceed with 'yes' if you have already installed the ga server or type 'no' to "
-                                "stop the installation.", False)
+                                "Agree if you have already installed the ga server or disagree to stop the "
+                                "installation.", False)
     if ga_setup_yousure is False:
+        ga_setuplogfile("Exit. User has not installed the server before the agent.")
         raise SystemExit("Stopped growautomation agent installation.")
 
 ga_internalca = ga_input("Need to import internal ca for git/pip? Mainly needed if your firewall uses ssl inspection.\n"
