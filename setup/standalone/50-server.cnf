@@ -85,15 +85,15 @@ log_error = /var/log/mysql/error.log
 #
 # For generating SSL certificates you can use for example the GUI tool "tinyca".
 #
-ssl-ca = /etc/mysql/ssl/cacert.pem
-ssl-cert = /etc/mysql/ssl/server-cert.pem
-ssl-key = /etc/mysql/ssl/server-key.pem
+#ssl-ca = /etc/mysql/ssl/cacert.pem
+#ssl-cert = /etc/mysql/ssl/server-cert.pem
+#ssl-key = /etc/mysql/ssl/server-key.pem
 #
 # Accept only connections using the latest and most secure TLS protocol version.
 # ..when MariaDB is compiled with OpenSSL:
-ssl-cipher = TLSv1.2
+#ssl-cipher = TLSv1.2
 # ..when MariaDB is compiled with YaSSL (default in Debian):
-ssl = on
+#ssl = on
 
 #
 # * Character sets

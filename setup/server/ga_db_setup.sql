@@ -3,7 +3,7 @@ use ga;
 create table IF NOT EXISTS AgentDataDevice (
 	id int unsigned not null auto_increment,
 	created timestamp not null default current_timestamp,
-	controller varchar(10) not null,
+	agent varchar(10) not null,
 	data varchar(10) not null,
 	primary key (id)
 )engine innodb,
@@ -14,7 +14,7 @@ create table IF NOT EXISTS AgentConfigSector (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-	controller varchar(10) not null,
+	agent varchar(10) not null,
 	primary key (id)
 )engine innodb,
  character set utf8,
@@ -38,7 +38,7 @@ create table IF NOT EXISTS AgentConfigDevice (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-	controller varchar(10) not null,
+	agent varchar(10) not null,
 	name varchar(10) not null unique key,
 	type varchar(10) not null,
 	sector smallint unsigned not null default 1,
@@ -74,11 +74,11 @@ create table IF NOT EXISTS AgentConfigLink (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfigMain (
+create table IF NOT EXISTS AgentConfig (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-	controller varchar(10) not null,
+	agent varchar(10) not null,
 	name varchar(30) not null,
 	data varchar(100) not null,
 	description varchar(50) null,
@@ -87,7 +87,7 @@ create table IF NOT EXISTS AgentConfigMain (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS ServerConfigMain (
+create table IF NOT EXISTS ServerConfig (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
@@ -115,8 +115,9 @@ create table IF NOT EXISTS ServerConfigAgents (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-	controller varchar(10) not null,
+	name varchar(10) not null,
 	description varchar(50) null,
+	version varchar(10) not null,
 	enabled tinyint unsigned not null default 1,
 	primary key (id)
 )engine innodb,
