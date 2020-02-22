@@ -59,6 +59,7 @@ def ga_setup_shelloutput_subheader(output):
     print('-' * (int(shellwidth) - 1))
     print(output)
     print('-' * (int(shellwidth) - 1))
+    print("\n")
     ga_setup_log_write("------------------------------------")
     ga_setup_log_write(output)
     ga_setup_log_write("------------------------------------")
@@ -85,7 +86,7 @@ def ga_setup_shelloutput_text(output, style=""):
 
 def ga_setup_log_write(output):
     if os.path.exists(ga_config["setup_log_path"]) is False:
-        os.system("mkdir -p %s" % ga_config["setup_log_path"])
+        os.system("mkdir -p %s %s" % (ga_config["setup_log_path"], ga_config["setup_log_redirect"]))
     tmplog = open(ga_config["setup_log"], "a")
     tmplog.write("\n" + output + "\n")
     tmplog.close()
@@ -113,7 +114,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
     if type(default) == bool:
         while True:
             try:
-                return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
+                return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False, "f": False, "t": True,
                         "": default}[input(styletype + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower()]
             except KeyError:
                 ga_setup_shelloutput_text("WARNING: Invalid input please enter either yes/true/no/false!\n", style="warn")
@@ -625,7 +626,7 @@ def ga_setup_config_file(opentype, openinput):
     tmpfile_open = open(tmpfile, opentype)
     if opentype == "a" or opentype == "w":
         tmpfile_open.write(openinput)
-        os.system("chown growautomation:growautomation %s && chmod 440 %s" % (tmpfile, tmpfile))
+        os.system("chown growautomation:growautomation %s && chmod 440 %s %s" % (tmpfile, tmpfile, ga_config["setup_log_redirect"]))
     elif opentype == "r":
         return tmpfile_open.readlines()
     tmpfile_open.close()
@@ -644,14 +645,14 @@ def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
 
 
 def ga_replaceline(file, replace, insert):
-    os.system("sed -i 's/" + replace + "/" + insert + "/p' " + file)
+    os.system("sed -i 's/%s/%s/p' %s %s" % (replace, insert, file, ga_config["setup_log_redirect"]))
 
 
 def ga_openssl_setup():
     ga_foldercreate("%s/ca/private" % ga_config["path_root"])
     ga_foldercreate("%s/ca/certs" % ga_config["path_root"])
     ga_foldercreate("%s/ca/crl" % ga_config["path_root"])
-    os.system("chmod 770 %s/ca/private" % ga_config["path_root"])
+    os.system("chmod 770 %s/ca/private %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
     ga_replaceline("%s/ca/openssl.cnf", "= /root/ca", "= %s/ca") % (ga_config["path_root"], ga_config["path_root"])
     ga_setup_shelloutput_subheader("Creating root certificate")
     os.system("openssl genrsa -aes256 -out %s/ca/private/ca.key.pem 4096 && chmod 400 %s/ca/private/ca.key.pe %s"
@@ -662,11 +663,11 @@ def ga_openssl_setup():
 
 def ga_openssl_server_cert(tmpname):
     ga_setup_shelloutput_subheader("Generating server certificate")
-    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_config["path_root"], tmpname))
-    os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem -new -sha256 -out %s/ca/csr/%s.csr.pem"
-              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname))
-    os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 -in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem"
-              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname))
+    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048 %s" % (ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
+    os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem -new -sha256 -out %s/ca/csr/%s.csr.pem %s"
+              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
+    os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 -in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem %s"
+              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
 
 
 def ga_sql_all():
@@ -685,7 +686,7 @@ def ga_sql_all():
     tmpfile.write("[mysqldump]\nuser=gabackup\npassword=%s" % ga_sql_backup_pwd)
     tmpfile.close()
 
-    os.system("usermod -a -G growautomation mysql")
+    os.system("usermod -a -G growautomation mysql %s" % ga_config["setup_log_redirect"])
     ga_foldercreate("/etc/mysql/ssl")
 
 
@@ -695,8 +696,7 @@ def ga_sql_server():
     if ga_config["setup_type"] == "server":
         os.system("cp /tmp/controller/setup/server/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
     elif ga_config["setup_type"] == "standalone":
-        os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s"
-                  % ga_config["setup_log_redirect"])
+        os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
 
     ga_setup_shelloutput_subheader("Creating mysql admin user")
     ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH PRIVILEGES;"
@@ -732,7 +732,7 @@ def ga_sql_agent():
     ga_sql_server_agent_id = int(ga_mysql("SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;"
                                           % ga_config["hostname"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) + 100)
     ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1", "server-id = %s" % ga_sql_server_agent_id)
-    os.system("systemctl restart mysql")
+    os.system("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
 
     ga_setup_shelloutput_subheader("Creating local mysql controller user (read only)")
     ga_mysql("CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';GRANT SELECT ON ga.* TO 'gacon'@'localhost' "
@@ -810,7 +810,8 @@ def ga_ufw_setup():
     ga_setup_shelloutput_subheader("Configuring firewall")
     os.system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && "
               "ufw allow out to any port 22/tcp && ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
-              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && ufw allow 22/tcp from 10.0.0.0/10")
+              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && ufw allow 22/tcp from 10.0.0.0/10 %s"
+              % ga_config["setup_log_redirect"])
     if ga_config["setup_type"] == "server" or ga_config["setup_type"] == "agent":
         os.system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
     ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\nSSH and MySql connections from public ip ranges will be denied!", True)
@@ -833,7 +834,7 @@ def ga_setup_apt():
     if ga_config["setup_type_as"] is True:
         os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
     else:
-        os.system("apt-get -y install openssl")
+        os.system("apt-get -y install openssl %s" % ga_config["setup_log_redirect"])
 
     if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
         if ga_config["mnt_backup_type"] == "nfs" or ga_config["mnt_log_type"] == "nfs":
@@ -867,7 +868,7 @@ def ga_infra_oldversion_rootcheck():
 
 
 def ga_infra_oldversion_cleanconfig():
-    os.system("mv %s /tmp" % ga_infra_oldversion_rootcheck())
+    os.system("mv %s /tmp %s" % (ga_infra_oldversion_rootcheck(), ga_config["setup_log_redirect"]))
     ga_mysql("DROP DATABASE ga;")
 
 
@@ -876,7 +877,7 @@ def ga_infra_oldversion_backup():
     ga_setup_shelloutput_subheader("Backing up old growautomation root directory and database")
     oldbackup = ga_config["path_backup"] + "/install"
     os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
-    os.system("mv %s %s" % (ga_config["setup_version_file"], oldbackup))
+    os.system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
     ga_setup_shelloutput_text("Backupfolder: %s\nRootbackup: %s" % (os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
     if os.path.exists(oldbackup + "/ga.dbdump.sql") is False or \
@@ -926,6 +927,8 @@ def ga_setup_infra():
 # code setup
 def ga_setup_infra_code():
     ga_setup_shelloutput_header("Setting up growautomation code")
+    if os.path.exists("/tmp/controller") is True:
+        os.system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
     os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
     os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main /usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_config["setup_log_redirect"])
     if ga_config["setup_type_as"] is True:
