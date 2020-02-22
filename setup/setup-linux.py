@@ -185,22 +185,25 @@ def ga_mysql_unixsock():
         return sql_sock
 
 
-def ga_mysql_execute(connection, command):
+def ga_mysql_execute(connection, command, output):
     try:
         curser = connection.cursor()
         curser.execute(command)
-        connection.commit()
-        data = curser.fetchall()
+        if output is True:
+            data = curser.fetchall()
         curser.close()
         connection.close()
-        return data
+        if output is True:
+            return data
+        else:
+            return True
     except mysql.connector.Error as error:
         connection.rollback()
         ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
         return False
 
 
-def ga_mysql(dbinput, inuser="", dbpwd=""):
+def ga_mysql(dbinput, inuser="", dbpwd="", dboutput=False):
     if inuser == "":
         dbuser = "root"
     else:
@@ -212,12 +215,12 @@ def ga_mysql(dbinput, inuser="", dbpwd=""):
         connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
 
     if type(dbinput) == str:
-        return ga_mysql_execute(connection, dbinput)
+        return ga_mysql_execute(connection, dbinput, dboutput)
     elif type(dbinput) == list:
         outputdict = {}
         anyfalse = True
         for command in dbinput:
-            output = ga_mysql_execute(connection, command)
+            output = ga_mysql_execute(connection, command, dboutput)
             outputdict[command] = output
             if output is False:
                 anyfalse = False
@@ -235,7 +238,8 @@ def ga_mysql_conntest(dbuser="", dbpwd=""):
     else:
         return False
 
-
+# ga_configdict_sql_server = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_server_admin_usr"],
+# ga_config["sql_server_admin_pwd"], ga_config["hostname"])
 def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
     if agent == "":
         command_table = "Server"
@@ -246,10 +250,10 @@ def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
     if type(searchfor) == list:
         itemdatadict = {}
         for item in searchfor:
-            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, item, command_agents), user, pwd)
+            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, item, command_agents), user, pwd, True)
         return itemdatadict
     elif type(searchfor) == str:
-        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, searchfor, command_agents), user, pwd)
+        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, searchfor, command_agents), user, pwd, True)
         return data
 
 
@@ -643,19 +647,23 @@ ga_setup_shelloutput_text("Thank you for providing the setup information.\nThe i
 
 
 # functions
-def ga_foldercreate(tmppath):
-    os.system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (tmppath, tmppath, ga_config["setup_log_redirect"]))
+def ga_foldercreate(path):
+    if os.path.exists(path) is False:
+        os.system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (path, path, ga_config["setup_log_redirect"]))
 
 
-def ga_setup_config_file(opentype, openinput):
-    tmpfile = "%s/main/main.conf" % ga_config["path_root"]
-    tmpfile_open = open(tmpfile, opentype)
+def ga_setup_config_file(opentype, openinput, openfile=""):
+    if openfile == "":
+        file = "%s/main/main.conf" % ga_config["path_root"]
+    else:
+        file = openfile
+    file_open = open(file, opentype)
     if opentype == "a" or opentype == "w":
-        tmpfile_open.write(openinput)
-        os.system("chown growautomation:growautomation %s && chmod 440 %s %s" % (tmpfile, tmpfile, ga_config["setup_log_redirect"]))
+        file_open.write(openinput)
+        os.system("chown growautomation:growautomation %s && chmod 440 %s %s" % (file, file, ga_config["setup_log_redirect"]))
     elif opentype == "r":
-        return tmpfile_open.readlines()
-    tmpfile_open.close()
+        return file_open.readlines()
+    file_open.close()
     
 
 def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
@@ -687,13 +695,13 @@ def ga_openssl_setup():
               % (ga_config["path_root"], ga_config["path_root"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
 
-def ga_openssl_server_cert(tmpname):
+def ga_openssl_server_cert(certname):
     ga_setup_shelloutput_subheader("Generating server certificate")
-    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048 %s" % (ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
+    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048 %s" % (ga_config["path_root"], certname, ga_config["setup_log_redirect"]))
     os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem -new -sha256 -out %s/ca/csr/%s.csr.pem %s"
-              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
+              % (ga_config["path_root"], ga_config["path_root"], certname, ga_config["path_root"], certname, ga_config["setup_log_redirect"]))
     os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 -in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem %s"
-              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname, ga_config["setup_log_redirect"]))
+              % (ga_config["path_root"], ga_config["path_root"], certname, ga_config["path_root"], certname, ga_config["setup_log_redirect"]))
 
 
 def ga_sql_all():
@@ -703,14 +711,13 @@ def ga_sql_all():
     ga_mysql(["CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, "
              "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"])
 
-    ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes")
-    ga_setup_shelloutput_text("Example random password: %s\nMySql will not ask for the password if you start it "
-                              "(mysql -u root) locally with sudo/root privileges (set & forget)" % ga_setup_pwd_gen(ga_config["setup_pwd_length"]))
+    ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes", style="info")
+    ga_setup_shelloutput_text("Example random password:", style="info")
+    print(ga_setup_pwd_gen(ga_config["setup_pwd_length"]))
+    ga_setup_shelloutput_text("MySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
     os.system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
-    tmpfile = open("/etc/mysql/conf.d/ga.mysqldump.cnf", 'a')
-    tmpfile.write("[mysqldump]\nuser=gabackup\npassword=%s" % ga_sql_backup_pwd)
-    tmpfile.close()
+    ga_setup_config_file("a", "[mysqldump]\nuser=gabackup\npassword=%s\n" % ga_sql_backup_pwd, "/etc/mysql/conf.d/ga.mysqldump.cnf")
 
     os.system("usermod -a -G growautomation mysql %s" % ga_config["setup_log_redirect"])
     ga_foldercreate("/etc/mysql/ssl")
@@ -728,7 +735,7 @@ def ga_sql_server():
     ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]),
               "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]), "FLUSH PRIVILEGES;"])
 
-    ga_setup_config_file("a", "[db_growautomation]\nserveruser=%s\nserverpassword=%s" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
+    ga_setup_config_file("a", "[db_growautomation]\nserveruser=%s\nserverpassword=%s\n" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
 
     if ga_config["setup_type"] == "server":
         print("Creating mysql server certificate\n")
@@ -993,7 +1000,7 @@ if ga_config["setup_type_ss"] is True:
 if ga_config["setup_type"] == "server":
     ga_sql_server_create_agent()
 
-elif ga_config["setup_type"] == "agent":
+elif ga_config["setup_type_as"] is True:
     ga_sql_agent()
 
 if ga_ufw is True:
@@ -1019,9 +1026,9 @@ def ga_mysql_write_config():
         table = "Agent"
     for key, value in newdict.items():
         if ga_config["setup_type"] == "agent":
-            ga_mysql("INSERT INTO ga.%sConfig (author, agent, name, data) VALUES (%s, %s, %s, %s);" % (table, "gasetup", ga_config["hostname"], key, value), dbuser, dbpwd)
+            ga_mysql("INSERT INTO ga.%sConfig (author, agent, name, data) VALUES ('%s', '%s', '%s, '%s');" % (table, "gasetup", ga_config["hostname"], key, value), dbuser, dbpwd)
         elif ga_config["setup_type_ss"] is True:
-            ga_mysql("INSERT INTO ga.%sConfig (author, name, data) VALUES (%s, %s, %s);" % (table, "gasetup", key, value), dbuser, dbpwd)
+            ga_mysql("INSERT INTO ga.%sConfig (author, name, data) VALUES ('%s', '%s', '%s');" % (table, "gasetup", key, value), dbuser, dbpwd)
 
 
 ga_mysql_write_config()
