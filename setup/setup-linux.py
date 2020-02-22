@@ -947,6 +947,7 @@ def ga_setup_infra_code():
     ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
 
 
+ga_setup_infra()
 ga_setup_infra_code()
 
 # creating openssl ca
