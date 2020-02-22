@@ -109,6 +109,7 @@ def ga_setup_fstabcheck():
 
 def ga_setup_input(prompt, default="", poss="", intype="", style=""):
     styletype = ga_setup_shelloutput_colors(style)
+    whilecount = 0
     if type(default) == bool:
         while True:
             try:
@@ -124,8 +125,9 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
         elif intype == "passgen":
             inputnumber = 0
             while inputnumber < 8 or inputnumber > 99:
-                if inputnumber < 8 or inputnumber > 99:
+                if (inputnumber < 8 or inputnumber > 99) and whilecount > 0:
                     print("Input error. Value should be between 8 and 99.\n")
+                whilecount += 1
                 inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
                 inputnumber = int(inputstr)
             return inputstr
@@ -281,7 +283,7 @@ if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/e
     def ga_config_vars_oldversion_replace():
         global ga_config
         ga_config["setup_old"] = True
-        ga_config["setup_old_replace"] = ga_setup_input("Do you want to replace your current growautomation isntallation?", False)
+        ga_config["setup_old_replace"] = ga_setup_input("Do you want to replace your current growautomation installation?", False)
         if ga_config["setup_old_replace"] is True:
             ga_config["setup_old_replace_migrate"] = ga_setup_input("Should we try to keep your old configuration and data?", False)
             if ga_config["setup_old_replace_migrate"] is True:
@@ -390,7 +392,7 @@ def ga_config_var_base():
 def ga_config_var_setup():
     global ga_config
     ga_setup_shelloutput_subheader("Checking setup options")
-    ga_config["setup_pwd_length"] = ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen")
+    ga_config["setup_pwd_length"] = int(ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen"))
 
     ga_config["setup_ca"] = ga_setup_input("Need to import internal ca certificate for git/pip? Mainly needed if your firewall uses ssl inspection.", False)
 
