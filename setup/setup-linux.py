@@ -25,7 +25,8 @@ from datetime import datetime
 import getpass
 import random
 import string
-from colorama import Fore, Back, Style
+import colorama
+
 
 # basic vars
 ga_config = {}
@@ -58,8 +59,8 @@ def ga_setup_shelloutput_subheader(output):
     ga_setup_log_write("####################################")
 
 
-def ga_setup_shelloutput_text(output):
-    if output.find("Fore.") != -1:
+def ga_setup_shelloutput_text(output, special=False):
+    if special is True:
         print("%s\n" % output)
     else:
         print("%s.\n" % output)
@@ -67,15 +68,15 @@ def ga_setup_shelloutput_text(output):
 
 
 def ga_setup_shelloutput_info(output):
-    ga_setup_shelloutput_text(Fore.BLUE + output + "." + Style.RESET_ALL)
+    ga_setup_shelloutput_text(colorama.Fore.BLUE + output + "." + colorama.Style.RESET_ALL, True)
 
 
 def ga_setup_shelloutput_warning(output):
-    ga_setup_shelloutput_text(Fore.YELLOW + output + "." + Style.RESET_ALL)
+    ga_setup_shelloutput_text(colorama.Fore.MAGENTA + output + "." + colorama.Style.RESET_ALL, True)
     
     
 def ga_setup_shelloutput_success(output):
-    ga_setup_shelloutput_text(Fore.GREEN + output + "." + Style.RESET_ALL)
+    ga_setup_shelloutput_text(colorama.Fore.GREEN + output + "." + colorama.Style.RESET_ALL, True)
 
 
 def ga_setup_log_write(output):
@@ -101,48 +102,48 @@ def ga_setup_fstabcheck():
         if stringcount > 0:
             shellhight, shellwidth = os.popen('stty size', 'r').read().split()
             print('#' * (int(shellwidth) - 1))
-            print(Fore.YELLOW + "WARNING!\n"
+            print(colorama.Fore.MAGENTA + "WARNING!\n"
                   "You already have one or more remote shares configured.\n"
                   "If you want to install new ones you should disable the old ones by editing the '/etc/fstab' file.\n"
                   "Just add a '#' in front of the old shares or delete those lines to disable them.\n"
-                  "WARNING!" + Style.RESET_ALL)
+                  "WARNING!" + colorama.Style.RESET_ALL)
             print('#' * (int(shellwidth) - 1) + "\n")
 
 
-def ga_setup_input(prompt, default=" ", poss=" ", intype=" "):
-    if prompt.find("WARNING") != -1:
-        styledprompt = Fore.YELLOW + prompt + Style.RESET_ALL
-    elif prompt.find("ERROR") != -1:
-        styledprompt = Fore.RED + prompt + Style.RESET_ALL
+def ga_setup_input(prompt, default="", poss="", intype="", style=""):
+    if style == "warn":
+        styletype = colorama.Fore.MAGENTA
+    elif style == "err":
+        styletype = colorama.Fore.RED
     else:
-        styledprompt = prompt
+        styletype = ""
     if type(default) == bool:
         while True:
             try:
                 return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
-                        "": default}[input("\n%s\n(Poss: yes/true/no/false - Default: %s)\n > "
-                                           % (styledprompt, default)).lower()]
+                        "": default}[input(styletype + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " + colorama.Style.RESET_ALL
+                                           % (prompt, default)).lower()]
             except KeyError:
-                print(Fore.YELLOW + "WARNING: Invalid input please enter either yes/true/no/false!\n" + Style.RESET_ALL)
+                print(colorama.Fore.YELLOW + "WARNING: Invalid input please enter either yes/true/no/false!\n" + colorama.Style.RESET_ALL)
     elif type(default) == str:
-        if intype == "pass" and default != " ":
-            getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (styledprompt, default)) or "%s" % default
+        if intype == "pass" and default != "":
+            getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (prompt, default)) or "%s" % default
         elif intype == "pass":
-            getpass.getpass(prompt="\n%s\n > " % styledprompt)
+            getpass.getpass(prompt="\n%s\n > " % prompt)
         elif intype == "passgen":
             inputnumber = 0
             while inputnumber < 8 or inputnumber > 99:
                 if inputnumber < 8 or inputnumber > 99:
                     print("Input error. Value should be between 8 and 99.\n")
-                inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (styledprompt, poss, default)).lower() or "%s" % default)
+                inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
                 inputnumber = int(inputstr)
             return inputstr
-        elif poss != " ":
-            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (styledprompt, poss, default)).lower() or "%s" % default)
-        elif default != " ":
-            return str(input("\n%s\n(Default: %s)\n > " % (styledprompt, default)).lower() or "%s" % default)
+        elif poss != "":
+            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
+        elif default != "":
+            return str(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
         else:
-            return str(input("\n%s\n > " % styledprompt).lower())
+            return str(input("\n%s\n > " % prompt).lower())
 
 
 def ga_mnt_creds(outtype, inputstr=""):
@@ -248,7 +249,7 @@ def ga_setup_configparser_file(file, text):
 
 def ga_setup_exit(shell, log):
     ga_setup_log_write("\nExit. %s.\n\n" % log)
-    raise SystemExit(Fore.RED + "\n%s!\nYou can find the full setup log at %s.\n\n" + Style.RESET_ALL % (shell, ga_config["setup_log"]))
+    raise SystemExit(colorama.Fore.RED + "\n%s!\nYou can find the full setup log at %s.\n\n" + colorama.Style.RESET_ALL % (shell, ga_config["setup_log"]))
 
 
 ########################################################################################################################
@@ -284,7 +285,7 @@ ga_setup_shelloutput_header("Checking if growautomation is already installed on 
 
 # check if growautomation is already installed
 if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/etc/growautomation") is True:
-    ga_setup_shelloutput_info("Growautomation version file or default root path found.")
+    ga_setup_shelloutput_info("Growautomation version file or default root path found")
 
     def ga_config_vars_oldversion_replace():
         global ga_config
