@@ -26,6 +26,7 @@ import getpass
 from random import choice as random_choice
 from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
+from sys import version_info as sys_version_info
 
 
 # basic vars
@@ -929,13 +930,19 @@ def ga_setup_infra_code():
     ga_setup_shelloutput_header("Setting up growautomation code")
     if os.path.exists("/tmp/controller") is True:
         os.system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
+
     os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
-    os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main /usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_config["setup_log_redirect"])
+
     if ga_config["setup_type_as"] is True:
         os.system("cp -r /tmp/controller/code/agent/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
     if ga_config["setup_type_ss"] is True:
         os.system("cp -r /tmp/controller/code/server/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
+
+    ga_pyvers = "%s.%s" % (sys_version_info.major, sys_version_info.minor)
+    ga_pyvers_modpath = "/usr/local/lib/python%s/dist-packages/GA" % ga_pyvers
+    if os.path.exists(ga_pyvers_modpath) is False:
+        os.system("ln -s /etc/growautomation/main %s %s" % (ga_pyvers_modpath, ga_config["setup_log_redirect"]))
 
     ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
 
