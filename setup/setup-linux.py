@@ -121,8 +121,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
         while True:
             try:
                 return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
-                        "": default}[input(styletype + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " + colorama.Style.RESET_ALL
-                                           % (prompt, default)).lower()]
+                        "": default}[input(styletype + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " % (prompt, default) + colorama.Style.RESET_ALL).lower()]
             except KeyError:
                 print(colorama.Fore.YELLOW + "WARNING: Invalid input please enter either yes/true/no/false!\n" + colorama.Style.RESET_ALL)
     elif type(default) == str:
@@ -139,11 +138,11 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
                 inputnumber = int(inputstr)
             return inputstr
         elif poss != "":
-            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
+            return str(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama.Style.RESET_ALL).lower() or "%s" % default)
         elif default != "":
-            return str(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
+            return str(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama.Style.RESET_ALL).lower() or "%s" % default)
         else:
-            return str(input("\n%s\n > " % prompt).lower())
+            return str(input(styletype + "\n%s\n > " % prompt + colorama.Style.RESET_ALL).lower())
 
 
 def ga_mnt_creds(outtype, inputstr=""):
