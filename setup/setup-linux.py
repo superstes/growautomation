@@ -20,17 +20,18 @@
 
 ########################################################################################################################
 
-# basic vars
-ga_version = "0.2.1.2"
-ga_version_file = "/etc/growautomation.version"
-ga_setup_log = "/var/log/growautomation-setup.log"
-ga_setup_log_redirect = "2>&1 | tee -a %s" % ga_setup_log
-
 import os
 from datetime import datetime
 import getpass
 import random
 import string
+
+# basic vars
+ga_config = []
+ga_config["version"] = "0.2.1.2"
+ga_config["setup_version_file"] = "/etc/growautomation.version"
+ga_config["setup_log"] = "/var/log/growautomation-setup.log"
+ga_config["setup_log_redirect"] = "2>&1 | tee -a %s" % ga_config["ga_setup_log"]
 
 
 ########################################################################################################################
@@ -52,19 +53,19 @@ def ga_setup_shelloutput_text(output):
 
 
 def ga_setup_log_write(output):
-    tmplog = open(ga_setup_log, "a")
-    tmplog.write("\n------------------------------------------\n" + output + "\n")
+    tmplog = open(ga_config["setup_log"], "a")
+    tmplog.write("\n" + output + "\n")
     tmplog.close()
 
 
-def ga_setup_log_writeplain(output):
-    tmplog = open(ga_setup_log, "a")
+def ga_setup_log_write_plain(output):
+    tmplog = open(ga_config["setup_log"], "a")
     tmplog.write(output + "\n")
     tmplog.close()
 
 
 def ga_setup_check_version_file():
-    tmpfile = open(ga_version_file, 'r')
+    tmpfile = open(ga_config["setup_version_file"], 'r')
     return tmpfile.readlines()
 
 
@@ -92,13 +93,13 @@ def ga_setup_input(prompt, default=" ", poss=" ", intype=" "):
         while True:
             try:
                 return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
-                        "": default}[input("\n%s (Poss: yes/true/no/false - Default: %s)\n > "
+                        "": default}[input("\n%s\n(Poss: yes/true/no/false - Default: %s)\n > "
                                            % (prompt, default)).lower()]
             except KeyError:
-                print("WARNING: Invalid input please enter True or False!\n")
+                print("WARNING: Invalid input please enter either yes/true/no/false!\n")
     elif type(default) == str:
         if intype == "pass" and default != " ":
-            getpass.getpass(prompt="\n%s (Random: %s)\n > " % (prompt, default)) or "%s" % default
+            getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (prompt, default)) or "%s" % default
         elif intype == "pass":
             getpass.getpass(prompt="\n%s\n > " % prompt)
         elif intype == "passgen":
@@ -106,14 +107,14 @@ def ga_setup_input(prompt, default=" ", poss=" ", intype=" "):
             while tmpinput < 8 or tmpinput > 99:
                 if tmpinput < 8 or tmpinput > 99:
                     print("Input error. Value should be between 8 and 99.\n")
-                tmpinputstr = str(input("\n%s (Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower()
+                tmpinputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower()
                                   or "%s" % default)
                 tmpinput = int(tmpinputstr)
             return tmpinput
         elif poss != " ":
-            return str(input("\n%s (Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
+            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
         elif default != " ":
-            return str(input("\n%s (Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
+            return str(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
         else:
             return str(input("\n%s\n > " % prompt).lower())
 
@@ -127,73 +128,89 @@ def ga_mnt_creds(outtype, inputstr=""):
         return ga_setup_input("Provide domain for share authentication.", "workgroup")
 
 
-def ga_mysql(dbuser, command, dbserver="", dbpwd=""):
-    db = mysql.connector.connect(host=dbserver, user=dbuser, passwd=dbpwd, database="ga")
-    dbcursor = db.cursor()
-    dbcursor.execute(command)
-    tmpvar = dbcursor.fetchall()
-    dbcursor.close()
-    db.close()
-    return tmpvar
+# def ga_setup_varcheck(tmpvar, error=""):
+#     try:
+#         tmpvar
+#         return True
+#     except NameError:
+#         if error != "":
+#             ga_setup_shelloutput_text("WARNING! %s" % error)
+#         return False
 
 
-def ga_setup_varcheck(tmpvar, error):
-    try:
-        tmpvar
+def ga_setup_keycheck(dictkey):
+    dict = ga_config
+    if dict[dictkey] is None:
+        ga_setup_log_write("WARNING! Dict key %s has value of None" % dictkey)
+        return False
+    elif dictkey in dict:
         return True
-    except NameError:
-        ga_setup_shelloutput_text("WARNING! %s" %error)
+    else:
+        ga_setup_log_write("WARNING! Dict key not found" % dictkey)
         return False
 
 
-def ga_setup_configparser_mysql(user, pwd, table, name, server="", agent=""):
-    if type(name) == list:
-        if table == "agent":
-            itemdatadict = {}
-            for item in name:
-                try:
-                    data = ga_mysql(user, "FROM ga.AgentConfig SELECT data WHERE name = %s and agent = %s"
-                                    % (item, agent), server, pwd)
-                    itemdatadict[item] = data
-                except mysql.connector.Error as error:
-                    ga_setup_shelloutput_text("Error when retrieving config item %s from database:\n%s" % (item, error))
-            return itemdatadict
-        elif table == "server":
-            itemdatadict = {}
-            for item in name:
-                try:
-                    data = ga_mysql(user, "FROM ga.ServerConfig SELECT data WHERE name = %s" % item, server, pwd)
-                    itemdatadict[item] = data
-                except mysql.connector.Error as error:
-                    ga_setup_shelloutput_text("Error when retrieving config item %s from database:\n%s" % (item, error))
-            return itemdatadict
-    elif type(name) == str:
-        if table == "agent":
-            try:
-                data = ga_mysql(user, "FROM ga.AgentConfig SELECT data WHERE name = %s and agent = %s"
-                                % (name, agent), server, pwd)
-                return data
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("Error when retrieving config item %s from database:\n%s" % (name, error))
-        elif table == "server":
-            try:
-                data = ga_mysql(user, "FROM ga.ServerConfig SELECT data WHERE name = %s" % name, server, pwd)
-                return data
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("Error when retrieving config item %s from database:\n%s" % (name, error))
+def ga_mysql_unixsock():
+    global ga_config
+    sql_sock = "/var/run/mysqld/mysqld.sock"
+    if os.path.exists(sql_sock) is False:
+        sql_customsock = ga_setup_input("Mysql was unable to find the mysql unix socket file at %s.\nThe path can be found in mysql via "
+                                        "the command:\n > show variables like 'socket;'\nProvide the correct path to it.")
+        ga_config["sql_sock"] = sql_customsock
+        return sql_customsock
+    else:
+        ga_config["sql_sock"] = sql_sock
+        return sql_sock
 
-# def ga_setup_configparser_file(file, header, text, cuttext, count=4):
-#     tmpfile = open(file)
-#     tmpcount = 0
-#     for line in tmpfile.readlines():
-#         if line.find(header) != -1:
-#             tmpcount = 1
-#         if tmpcount > 0 and tmpcount < count:
-#             if line.find(text) != -1:
-#                 output = line[cuttext]
-#         if tmpcount > 0:
-#             tmpcount += 1
-#     return output
+
+def ga_mysql(command, dbuser="", dbpwd=""):
+    try:
+        if ga_config["sql_server_ip"] == "127.0.0.1" and dbuser != "root" or dbuser != "":
+            mysql_doit = "user=%s, passwd=%s, unix_socket=%s" % (dbuser, dbpwd, ga_mysql_unixsock())
+        elif ga_config["sql_server_ip"] == "127.0.0.1":
+            mysql_doit = "unix_socket=%s" % ga_mysql_unixsock()
+        else:
+            mysql_doit = "host=%s, port=%s, user=%s, passwd=%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], dbuser, dbpwd)
+        db = mysql.connector.connect(mysql_doit)
+        dbcursor = db.cursor()
+        dbcursor.execute(command)
+        data = dbcursor.fetchall()
+        dbcursor.close()
+        db.close()
+        return data
+    except mysql.connector.Error as error:
+        ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error))
+        return False
+
+
+def ga_mysql_conntest(dbuser="", dbpwd=""):
+    if dbuser is None or dbpwd is None or ga_config["sql_server_ip"] is None:
+        return False
+    sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd)
+    if type(sqltest) == list:
+        return True
+    else:
+        return False
+
+
+def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
+    if agent == "":
+        command_table = "Server"
+        command_agents = ""
+    else:
+        command_table = "Agent"
+        command_agents = " and agent = '%s'" % agent
+    if type(searchfor) == list:
+        itemdatadict = {}
+        for item in searchfor:
+            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s"
+                                          % (command_table, item, command_agents), user, pwd)
+        return itemdatadict
+    elif type(searchfor) == str:
+        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s"
+                        % (command_table, searchfor, command_agents), user, pwd)
+        return data
+
 
 def ga_setup_configparser_file(file, text):
     tmpfile = open(file)
@@ -204,7 +221,7 @@ def ga_setup_configparser_file(file, text):
 
 def ga_setup_exit(shell, log):
     ga_setup_log_write("Exit. %s." % log)
-    raise SystemExit("%s!\nYou can find the full setup log at %s." % (shell, ga_setup_log))
+    raise SystemExit("%s!\nYou can find the full setup log at %s." % (shell, ga_config["setup_log"]))
 
 
 ########################################################################################################################
@@ -215,7 +232,7 @@ ga_setup_log_write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 # prechecks
 ga_setup_shelloutput_header("Installing setup dependencies")
 
-os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python %s" % ga_setup_log_redirect)
+os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python %s" % ga_config["setup_log_redirect"])
 import mysql.connector
 
 
@@ -226,280 +243,327 @@ if os.getuid() != 0:
 else:
     ga_setup_shelloutput_header("Starting Growautomation installation script\n"
                                 "The newest versions can be found at: https://git.growautomation.at")
-    ga_setupwarning = ga_setup_input("WARNING!\n\nWe recommend using this installation script on dedicated systems.\n"
-                               "This installation script won't check your already installed programs for compatibility "
-                               "problems.\nIf you already use web-/database or other complex software on this system "
-                               "you should back it up before installing this software.\nWe assume no liability for "
-                               "problems that may be caused by this installation!\nAccept the risk if you want to "
-                               "continue.", False)
-    if ga_setupwarning is False:
-        ga_setup_exit("Script cancelled by user\nYou can also install this software manually through the setup manual.\n"
-                     "It can be found at: https://git.growautomation.at/tree/master/manual",
-                     "Setupwarning not accepted by user")
+    ga_config["setup_warning"] = ga_setup_input("WARNING!\n\nWe recommend using this installation script on dedicated systems.\n"
+                                                "This installation script won't check your already installed programs for compatibility problems.\n"
+                                                "If you already use web-/database or other complex software on this system you should back it up before installing this software.\n"
+                                                "We assume no liability for problems that may be caused by this installation!\n"
+                                                "Accept the risk if you want to continue.", False)
+    if ga_config["setup_warning"] is False:
+        ga_setup_exit("Script cancelled by user\nYou can also install this software manually through the setup "
+                      "manual.\nIt can be found at: https://git.growautomation.at/tree/master/manual",
+                      "Setupwarning not accepted by user")
 
-ga_setup_shelloutput_header("Checking if growautomation is already installed on the system.")
+ga_setup_shelloutput_header("Checking if growautomation is already installed on the system")
 
 # check if growautomation is already installed
-if os.path.exists(ga_version_file) is True or os.path.exists("/etc/growautomation") is True:
-    ga_versionold = True
+if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/etc/growautomation") is True:
+    ga_config["setup_old_version"] = True
 else:
-    ga_versionold = False
+    ga_config["setup_old_version"] = False
 
-if ga_versionold is True:
+if ga_config["setup_old_version"] is True:
     for line in ga_setup_check_version_file():
         if line.find("gaversion=") != -1:
             print("A version of growautomation is/was already installed on this system!\n\n"
                   "Installed version: " + line[11:] +
-                  "\nReplace version: %s" % ga_version)
-            ga_versionold_replace = ga_setup_input("Do you want to replace it?", False)
-            if ga_versionold_replace is True:
-                ga_versionold_replace_migrate = ga_setup_input("Should we try to keep your old configuration and data?", False)
-            if ga_versionold_replace is True:
-                ga_versionold_replace_backup = ga_setup_input("Do you want to backup your old growautomation installation?", True)
-            elif ga_versionold_replace is False:
+                  "\nReplace version: %s" % ga_config["version"])
+            ga_config["setup_old_replace"] = ga_setup_input("Do you want to replace it?", False)
+            if ga_config["setup_old_replace"] is True:
+                ga_config["setup_old_replace_migrate"] = ga_setup_input("Should we try to keep your old configuration and data?", False)
+            if ga_config["setup_old_replace"] is True:
+                ga_config["setup_old_replace_backup"] = ga_setup_input("Do you want to backup your old growautomation installation?", True)
+            elif ga_config["setup_old_replace"] is False:
                 ga_setup_exit("Stopping script. Current installation should not be overwritten",
-                             "Already installed ga should not be overwritten")
+                              "Already installed ga should not be overwritten")
+    if ga_config["setup_old_replace_migrate"] is True:
+        ga_config["setup_fresh"] = False
+    else:
+        ga_config["setup_fresh"] = True
 else:
     ga_setup_shelloutput_text("No previous growautomation installation found")
+    ga_config["setup_fresh"] = True
 
 ########################################################################################################################
 
 # setup vars
-ga_setup_shelloutput_header("Retrieving setup configuration through user input.")
+ga_setup_shelloutput_header("Retrieving setup configuration through user input")
 
 
 def ga_config_var_base():
-    ga_setup_type = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone",
-                                   "agent/standalone/server")
-    if ga_setup_type == "agent":
-        ga_setup_yousure = ga_setup_input(
-            "You should install/update the growautomation server component before the agent because of dependencies.\n"
-            "Agree if you have already installed/updated the ga server or disagree to stop the "
-            "installation.", False)
-        # print("If you haven't created this agent on the server -> this is you last chance.\n"
-        #       "Find more information about the creation of new agents at: "
-        #       "https://git.growautomation.at/tree/master/manual/agent\n\n")
-        if ga_setup_yousure is False:
-            ga_setup_log_write("Exit. User has not installed the server before the agent.")
-            raise SystemExit("Stopped growautomation agent installation.")
-    ga_path_root = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
-    if ga_setup_type == "agent":
-        ga_config_name = ga_setup_input("Provide the name of this growautomation agent as configured on the server.",
-                                        "gacon01")
-    elif ga_setup_type == "server":
-        ga_config_name = "gaserver"
-    elif ga_setup_type == "standalone":
-        ga_config_name = "gacon01"
+    global ga_config
+
+    def ga_config_var_base_name():
+        global ga_config
+        if ga_config["setup_type"] == "agent":
+            ga_config["hostname"] = ga_setup_input("Provide the name of this growautomation agent as configured on the server.", "gacon01")
+        elif ga_config["setup_type"] == "server":
+            ga_config["hostname"] = "gaserver"
+        elif ga_config["setup_type"] == "standalone":
+            ga_config["hostname"] = "gacon01"
+    if ga_config["setup_fresh"] is False:
+        for line in ga_setup_check_version_file():
+            if line.find("root=") != -1:
+                ga_config["path_root"] = line[8:]
+            elif line.find("name=") != -1:
+                ga_config["hostname"] = line[6:]
+            elif line.find("type=") != -1:
+                ga_config["setup_type"] = line[6:]
+        if ga_setup_keycheck("path_root") is False:
+            ga_setup_shelloutput_text("Growautomation rootpath not found in old versionfile")
+            ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
+
+        if ga_setup_keycheck("hostname") is False:
+            ga_setup_shelloutput_text("Growautomation hostname not found in old versionfile")
+            ga_config_var_base_name()
+
+        if ga_setup_keycheck("setup_type") is False:
+            ga_setup_shelloutput_text("Growautomation setuptype not found in old versionfile.\n\n"
+                                      "WARNING!\nTo keep your old configuration the setuptype must be the same as before")
+            ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
+            if ga_config["setup_old_replace_backup"] is False:
+                ga_setup_shelloutput_text("Turning on migration backup option - just in case")
+                ga_config["setup_old_replace_backup"] = True
+
+    if ga_config["setup_fresh"] is True:
+        ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
+
+        if ga_config["setup_type"] == "agent":
+            ga_config["setup_yousure"] = ga_setup_input("You should install/update the growautomation server component before the agent because of dependencies.\n"
+                                                        "Find more information about the creation of new agents at:\nhttps://git.growautomation.at/tree/master/manual/agent\n\n"
+                                                        "Agree if you have already installed/updated the ga server or disagree to stop the installation.", False)
+            if ga_config["setup_yousure"] is False:
+                ga_setup_exit("Stopping script. Server was not installed before agent", "User has not installed the server before the agent")
+        ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
+        ga_config_var_base_name()
+
+    if ga_config["setup_type"] == "server" or ga_config["setup_type"] == "standalone":
+        ga_config["setup_type_ss"] = True
+    else:
+        ga_config["setup_type_ss"] = False
 
 
 def ga_config_var_setup():
-    ga_setup_pwd_length = ga_setup_input("This setup will generate random passwords for you.\nPlease define the "
-                                        "length of those random passwords!", "12", "8-99", "passgen")
+    global ga_config
+    ga_config["setup_pwd_length"] = ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen")
 
-    ga_setup_ca = ga_setup_input("Need to import internal ca for git/pip? Mainly needed if your firewall uses "
-                                   "ssl inspection.\n", False)
+    ga_config["setup_ca"] = ga_setup_input("Need to import internal ca certificate for git/pip? Mainly needed if your firewall uses ssl inspection.", False)
 
-    if ga_setup_ca is True:
-        ga_setup_capath = ga_setup_input("Provide path to the ca file.", "/etc/ssl/certs/internalca.cer")
+    if ga_config["setup_ca"] is True:
+        ga_config["setup_ca_path"] = ga_setup_input("Provide path to the ca file.", "/etc/ssl/certs/internalca.cer")
+    else:
+        ga_config["setup_ca_path"] = "notprovided"
 
-    ga_setup_linuxupgrade = ga_setup_input("Want to upgrade your software and distribution before growautomation "
-                                     "installation?", True)
+    ga_config["setup_linuxupgrade"] = ga_setup_input("Want to upgrade your software and distribution before growautomation installation?", True)
 
 
 def ga_config_var_db():
-    if ga_setup_type == "agent":
-        while True:
-            ga_sql_agent_pwd = ga_setup_pwd_gen(ga_setup_pwd_length)
-            ga_sql_server_ip = ga_setup_input("Provide the ip address of the growautomation server.", "192.168.0.201")
-            ga_serversqlport = ga_setup_input("Provide the mysql port of the growautomation server.", "3306")
-            print("The following credentials can be found in the serverfile '$garoot/main/main.conf'\n")
-            ga_sql_server_agent_usr = ga_setup_input("Please provide the user used to connect to the database.", ga_config_name)
-            ga_sql_server_agent_pwd = ga_setup_input("Please provide the password used to connect to the database.",
-                                                     ga_sql_agent_pwd, intype="pass")
-            ga_sql_server_repl = ga_setup_input("Please provide sql replication user.", ga_config_name + "replica")
-            ga_sql_server_replpwd = ga_setup_input("Please provide sql replication password.", ga_sql_server_agent_pwd)
-            try:
-                ga_mysql(ga_sql_server_agent_usr, "SELECT * FROM ga.AgentConfig ORDER BY A DESC LIMIT 10;",
-                         ga_sql_server_ip, ga_sql_server_agent_pwd)
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("An error occoured when testing the sql connection:\n%s\n\n"
-                                          "Try again." % error)
-    elif ga_setup_type == "server" or ga_setup_type == "standalone":
-        while True:
-            a_sql_server_admin_usr = ga_setup_input("Please provide the user used to connect to the database.",
-                                                    "gadmin")
-            ga_sql_server_admin_pwd = ga_setup_input("Please provide the password used to connect to the database.",
-                                                     intype="pass")
-            try:
-                ga_mysql(a_sql_server_admin_usr, "SELECT * FROM ga.AgentConfig ORDER BY A DESC LIMIT 10;",
-                         dbpwd=ga_sql_server_admin_pwd)
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("An error occoured when testing the sql connection:\n%s\n\n"
-                                          "Try again." % error)
+    global ga_config
+    whilecount = 0
+    whilestate = False
+    if ga_config["setup_type"] == "agent":
+        if ga_config["setup_fresh"] is True:
+            ga_config["sql_agent_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+            while whilestate is False:
+                if whilecount > 0:
+                    ga_setup_shelloutput_text("SQL connection failed. Please try again")
+                whilecount += 1
+                ga_config["sql_server_ip"] = ga_setup_input("Provide the ip address of the growautomation server.", "192.168.0.201")
+                ga_config["sql_server_port"] = ga_setup_input("Provide the mysql port of the growautomation server.", "3306")
+                print("The following credentials can be found in the serverfile '$garoot/main/main.conf'\n")
+                ga_config["sql_server_agent_usr"] = ga_setup_input("Please provide the user used to connect to the database.", ga_config["hostname"])
+                ga_config["sql_server_agent_pwd"] = ga_setup_input("Please provide the password used to connect to the database.", ga_config["sql_agent_pwd"], intype="pass")
+                if ga_mysql_conntest(ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) is True:
+                    whilestate = True
+                    ga_setup_shelloutput_text("Server SQL connection verified")
+                    ga_config["sql_server_repl_usr"] = ga_setup_input("Please provide sql replication user.", ga_config["hostname"] + "replica")
+                    ga_config["sql_server_repl_pwd"] = ga_setup_input("Please provide sql replication password.", ga_config["sql_server_agent_pwd"])
+        else:
+            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localuser=")[11:]
+            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localpassword=")[15:]
+
+            if ga_mysql_conntest(ga_config["sql_agent_usr"], ga_config["sql_agent_pwd"]) is True:
+                ga_setup_shelloutput_text("Local SQL connection verified")
+
+            while whilestate is False:
+                if whilecount > 0:
+                    ga_setup_shelloutput_text("You can reset/configure the agent database credentials on the "
+                                              "growautomation server. Details can be found in the manual: "
+                                              "https://git.growautomation.at/tree/master/manual")
+                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentuser=")[11:]
+                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentpassword=")[15:]
+                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverip=")[10:]
+                whilestate = ga_mysql_conntest(ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"])
+
+            ga_setup_shelloutput_text("Server SQL connection verified")
+            # other config will be received via sql query
+            return "default"
+
+    elif ga_config["setup_type_ss"] is True:
+        ga_config["sql_server_ip"] = "127.0.0.1"
+        ga_config["sql_server_port"] = "3306"
+        if ga_config["setup_fresh"] is True:
+            ga_config["sql_server_admin_usr"] = ga_setup_input("How should the growautomation database admin user be named?", "gadmin")
+            ga_config["sql_server_admin_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+        else:
+            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[10:]
+            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[10:]
+            if ga_mysql_conntest(ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]) is False:
+                while whilestate is False:
+                    if whilecount > 0:
+                        ga_config["setup_server_admin_reset"] = ga_setup_input("Do you want to reset the database admin via the setup?", False)
+                        if ga_config["setup_server_admin_reset"] is True:
+                            if ga_mysql_conntest() is False:
+                                ga_setup_shelloutput_text("Database admin can't be reset since the database check as root failed.\nThis could happen "
+                                                          "if the growautomation database doesn't exist")
+                                ga_config["sql_server_noaccess_yousure"] = ga_setup_input("Do you want to continue the setup anyway? The problem might maybe get fixed by the setup process.", False)
+                                if ga_config["sql_server_noaccess_yousure"] is False:
+                                    ga_setup_exit("All database connections failed", "User chose to exit since all database connections failed")
+                                ga_config["setup_server_admin_reset"] = False
+                                if ga_config["setup_old_replace_backup"] is False:
+                                    ga_setup_shelloutput_text("Turning on migration backup option - just in case")
+                                    ga_config["setup_old_replace_backup"] = True
+                                return "none"
+                            else:
+                                ga_setup_shelloutput_text("SQL connection verified")
+                                return "root"
+                    ga_setup_shelloutput_text("SQL connection failed. Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/main/main.conf'")
+                    ga_config["sql_server_admin_usr"] = ga_setup_input("Provide the name of the growautomation database admin user.", "gadmin")
+                    ga_config["sql_server_admin_pwd"] = ga_setup_input("Please provide the password used to connect to the database.", intype="pass")
+                    whilestate = ga_mysql_conntest(ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+                    whilecount += 1
+
+                ga_setup_shelloutput_text("SQL connection verified")
+                return "default"
 
 
 def ga_config_var_certs():
-    if ga_setup_type == "agent":
+    if ga_config["setup_type"] == "agent":
+        global ga_config
         ga_setup_shelloutput_text("The following certificates can be found in the serverpath '$garoot/ca/certs/'\n")
-        ga_config_server_ca = ga_setup_input("Provide the path to the ca-certificate from your ga-server.",
-                                             "%s/ssl/ca.cer.pem"
-                                             % ga_path_root)
-        ga_config_server_cert = ga_setup_input("Provide the path to the agent server certificate.", "%s/ssl/%s.cer.pem"
-                                               % (ga_path_root, ga_config_name))
-        ga_config_server_key = ga_setup_input("Provide the path to the agent server key.", "%s/ssl/%s.key.pem"
-                                              % (ga_path_root, ga_config_name))
-
+        ga_config["sql_ca"] = ga_setup_input("Provide the path to the ca-certificate from your ga-server.", "%s/ssl/ca.cer.pem" % ga_config["path_root"])
+        ga_config["sql_cert"] = ga_setup_input("Provide the path to the agent server certificate.", "%s/ssl/%s.cer.pem" % (ga_config["path_root"], ga_config["hostname"]))
+        ga_config["sql_key"] = ga_setup_input("Provide the path to the agent server key.", "%s/ssl/%s.key.pem" % (ga_config["path_root"], ga_config["hostname"]))
 ########################################################################################################################
 # Config migration from old installation
-if ga_versionold is True and ga_versionold_replace_migrate is True:
-    for line in ga_setup_check_version_file():
-        if line.find("garoot=") != -1:
-            ga_path_root = line[8:]
-        elif line.find("name=") != -1:
-            ga_config_name = line[6:] 
-        elif line.find("type=") != -1:
-            ga_setup_type = line[6:]
-    tmprootstate = ga_setup_varcheck(ga_path_root, "GA rootpath not found in old versionfile.")
-    tmpnamestate = ga_setup_varcheck(ga_path_root, "GA agent name not found in old versionfile.")
-    tmptypestate = ga_setup_varcheck(ga_path_root, "GA setup type not found in old versionfile.")
-    if tmpnamestate is False or tmprootstate is False or tmptypestate is False:
-        ga_setup_shelloutput_text("Old versionfile could not provide all needed data. Failing over to manual input.")
-        ga_config_var_base()
+
+
+if ga_config["setup_fresh"] is False:
     ga_config_var_setup()
 
     ga_setup_shelloutput_header("Checking for database credentials")
-    if ga_setup_type == "server" or ga_setup_type == "standalone":
-        ga_sql_server_admin_pwd = ga_setup_configparser_file("%s/main/main.conf" % ga_path_root, "serverpassword=")[10:]
-        while True:
-            try:
-                ga_mysql("gadmin", "SELECT * FROM ga.AgentConfig ORDER BY A DESC LIMIT 10;", dbpwd=ga_sql_server_admin_pwd)
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("An error occoured when testing the sql connection:\n%s\n\n"
-                                          "Automatic database configuration failed. Switching over to manual." % error)
-
-            ga_config_var_db()
-
-    elif ga_setup_type == "agent":
-        ga_sql_server_agent_usr = ga_setup_configparser_file("%s/main/main.conf" % ga_path_root, "agentuser=")[10:]
-        ga_sql_server_agent_pwd = ga_setup_configparser_file("%s/main/main.conf" % ga_path_root, "agentpassword=")[15:]
-        ga_sql_server_ip = ga_setup_configparser_file("%s/main/main.conf" % ga_path_root, "serverip=")[10:]
-        while True:
-            try:
-                ga_mysql(ga_sql_server_agent_usr, "SELECT * FROM ga.AgentConfig ORDER BY A DESC LIMIT 10;",
-                         ga_sql_server_ip, ga_sql_server_agent_pwd)
-            except mysql.connector.Error as error:
-                ga_setup_shelloutput_text("An error occoured when testing the sql connection:\n%s\n\n"
-                                          "Automatic database configuration failed. Switching over to manual." % error)
-            ga_config_var_db()
+    ga_config_var_db()
+    #
 
     ga_setup_shelloutput_header("Retrieving existing configuration from database")
-    ga_config_list_agent = ["path_root", "path_config", "path_sensors", "path_actions", "path_checks", "path_service",
-                            "backup", "path_backup", "mnt_backup", "mnt_backup_type", "mnt_backup_server",
+    ga_config_list_agent = ["backup", "path_backup", "mnt_backup", "mnt_backup_type", "mnt_backup_server",
                             "mnt_backup_share", "mnt_backup_usr", "mnt_backup_pwd", "mnt_backup_dom", "path_log",
                             "mnt_log", "mnt_shared_creds", "mnt_shared_server", "mnt_shared_type", "mnt_log_type",
                             "mnt_log_server", "mnt_log_share", "mnt_log_usr", "mnt_log_pwd", "mnt_log_dom", "ga_ufw"]
     ga_config_list_server = []
-    if ga_setup_type == "server":
-        ga_setup_configparser_mysql(ga_sql_server_admin_usr, ga_sql_server_admin_pwd, "server", "ga_config_list_server")
-    elif ga_setup_type == "standalone":
-        ga_setup_configparser_mysql(ga_sql_server_admin_usr, ga_sql_server_admin_pwd, "agent", "ga_config_list_agent",
-                                    agent=ga_config_name)
-        ga_setup_configparser_mysql(ga_sql_server_admin_usr, ga_sql_server_admin_pwd, "server", "ga_config_list_server",
-                                    agent=ga_config_name)
-    elif ga_setup_type == "agent":
-        ga_setup_configparser_mysql(ga_sql_server_admin_usr, ga_sql_server_admin_pwd, "agent", "ga_config_list_agent",
-                                    ga_sql_server_ip, ga_config_name)
+    if ga_config["setup_type"] == "server":
+        ga_configdict_sql = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+    elif ga_config["setup_type"] == "standalone":
+        ga_configdict_sql_agent = ga_setup_configparser_mysql("ga_config_list_agent", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"], ga_config["hostname"])
+        ga_configdict_sql_server = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"], ga_config["hostname"])
+        ga_configdict_sql = {**ga_configdict_sql_agent, **ga_configdict_sql_server}
+    else:
+        ga_configdict_sql = ga_setup_configparser_mysql("ga_config_list_agent", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"], ga_config["hostname"])
+
+    ga_config = {**ga_configdict_sql, **ga_config}
 
 ########################################################################################################################
 # Configuration without migration
-if ga_versionold is False:
+if ga_config["setup_old_version"] is False:
     ga_config_var_base()
     ga_config_var_setup()
-    
+
+    ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
     ga_backup = ga_setup_input("Want to enable backup?", True)
     if ga_backup is True:
-        ga_path_backup = ga_setup_input("Want to choose a custom backup path? (", "/mnt/growautomation/backup/")
-        ga_mnt_backup = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.",
-                                True)
+        ga_mnt_backup = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.", True)
         if ga_mnt_backup is True:
             ga_setup_fstabcheck()
-            ga_mnt_backup_type = ga_setup_input("Mount nfs or smb/cifs share as backup destination?", "nfs", "nfs/cifs")
-            ga_mnt_backup_server = ga_setup_input("Provide the server ip.", "192.168.0.201")
-            ga_mnt_backup_share = ga_setup_input("Provide the share name.", "growautomation/backup")
-            if ga_mnt_backup_type == "cifs":
-                ga_mnt_backup_tmppwd = ga_setup_pwd_gen(ga_setup_pwd_length)
-                ga_mnt_backup_usr = ga_mnt_creds("usr", "gabackup")
-                ga_mnt_backup_pwd = ga_mnt_creds("pwd", ga_mnt_backup_tmppwd)
-                ga_mnt_backup_dom = ga_mnt_creds("dom")
+            ga_config["mnt_backup_type"] = ga_setup_input("Mount nfs or smb/cifs share as backup destination?", "nfs", "nfs/cifs")
+            ga_config["mnt_backup_srv"] = ga_setup_input("Provide the server ip.", "192.168.0.201")
+            ga_config["mnt_backup_share"] = ga_setup_input("Provide the share name.", "growautomation/backup")
+            if ga_config["mnt_backup_type"] == "cifs":
+                ga_mnt_backup_tmppwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+                ga_config["mnt_backup_usr"] = ga_mnt_creds("usr", "gabackup")
+                ga_config["mnt_backup_pwd"] = ga_mnt_creds("pwd", ga_mnt_backup_tmppwd)
+                ga_config["mnt_backup_dom"] = ga_mnt_creds("dom")
             # else:
             #     ga_setup_shelloutput_text("Not mounting remote share for backup!\nCause: No sharetype, "
             #                               "serverip or sharename provided.\n")
     else:
         ga_mnt_backup = False
-        ga_mnt_backup_type = "none"
+        ga_config["mnt_backup_type"] = "none"
     
-    ga_path_log = ga_setup_input("Want to choose a custom log path?", "/var/log/growautomation")
+    ga_config["path_log"] = ga_setup_input("Want to choose a custom log path?", "/var/log/growautomation")
     ga_mnt_log = ga_setup_input("Want to mount remote share as log destination? Smb and nfs available.", False)
     if ga_mnt_log is True:
         ga_setup_fstabcheck()
         if ga_mnt_backup is True:
             ga_mnt_samecreds = ga_setup_input("Use same server as for remote backup?", True)
             if ga_mnt_samecreds is True:
-                ga_mnt_log_type = ga_mnt_backup_type
-                ga_mnt_log_server = ga_mnt_backup_server
+                ga_config["mnt_log_type"] = ga_config["mnt_backup_type"]
+                ga_config["mnt_log_server"] = ga_config["mnt_backup_srv"]
         else:
-            ga_mnt_log_type = ga_setup_input("Mount nfs or smb/cifs share as log destination?", "nfs", "nfs/cifs")
-            ga_mnt_log_server = ga_setup_input("Provide the server ip.", "192.168.0.201")
-        ga_mnt_log_share = ga_setup_input("Provide the share name.", "growautomation/log")
+            ga_config["mnt_log_type"] = ga_setup_input("Mount nfs or smb/cifs share as log destination?", "nfs", "nfs/cifs")
+            ga_config["mnt_log_server"] = ga_setup_input("Provide the server ip.", "192.168.0.201")
+        ga_config["mnt_log_share"] = ga_setup_input("Provide the share name.", "growautomation/log")
     
-        if ga_mnt_log_type == "cifs":
-            ga_mnt_log_tmppwd = ga_setup_pwd_gen(ga_setup_pwd_length)
+        if ga_config["mnt_log_type"] == "cifs":
+            ga_mnt_log_tmppwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+
+
             def ga_mnt_log_creds():
-                ga_mnt_backup_usr = ga_mnt_creds("usr", "galog")
-                ga_mnt_backup_pwd = ga_mnt_creds("pwd", ga_mnt_log_tmppwd)
-                ga_mnt_backup_dom = ga_mnt_creds("dom")
-            if ga_mnt_backup is True and ga_mnt_backup_type == "cifs" and ga_mnt_samecreds is True:
-                ga_mnt_samecreds = ga_setup_input("Use same share credentials as for remote backup?", True)
-                if ga_mnt_samecreds is True:
-                    ga_mnt_log_usr = ga_mnt_backup_usr
-                    ga_mnt_log_pwd = ga_mnt_backup_pwd
-                    ga_mnt_log_dom = ga_mnt_backup_dom
+                global ga_config
+                ga_config["mnt_backup_usr"] = ga_mnt_creds("usr", "galog")
+                ga_config["mnt_backup_pwd"] = ga_mnt_creds("pwd", ga_mnt_log_tmppwd)
+                ga_config["mnt_backup_dom"] = ga_mnt_creds("dom")
+
+            if ga_config["mnt_backup"] is True and ga_config["mnt_backup_type"] == "cifs" and \
+                    ga_config["mnt_samecreds"] is True:
+                ga_config["mnt_samecreds"] = ga_setup_input("Use same share credentials as for remote backup?", True)
+                if ga_config["mnt_samecreds"] is True:
+                    ga_config["mnt_log_usr"] = ga_config["mnt_backup_usr"]
+                    ga_config["ga_mnt_log_pwd"] = ga_config["mnt_backup_pwd"]
+                    ga_config["ga_mnt_log_dom"] = ga_config["mnt_backup_dom"]
                 else:
                     ga_mnt_log_creds()
             else:
                 ga_mnt_log_creds()
     else:
-        ga_mnt_log_type = "none"  # for nfs/cifs apt installation
+        ga_config["mnt_log_type"] = "none"  # for nfs/cifs apt installation
 
 ########################################################################################################################
 # always vars
-ga_config_var_certs()
+if ga_config["setup_type"] == "agent":
+    ga_config_var_certs()
 
-ga_ufw = ga_setup_input("Do you want to install the linux software firewall?\n"
+ga_ufw = ga_setup_input("Do you want to install the linux software firewall (ufw)?\n"
                         "It will be configured for growautomation", True)
 
 ########################################################################################################################
 
-ga_setup_log_write("Setup information received:\n")
-ga_setup_log_writeplain("Basic vars: setuptype %s, internalca %s, garootpath %s,backup %s, ufw %s\n"
-                     % (ga_setup_type, ga_setup_ca, ga_path_root, ga_backup, ga_ufw))
-if ga_backup is True:
-    ga_setup_log_writeplain("Backup vars: backuppath %s, backupmnt %r\n" % (ga_path_backup, ga_mnt_backup_))
-    if ga_mnt_backup is True:
-        ga_setup_log_writeplain(
-            "backupmnttype %s, backupserver %s, backupshare %s\n"
-            % (ga_mnt_backup_type, ga_mnt_backup_server, ga_mnt_backup_share))
-        if ga_mnt_backup_type == "cifs":
-            ga_setup_log_writeplain("backupmntusr %s, backupmntdom %s\n" % (ga_mnt_backup_usr, ga_mnt_backup_dom))
-ga_setup_log_writeplain("Log vars: logpath %s, logmnt %r\n" % (ga_path_log, ga_mnt_log_))
-if ga_mnt_log is True:
-    ga_setup_log_writeplain("logmnttype %s, logserver %s, logshare %s\n" 
-                            % (ga_mnt_log_type, ga_mnt_log_server, ga_mnt_log_share))
-    if ga_mnt_log_type == "cifs":
-        ga_setup_log_writeplain("logmntusr %s, logmntdom %s\n" % (ga_mnt_log_usr, ga_mnt_log_dom))
-if ga_setup_type == "agent":
-    ga_setup_log_writeplain("Agent vars: serverip %s, sqlport %s, sqluser %s"
-                         % (ga_sql_server_ip, ga_serversqlport, ga_sql_server_agent_usr))
+ga_setup_shelloutput_text("Logging setup information")
+
+
+def ga_log_write_vars():
+    newdict = {}
+    for key, value in ga_config.items():
+        if type(value) == str:
+            if "pwd" in key:
+                pass
+            else:
+                newdict[key] = value
+        else:
+            newdict[key] = value
+    return newdict
+
+
+ga_setup_log_write_plain(ga_log_write_vars())
+
 ga_setup_shelloutput_header("Thank you for providing the setup information\nThe installation will start now")
 
 ########################################################################################################################
@@ -507,11 +571,11 @@ ga_setup_shelloutput_header("Thank you for providing the setup information\nThe 
 
 # functions
 def ga_foldercreate(tmppath):
-    os.system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (tmppath, tmppath, ga_setup_log_redirect))
+    os.system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (tmppath, tmppath, ga_config["setup_log_redirect"]))
 
 
 def ga_setup_config_file(opentype, openinput):
-    tmpfile = "%s/main/main.conf" % ga_path_root
+    tmpfile = "%s/main/main.conf" % ga_config["path_root"]
     tmpfile_open = open(tmpfile, opentype)
     if opentype == "a" or opentype == "w":
         tmpfile_open.write(openinput)
@@ -522,8 +586,7 @@ def ga_setup_config_file(opentype, openinput):
     
 
 def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
-    ga_setup_shelloutput_header("Mounting %s share" % mname)
-    ga_setup_log_write("Mounting %s share" % mname)
+    ga_setup_shelloutput_text("Mounting %s share" % mname)
     if mtype == "cifs":
         mcreds = "username=%s,password=%s,domain=%s" % (muser, mpwd, mdom)
     else:
@@ -531,7 +594,7 @@ def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
     ga_fstab = open("/etc/fstab", 'a')
     ga_fstab.write("#Growautomation %s mount\n//%s/%s %s %s %s 0 0\n\n" % (mname, msrv, mshr, mpath, mtype, mcreds))
     ga_fstab.close()
-    os.system("mount -a %s" % ga_setup_log_redirect)
+    os.system("mount -a %s" % ga_config["setup_log_redirect"])
 
 
 def ga_replaceline(file, replace, insert):
@@ -539,44 +602,38 @@ def ga_replaceline(file, replace, insert):
 
 
 def ga_openssl_setup():
-    ga_foldercreate("%s/ca/private" % ga_path_root)
-    ga_foldercreate("%s/ca/certs" % ga_path_root)
-    ga_foldercreate("%s/ca/crl" % ga_path_root)
-    os.system("chmod 770 %s/ca/private" % ga_path_root)
-    ga_replaceline("%s/ca/openssl.cnf", "= /root/ca", "= %s/ca"
-                   ) % (ga_path_root, ga_path_root)
+    ga_foldercreate("%s/ca/private" % ga_config["path_root"])
+    ga_foldercreate("%s/ca/certs" % ga_config["path_root"])
+    ga_foldercreate("%s/ca/crl" % ga_config["path_root"])
+    os.system("chmod 770 %s/ca/private" % ga_config["path_root"])
+    ga_replaceline("%s/ca/openssl.cnf", "= /root/ca", "= %s/ca") % (ga_config["path_root"], ga_config["path_root"])
     ga_setup_shelloutput_text("Creating root certificate")
     os.system("openssl genrsa -aes256 -out %s/ca/private/ca.key.pem 4096 && chmod 400 %s/ca/private/ca.key.pe %s"
-              % (ga_path_root, ga_path_root, ga_setup_log_redirect))
-    os.system("openssl req -config %s/ca/openssl.cnf -key %s/ca/private/ca.key.pem -new -x509 -days 7300 -sha256 "
-              "-extensions v3_ca -out %s/ca/certs/ca.cer.pem %s"
-              % (ga_path_root, ga_path_root, ga_path_root, ga_setup_log_redirect))
+              % (ga_config["path_root"], ga_config["path_root"], ga_config["setup_log_redirect"]))
+    os.system("openssl req -config %s/ca/openssl.cnf -key %s/ca/private/ca.key.pem -new -x509 -days 7300 -sha256 -extensions v3_ca -out %s/ca/certs/ca.cer.pem %s"
+              % (ga_config["path_root"], ga_config["path_root"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
 
 def ga_openssl_server_cert(tmpname):
     ga_setup_shelloutput_text("Generating server certificate")
-    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_path_root, tmpname))
-    os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem "
-              "-new -sha256 -out %s/ca/csr/%s.csr.pem" % (ga_path_root, ga_path_root, tmpname, ga_path_root, tmpname))
-    os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 "
-              "-in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem"
-              % (ga_path_root, ga_path_root, tmpname, ga_path_root, tmpname))
+    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_config["path_root"], tmpname))
+    os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem -new -sha256 -out %s/ca/csr/%s.csr.pem"
+              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname))
+    os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 -in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem"
+              % (ga_config["path_root"], ga_config["path_root"], tmpname, ga_config["path_root"], tmpname))
 
 
 def ga_sql_all():
     ga_setup_shelloutput_header("Starting sql setup")
-    ga_sql_backup_pwd = ga_setup_pwd_gen(ga_setup_pwd_length)
+    ga_sql_backup_pwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
     ga_setup_shelloutput_text("Creating mysql backup user")
-    ga_mysql(dbuser="root", command="CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';"
-                                    "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO "
-                                    "'gabackup'@'localhost' IDENTIFIED BY '%s';"
-                                    "FLUSH PRIVILEGES;" % (ga_sql_backup_pwd, ga_sql_backup_pwd))
+    ga_mysql("CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, "
+             "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';FLUSH PRIVILEGES;" % (ga_sql_backup_pwd, ga_sql_backup_pwd))
 
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes")
     ga_setup_shelloutput_text("Example random password: %s\nMySql will not ask for the password if you start it "
-                              "(mysql -u root) locally with sudo/root privileges (set & forget)"
-                              % ga_setup_pwd_gen(ga_setup_pwd_length))
-    os.system("mysql_secure_installation %s" % ga_setup_log_redirect)
+                              "(mysql -u root) locally with sudo/root privileges (set & forget)" % ga_setup_pwd_gen(ga_config["setup_pwd_length"]))
+    os.system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
     tmpfile = open("/etc/mysql/conf.d/ga.mysqldump.cnf", 'a')
     tmpfile.write("[mysqldump]\nuser=gabackup\npassword=%s" % ga_sql_backup_pwd)
@@ -588,166 +645,131 @@ def ga_sql_all():
 
 def ga_sql_server():
     ga_setup_shelloutput_header("Configuring sql as growautomation server")
-    os.system("mysql -u root < /tmp/controller/setup/server/ga_db_setup.sql %s" % ga_setup_log_redirect)
-    if ga_setup_type == "server":
-        os.system("cp /tmp/controller/setup/server/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_setup_log_redirect)
-    elif ga_setup_type == "standalone":
+    os.system("mysql -u root < /tmp/controller/setup/server/ga_db_setup.sql %s" % ga_config["setup_log_redirect"])
+    if ga_config["setup_type"] == "server":
+        os.system("cp /tmp/controller/setup/server/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
+    elif ga_config["setup_type"] == "standalone":
         os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s"
-                  % ga_setup_log_redirect)
+                  % ga_config["setup_log_redirect"])
 
     ga_setup_shelloutput_text("Creating mysql admin user")
-    ga_mysql(dbuser="root", command="CREATE USER 'gadmin'@'%s' IDENTIFIED BY '%s';"
-                                    "GRANT ALL ON ga.* TO 'gadmin'@'%s' IDENTIFIED BY '%s';"
-                                    "FLUSH PRIVILEGES;"
-                                    % ("%", ga_sql_admin_pwd, "%", ga_sql_admin_pwd))
+    ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH PRIVILEGES;"
+             % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"], ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]))
 
-    ga_setup_config_file("a", "[db_growautomation]\nuser=gadmin\npassword=%s" % ga_sql_admin_pwd)
+    ga_setup_config_file("a", "[db_growautomation]\nserveruser=%s\nserverpassword=%s" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
 
-    if ga_setup_type == "server":
+    if ga_config["setup_type"] == "server":
         print("Creating mysql server certificate\n")
         ga_openssl_server_cert("mysql")
-        os.system("ln -s %s/ca/certs/ca.cer.pem /etc/mysql/ssl/cacert.pem && "
-                  "ln -s %s/ca/certs/mysql.cer.pem /etc/mysql/ssl/server-cert.pem && "
+        os.system("ln -s %s/ca/certs/ca.cer.pem /etc/mysql/ssl/cacert.pem && ln -s %s/ca/certs/mysql.cer.pem /etc/mysql/ssl/server-cert.pem && "
                   "ln -s %s/ca/private/mysql.key.pem /etc/mysql/ssl/server-key.pem %s"
-                  % (ga_path_root, ga_path_root, ga_path_root, ga_setup_log_redirect))
+                  % (ga_config["path_root"], ga_config["path_root"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
 
 def ga_sql_agent():
     ga_setup_shelloutput_header("Configuring sql as growautomation agent")
-    ga_sql_agent_pwd = ga_setup_pwd_gen(ga_setup_pwd_length)
-    os.system("cp /tmp/controller/setup/agent/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_setup_log_redirect)
+    ga_config["sql_agent_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+    os.system("cp /tmp/controller/setup/agent/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
     ga_setup_shelloutput_text("Configuring mysql master-slave setup")
     ga_setup_shelloutput_text("Replicating server db to agent for the first time")
-    os.system("mysqldump -h %s -u %s -p %s ga > /tmp/ga.dbdump.sql && mysql -u root ga < /tmp/ga.dbdump.sql %s"
-              % (ga_sql_server_ip, ga_sql_server_agent_usr, ga_sql_server_agent_pwd, ga_setup_log_redirect))
+    os.system("mysqldump -h %s --port %s -u %s -p %s ga > /tmp/ga.dbdump.sql && mysql -u root ga < /tmp/ga.dbdump.sql "
+              "%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["setup_log_redirect"]))
     tmpsearchdepth = 500
     tmpfile = open("/tmp/ga.dbdump.sql", 'r')
     tmplines = tmpfile.readlines()[:tmpsearchdepth]
     for line in tmplines:
         if line.find("Master_Log_File: ") != -1:
-            ga_sql_server_repl_file = line.split("Master_Log_File: ")[1].split("\n", 1)[0]
+            ga_config["sql_server_repl_file"] = line.split("Master_Log_File: ")[1].split("\n", 1)[0]
         elif line.find("Master_Log_Pos: ") != -1:
-            ga_sql_server_repl_pos = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
+            ga_config["sql_server_repl_pos"] = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
 
-    tmpreplfilestate = ga_setup_varcheck(ga_sql_server_repl_file, "Info Master_Log_File not  found.")
-    tmpreplposstate = ga_setup_varcheck(ga_sql_server_repl_pos, "Info Master_Log_Pos not found.")
-
-    ga_sql_server_agent_id = int(ga_mysql(dbuser=ga_sql_server_agent_usr, dbpwd=ga_sql_server_agent_pwd,
-                                          dbserver=ga_sql_server_ip,
-                                          command="SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;"
-                                                  % ga_config_name)) + 100
-    ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1",
-                   "server-id = %s" % ga_sql_server_agent_id)
+    ga_sql_server_agent_id = int(ga_mysql("SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;"
+                                          % ga_config["hostname"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) + 100)
+    ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1", "server-id = %s" % ga_sql_server_agent_id)
     os.system("systemctl restart mysql")
 
     ga_setup_shelloutput_text("Creating local mysql controller user (read only)")
-    ga_mysql(dbuser="root", command="CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';"
-                                    "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';"
-                                    "FLUSH PRIVILEGES;"
-                                    % (ga_sql_agent_pwd, ga_sql_agent_pwd))
+    ga_mysql("CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';GRANT SELECT ON ga.* TO 'gacon'@'localhost' "
+             "IDENTIFIED BY '%s';FLUSH PRIVILEGES;" % (ga_config["sql_agent_pwd"], ga_config["sql_agent_pwd"]))
 
-    ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s"
-                              "\nserverip=%s" % (ga_sql_agent_pwd, ga_sql_server_agent_usr, ga_sql_server_agent_pwd,
-                                                 ga_sql_server_ip))
-    ga_sql_agent_masterslave_command = "CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', " \
-                                       "MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s; START SLAVE; SHOW SLAVE STATUS\G"
+    ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s"
+                         % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"]))
     
-    if tmpreplfilestate is False or tmpreplposstate is False:
-        ga_setup_shelloutput_text("SQL master slave configuration not possible due to missing information.\n"
-                                  "Should be found in mysql dump from server (searching in first %s lines).\n"
-                                  "Failed command: %s" % (tmpsearchdepth, ga_sql_agent_masterslave_command))
+    if ga_setup_keycheck(ga_config["sql_server_repl_file"]) is False or ga_setup_keycheck(ga_config["sql_server_repl_pos"]) is False:
+        ga_setup_shelloutput_text("SQL master slave configuration not possible due to missing information.\nShould be found in mysql dump from server "
+                                  "(searching in first %s lines).\nNot found: 'Master_Log_File:'/'Master_Log_Pos:'" % tmpsearchdepth)
     else:
-        ga_mysql(dbuser="root", command=ga_sql_agent_masterslave_command 
-                                        % (ga_sql_server_ip, ga_sql_server_repl, ga_sql_server_replpwd,
-                                           ga_sql_server_repl_file, ga_sql_server_repl_pos))
+        ga_mysql("CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s; START SLAVE; SHOW SLAVE STATUS;"
+                 % (ga_config["sql_server_ip"], ga_config["sql_server_repl_usr"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"], ga_config["sql_server_repl_pos"]))
+        # \G
 
     ga_setup_shelloutput_text("Linking mysql certificate")
-    os.system("ln -s %s /etc/mysql/ssl/cacert.pem && "
-              "ln -s %s /etc/mysql/ssl/server-cert.pem && "
-              "ln -s %s /etc/mysql/ssl/server-key.pem %s"
-              % (ga_config_server_ca, ga_config_server_cert, ga_config_server_key, ga_setup_log_redirect))
+    os.system("ln -s %s /etc/mysql/ssl/cacert.pem && ln -s %s /etc/mysql/ssl/server-cert.pem && ln -s %s /etc/mysql/ssl/server-key.pem %s"
+              % (ga_config["sql_ca"], ga_config["sql_cert"], ga_config["sql_key"], ga_config["setup_log_redirect"]))
 
 
 def ga_sql_server_create_agent():
     ga_setup_shelloutput_header("Registering a new growautomation agent to the server")
-    ga_sql_create_agent = ga_setup_input("Do you want to register an agent to the ga-server?", True)
-    if ga_sql_create_agent is True:
-        ga_sql_server_agent_list = ga_mysql(dbuser="gadmin", dbpwd=ga_sql_admin_pwd,
-                                            command="SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;")
-        if len(ga_sql_server_agent_list) > 0:
-            ga_setup_shelloutput_text("List of registered agents:\n%s\n" % ga_sql_server_agent_list)
+    create_agent = ga_setup_input("Do you want to register an agent to the ga-server?", True)
+    if create_agent is True:
+        server_agent_list = ga_mysql("SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+        if len(server_agent_list) > 0:
+            ga_setup_shelloutput_text("List of registered agents:\n%s\n" % server_agent_list)
         else:
             ga_setup_shelloutput_text("No agents are registered/enabled yet.\n")
 
-        ga_sql_create_agent_namelen = 0
-        while ga_sql_create_agent_namelen > 10:
-            if ga_sql_create_agent_namelen > 10:
-                ga_setup_shelloutput_text("Agent could not be created due to a too long name.\nMax 10 "
-                                          "characters supported.\nProvided: %s" % ga_sql_create_agent_namelen)
-            ga_sql_create_agent_name = ga_setup_input("Provide agent name.", "gacon01", poss="max. 10 characters long")
-            if ga_sql_create_agent_name in ga_sql_server_agent_list:
+        create_agent_namelen = 0
+        while create_agent_namelen > 10:
+            if create_agent_namelen > 10:
+                ga_setup_shelloutput_text("Agent could not be created due to a too long name.\nMax 10 characters supported.\nProvided: %s" % create_agent_namelen)
+            create_agent_name = ga_setup_input("Provide agent name.", "gacon01", poss="max. 10 characters long")
+            if create_agent_name in server_agent_list:
                 ga_setup_shelloutput_text("Controllername already registered to server. Choose a diffent name")
-                ga_sql_create_agent_name = "-----------"
-            ga_sql_create_agent_namelen = len(ga_sql_create_agent_name)
+                create_agent_name = "-----------"
+            create_agent_namelen = len(create_agent_name)
 
-        ga_sql_create_agent_pwdlen = 0
-        while ga_sql_create_agent_pwdlen > 99 or ga_sql_create_agent_pwdlen < 8:
-            if ga_sql_create_agent_pwdlen > 99 or ga_sql_create_agent_pwdlen < 8:
-                    ga_setup_shelloutput_text("Input error. Value should be between 8 and 99")
-            ga_sql_create_agent_pwd = ga_setup_input("Provide agent password.", ga_setup_pwd_gen(ga_setup_pwd_length),
-                                                     poss="between 8 and 99 characters")
-            ga_sql_create_agent_pwdlen = len(ga_sql_create_agent_pwd)
+        create_agent_pwdlen = 0
+        while create_agent_pwdlen > 99 or create_agent_pwdlen < 8:
+            if create_agent_pwdlen > 99 or create_agent_pwdlen < 8:
+                ga_setup_shelloutput_text("Input error. Value should be between 8 and 99")
+            create_agent_pwd = ga_setup_input("Provide agent password.", ga_setup_pwd_gen(ga_config["setup_pwd_length"]), poss="between 8 and 99 characters")
+            create_agent_pwdlen = len(create_agent_pwd)
 
         ga_setup_shelloutput_text("Creating mysql controller user")
-        ga_sql_create_agent_desclen = 0
-        while ga_sql_create_agent_desclen > 50:
-            if ga_sql_create_agent_desclen > 50:
+        create_agent_desclen = 0
+        while create_agent_desclen > 50:
+            if create_agent_desclen > 50:
                 ga_setup_shelloutput_text("Description longer than 50 characters. Try again.")
-            ga_sql_create_agent_desc = ga_setup_input("Do you want to add a description to the agent?",
-                                                      poss="String up to 50 characters")
-            ga_sql_create_agent_desclen = len(ga_sql_create_agent_desc)
+            create_agent_desc = ga_setup_input("Do you want to add a description to the agent?", poss="String up to 50 characters")
+            create_agent_desclen = len(create_agent_desc)
 
-        ga_mysql(dbuser="gadmin", dbpwd=ga_sql_admin_pwd,
-                 command="CREATE USER '%s'@'%s' IDENTIFIED BY '%s';"
-                         "GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';"
-                         "FLUSH PRIVILEGES;"
-                         "INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
-                         % (ga_sql_create_agent_name, "%", ga_sql_create_agent_pwd, ga_sql_create_agent_name, "%",
-                            ga_sql_create_agent_pwd,
-                            "gasetup", ga_sql_create_agent_name, ga_sql_create_agent_desc))
+        ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH "
+                 "PRIVILEGES;INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
+                 % (create_agent_name, "%", create_agent_pwd, create_agent_name, "%", create_agent_pwd, "gasetup", create_agent_name, create_agent_desc),
+                 ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
-        ga_sql_create_replica_usr = ga_sql_create_agent_name + "replica"
-        ga_sql_create_replica_pwd = ga_setup_pwd_gen(ga_setup_pwd_length)
-        ga_mysql(dbuser="gadmin", dbpwd=ga_sql_admin_pwd,
-                 command="CREATE USER '%s'@'%s' IDENTIFIED BY '%s';"
-                         "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';"
-                         "FLUSH PRIVILEGES;"
-                         % (ga_sql_create_replica_usr, "%", ga_sql_create_replica_pwd, ga_sql_create_replica_usr, "%",
-                            ga_sql_create_replica_pwd))
+        create_replica_usr = create_agent_name + "replica"
+        create_replica_pwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+        ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH PRIVILEGES;"
+                 % (create_replica_usr, "%", create_replica_pwd,  create_replica_usr, "%", create_replica_pwd), ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
-        ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s"
-                                  "\nreplicapassword=%s"
-                      % (ga_sql_create_agent_name, ga_sql_server_ip, ga_sql_create_agent_name, ga_sql_create_agent_pwd,
-                         ga_sql_create_replica_usr, ga_sql_create_replica_pwd))
+        ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
+                             % (create_agent_name, ga_config["sql_server_ip"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
 
         ga_setup_shelloutput_text("Creating mysql agent certificate\n")
-        ga_openssl_server_cert(ga_sql_create_agent_name)
+        ga_openssl_server_cert(create_agent_name)
 
 
 def ga_ufw_setup():
     ga_setup_shelloutput_header("Configuring firewall")
-    os.system("ufw default deny outgoing && ufw default deny incoming && "
-              "ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && allow out to any port 22/tcp &&"
-              " ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
-              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && "
-              "ufw allow 22/tcp from 10.0.0.0/10")
-    if ga_setup_type == "server" or ga_setup_type == "agent":
-              os.system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && "
-                        "ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_setup_log_redirect)
-    ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\n"
-                                   "SSH and MySql connections from public ip ranges will be denied!", True)
+    os.system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && "
+              "ufw allow out to any port 22/tcp && ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
+              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && ufw allow 22/tcp from 10.0.0.0/10")
+    if ga_config["setup_type"] == "server" or ga_config["setup_type"] == "agent":
+        os.system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
+    ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\nSSH and MySql connections from public ip ranges will be denied!", True)
     if ga_ufw_enable is True:
-        os.system("ufw enable %s" % ga_setup_log_redirect)
+        os.system("ufw enable %s" % ga_config["setup_log_redirect"])
 
 
 ########################################################################################################################
@@ -755,97 +777,139 @@ def ga_ufw_setup():
 
 # install packages
 ga_setup_shelloutput_header("Installing software packages")
-os.system("apt-get update" + ga_setup_log_redirect)
-if ga_setup_linuxupgrade is True:
-    os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s" % ga_setup_log_redirect)
+os.system("apt-get update" + ga_config["setup_log_redirect"])
+if ga_config["setup_linuxupgrade"] is True:
+    os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s" % ga_config["setup_log_redirect"])
 
-os.system("apt-get -y install python3 mariadb-server mariadb-client git %s" % ga_setup_log_redirect)
+os.system("apt-get -y install python3 mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
 
-if ga_setup_type == "agent" or ga_setup_type == "standalone":
-    os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git %s" % ga_setup_log_redirect)
-    if ga_setup_ca is True:
-        os.system("git main --global http.sslCAInfo %s && python3 -m pip main set global.cert %s %s"
-                  % (ga_setup_capath, ga_setup_capath, ga_setup_log_redirect))
+if ga_config["setup_type"] == "agent" or ga_config["setup_type"] == "standalone":
+    os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
+    if ga_config["setup_ca"] is True:
+        os.system("git main --global http.sslCAInfo %s && python3 -m pip main set global.cert %s %s" % (ga_config["setup_ca_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
     ga_setup_shelloutput_text("Installing python packages")
-    os.system("python3 -m pip install "
-              "mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay "
-              "--default-timeout=100 %s" % ga_setup_log_redirect)
+    os.system("python3 -m pip install mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s" % ga_config["setup_log_redirect"])
 else:
     os.system("apt-get -y install openssl")
 
-if (ga_mnt_backup or ga_mnt_log_) is True:
-    if ga_mnt_backup_type == "nfs" or ga_mnt_log_type == "nfs":
-        os.system("apt-get -y install nfs-common %s" % ga_setup_log_redirect)
-    elif ga_mnt_backup_type == "cifs" or ga_mnt_log_type == "cifs":
-        os.system("apt-get -y install cifs-utils %s" % ga_setup_log_redirect)
+if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
+    if ga_config["mnt_backup_type"] == "nfs" or ga_config["mnt_log_type"] == "nfs":
+        os.system("apt-get -y install nfs-common %s" % ga_config["setup_log_redirect"])
+    elif ga_config["mnt_backup_type"] == "cifs" or ga_config["mnt_log_type"] == "cifs":
+        os.system("apt-get -y install cifs-utils %s" % ga_config["setup_log_redirect"])
 
 if ga_ufw is True:
-    os.system("apt-get -y install ufw %s" % ga_setup_log_redirect)
+    os.system("apt-get -y install ufw %s" % ga_config["setup_log_redirect"])
 
 # folders
 # Create folders
 ga_setup_shelloutput_header("Setting up directories")
 ga_setup_log_write("Setting up directories")
-os.system("useradd growautomation %s" % ga_setup_log_redirect)
+os.system("useradd growautomation %s" % ga_config["setup_log_redirect"])
 
-ga_foldercreate(ga_path_backup)
-if ga_versionold is True:
-    if ga_versionold_replace_backup is True:
-        ga_versionoldbackup = ga_path_backup + "/install"
-        os.system("mkdir -p %s && mv %s %s %s"
-                  % (ga_versionoldbackup, ga_path_root, ga_versionoldbackup, ga_setup_log_redirect))
-        os.system("mv %s %s" % (ga_version_file, ga_versionoldbackup))
-    else:
-        os.system("mv %s /tmp" % ga_path_root)
-    tmpfile = open(ga_version_file, 'w')
-    tmpfile.write("gaversion=%s\ngaroot=%s\n" % (ga_version, ga_path_root))
-    tmpfile.close()
-ga_foldercreate(ga_path_root)
-ga_foldercreate(ga_path_log)
+ga_foldercreate(ga_config["path_backup"])
+if ga_config["setup_old_version"] is True:
+    def ga_backup_oldversion():
+        global ga_config
+        if ga_config["setup_old_replace_backup"] is True:
+            ga_setup_shelloutput_text("Backing up old growautomation root directory and database")
+            oldbackup = ga_config["path_backup"] + "/install"
+            os.system("mkdir -p %s && mv %s %s %s" % (oldbackup, ga_config["path_root"], oldbackup, ga_config["setup_log_redirect"]))
+            os.system("mv %s %s" % (ga_config["setup_version_file"], oldbackup))
+            os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
+            os.listdir(oldbackup)
+            if os.path.exists(oldbackup + "/ga.dbdump.sql") is False or \
+                    os.path.exists(oldbackup + "/growautomation/") is False:
+                ga_setup_shelloutput_text("Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
+                                          "to get to Shell -> 'fg' to get back)\nBackuppath: %s" % oldbackup)
+                ga_config["old_replace_backup_failed_yousure"] = ga_setup_input("Please verify that you want to continue the setup", False)
+        else:
+            os.system("mv %s /tmp" % ga_config["path_root"])
 
-if ga_mnt_backup is True:
-    ga_mounts("backup", ga_mnt_backup_usr, ga_mnt_backup_pwd, ga_mnt_backup_dom, ga_mnt_backup_server, ga_mnt_backup_share,
-              ga_path_backup, ga_mnt_backup_type)
-if ga_mnt_log is True:
-    ga_mounts("log", ga_mnt_log_usr, ga_mnt_log_pwd, ga_mnt_log_dom, ga_mnt_log_server, ga_mnt_log_share, ga_path_log,
-              ga_mnt_log_type)
+    ga_backup_oldversion()
+
+    def ga_write_versionfile():
+        tmpfile = open(ga_config["setup_version_file"], 'w')
+        tmpfile.write("version=%s\nroot=%s\nname=%s\ntype=%s\n" % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]))
+        tmpfile.close()
+    ga_write_versionfile()
+ga_foldercreate(ga_config["path_root"])
+ga_foldercreate(ga_config["path_log"])
+
+if ga_config["mnt_backup"] is True or ga_config["mnt_log"] is True:
+    ga_setup_shelloutput_header("Mounting shares")
+    if ga_config["mnt_backup"] is True:
+        ga_mounts("backup", ga_config["mnt_backup_usr"], ga_config["mnt_backup_pwd"], ga_config["mnt_backup_dom"], ga_config["mnt_backup_srv"],
+                  ga_config["mnt_backup_share"], ga_config["path_backup"], ga_config["mnt_backup_type"])
+    if ga_config["mnt_log"] is True:
+        ga_mounts("log", ga_config["mnt_log_usr"], ga_config["ga_mnt_log_pwd"], ga_config["ga_mnt_log_dom"], ga_config["mnt_log_server"], ga_config["mnt_log_share"],
+                  ga_config["path_log"], ga_config["mnt_log_type"])
 
 # code setup
 ga_setup_shelloutput_header("Setting up growautomation code")
 ga_setup_log_write("Setting up growautomation code")
-os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_setup_log_redirect)
-os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main "
-          "/usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_setup_log_redirect)
-if ga_setup_type == "agent" or ga_setup_type == "standalone":
-    os.system("cp -r /tmp/controller/code/agent/* %s %s" % (ga_path_root, ga_setup_log_redirect))
+os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
+os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main /usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_config["setup_log_redirect"])
+if ga_config["setup_type"] == "agent" or ga_config["setup_type"] == "standalone":
+    os.system("cp -r /tmp/controller/code/agent/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-if ga_setup_type == "server" or ga_setup_type == "standalone":
-    os.system("cp -r /tmp/controller/code/server/* %s %s" % (ga_path_root, ga_setup_log_redirect))
+if ga_config["setup_type_ss"] is True:
+    os.system("cp -r /tmp/controller/code/server/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config_name, ga_setup_type))
+ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
 
 # creating openssl ca
-if ga_setup_type == "server":
+if ga_config["setup_type"] == "server":
     ga_openssl_setup()
 
 
 # db setup
 ga_sql_all()
 
-if ga_setup_type == "server" or "standalone":
-    ga_sql_admin_pwd = ga_setup_pwd_gen(ga_setup_pwd_length)
-    ga_sql_server(ga_path_root, ga_sql_admin_pwd)
+if ga_config["setup_type_ss"] is True:
+    ga_sql_server()
     
-if ga_setup_type == "server":
+if ga_config["setup_type"] == "server":
     ga_sql_server_create_agent()
 
-elif ga_setup_type == "agent":
+elif ga_config["setup_type"] == "agent":
     ga_sql_agent()
 
 if ga_ufw is True:
     ga_ufw_setup()
 
-ga_setup_shelloutput_header("Setup finished! Please reboot the system.")
+ga_setup_shelloutput_header("Writing configuration to database")
+
+
+def ga_mysql_write_config():
+    newdict = {}
+    for key, value in ga_config.items():
+        if type(value) == str:
+            if "setup_" in key or "sql_server_agent_pwd" in key or "sql_agent_pwd" in key or "sql_agent_usr" in key or "sql_server_admin_pwd" in key:
+                pass
+            else:
+                newdict[key] = value
+        else:
+            newdict[key] = value
+    if ga_config["setup_type_ss"] is True:
+        dbuser = ga_config["sql_server_admin_usr"]
+        dbpwd = ga_config["sql_server_admin_pwd"]
+        table = "Server"
+    else:
+        dbuser = ga_config["sql_server_agent_usr"]
+        dbpwd = ga_config["sql_server_agent_pwd"]
+        table = "Agent"
+    for key, value in newdict.items():
+        if ga_config["setup_type"] == "agent":
+            ga_mysql("INSERT INTO ga.%sConfig (author, agent, name, data) VALUES (%s, %s, %s, %s);" % (table, "gasetup", ga_config["hostname"], key, value), dbuser, dbpwd)
+        elif ga_config["setup_type_ss"] is True:
+            ga_mysql("INSERT INTO ga.%sConfig (author, name, data) VALUES (%s, %s, %s);" % (table, "gasetup", key, value), dbuser, dbpwd)
+
+
+ga_mysql_write_config()
+
+
+ga_setup_shelloutput_header("Setup finished! Please reboot the system")
 ga_setup_log_write("Setup finished.")
 # delete old fstab entries and replace them (ask user)
 # systemd timer setup for agentdata and serverbackup
