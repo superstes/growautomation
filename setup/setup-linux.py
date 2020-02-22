@@ -116,7 +116,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
                 return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
                         "": default}[input(styletype + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower()]
             except KeyError:
-                print(styletype + "WARNING: Invalid input please enter either yes/true/no/false!\n" + colorama_fore.RESET)
+                ga_setup_shelloutput_text("WARNING: Invalid input please enter either yes/true/no/false!\n", style="warn")
     elif type(default) == str:
         if intype == "pass" and default != "":
             getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (prompt, default)) or "%s" % default
@@ -126,7 +126,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
             inputnumber = 0
             while inputnumber < 8 or inputnumber > 99:
                 if (inputnumber < 8 or inputnumber > 99) and whilecount > 0:
-                    print("Input error. Value should be between 8 and 99.\n")
+                    ga_setup_shelloutput_text("Input error. Value should be between 8 and 99.\n", style="warn")
                 whilecount += 1
                 inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
                 inputnumber = int(inputstr)
@@ -223,12 +223,10 @@ def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
     if type(searchfor) == list:
         itemdatadict = {}
         for item in searchfor:
-            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s"
-                                          % (command_table, item, command_agents), user, pwd)
+            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, item, command_agents), user, pwd)
         return itemdatadict
     elif type(searchfor) == str:
-        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s"
-                        % (command_table, searchfor, command_agents), user, pwd)
+        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, searchfor, command_agents), user, pwd)
         return data
 
 
@@ -242,7 +240,7 @@ def ga_setup_configparser_file(file, text):
 
 def ga_setup_exit(shell, log):
     ga_setup_log_write("\nExit. %s.\n\n" % log)
-    raise SystemExit(colorama_fore.RED + "\n%s!\nYou can find the full setup log at %s.\n\n" + colorama_fore.RESET % (shell, ga_config["setup_log"]))
+    raise SystemExit(ga_setup_shelloutput_colors("err") + "\n%s!\nYou can find the full setup log at %s.\n\n" % (shell, ga_config["setup_log"]) + colorama_fore.RESET)
 
 
 ########################################################################################################################
