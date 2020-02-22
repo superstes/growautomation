@@ -884,11 +884,8 @@ ga_setup_shelloutput_header("Writing configuration to database")
 def ga_mysql_write_config():
     newdict = {}
     for key, value in ga_config.items():
-        if type(value) == str:
-            if "setup_" in key or "sql_server_agent_pwd" in key or "sql_agent_pwd" in key or "sql_agent_usr" in key or "sql_server_admin_pwd" in key:
-                pass
-            else:
-                newdict[key] = value
+        if "setup_" in key or "sql_server_agent_pwd" in key or "sql_agent_pwd" in key or "sql_agent_usr" in key or "sql_server_admin_pwd" in key:
+            pass
         else:
             newdict[key] = value
     if ga_config["setup_type_ss"] is True:
