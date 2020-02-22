@@ -185,38 +185,45 @@ def ga_mysql_unixsock():
         return sql_sock
 
 
-def ga_mysql(dbinput, dbuser="", dbpwd=""):
-    if ga_config["sql_server_ip"] == "127.0.0.1" and dbuser != "root" or dbuser != "":
-        setting = "user=%s, passwd=%s, unix_socket=%s" % (dbuser, dbpwd, ga_mysql_unixsock())
-    elif ga_config["sql_server_ip"] == "127.0.0.1":
-        setting = "unix_socket=%s" % ga_mysql_unixsock()
+def ga_mysql_execute(connection, command):
+    try:
+        curser = connection.cursor()
+        curser.execute(command)
+        connection.commit()
+        data = curser.fetchall()
+        curser.close()
+        connection.close()
+        return data
+    except mysql.connector.Error as error:
+        connection.rollback()
+        ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
+        return False
+
+
+def ga_mysql(dbinput, inuser="", dbpwd=""):
+    if inuser == "":
+        dbuser = "root"
     else:
-        setting = "host=%s, port=%s, user=%s, passwd=%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], dbuser, dbpwd)
+        dbuser = inuser
 
-    connection = mysql.connector.connect(setting)
-    curser = connection.cursor()
-
-    def ga_mysql_execute(command):
-        try:
-            curser.execute(command)
-            connection.commit()
-            data = curser.fetchall()
-            curser.close()
-            connection.close()
-            return data
-        except mysql.connector.Error as error:
-            connection.rollback()
-            ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
-            return False
+    if ga_config["sql_server_ip"] == "127.0.0.1":
+        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=ga_mysql_unixsock(), user=dbuser, passwd=dbpwd)
+    else:
+        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
 
     if type(dbinput) == str:
-        return ga_mysql_execute(dbinput)
+        return ga_mysql_execute(connection, dbinput)
     elif type(dbinput) == list:
-        returnlist = []
-        for item in dbinput:
-            dboutput = ga_mysql_execute(item)
-            returnlist.append(dboutput)
-        return returnlist
+        outputdict = {}
+        anyfalse = True
+        for command in dbinput:
+            output = ga_mysql_execute(connection, command)
+            outputdict[command] = output
+            if output is False:
+                anyfalse = False
+        if anyfalse is False:
+            return False
+        return outputdict
 
 
 def ga_mysql_conntest(dbuser="", dbpwd=""):
@@ -340,6 +347,10 @@ if ga_config["setup_old"] is False:
     ga_setup_shelloutput_text("Growautomation will be installed completely new", style="succ")
 else:
     ga_setup_shelloutput_text("Growautomation will be migrated to the new version", style="succ")
+    if ga_config["setup_fresh"] is True:
+        ga_setup_shelloutput_text("The configuration and data will be overwritten", style="succ")
+    else:
+        ga_setup_shelloutput_text("The configuration and data will be migrated", style="succ")
 
 ########################################################################################################################
 
@@ -898,7 +909,7 @@ def ga_infra_oldversion_backup():
     os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
     os.system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
-    ga_setup_shelloutput_text("Backupfolder: %s\nRootbackup: %s" % (os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
+    ga_setup_shelloutput_text("Backupfolder:\n%s\nRoot backupfolder:\n%s" % (os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
     if os.path.exists(oldbackup + "/ga.dbdump.sql") is False or \
             os.path.exists(oldbackup + "/growautomation/") is False:
         ga_setup_shelloutput_text("Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
