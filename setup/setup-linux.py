@@ -101,13 +101,10 @@ def ga_setup_fstabcheck():
         stringcount = readfile.read().count("Growautomation")
         if stringcount > 0:
             shellhight, shellwidth = os.popen('stty size', 'r').read().split()
-            print('#' * (int(shellwidth) - 1))
-            print(colorama_fore.MAGENTA + "WARNING!\n"
-                  "You already have one or more remote shares configured.\n"
-                  "If you want to install new ones you should disable the old ones by editing the '/etc/fstab' file.\n"
-                  "Just add a '#' in front of the old shares or delete those lines to disable them.\n"
-                  "WARNING!" + colorama_fore.RESET)
-            print('#' * (int(shellwidth) - 1) + "\n")
+            ga_setup_shelloutput_text("WARNING!\nYou already have one or more remote shares configured.\nIf you want"
+                                      " to install new ones you should disable the old ones by editing the "
+                                      "'/etc/fstab' file.\nJust add a '#' in front of the old shares or delete "
+                                      "those lines to disable them", style="warn")
 
 
 def ga_setup_input(prompt, default="", poss="", intype="", style=""):
@@ -269,7 +266,7 @@ else:
                                                 "This installation script won't check your already installed programs for compatibility problems.\n"
                                                 "If you already use web-/database or other complex software on this system you should back it up before installing this software.\n"
                                                 "We assume no liability for problems that may be caused by this installation!\n"
-                                                "Accept the risk if you want to continue.", False)
+                                                "Accept the risk if you want to continue.", False, style="warn")
     if ga_config["setup_warning"] is False:
         ga_setup_exit("Script cancelled by user\nYou can also install this software manually through the setup "
                       "manual.\nIt can be found at: https://git.growautomation.at/tree/master/manual",
@@ -374,7 +371,7 @@ def ga_config_var_base():
         if ga_config["setup_type"] == "agent":
             ga_config["setup_yousure"] = ga_setup_input("WARNING!\nYou should install/update the growautomation server component before the agent because of dependencies.\n"
                                                         "Find more information about the creation of new agents at:\nhttps://git.growautomation.at/tree/master/manual/agent\n\n"
-                                                        "Agree if you have already installed/updated the ga server or disagree to stop the installation.", False)
+                                                        "Agree if you have already installed/updated the ga server or disagree to stop the installation.", False, style="warn")
             if ga_config["setup_yousure"] is False:
                 ga_setup_exit("Stopping script. Server was not installed before agent", "User has not installed the server before the agent")
         ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
