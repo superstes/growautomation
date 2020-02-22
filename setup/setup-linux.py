@@ -31,8 +31,8 @@ from colorama import Fore, Back, Style
 ga_config = {}
 ga_config["version"] = "0.2.1.2"
 ga_config["setup_version_file"] = "/etc/growautomation.version"
-ga_config["setup_log"] = "/var/log/growautomation-setup.log"
-ga_config["setup_log_redirect"] = "2>&1 | tee -a %s" % ga_config["setup_log"]
+ga_config["setup_log"] = "/var/log/growautomation-setup_%s.log" % datetime.now().strftime("%Y-%m-%d_%H-%M")
+ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 
 
 ########################################################################################################################
@@ -53,20 +53,29 @@ def ga_setup_shelloutput_subheader(output):
     print('-' * (int(shellwidth) - 1))
     print(output)
     print('-' * (int(shellwidth) - 1))
+    ga_setup_log_write("####################################")
     ga_setup_log_write(output)
+    ga_setup_log_write("####################################")
 
 
 def ga_setup_shelloutput_text(output):
-    print("%s.\n" % output)
+    if output.find("Fore.") != -1:
+        print("%s\n" % output)
+    else:
+        print("%s.\n" % output)
     ga_setup_log_write(output)
 
 
+def ga_setup_shelloutput_info(output):
+    ga_setup_shelloutput_text(Fore.BLUE + output + "." + Style.RESET_ALL)
+
+
 def ga_setup_shelloutput_warning(output):
-    ga_setup_shelloutput_text(Fore.YELLOW + output + Style.RESET_ALL)
+    ga_setup_shelloutput_text(Fore.YELLOW + output + "." + Style.RESET_ALL)
     
     
 def ga_setup_shelloutput_success(output):
-    ga_setup_shelloutput_text(Fore.GREEN + output + Style.RESET_ALL)
+    ga_setup_shelloutput_text(Fore.GREEN + output + "." + Style.RESET_ALL)
 
 
 def ga_setup_log_write(output):
@@ -102,35 +111,38 @@ def ga_setup_fstabcheck():
 
 def ga_setup_input(prompt, default=" ", poss=" ", intype=" "):
     if prompt.find("WARNING") != -1:
-        prompt = Fore.YELLOW + prompt + Style.RESET_ALL
+        styledprompt = Fore.YELLOW + prompt + Style.RESET_ALL
+    elif prompt.find("ERROR") != -1:
+        styledprompt = Fore.RED + prompt + Style.RESET_ALL
+    else:
+        styledprompt = prompt
     if type(default) == bool:
         while True:
             try:
                 return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False,
                         "": default}[input("\n%s\n(Poss: yes/true/no/false - Default: %s)\n > "
-                                           % (prompt, default)).lower()]
+                                           % (styledprompt, default)).lower()]
             except KeyError:
                 print(Fore.YELLOW + "WARNING: Invalid input please enter either yes/true/no/false!\n" + Style.RESET_ALL)
     elif type(default) == str:
         if intype == "pass" and default != " ":
-            getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (prompt, default)) or "%s" % default
+            getpass.getpass(prompt="\n%s\n(Random: %s)\n > " % (styledprompt, default)) or "%s" % default
         elif intype == "pass":
-            getpass.getpass(prompt="\n%s\n > " % prompt)
+            getpass.getpass(prompt="\n%s\n > " % styledprompt)
         elif intype == "passgen":
-            tmpinput = 0
-            while tmpinput < 8 or tmpinput > 99:
-                if tmpinput < 8 or tmpinput > 99:
+            inputnumber = 0
+            while inputnumber < 8 or inputnumber > 99:
+                if inputnumber < 8 or inputnumber > 99:
                     print("Input error. Value should be between 8 and 99.\n")
-                tmpinputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower()
-                                  or "%s" % default)
-                tmpinput = int(tmpinputstr)
-            return tmpinput
+                inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (styledprompt, poss, default)).lower() or "%s" % default)
+                inputnumber = int(inputstr)
+            return inputstr
         elif poss != " ":
-            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
+            return str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (styledprompt, poss, default)).lower() or "%s" % default)
         elif default != " ":
-            return str(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
+            return str(input("\n%s\n(Default: %s)\n > " % (styledprompt, default)).lower() or "%s" % default)
         else:
-            return str(input("\n%s\n > " % prompt).lower())
+            return str(input("\n%s\n > " % styledprompt).lower())
 
 
 def ga_mnt_creds(outtype, inputstr=""):
@@ -271,9 +283,8 @@ else:
 ga_setup_shelloutput_header("Checking if growautomation is already installed on the system")
 
 # check if growautomation is already installed
-# kills itself
 if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/etc/growautomation") is True:
-    ga_setup_shelloutput_text("Growautomation version file or default root path found.")
+    ga_setup_shelloutput_info("Growautomation version file or default root path found.")
 
     def ga_config_vars_oldversion_replace():
         global ga_config
@@ -310,7 +321,7 @@ if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/e
         ga_setup_shelloutput_warning("Growautomation is currently installed. But its version number could not be found")
         ga_config_vars_oldversion_replace()
 else:
-    ga_setup_shelloutput_text("No previous growautomation installation found")
+    ga_setup_shelloutput_info("No previous growautomation installation found")
     ga_config["setup_old"] = False
 
 if ga_config["setup_old"] is False:
@@ -328,6 +339,7 @@ ga_setup_shelloutput_header("Retrieving setup configuration through user input")
 
 def ga_config_var_base():
     global ga_config
+    ga_setup_shelloutput_subheader("Checking basic information")
 
     def ga_config_var_base_name():
         global ga_config
@@ -358,14 +370,14 @@ def ga_config_var_base():
                                          "WARNING!\nTo keep your old configuration the setuptype must be the same as before")
             ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
             if ga_config["setup_old_backup"] is False:
-                ga_setup_shelloutput_text("Turning on migration backup option - just in case")
+                ga_setup_shelloutput_info("Turning on migration backup option - just in case")
                 ga_config["setup_old_backup"] = True
 
     if ga_config["setup_fresh"] is True:
         ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
 
         if ga_config["setup_type"] == "agent":
-            ga_config["setup_yousure"] = ga_setup_input("You should install/update the growautomation server component before the agent because of dependencies.\n"
+            ga_config["setup_yousure"] = ga_setup_input("WARNING!\nYou should install/update the growautomation server component before the agent because of dependencies.\n"
                                                         "Find more information about the creation of new agents at:\nhttps://git.growautomation.at/tree/master/manual/agent\n\n"
                                                         "Agree if you have already installed/updated the ga server or disagree to stop the installation.", False)
             if ga_config["setup_yousure"] is False:
@@ -385,6 +397,7 @@ def ga_config_var_base():
 
 def ga_config_var_setup():
     global ga_config
+    ga_setup_shelloutput_subheader("Checking setup options")
     ga_config["setup_pwd_length"] = ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen")
 
     ga_config["setup_ca"] = ga_setup_input("Need to import internal ca certificate for git/pip? Mainly needed if your firewall uses ssl inspection.", False)
@@ -399,6 +412,7 @@ def ga_config_var_setup():
 
 def ga_config_var_db():
     global ga_config
+    ga_setup_shelloutput_subheader("Checking for database credentials")
     whilecount = 0
     whilestate = False
     if ga_config["setup_type"] == "agent":
@@ -427,7 +441,7 @@ def ga_config_var_db():
 
             while whilestate is False:
                 if whilecount > 0:
-                    ga_setup_shelloutput_text("You can reset/configure the agent database credentials on the "
+                    ga_setup_shelloutput_info("You can reset/configure the agent database credentials on the "
                                               "growautomation server. Details can be found in the manual: "
                                               "https://git.growautomation.at/tree/master/manual")
                 ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentuser=")[11:]
@@ -461,7 +475,7 @@ def ga_config_var_db():
                                     ga_setup_exit("All database connections failed", "User chose to exit since all database connections failed")
                                 ga_config["setup_server_admin_reset"] = False
                                 if ga_config["setup_old_backup"] is False:
-                                    ga_setup_shelloutput_text("Turning on migration backup option - just in case")
+                                    ga_setup_shelloutput_info("Turning on migration backup option - just in case")
                                     ga_config["setup_old_backup"] = True
                                 return "none"
                             else:
@@ -479,8 +493,9 @@ def ga_config_var_db():
 
 def ga_config_var_certs():
     global ga_config
+    ga_setup_shelloutput_subheader("Checking certificate information")
     if ga_config["setup_type"] == "agent":
-        ga_setup_shelloutput_text("The following certificates can be found in the serverpath '$garoot/ca/certs/'\n")
+        ga_setup_shelloutput_info("The following certificates can be found in the serverpath '$garoot/ca/certs/'\n")
         ga_config["sql_ca"] = ga_setup_input("Provide the path to the ca-certificate from your ga-server.", "%s/ssl/ca.cer.pem" % ga_config["path_root"])
         ga_config["sql_cert"] = ga_setup_input("Provide the path to the agent server certificate.", "%s/ssl/%s.cer.pem" % (ga_config["path_root"], ga_config["hostname"]))
         ga_config["sql_key"] = ga_setup_input("Provide the path to the agent server key.", "%s/ssl/%s.key.pem" % (ga_config["path_root"], ga_config["hostname"]))
@@ -490,12 +505,9 @@ def ga_config_var_certs():
 
 if ga_config["setup_fresh"] is False:
     ga_config_var_setup()
-
-    ga_setup_shelloutput_header("Checking for database credentials")
     ga_config_var_db()
-    #
 
-    ga_setup_shelloutput_header("Retrieving existing configuration from database")
+    ga_setup_shelloutput_subheader("Retrieving existing configuration from database")
     ga_config_list_agent = ["backup", "path_backup", "mnt_backup", "mnt_backup_type", "mnt_backup_server",
                             "mnt_backup_share", "mnt_backup_usr", "mnt_backup_pwd", "mnt_backup_dom", "path_log",
                             "mnt_log", "mnt_shared_creds", "mnt_shared_server", "mnt_shared_type", "mnt_log_type",
@@ -517,6 +529,7 @@ if ga_config["setup_fresh"] is False:
 if ga_config["setup_fresh"] is True:
     ga_config_var_base()
     ga_config_var_setup()
+    ga_config_var_db()
 
     ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
     ga_backup = ga_setup_input("Want to enable backup?", True)
@@ -587,10 +600,9 @@ ga_ufw = ga_setup_input("Do you want to install the linux software firewall (ufw
 ########################################################################################################################
 
 ga_setup_shelloutput_subheader("Logging setup information")
-print(ga_config)
-# kills itself
+
+
 def ga_log_write_vars():
-    newdict = {}
     for key, value in ga_config.items():
         if "pwd" in key:
             pass
@@ -600,7 +612,7 @@ def ga_log_write_vars():
 
 ga_log_write_vars()
 
-ga_setup_shelloutput_header("Thank you for providing the setup information\nThe installation will start now")
+ga_setup_shelloutput_text("Thank you for providing the setup information\nThe installation will start now")
 
 ########################################################################################################################
 
@@ -707,7 +719,7 @@ def ga_sql_agent():
     ga_config["sql_agent_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
     os.system("cp /tmp/controller/setup/agent/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
     ga_setup_shelloutput_subheader("Configuring mysql master-slave setup")
-    ga_setup_shelloutput_text("Replicating server db to agent for the first time")
+    ga_setup_shelloutput_info("Replicating server db to agent for the first time")
     os.system("mysqldump -h %s --port %s -u %s -p %s ga > /tmp/ga.dbdump.sql && mysql -u root ga < /tmp/ga.dbdump.sql "
               "%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["setup_log_redirect"]))
     tmpsearchdepth = 500
@@ -750,9 +762,9 @@ def ga_sql_server_create_agent():
     if create_agent is True:
         server_agent_list = ga_mysql("SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
         if len(server_agent_list) > 0:
-            ga_setup_shelloutput_text("List of registered agents:\n%s\n" % server_agent_list)
+            ga_setup_shelloutput_info("List of registered agents:\n%s\n" % server_agent_list)
         else:
-            ga_setup_shelloutput_text("No agents are registered/enabled yet.\n")
+            ga_setup_shelloutput_info("No agents are registered/enabled yet.\n")
 
         create_agent_namelen = 0
         while create_agent_namelen > 10:
@@ -958,7 +970,7 @@ def ga_mysql_write_config():
 
 
 ga_mysql_write_config()
-
+ga_log_write_vars()
 
 ga_setup_shelloutput_header("Setup finished! Please reboot the system")
 ga_setup_log_write("Setup finished.")
