@@ -26,14 +26,14 @@ import getpass
 from random import choice as random_choice
 from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
-from colorama import Fore as colorama_fore
 
 
 # basic vars
 ga_config = {}
 ga_config["version"] = "0.2.1.2"
 ga_config["setup_version_file"] = "/etc/growautomation.version"
-ga_config["setup_log"] = "/var/log/growautomation-setup_%s.log" % datetime.now().strftime("%Y-%m-%d_%H-%M")
+ga_config["setup_log_path"] = "/var/log/growautomation/"
+ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
 ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 
 
@@ -48,16 +48,20 @@ def ga_setup_shelloutput_header(output):
     print("\n" + output + "\n")
     print('#' * (int(shellwidth) - 1))
     print("\n")
+    ga_setup_log_write("####################################")
+    ga_setup_log_write(output)
+    ga_setup_log_write("####################################")
 
 
 def ga_setup_shelloutput_subheader(output):
     shellhight, shellwidth = os.popen('stty size', 'r').read().split()
+    print("\n")
     print('-' * (int(shellwidth) - 1))
     print(output)
     print('-' * (int(shellwidth) - 1))
-    ga_setup_log_write("####################################")
+    ga_setup_log_write("------------------------------------")
     ga_setup_log_write(output)
-    ga_setup_log_write("####################################")
+    ga_setup_log_write("------------------------------------")
 
 
 def ga_setup_shelloutput_colors(style):
@@ -80,14 +84,10 @@ def ga_setup_shelloutput_text(output, style=""):
 
 
 def ga_setup_log_write(output):
+    if os.path.exists(ga_config["setup_log_path"]) is False:
+        os.system("mkdir -p %s" % ga_config["setup_log_path"])
     tmplog = open(ga_config["setup_log"], "a")
     tmplog.write("\n" + output + "\n")
-    tmplog.close()
-
-
-def ga_setup_log_write_plain(output):
-    tmplog = open(ga_config["setup_log"], "a")
-    tmplog.write(output + "\n")
     tmplog.close()
 
 
@@ -253,6 +253,7 @@ ga_setup_shelloutput_header("Installing setup dependencies")
 
 os.system("apt-get -y install python3-pip && python3 -m pip install mysql-connector-python colorama %s" % ga_config["setup_log_redirect"])
 import mysql.connector
+from colorama import Fore as colorama_fore
 
 
 # check for root privileges
@@ -277,6 +278,7 @@ ga_setup_shelloutput_header("Checking if growautomation is already installed on 
 # check if growautomation is already installed
 if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/etc/growautomation") is True:
     ga_setup_shelloutput_text("Growautomation version file or default root path found", style="info")
+
 
     def ga_config_vars_oldversion_replace():
         global ga_config
@@ -385,6 +387,11 @@ def ga_config_var_base():
         ga_config["setup_type_ss"] = True
     else:
         ga_config["setup_type_ss"] = False
+
+    if ga_config["setup_type"] == "agent" or ga_config["setup_type"] == "standalone":
+        ga_config["setup_type_as"] = True
+    else:
+        ga_config["setup_type_as"] = False
 
 
 def ga_config_var_setup():
@@ -560,7 +567,6 @@ if ga_config["setup_fresh"] is True:
     
         if ga_config["mnt_log_type"] == "cifs":
 
-
             def ga_mnt_log_creds():
                 global ga_config
                 ga_config["mnt_backup_usr"] = ga_mnt_creds("usr", "galog")
@@ -599,12 +605,12 @@ def ga_log_write_vars():
         if "pwd" in key:
             pass
         else:
-            ga_setup_log_write_plain("%s - %s" % (key, value))
+            ga_setup_log_write("%s - %s" % (key, value))
 
 
 ga_log_write_vars()
 
-ga_setup_shelloutput_text("Thank you for providing the setup information\nThe installation will start now")
+ga_setup_shelloutput_text("Thank you for providing the setup information.\nThe installation will start now")
 
 ########################################################################################################################
 
@@ -816,58 +822,63 @@ def ga_ufw_setup():
 
 
 # install packages
-ga_setup_shelloutput_header("Installing software packages")
-os.system("apt-get update" + ga_config["setup_log_redirect"])
-if ga_config["setup_linuxupgrade"] is True:
-    os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s" % ga_config["setup_log_redirect"])
+def ga_setup_apt():
+    ga_setup_shelloutput_header("Installing software packages")
+    os.system("apt-get update" + ga_config["setup_log_redirect"])
+    if ga_config["setup_linuxupgrade"] is True:
+        os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s" % ga_config["setup_log_redirect"])
 
-os.system("apt-get -y install python3 mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
+    os.system("apt-get -y install python3 mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
 
-if ga_config["setup_type"] == "agent" or ga_config["setup_type"] == "standalone":
-    os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
+    if ga_config["setup_type_as"] is True:
+        os.system("apt-get -y install python3 python3-pip python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
+    else:
+        os.system("apt-get -y install openssl")
+
+    if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
+        if ga_config["mnt_backup_type"] == "nfs" or ga_config["mnt_log_type"] == "nfs":
+            os.system("apt-get -y install nfs-common %s" % ga_config["setup_log_redirect"])
+        elif ga_config["mnt_backup_type"] == "cifs" or ga_config["mnt_log_type"] == "cifs":
+            os.system("apt-get -y install cifs-utils %s" % ga_config["setup_log_redirect"])
+
+    if ga_ufw is True:
+        os.system("apt-get -y install ufw %s" % ga_config["setup_log_redirect"])
+
+
+def ga_setup_pip():
     if ga_config["setup_ca"] is True:
         os.system("git main --global http.sslCAInfo %s && python3 -m pip main set global.cert %s %s" % (ga_config["setup_ca_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
     ga_setup_shelloutput_subheader("Installing python packages")
     os.system("python3 -m pip install mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s" % ga_config["setup_log_redirect"])
-else:
-    os.system("apt-get -y install openssl")
 
-if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
-    if ga_config["mnt_backup_type"] == "nfs" or ga_config["mnt_log_type"] == "nfs":
-        os.system("apt-get -y install nfs-common %s" % ga_config["setup_log_redirect"])
-    elif ga_config["mnt_backup_type"] == "cifs" or ga_config["mnt_log_type"] == "cifs":
-        os.system("apt-get -y install cifs-utils %s" % ga_config["setup_log_redirect"])
 
-if ga_ufw is True:
-    os.system("apt-get -y install ufw %s" % ga_config["setup_log_redirect"])
+ga_setup_apt()
+if ga_config["setup_type_as"] is True:
+    ga_setup_pip()
+
 
 # folders
 # Create folders
-ga_setup_shelloutput_header("Setting up directories")
-os.system("useradd growautomation %s" % ga_config["setup_log_redirect"])
-
-ga_foldercreate(ga_config["path_backup"])
-
-def ga_oldversion_rootcheck():
+def ga_infra_oldversion_rootcheck():
     if ga_config["path_old_root"] is False:
         return ga_config["path_root"]
     else:
         return ga_config["path_old_root"]
 
 
-def ga_oldversion_cleanconfig():
-    os.system("mv %s /tmp" % ga_oldversion_rootcheck())
+def ga_infra_oldversion_cleanconfig():
+    os.system("mv %s /tmp" % ga_infra_oldversion_rootcheck())
     ga_mysql("DROP DATABASE ga;")
 
 
-def ga_oldversion_backup():
+def ga_infra_oldversion_backup():
     global ga_config
     ga_setup_shelloutput_subheader("Backing up old growautomation root directory and database")
     oldbackup = ga_config["path_backup"] + "/install"
-    os.system("mkdir -p %s && mv %s %s %s" % (oldbackup, ga_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
+    os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
     os.system("mv %s %s" % (ga_config["setup_version_file"], oldbackup))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
-    os.listdir(oldbackup)
+    ga_setup_shelloutput_text("Backupfolder: %s\nRootbackup: %s" % (os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
     if os.path.exists(oldbackup + "/ga.dbdump.sql") is False or \
             os.path.exists(oldbackup + "/growautomation/") is False:
         ga_setup_shelloutput_text("Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
@@ -875,46 +886,58 @@ def ga_oldversion_backup():
         ga_config["setup_old_backup_failed_yousure"] = ga_setup_input("Please verify that you want to continue the setup", False)
     else:
         ga_config["setup_old_backup_failed_yousure"] = True
-    ga_oldversion_cleanconfig()
+    ga_infra_oldversion_cleanconfig()
 
 
-if ga_config["setup_old"] is True and ga_config["setup_old_backup"] is True:
-    ga_oldversion_backup()
-elif ga_config["setup_old"] is True:
-    ga_oldversion_cleanconfig()
-
-
-def ga_versionfile_write():
+def ga_infra_versionfile_write():
     tmpfile = open(ga_config["setup_version_file"], 'w')
     tmpfile.write("version=%s\nroot=%s\nname=%s\ntype=%s\n" % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]))
     tmpfile.close()
 
 
-ga_versionfile_write()
-ga_foldercreate(ga_config["path_root"])
-ga_foldercreate(ga_config["path_log"])
+def ga_setup_infra_mounts():
+    if ga_config["mnt_backup"] is True or ga_config["mnt_log"] is True:
+        ga_setup_shelloutput_header("Mounting shares")
+        if ga_config["mnt_backup"] is True:
+            ga_mounts("backup", ga_config["mnt_backup_usr"], ga_config["mnt_backup_pwd"], ga_config["mnt_backup_dom"], ga_config["mnt_backup_srv"],
+                      ga_config["mnt_backup_share"], ga_config["path_backup"], ga_config["mnt_backup_type"])
+        if ga_config["mnt_log"] is True:
+            ga_mounts("log", ga_config["mnt_log_usr"], ga_config["ga_mnt_log_pwd"], ga_config["ga_mnt_log_dom"], ga_config["mnt_log_server"], ga_config["mnt_log_share"],
+                      ga_config["path_log"], ga_config["mnt_log_type"])
 
-if ga_config["mnt_backup"] is True or ga_config["mnt_log"] is True:
-    ga_setup_shelloutput_header("Mounting shares")
-    if ga_config["mnt_backup"] is True:
-        ga_mounts("backup", ga_config["mnt_backup_usr"], ga_config["mnt_backup_pwd"], ga_config["mnt_backup_dom"], ga_config["mnt_backup_srv"],
-                  ga_config["mnt_backup_share"], ga_config["path_backup"], ga_config["mnt_backup_type"])
-    if ga_config["mnt_log"] is True:
-        ga_mounts("log", ga_config["mnt_log_usr"], ga_config["ga_mnt_log_pwd"], ga_config["ga_mnt_log_dom"], ga_config["mnt_log_server"], ga_config["mnt_log_share"],
-                  ga_config["path_log"], ga_config["mnt_log_type"])
+
+def ga_setup_infra():
+    ga_setup_shelloutput_header("Setting up directories")
+    os.system("useradd growautomation %s" % ga_config["setup_log_redirect"])
+
+    ga_foldercreate(ga_config["path_backup"])
+
+    if ga_config["setup_old"] is True and ga_config["setup_old_backup"] is True:
+        ga_infra_oldversion_backup()
+    elif ga_config["setup_old"] is True:
+        ga_infra_oldversion_cleanconfig()
+
+    ga_infra_versionfile_write()
+    ga_foldercreate(ga_config["path_root"])
+    ga_foldercreate(ga_config["path_log"])
+    ga_setup_infra_mounts()
+
 
 # code setup
-ga_setup_shelloutput_header("Setting up growautomation code")
-ga_setup_log_write("Setting up growautomation code")
-os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
-os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main /usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_config["setup_log_redirect"])
-if ga_config["setup_type"] == "agent" or ga_config["setup_type"] == "standalone":
-    os.system("cp -r /tmp/controller/code/agent/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
+def ga_setup_infra_code():
+    ga_setup_shelloutput_header("Setting up growautomation code")
+    os.system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
+    os.system("PYVER=$(python3 --version | cut -c8-10) && ln -s /etc/growautomation/main /usr/local/lib/python$PYVER/dist-packages/GA %s" % ga_config["setup_log_redirect"])
+    if ga_config["setup_type_as"] is True:
+        os.system("cp -r /tmp/controller/code/agent/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-if ga_config["setup_type_ss"] is True:
-    os.system("cp -r /tmp/controller/code/server/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
+    if ga_config["setup_type_ss"] is True:
+        os.system("cp -r /tmp/controller/code/server/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
+    ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
+
+
+ga_setup_infra_code()
 
 # creating openssl ca
 if ga_config["setup_type"] == "server":
