@@ -185,24 +185,38 @@ def ga_mysql_unixsock():
         return sql_sock
 
 
-def ga_mysql(command, dbuser="", dbpwd=""):
-    try:
-        if ga_config["sql_server_ip"] == "127.0.0.1" and dbuser != "root" or dbuser != "":
-            mysql_doit = "user=%s, passwd=%s, unix_socket=%s" % (dbuser, dbpwd, ga_mysql_unixsock())
-        elif ga_config["sql_server_ip"] == "127.0.0.1":
-            mysql_doit = "unix_socket=%s" % ga_mysql_unixsock()
-        else:
-            mysql_doit = "host=%s, port=%s, user=%s, passwd=%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], dbuser, dbpwd)
-        db = mysql.connector.connect(mysql_doit)
-        dbcursor = db.cursor()
-        dbcursor.execute(command)
-        data = dbcursor.fetchall()
-        dbcursor.close()
-        db.close()
-        return data
-    except mysql.connector.Error as error:
-        ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
-        return False
+def ga_mysql(dbinput, dbuser="", dbpwd=""):
+    if ga_config["sql_server_ip"] == "127.0.0.1" and dbuser != "root" or dbuser != "":
+        setting = "user=%s, passwd=%s, unix_socket=%s" % (dbuser, dbpwd, ga_mysql_unixsock())
+    elif ga_config["sql_server_ip"] == "127.0.0.1":
+        setting = "unix_socket=%s" % ga_mysql_unixsock()
+    else:
+        setting = "host=%s, port=%s, user=%s, passwd=%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], dbuser, dbpwd)
+
+    connection = mysql.connector.connect(setting)
+    curser = connection.cursor()
+
+    def ga_mysql_execute(command):
+        try:
+            curser.execute(command)
+            connection.commit()
+            data = curser.fetchall()
+            curser.close()
+            connection.close()
+            return data
+        except mysql.connector.Error as error:
+            connection.rollback()
+            ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
+            return False
+
+    if type(dbinput) == str:
+        return ga_mysql_execute(dbinput)
+    elif type(dbinput) == list:
+        returnlist = []
+        for item in dbinput:
+            dboutput = ga_mysql_execute(item)
+            returnlist.append(dboutput)
+        return returnlist
 
 
 def ga_mysql_conntest(dbuser="", dbpwd=""):
@@ -675,8 +689,8 @@ def ga_sql_all():
     ga_setup_shelloutput_header("Starting sql setup")
     ga_sql_backup_pwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
     ga_setup_shelloutput_subheader("Creating mysql backup user")
-    ga_mysql("CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, "
-             "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';FLUSH PRIVILEGES;" % (ga_sql_backup_pwd, ga_sql_backup_pwd))
+    ga_mysql(["CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, "
+             "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"])
 
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes")
     ga_setup_shelloutput_text("Example random password: %s\nMySql will not ask for the password if you start it "
@@ -700,8 +714,8 @@ def ga_sql_server():
         os.system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
 
     ga_setup_shelloutput_subheader("Creating mysql admin user")
-    ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH PRIVILEGES;"
-             % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"], ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]))
+    ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]),
+              "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]), "FLUSH PRIVILEGES;"])
 
     ga_setup_config_file("a", "[db_growautomation]\nserveruser=%s\nserverpassword=%s" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
 
@@ -736,8 +750,9 @@ def ga_sql_agent():
     os.system("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
 
     ga_setup_shelloutput_subheader("Creating local mysql controller user (read only)")
-    ga_mysql("CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';GRANT SELECT ON ga.* TO 'gacon'@'localhost' "
-             "IDENTIFIED BY '%s';FLUSH PRIVILEGES;" % (ga_config["sql_agent_pwd"], ga_config["sql_agent_pwd"]))
+    ga_mysql(["CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
+              "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
+              "FLUSH PRIVILEGES;"])
 
     ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s"
                          % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"]))
@@ -746,8 +761,9 @@ def ga_sql_agent():
         ga_setup_shelloutput_text("SQL master slave configuration not possible due to missing information.\nShould be found in mysql dump from server "
                                   "(searching in first %s lines).\nNot found: 'Master_Log_File:'/'Master_Log_Pos:'" % tmpsearchdepth, style="warn")
     else:
-        ga_mysql("CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s; START SLAVE; SHOW SLAVE STATUS;"
-                 % (ga_config["sql_server_ip"], ga_config["sql_server_repl_usr"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"], ga_config["sql_server_repl_pos"]))
+        ga_mysql(["CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s;"
+                  % (ga_config["sql_server_ip"], ga_config["sql_server_repl_usr"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"],
+                     ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"])
         # \G
 
     ga_setup_shelloutput_subheader("Linking mysql certificate")
@@ -790,15 +806,16 @@ def ga_sql_server_create_agent():
             create_agent_desc = ga_setup_input("Do you want to add a description to the agent?", poss="String up to 50 characters")
             create_agent_desclen = len(create_agent_desc)
 
-        ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH "
-                 "PRIVILEGES;INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
-                 % (create_agent_name, "%", create_agent_pwd, create_agent_name, "%", create_agent_pwd, "gasetup", create_agent_name, create_agent_desc),
-                 ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+        ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
+                  "GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
+                  "FLUSH PRIVILEGES;", "INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
+                  % ("gasetup", create_agent_name, create_agent_desc)], ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
         create_replica_usr = create_agent_name + "replica"
         create_replica_pwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
-        ga_mysql("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';FLUSH PRIVILEGES;"
-                 % (create_replica_usr, "%", create_replica_pwd,  create_replica_usr, "%", create_replica_pwd), ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+        ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
+                  "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
+                  "FLUSH PRIVILEGES;"], ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
         ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
                              % (create_agent_name, ga_config["sql_server_ip"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
@@ -870,13 +887,14 @@ def ga_infra_oldversion_rootcheck():
 
 def ga_infra_oldversion_cleanconfig():
     os.system("mv %s /tmp %s" % (ga_infra_oldversion_rootcheck(), ga_config["setup_log_redirect"]))
+    os.system("mysqldump ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
     ga_mysql("DROP DATABASE ga;")
 
 
 def ga_infra_oldversion_backup():
     global ga_config
     ga_setup_shelloutput_subheader("Backing up old growautomation root directory and database")
-    oldbackup = ga_config["path_backup"] + "/install"
+    oldbackup = ga_config["path_backup"] + "/install_%s" % datetime.now().strftime("%Y-%m-%d_%H-%M")
     os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
     os.system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
