@@ -148,7 +148,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
                             whilestate = True
                 except KeyError:
                     ga_setup_shelloutput_text("Input error. Choose one of the following: %s\n" % poss, style="warn")
-            return
+            return usrinput
         elif default != "":
             return str(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or "%s" % default)
         else:
