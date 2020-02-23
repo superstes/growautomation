@@ -111,7 +111,7 @@ create table IF NOT EXISTS ServerConfig (
 	setting varchar(30) not null unique key,
 	data varchar(100) not null,
 	description varchar(50) null,
-	primary key (id),
+	primary key (id)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
