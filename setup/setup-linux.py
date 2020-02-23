@@ -199,7 +199,11 @@ def ga_mysql_unixsock():
         return sql_sock
 
 
-def ga_mysql_execute(connection, command, query):
+def ga_mysql_execute(dbuser, dbpwd, command, query):
+    if ga_config["sql_server_ip"] == "127.0.0.1":
+        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=ga_mysql_unixsock(), user=dbuser, passwd=dbpwd)
+    else:
+        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
     try:
         curser = connection.cursor(buffered=True)
         curser.execute(command)
@@ -225,18 +229,13 @@ def ga_mysql(dbinput, inuser="", dbpwd="", query=False):
     else:
         dbuser = inuser
 
-    if ga_config["sql_server_ip"] == "127.0.0.1":
-        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=ga_mysql_unixsock(), user=dbuser, passwd=dbpwd)
-    else:
-        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
-
     if type(dbinput) == str:
-        return ga_mysql_execute(connection, dbinput, query)
+        return ga_mysql_execute(dbuser, dbpwd, dbinput, query)
     elif type(dbinput) == list:
         outputdict = {}
         anyfalse = True
         for command in dbinput:
-            output = ga_mysql_execute(connection, command, query)
+            output = ga_mysql_execute(dbuser, dbpwd, command, query)
             outputdict[command] = output
             if output is False:
                 anyfalse = False
@@ -373,7 +372,7 @@ if ga_config["setup_old"] is False:
 else:
     ga_setup_shelloutput_text("Growautomation will be migrated to the new version", style="succ")
     if ga_config["setup_fresh"] is True:
-        ga_setup_shelloutput_text("The configuration and data will be overwritten", style="succ")
+        ga_setup_shelloutput_text("The configuration and data will be overwritten", style="warn")
     else:
         ga_setup_shelloutput_text("The configuration and data will be migrated", style="succ")
 
@@ -764,7 +763,7 @@ def ga_sql_server():
     ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]),
               "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]), "FLUSH PRIVILEGES;"])
 
-    ga_setup_config_file("a", "[db_growautomation]\nserveruser=%s\nserverpassword=%s\n" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
+    ga_setup_config_file("a", "\n[db_growautomation]\nserveruser=%s\nserverpassword=%s\n" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
 
     if ga_config["setup_type"] == "server":
         print("Creating mysql server certificate\n")
@@ -798,8 +797,7 @@ def ga_sql_agent():
 
     ga_setup_shelloutput_subheader("Creating local mysql controller user (read only)")
     ga_mysql(["CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
-              "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
-              "FLUSH PRIVILEGES;"])
+              "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"], "FLUSH PRIVILEGES;"])
 
     ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s"
                          % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"]))
@@ -1026,8 +1024,9 @@ if ga_config["setup_type_ss"] is True:
 if ga_config["setup_type"] == "server":
     ga_sql_server_create_agent()
 
-elif ga_config["setup_type_as"] is True:
+elif ga_config["setup_type"] == "agent":
     ga_sql_agent()
+
 
 if ga_ufw is True:
     ga_ufw_setup()
