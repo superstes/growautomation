@@ -185,15 +185,17 @@ def ga_mysql_unixsock():
         return sql_sock
 
 
-def ga_mysql_execute(connection, command, output):
+def ga_mysql_execute(connection, command, query):
     try:
-        curser = connection.cursor()
+        curser = connection.cursor(buffered=True)
         curser.execute(command)
-        if output is True:
+        if query is True:
             data = curser.fetchall()
+        else:
+            connection.commit()
         curser.close()
         connection.close()
-        if output is True:
+        if query is True:
             return data
         else:
             return True
@@ -203,7 +205,7 @@ def ga_mysql_execute(connection, command, output):
         return False
 
 
-def ga_mysql(dbinput, inuser="", dbpwd="", dboutput=False):
+def ga_mysql(dbinput, inuser="", dbpwd="", query=False):
     if inuser == "":
         dbuser = "root"
     else:
@@ -215,12 +217,12 @@ def ga_mysql(dbinput, inuser="", dbpwd="", dboutput=False):
         connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
 
     if type(dbinput) == str:
-        return ga_mysql_execute(connection, dbinput, dboutput)
+        return ga_mysql_execute(connection, dbinput, query)
     elif type(dbinput) == list:
         outputdict = {}
         anyfalse = True
         for command in dbinput:
-            output = ga_mysql_execute(connection, command, dboutput)
+            output = ga_mysql_execute(connection, command, query)
             outputdict[command] = output
             if output is False:
                 anyfalse = False
@@ -232,14 +234,13 @@ def ga_mysql(dbinput, inuser="", dbpwd="", dboutput=False):
 def ga_mysql_conntest(dbuser="", dbpwd=""):
     if dbuser is None or dbpwd is None or ga_config["sql_server_ip"] is None:
         return False
-    sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd)
+    sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
     if type(sqltest) == list:
         return True
     else:
         return False
 
-# ga_configdict_sql_server = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_server_admin_usr"],
-# ga_config["sql_server_admin_pwd"], ga_config["hostname"])
+
 def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
     if agent == "":
         command_table = "Server"
@@ -561,6 +562,8 @@ if ga_config["setup_fresh"] is True:
     ga_config_var_setup()
     ga_config_var_db()
 
+    ga_setup_shelloutput_subheader("Checking directory information")
+
     ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
     ga_backup = ga_setup_input("Want to enable backup?", True)
     if ga_backup is True:
@@ -763,7 +766,7 @@ def ga_sql_agent():
             ga_config["sql_server_repl_pos"] = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
 
     ga_sql_server_agent_id = int(ga_mysql("SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;"
-                                          % ga_config["hostname"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) + 100)
+                                          % ga_config["hostname"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], True) + 100)
     ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1", "server-id = %s" % ga_sql_server_agent_id)
     os.system("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
 
@@ -793,7 +796,7 @@ def ga_sql_server_create_agent():
     ga_setup_shelloutput_header("Registering a new growautomation agent to the server")
     create_agent = ga_setup_input("Do you want to register an agent to the ga-server?", True)
     if create_agent is True:
-        server_agent_list = ga_mysql("SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
+        server_agent_list = ga_mysql("SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;", ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"], True)
         if len(server_agent_list) > 0:
             ga_setup_shelloutput_text("List of registered agents:\n%s\n" % server_agent_list, style="info")
         else:
@@ -863,7 +866,7 @@ def ga_setup_apt():
     ga_setup_shelloutput_header("Installing software packages")
     os.system("apt-get update" + ga_config["setup_log_redirect"])
     if ga_config["setup_linuxupgrade"] is True:
-        os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s" % ga_config["setup_log_redirect"])
+        os.system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
 
     os.system("apt-get -y install python3 mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
 
@@ -916,7 +919,7 @@ def ga_infra_oldversion_backup():
     os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
     os.system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
-    ga_setup_shelloutput_text("Backupfolder:\n%s\nRoot backupfolder:\n%s" % (os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
+    ga_setup_shelloutput_text("Backupfolder: %s\n%s\nRoot backupfolder:\n%s" % (oldbackup, os.listdir(oldbackup), os.listdir(oldbackup + "/growautomation")), style="info")
     if os.path.exists(oldbackup + "/ga.dbdump.sql") is False or \
             os.path.exists(oldbackup + "/growautomation/") is False:
         ga_setup_shelloutput_text("Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
