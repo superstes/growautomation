@@ -1,6 +1,7 @@
 [Unit]
 Description=Growautomation Service
 After=network.target
+#After=mysqld.service
 
 [Service]
 Type=simple

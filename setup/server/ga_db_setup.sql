@@ -11,11 +11,35 @@ create table IF NOT EXISTS AgentDataDevice (
  character set utf8,
  collate utf8_unicode_ci;
 
+create table IF NOT EXISTS AgentConfig (
+	id smallint unsigned not null auto_increment,
+	changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(10) not null,
+	agent varchar(10) not null,
+	setting varchar(30) not null,
+	data varchar(100) not null,
+	description varchar(50) null,
+	primary key (id),
+	unique key unique_agent_setting (agent, setting)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
 create table IF NOT EXISTS AgentConfigSector (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
 	agent varchar(10) not null,
+	primary key (id)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+create table IF NOT EXISTS AgentConfigLink (
+	id smallint unsigned not null auto_increment,
+	changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(10) not null,
+	description varchar(50) null,
 	primary key (id)
 )engine innodb,
  character set utf8,
@@ -34,7 +58,22 @@ create table IF NOT EXISTS AgentConfigDeviceType (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfigSensor (
+# setting inheritence for devices
+create table IF NOT EXISTS AgentConfigDeviceTypeSetting (
+    id smallint unsigned not null auto_increment,
+    name varchar(10) not null,
+    setting varchar(30) not null,
+	data varchar(100) not null,
+	description varchar(50) null,
+    primary key (id),
+    foreign key (name) references AgentConfigDeviceType (name) on update cascade on delete restrict,
+    unique key unique_name_setting (name, setting)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+# sensortype specific settings
+create table IF NOT EXISTS AgentConfigDeviceTypeSensorSetting (
 	id tinyint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
@@ -67,6 +106,7 @@ create table IF NOT EXISTS AgentConfigDevice (
  character set utf8,
  collate utf8_unicode_ci;
 
+# overwriting devicetype settings for specific devices
 create table IF NOT EXISTS AgentConfigDeviceSetting (
     id smallint unsigned not null auto_increment,
     name varchar(10) not null,
@@ -76,30 +116,6 @@ create table IF NOT EXISTS AgentConfigDeviceSetting (
     primary key (id),
     foreign key (name) references AgentConfigDevice (name) on update cascade on delete restrict,
     unique key unique_name_setting (name, setting)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigLink (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	description varchar(50) null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfig (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	agent varchar(10) not null,
-	setting varchar(30) not null,
-	data varchar(100) not null,
-	description varchar(50) null,
-	primary key (id),
-	unique key unique_agent_setting (agent, setting)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
