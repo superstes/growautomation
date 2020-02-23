@@ -109,7 +109,7 @@ def ga_setup_fstabcheck():
                                       "those lines to disable them", style="warn")
 
 
-def ga_setup_input(prompt, default="", poss="", intype="", style=""):
+def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str"):
     styletype = ga_setup_shelloutput_colors(style)
     whilecount = 0
     if type(default) == bool:
@@ -125,16 +125,30 @@ def ga_setup_input(prompt, default="", poss="", intype="", style=""):
         elif intype == "pass":
             getpass.getpass(prompt="\n%s\n > " % prompt)
         elif intype == "passgen":
-            inputnumber = 0
-            while inputnumber < 8 or inputnumber > 99:
-                if (inputnumber < 8 or inputnumber > 99) and whilecount > 0:
+            usrinput = 0
+            while usrinput < 8 or usrinput > 99:
+                if (usrinput < 8 or usrinput > 99) and whilecount > 0:
                     ga_setup_shelloutput_text("Input error. Value should be between 8 and 99.\n", style="warn")
                 whilecount += 1
-                inputstr = str(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
-                inputnumber = int(inputstr)
-            return inputstr
+                usrinput = int(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
+            return usrinput
         elif poss != "":
-            return str(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or "%s" % default)
+            whilestate = False
+            while whilestate is False:
+                try:
+                    if posstype == "str":
+                        usrinput = str(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or "%s" % default)
+                    elif posstype == "int":
+                        usrinput = int(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or "%s" % default)
+                    if type(poss) == list:
+                        if usrinput in poss:
+                            whilestate = True
+                    elif type(poss) == str:
+                        if usrinput == poss:
+                            whilestate = True
+                except KeyError:
+                    ga_setup_shelloutput_text("Input error. Choose one of the following: %s\n" % poss, style="warn")
+            return
         elif default != "":
             return str(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or "%s" % default)
         else:
@@ -231,9 +245,12 @@ def ga_mysql(dbinput, inuser="", dbpwd="", query=False):
         return outputdict
 
 
-def ga_mysql_conntest(dbuser="", dbpwd=""):
+def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
-        sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True)
+        if special is True:
+            sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", "root", query=True)
+        else:
+            sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True)
     elif dbpwd == "":
         return False
     else:
@@ -368,6 +385,8 @@ ga_setup_shelloutput_header("Retrieving setup configuration through user input")
 
 def ga_config_var_base():
     global ga_config
+    whilestate = False
+    whilecount = 0
     ga_setup_shelloutput_subheader("Checking basic information")
 
     def ga_config_var_base_name():
@@ -378,6 +397,7 @@ def ga_config_var_base():
             ga_config["hostname"] = "gaserver"
         elif ga_config["setup_type"] == "standalone":
             ga_config["hostname"] = "gacon01"
+
     if ga_config["setup_fresh"] is False:
         ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "garoot=")[8:]
         ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "name=")[6:]
@@ -403,8 +423,7 @@ def ga_config_var_base():
                 ga_config["setup_old_backup"] = True
 
     if ga_config["setup_fresh"] is True:
-        ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
-
+        ga_config["setup_type"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", ["agent", "standalone", "server"])
         if ga_config["setup_type"] == "agent":
             ga_config["setup_yousure"] = ga_setup_input("WARNING!\nYou should install/update the growautomation server component before the agent because of dependencies.\n"
                                                         "Find more information about the creation of new agents at:\nhttps://git.growautomation.at/tree/master/manual/agent\n\n"
@@ -914,15 +933,18 @@ def ga_infra_oldversion_rootcheck():
 
 
 def ga_infra_oldversion_cleanconfig():
-    os.system("mv %s /tmp %s" % (ga_infra_oldversion_rootcheck(), ga_config["setup_log_redirect"]))
+    movedir = "/tmp/ga_setup_%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"))
+    os.system("mkdir -p %s" % movedir)
+    os.system("mv %s %s %s" % (ga_infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
-    ga_mysql("DROP DATABASE ga;")
+    if ga_mysql_conntest("root", special=True) is True:
+        ga_mysql("DROP DATABASE ga;")
 
 
 def ga_infra_oldversion_backup():
     global ga_config
     ga_setup_shelloutput_subheader("Backing up old growautomation root directory and database")
-    oldbackup = ga_config["path_backup"] + "/install_%s" % datetime.now().strftime("%Y-%m-%d_%H-%M")
+    oldbackup = ga_config["path_backup"] + "install_%s" % datetime.now().strftime("%Y-%m-%d_%H-%M")
     os.system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
     os.system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
     os.system("mysqldump ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
@@ -935,12 +957,6 @@ def ga_infra_oldversion_backup():
     else:
         ga_config["setup_old_backup_failed_yousure"] = True
     ga_infra_oldversion_cleanconfig()
-
-
-def ga_infra_versionfile_write():
-    tmpfile = open(ga_config["setup_version_file"], 'w')
-    tmpfile.write("version=%s\nroot=%s\nname=%s\ntype=%s\n" % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]))
-    tmpfile.close()
 
 
 def ga_setup_infra_mounts():
@@ -965,7 +981,7 @@ def ga_setup_infra():
     elif ga_config["setup_old"] is True:
         ga_infra_oldversion_cleanconfig()
 
-    ga_infra_versionfile_write()
+    ga_setup_config_file("w", "version=%s\nroot=%s\nname=%s\ntype=%s\n" % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]), ga_config["setup_version_file"])
     ga_foldercreate(ga_config["path_root"])
     ga_foldercreate(ga_config["path_log"])
     ga_setup_infra_mounts()
