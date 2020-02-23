@@ -232,9 +232,12 @@ def ga_mysql(dbinput, inuser="", dbpwd="", query=False):
 
 
 def ga_mysql_conntest(dbuser="", dbpwd=""):
-    if dbuser is None or dbpwd is None or ga_config["sql_server_ip"] is None:
+    if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
+        sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True)
+    elif dbpwd == "":
         return False
-    sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
+    else:
+        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
     if type(sqltest) == list:
         return True
     else:
@@ -490,6 +493,10 @@ def ga_config_var_db():
         if ga_config["setup_fresh"] is True:
             ga_config["sql_server_admin_usr"] = ga_setup_input("How should the growautomation database admin user be named?", "gadmin")
             ga_config["sql_server_admin_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
+            if ga_mysql_conntest("root") is False:
+                ga_setup_shelloutput_text("Unable to connect to local mysql server with root privileges", style="err")
+            else:
+                ga_setup_shelloutput_text("Server SQL connection verified", style="succ")
         else:
             ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[10:]
             ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[10:]
