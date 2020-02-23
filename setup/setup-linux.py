@@ -79,9 +79,12 @@ def ga_setup_shelloutput_colors(style):
         return ""
 
 
-def ga_setup_shelloutput_text(output, style=""):
+def ga_setup_shelloutput_text(output, style="", point=True):
     styletype = ga_setup_shelloutput_colors(style)
-    print(styletype + "%s.\n" % output + colorama_fore.RESET)
+    if point is True:
+        print(styletype + "%s.\n" % output + colorama_fore.RESET)
+    else:
+        print(styletype + "%s\n" % output + colorama_fore.RESET)
     ga_setup_log_write(output)
 
 
@@ -330,9 +333,9 @@ if os.path.exists(ga_config["setup_version_file"]) is True or os.path.exists("/e
     def ga_config_vars_oldversion_replace():
         global ga_config
         ga_config["setup_old"] = True
-        ga_config["setup_old_replace"] = ga_setup_input("Do you want to replace your current growautomation installation?", False)
+        ga_config["setup_old_replace"] = ga_setup_input("Do you want to replace your current growautomation installation?", False, style="warn")
         if ga_config["setup_old_replace"] is True:
-            ga_config["setup_old_replace_migrate"] = ga_setup_input("Should we try to keep your old configuration and data?", False)
+            ga_config["setup_old_replace_migrate"] = ga_setup_input("Should we try to keep your old configuration and data?", False, style="warn")
             if ga_config["setup_old_replace_migrate"] is True:
                 ga_config["setup_fresh"] = False
             else:
@@ -590,8 +593,8 @@ if ga_config["setup_fresh"] is True:
     ga_setup_shelloutput_subheader("Checking directory information")
 
     ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
-    ga_backup = ga_setup_input("Want to enable backup?", True)
-    if ga_backup is True:
+    ga_config["backup"] = ga_setup_input("Want to enable backup?", True)
+    if ga_config["backup"] is True:
         ga_config["mnt_backup"] = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.", True)
         if ga_config["mnt_backup"] is True:
             ga_setup_fstabcheck()
@@ -740,9 +743,9 @@ def ga_sql_all():
              "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"])
 
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes", style="info")
-    ga_setup_shelloutput_text("Example random password:", style="info")
+    ga_setup_shelloutput_text("Example random password:", style="info", point=False)
     print(ga_setup_pwd_gen(ga_config["setup_pwd_length"]))
-    ga_setup_shelloutput_text("MySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
+    ga_setup_shelloutput_text("\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
     os.system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
     ga_setup_config_file("a", "[mysqldump]\nuser=gabackup\npassword=%s\n" % ga_sql_backup_pwd, "/etc/mysql/conf.d/ga.mysqldump.cnf")
@@ -1051,9 +1054,9 @@ def ga_mysql_write_config():
         table = "Agent"
     for key, value in newdict.items():
         if ga_config["setup_type"] == "agent":
-            ga_mysql("INSERT INTO ga.%sConfig (author, agent, name, data) VALUES ('%s', '%s', '%s, '%s');" % (table, "gasetup", ga_config["hostname"], key, value), dbuser, dbpwd)
+            ga_mysql("INSERT INTO ga.%sConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s, '%s');" % (table, "gasetup", ga_config["hostname"], key, value), dbuser, dbpwd)
         elif ga_config["setup_type_ss"] is True:
-            ga_mysql("INSERT INTO ga.%sConfig (author, name, data) VALUES ('%s', '%s', '%s');" % (table, "gasetup", key, value), dbuser, dbpwd)
+            ga_mysql("INSERT INTO ga.%sConfig (author, setting, data) VALUES ('%s', '%s', '%s');" % (table, "gasetup", key, value), dbuser, dbpwd)
 
 
 ga_mysql_write_config()
@@ -1067,3 +1070,13 @@ ga_setup_log_write("Setup finished.")
 # add [Unit]After=mysqld.service to service if standalone installation
 # write setup config to sql server
 # add script to add users to db (prompt for pwd and username -> set db privileges)
+# ga_config["backup"] should do something.. but what?
+# simple setup -> preconfigure most settings
+# advanced setup -> like now
+# dont repeat output if wrong input -> only warning
+# oldconf
+#    db functions for oldconfig checken -> less to do?
+#    should certs be renewed?
+#    tell user that type cant be changed without replace option (done already?)
+#    adv setup value overwrite x5 or so (manually)
+# ufw error ERROR: Couldn't determine iptables version
