@@ -65,7 +65,7 @@ actiontype = sys.argv[2]
 actionblock = getattr(mainconfig, actionblocknr)
 actionobjectlist = []
 for key, actionobject in actionblock.items():
-    if "actions" in key:
+    if "action" in key:
         for subkey, actionsubobject in actionobject.items():
             for item in actionsubobject:
                 if item.find(actiontype) >= 0:

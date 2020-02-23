@@ -3,7 +3,7 @@ Description=Growautomation check sensor aht
 
 [Timer]
 OnCalendar=*:0/15
-Unit=growautomation@SENSOR.service
+Unit=ga@SENSOR.service
 
 [Install]
 WantedBy=timers.target

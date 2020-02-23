@@ -35,7 +35,7 @@ from GA import codebase
 #						it executes the decision function for every actionobject linked to the current sensor
 # 2. Decision function	compares actionpoint and -state and decides if the action should be started
 # 3. Action function	executes the action for every actionobject in the current actionblock
-# 4. Precheck		    checks configuration for actiontype-links and actionobjects linked to the current sensor
+# 4. Precheck		    check configuration for actiontype-links and actionobjects linked to the current sensor
 #						if no errors found -> it executes the check function
 
 # Logs
@@ -191,6 +191,6 @@ if sensorsenabled > 0:
 else:
 	if mainconfig.loglevel > 0:
 		codebase.logtime("check")
-		logfile.write("None of the " + sensortype + " sensors are enabled.\nConnected Sensors: " + sensorsconnected + "\nDisabled Sensors: "+ sensorsdisabled + "\n")
+		logfile.write("None of the " + sensortype + " sensor are enabled.\nConnected Sensors: " + sensorsconnected + "\nDisabled Sensors: "+ sensorsdisabled + "\n")
 
-	raise SystemExit("\nNone of the " + sensortype + " sensors are enabled.")
+	raise SystemExit("\nNone of the " + sensortype + " sensor are enabled.")
