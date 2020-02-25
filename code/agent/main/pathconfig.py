@@ -28,12 +28,12 @@ backup = "/mnt/growautomation/backup/"
 config = root + "main/"
 
 #Sensors
-sensors = root + "sensors/"
+sensors = root + "sensor/"
 
 #Acions
-actions = root + "actions/"
-#pumpaction = actions + "psu.py"
-#winaaction = actions + "wina.py"
+actions = root + "action/"
+#pumpaction = action + "psu.py"
+#winaaction = action + "wina.py"
 
 #Checks
-checks = root + "checks/"
+checks = root + "check/"

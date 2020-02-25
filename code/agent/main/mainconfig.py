@@ -33,8 +33,8 @@ namemaxnumbers = 100
 dbserver = "IP"
 dbuser = "con01"
 dbpassword = "PASSWORD"
-sensordb = "sensors"
-actiondb = "actions"
+sensordb = "sensor"
+actiondb = "action"
 
 
 # Backup
@@ -44,7 +44,7 @@ backuplogs = "yes"      #yes/no -> If logs should be included into the backup
 
 # Logs
 loglevel = 0	        #2=debug/1=default/0=none
-logactiontodb = "yes"   #yes/no -> If taken actions should be logged into the database
+logactiontodb = "yes"   #yes/no -> If taken action should be logged into the database
 
 
 #############################  sensorS  #############################
@@ -99,7 +99,7 @@ checkrange = 6
 checkdbdatacolumn = 4
 
 
-#############################  actions  #############################
+#############################  action  #############################
 
 #actiontypes
 #Which action should react to which sensortype
@@ -107,20 +107,20 @@ actiontypes = {"eh": ("pump", "win"), "aht": ("win")}
 
 
 #actionblocks
-#Links sensors and actions -> simplifies configuration and processing
+#Links sensor and action -> simplifies configuration and processing
 #Format:
 #       {
 #       "sensorS": {
 #           "eh": ("*"),
 #           "aht": ("*")
 #           },
-#       "actions": {
+#       "action": {
 #           "pump": ("*"),
 #           "win": ("*")
 #           }
 #       }
-actionblock01 = {"sensors": {"eh": ("ehb01", "ehb02"), "aht": ("ahta01", "ahta02")}, "actions": {"win": ("wina02")}}
-actionblock02 = {"sensors": {"eh": ("ehb01", "ehb02")}, "actions": {"pump": ("pumpa01", "pumpa04"), "win": ("wina01")}}
+actionblock01 = {"sensor": {"eh": ("ehb01", "ehb02"), "aht": ("ahta01", "ahta02")}, "action": {"win": ("wina02")}}
+actionblock02 = {"sensor": {"eh": ("ehb01", "ehb02")}, "action": {"pump": ("pumpa01", "pumpa04"), "win": ("wina01")}}
 
 
 #Water pumps

@@ -30,7 +30,7 @@ from GA import codebase
 #sys.argv[1] = sensortype (pe eh)
 
 # Functionality
-# Gets executed from growautomation service/timer - it passes the sensortype
+# Gets executed from growautomation service/systemd - it passes the sensortype
 # 1. Check function     pulls threshold data for the current sensor from the database
 #						it executes the decision function for every actionobject linked to the current sensor
 # 2. Decision function	compares actionpoint and -state and decides if the action should be started

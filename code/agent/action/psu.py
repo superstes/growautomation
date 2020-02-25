@@ -45,7 +45,7 @@ from GA import pathconfig
 # 2. Check outlets      links the actionobjects and their psu outlets for further processing
 # 3. Action             changes powerstate for every actionobject found in 1.
 #                       uses the information from 2. to know which outletstatus should be changed
-# 4. Action timer       times the action like configured (on/off seconds)
+# 4. Action systemd       times the action like configured (on/off seconds)
 
 # Logs
 
@@ -215,7 +215,7 @@ def psuaction(obj, val):
                 codebase.logtime("action")
                 logfile.write("Database connection was closed.\n")
 
-# Action timer
+# Action systemd
 for obj, val in actioninfo.items():
     for action in mainconfig.actiontypes.values():
         if action in actiontype:

@@ -228,10 +228,15 @@ def ga_mysql_unixsock():
     global ga_config
     sql_sock = "/var/run/mysqld/mysqld.sock"
     if os_path.exists(sql_sock) is False:
-        sql_customsock = ga_setup_input("Mysql was unable to find the mysql unix socket file at %s.\nThe path can be found in mysql via "
-                                        "the command:\n > show variables like 'socket;'\nProvide the correct path to it.")
-        ga_config["sql_sock"] = sql_customsock
-        return sql_customsock
+        output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+        outputstr = output.decode("ascii")
+        if outputstr.find("Active: inactive") != -1:
+            os_system("systemctl start mysql.service %s" % ga_config["setup_log_redirect"])
+        if os_path.exists(sql_sock) is False:
+            sql_customsock = ga_setup_input("Mysql was unable to find the mysql unix socket file at %s.\nThe path can be found in mysql via "
+                                            "the command:\n > show variables like 'socket;'\nProvide the correct path to it.")
+            ga_config["sql_sock"] = sql_customsock
+            return sql_customsock
     else:
         ga_config["sql_sock"] = sql_sock
         return sql_sock
@@ -298,20 +303,29 @@ def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
         return False
 
 
-def ga_setup_configparser_mysql(searchfor, user, pwd, agent=""):
-    if agent == "":
-        command_table = "Server"
-        command_agents = ""
-    else:
-        command_table = "Agent"
-        command_agents = " and agent = '%s'" % agent
-    if type(searchfor) == list:
+def ga_setup_configparser_mysql_command(search, agent, table):
+    if table == "config":
+        if agent == "":
+            command_table = "Server"
+            command_agents = ""
+        else:
+            command_table = "Agent"
+            command_agents = " and agent = '%s'" % agent
+        return "SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, search, command_agents)
+    elif table == "devicetype" or table == "device":
+        if table == "devicetype": command_table = "DeviceType"
+        elif table == "device": command_table = "Device"
+        return "SELECT data FROM ga.AgentConfig%sSetting WHERE setting = '%s'" % (command_table, search)
+
+
+def ga_setup_configparser_mysql(search, user, pwd, agent="", table="config"):
+    if type(search) == list:
         itemdatadict = {}
-        for item in searchfor:
-            itemdatadict[item] = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, item, command_agents), user, pwd, True)
+        for item in search:
+            itemdatadict[item] = ga_mysql(ga_setup_configparser_mysql_command(item, agent, table), user, pwd, True)
         return itemdatadict
-    elif type(searchfor) == str:
-        data = ga_mysql("SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, searchfor, command_agents), user, pwd, True)
+    elif type(search) == str:
+        data = ga_mysql(ga_setup_configparser_mysql_command(search, agent, table), user, pwd, True)
         return data
 
 
@@ -594,14 +608,20 @@ def ga_config_var_certs():
         ga_config["sql_ca"] = ga_setup_input("Provide the path to the ca-certificate from your ga-server.", "%s/ssl/ca.cer.pem" % ga_config["path_root"])
         ga_config["sql_cert"] = ga_setup_input("Provide the path to the agent server certificate.", "%s/ssl/%s.cer.pem" % (ga_config["path_root"], ga_config["hostname"]))
         ga_config["sql_key"] = ga_setup_input("Provide the path to the agent server key.", "%s/ssl/%s.key.pem" % (ga_config["path_root"], ga_config["hostname"]))
+
+
+########################################################################################################################
+# Basic config
+ga_config_var_base()
+ga_config_var_setup()
+ga_config_var_db()
+
+
 ########################################################################################################################
 # Config migration from old installation
 
 
 if ga_config["setup_fresh"] is False:
-    ga_config_var_setup()
-    ga_config_var_db()
-
     ga_setup_shelloutput_subheader("Retrieving existing configuration from database")
     ga_config_list_agent = ["backup", "path_backup", "mnt_backup", "mnt_backup_type", "mnt_backup_server",
                             "mnt_backup_share", "mnt_backup_usr", "mnt_backup_pwd", "mnt_backup_dom", "path_log",
@@ -622,10 +642,6 @@ if ga_config["setup_fresh"] is False:
 ########################################################################################################################
 # Configuration without migration
 if ga_config["setup_fresh"] is True:
-    ga_config_var_base()
-    ga_config_var_setup()
-    ga_config_var_db()
-
     ga_setup_shelloutput_subheader("Checking directory information")
 
     ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
@@ -904,9 +920,9 @@ def ga_sql_server_create_agent():
 
 def ga_ufw_setup():
     ga_setup_shelloutput_subheader("Configuring firewall")
-    os_system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80/tcp && ufw allow out to any port 443/tcp && "
-              "ufw allow out to any port 22/tcp && ufw allow out to any port 53/udp && ufw allow out to any port 123/udp && "
-              "ufw allow 22/tcp from 192.168.0.0/16 && ufw allow 22/tcp from 172.16.0.0/12 && ufw allow 22/tcp from 10.0.0.0/10 %s"
+    os_system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80 proto tcp && ufw allow out to any port 443 proto tcp && "
+              "ufw allow out to any port 22 proto tcp && ufw allow out to any port 53 proto udp && ufw allow out to any port 53 proto tcp && ufw allow out to any port 123 proto udp && "
+              "ufw allow proto tcp from 192.168.0.0/16 to any port 22 && ufw allow proto tcp from 172.16.0.0/12 to any port 22 && ufw allow proto tcp from 10.0.0.0/10 to any port 22 %s"
               % ga_config["setup_log_redirect"])
     if ga_config["setup_type"] == "server" or ga_config["setup_type"] == "agent":
         os_system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
@@ -1042,22 +1058,22 @@ def ga_setup_infra_code():
     ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
 
 
-def ga_setup_infra_systemd_check(service, request="exists", checktype="service", out=""):
-    if checktype != "service" and checktype != "timer":
-        return "Input Error. Expected service or timer as checktype."
-    elif request == "exists":
-        command = "systemctl list-unit-files | grep %s.%s" % (service, checktype)
+def ga_setup_infra_systemd_check(systemd_element, request="exists", out=""):
+    if request == "exists":
+        command = "systemctl list-unit-files | grep %s" % systemd_element
     elif request == "enabled":
-        command = "systemctl list-unit-files | grep enabled | grep %s.%s" % (service, checktype)
-    elif request == "status":
-        command = "systemctl status %s | grep 'Active:'" % service
+        command = "systemctl list-unit-files | grep %s | grep enabled" % systemd_element
+    elif request == "status" and systemd_element.find(".service") != -1:
+        command = "systemctl status %s | grep 'Active:'" % systemd_element
+    else:
+        return "Input error."
 
     output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
     outputstr = output.decode("ascii")
     errorstr = error.decode("ascii")
 
     if request == "exists":
-        if outputstr.find(service) == -1:
+        if outputstr.find(systemd_element) == -1:
             return False
         elif out == "":
             return True
@@ -1074,87 +1090,80 @@ def ga_setup_infra_systemd_check(service, request="exists", checktype="service",
             return False
 
 
-def ga_setup_infra_service_enabled(name, checktype, check=True):
+def ga_setup_infra_service_enabled(systemd_element, check=True):
     if check is True:
-        enabled = ga_setup_infra_systemd_check(name, "enabled")
+        enabled = ga_setup_infra_systemd_check(systemd_element, "enabled")
     else:
         enabled = False
 
     if enabled is True:
-        ga_setup_shelloutput_text("%s %s is already enabled" % (checktype.capitalize(), name), style="succ")
+        ga_setup_shelloutput_text("%s is already enabled" % systemd_element, style="succ")
     else:
-        os_system("systemctl enable %s %s" % (name, ga_config["setup_log_redirect"]))
-        ga_setup_shelloutput_text("Enabled %s %s" % (checktype, name), style="info")
+        os_system("systemctl enable %s %s" % (systemd_element, ga_config["setup_log_redirect"]))
+        ga_setup_shelloutput_text("Enabled %s" % systemd_element, style="info")
 
 
-def ga_setup_infra_service_exists(name, filepath, checktype, check=True):
+def ga_setup_infra_service_exists(systemd_element, filepath, check=True):
     if check is True:
-        exists = ga_setup_infra_systemd_check(name, checktype=checktype)
+        exists = ga_setup_infra_systemd_check(systemd_element)
     else:
         exists = False
     if exists is True:
-        ga_setup_shelloutput_text("%s %s already exists" % (checktype.capitalize(), name), style="succ")
-        ga_setup_infra_service_enabled(name, checktype)
+        ga_setup_shelloutput_text("%s already exists" % systemd_element, style="succ")
+        ga_setup_infra_service_enabled(systemd_element)
     else:
         os_system("systemctl link %s %s" % (filepath, ga_config["setup_log_redirect"]))
-        ga_setup_shelloutput_text("Linked %s %s" % (checktype, name), style="info")
-        ga_setup_infra_service_enabled(name, checktype)
+        ga_setup_shelloutput_text("Linked %s" % systemd_element, style="info")
+        ga_setup_infra_service_enabled(systemd_element)
 
 
 def ga_setup_infra_service():
-    ga_systemd_dir_tocheck = ["%s/service/" % ga_config["path_root"], "%s/service/timer/" % ga_config["path_root"]]
+    service_dir = "%s/service/systemd/" % ga_config["path_root"]
 
-    for ga_service_dir in ga_systemd_dir_tocheck[0]:
-        if os_path.exists(ga_service_dir) is False:
-            if ga_config["setup_type_ss"] is True:
-                os_system("cp -r -f /tmp/controller/code/server/service/* %s %s" % (ga_service_dir, ga_config["setup_log_redirect"]))
-            if ga_config["setup_type_as"] is True:
-                os_system("cp -r -f /tmp/controller/code/agent/service/* %s %s" % (ga_service_dir, ga_config["setup_log_redirect"]))
-        if ga_config["setup_type"] == "standalone":
-            ga_replaceline(ga_service_dir, "#After=mysqld.service", "After=mysqld.service")
+    if os_path.exists(service_dir) is False:
+        ga_setup_infra_code()
 
-    for directory in ga_systemd_dir_tocheck:
-        if directory.find("/timer/") != -1:
-            checktype = "timer"
-        else:
-            checktype = "service"
-        for file in os_listdir(directory):
-            filepath = directory + file
-            if os_path.isfile(filepath):
-                ga_setup_infra_service_exists(file, filepath, checktype)
+    for file in os_listdir(service_dir):
+        filepath = service_dir + file
+        if os_path.isfile(filepath):
+            if (file.find(".service") != -1 or file.find(".timer") != -1) and file.find("DEFAULT") == -1:
+                ga_setup_infra_service_exists(file, filepath)
 
     os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
     ga_setup_shelloutput_text("Systemd services reloaded", style="info")
 
 
-def ga_setup_infra_service_add(name=""):
-    ga_timer_path = "%s/service/timer" % ga_config["path_root"]
-    if name == "":
-        ga_setup_input("Do you want to add a sensor/an action timer?", True)
-    while True:
-        if name != "":
-            timername = name
-        else:
-            while True:
-                timername = ga_setup_input("Please provide the name of the timer")
-                if ga_setup_string_check(timername) is True:
-                    break
-            # timer interval -> sql config either from DeviceSettings or DeviceTypeSettings (prio = DeviceSettings)
-        os_system("cp %s/ga@DEFAULT.timer %s/ga@%s.timer %s" % (ga_timer_path, ga_timer_path, timername, ga_config["setup_log_redirect"]))
-        ga_replaceline("%s/ga@%s.timer" % (ga_timer_path, timername), "Unit=", "Unit=ga@%s.service" % timername)
-        ga_setup_infra_service_exists(timername, ga_timer_path + "/ga@%s.timer" % timername, "timer", check=False)
-        ga_setup_infra_service_enabled(timername, "timer", check=False)
-
-        if name == "":
-            again = ga_setup_input("Do you want to add another timer?", True)
-            if again is False:
-                break
-        else:
-            break
+# in work
+# def ga_setup_infra_timer_add(systemd_element=""):
+#     ga_timer_path = "%s/service/systemd" % ga_config["path_root"]
+#     if systemd_element == "":
+#         ga_config["setup_systemd_add_timer"] = ga_setup_input("Do you want to add a sensor/an action timer?", True)
+#     elif ga_config["setup_systemd_add_timer"] is True or systemd_element != "":
+#         while True:
+#             if systemd_element != "":
+#                 devicetype = systemd_element
+#             else:
+#                 while True:
+#                     devicetype = ga_setup_input("Please provide the name of the device ")
+#                     if ga_setup_string_check(devicetype) is True:
+#                         break
+#                 # systemd interval -> sql config either from DeviceSettings or DeviceTypeSettings (prio = DeviceSettings)
+#                 ga_setup_configparser_mysql(devicetype, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"], table="devicetype")
+#             os_system("cp %s/ga@DEFAULT.timer %s/ga@%s.timer %s" % (ga_timer_path, ga_timer_path, devicetype, ga_config["setup_log_redirect"]))
+#             ga_replaceline("%s/ga@%s.timer" % (ga_timer_path, devicetype), "Unit=", "Unit=ga@%s.service" % devicetype)
+#             ga_setup_infra_service_exists(devicetype, ga_timer_path + "/ga@%s.timer" % devicetype, check=False)
+#             ga_setup_infra_service_enabled(devicetype, check=False)
+#
+#             if systemd_element == "":
+#                 again = ga_setup_input("Do you want to add another timer?", True)
+#                 if again is False:
+#                     break
+#             else:
+#                 break
 
 
 # delete old fstab entries and replace them (ask user)
-# systemd timer setup for agentdata and serverbackup
+# systemd systemd setup for agentdata and serverbackup
 # ga service check for python path /usr/bin/python3 and growautomation root -> change execstart execstop etc
 # ga_config["backup"] should do something.. but what?
 # simple setup -> preconfigure most settings
@@ -1170,6 +1179,7 @@ def ga_setup_infra_service_add(name=""):
 # mysql bug workaround MySql was unable to perform action 'CREATE USER
 # check all string inputs with ga_setup_string_check (reference in input function if poss/default is str?)
 # replaceline error if not found ?
+# configure first sensors / actions -> with systemd timers
 
 
 ga_setup_infra()
@@ -1191,6 +1201,13 @@ if ga_config["setup_type"] == "server":
 elif ga_config["setup_type"] == "agent":
     ga_sql_agent()
 
+if ga_config["setup_type_ss"] is True:
+    ga_config["setup_sql_usr"] = ga_config["sql_server_admin_usr"]
+    ga_config["setup_sql_pwd"] = ga_config["sql_server_admin_pwd"]
+else:
+    ga_config["setup_sql_usr"] = ga_config["sql_server_agent_usr"]
+    ga_config["setup_sql_pwd"] = ga_config["sql_server_agent_pwd"]
+
 if ga_ufw is True:
     ga_ufw_setup()
 
@@ -1211,18 +1228,13 @@ def ga_mysql_write_config(configtype):
             pass
         else:
             insertdict[key] = value
-    if ga_config["setup_type_ss"] is True:
-        dbuser = ga_config["sql_server_admin_usr"]
-        dbpwd = ga_config["sql_server_admin_pwd"]
-    else:
-        dbuser = ga_config["sql_server_agent_usr"]
-        dbpwd = ga_config["sql_server_agent_pwd"]
+
     for key, value in sorted(insertdict.items()):
         if configtype == "agent":
             command = "INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s, '%s');" % ("gasetup", ga_config["hostname"], key, value)
         elif configtype == "server":
             command = "INSERT INTO ga.ServerConfig (author, setting, data) VALUES ('%s', '%s', '%s');" % ("gasetup", key, value)
-        ga_mysql(command, dbuser, dbpwd)
+        ga_mysql(command, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"])
 
 
 ga_setup_shelloutput_header("Writing configuration to database")

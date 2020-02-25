@@ -24,7 +24,7 @@
         #add sensortype
             #add to main main file
             #default template -> ask user for main input?
-            #add systemd timer
+            #add systemd systemd
 
 #remove sensortype
 #migrate sensortype -> save main, remove, add, apply main
