@@ -18,6 +18,8 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+#ga_version0.2
+
 
 # https://github.com/systemd/python-systemd
 # systemctl link /home/nick/myservice.service

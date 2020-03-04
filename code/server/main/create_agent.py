@@ -18,16 +18,18 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+#ga_version0.2
+
 # checking for registered agent in the server db
 # registering new agent (next free nr.)
 # creating db user for agent since it will be needed in the agent setup
 # option to create backup and or log shares
     # option to create a linux user for shares
 
-def ga_openssl_server_cert(tmpname):
-    os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_rootpath, tmpname))
-    os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem "
-              "-new -sha256 -out %s/ca/csr/%s.csr.pem" % (ga_rootpath, ga_rootpath, tmpname, ga_rootpath, tmpname))
-    os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 "
-              "-in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem"
-              % (ga_rootpath, ga_rootpath, tmpname, ga_rootpath, tmpname))
+# def ga_openssl_server_cert(tmpname):
+#     os.system("openssl genrsa -aes256 -out %s/ca/private/%s.key.pem 2048" % (ga_rootpath, tmpname))
+#     os.system("eq -config %s/ca/openssl.cnf -key %s/ca/private/%s.key.pem "
+#               "-new -sha256 -out %s/ca/csr/%s.csr.pem" % (ga_rootpath, ga_rootpath, tmpname, ga_rootpath, tmpname))
+#     os.system("openssl ca -config %s/ca/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 "
+#               "-in %s/ca/csr/%s.csr.pem -out %s/ca/certs/%s.cert.pem"
+#               % (ga_rootpath, ga_rootpath, tmpname, ga_rootpath, tmpname))

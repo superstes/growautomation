@@ -18,6 +18,8 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+#ga_version0.1
+
 #Growautomation General Configuration File
 ##### FORMAT is case-sensitive!!! #####
 

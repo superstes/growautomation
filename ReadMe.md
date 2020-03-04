@@ -6,10 +6,10 @@ And provide code samples to the diy community.
 
 __The code is currently not in a stable state !__
 
-Version: 0.2.1
+Version: 0.2
 
 ## Currently active projects
-- centralizing the configuration (_v0.2.2_)
+- centralizing the configuration (_v0.2_)
     - in sql database -> mainconfig will be changed to sql-configparser
     - build-in config format checker
     - changing database design

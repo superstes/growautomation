@@ -17,6 +17,9 @@
 #
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
+
+#ga_version0.1
+
 #DC Motor 62RPM
 
 from time import sleep

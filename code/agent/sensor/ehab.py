@@ -18,6 +18,8 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+#ga_version0.1
+
 import inspect
 import mysql.connector
 import Adafruit_ADS1x15

@@ -17,7 +17,7 @@
 #
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
-#ga_version0.2.1
+#ga_version0.2
 #check if ga service is available
     #if not -> create and enable it
     #if yes
