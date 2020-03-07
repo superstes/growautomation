@@ -55,7 +55,7 @@ create table IF NOT EXISTS AgentConfigSectorGroupSetting (
     primary key (id),
     foreign key (gid) references AgentConfigSectorGroup (id) on update cascade on delete restrict,
     foreign key (sector) references AgentConfigSector (id) on update cascade on delete restrict,
-    unique key unique_group_sector (group, sector)
+    unique key unique_gid_sector (gid, sector)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
