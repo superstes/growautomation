@@ -50,7 +50,7 @@ ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 # shell output
 def ga_setup_shelloutput_header(output, symbol):
     shellhight, shellwidth = os_popen('stty size', 'r').read().split()
-    print("\n%s\n%s\n%s\n" % (symbol * int(shellwidth) - 1, output, symbol * int(shellwidth) - 1))
+    print("\n%s\n%s\n%s\n" % (symbol * (int(shellwidth) - 1), output, symbol * (int(shellwidth) - 1)))
     ga_setup_log_write("\n%s\n%s\n%s\n" % (symbol * 36, output, symbol * 36))
 
 
@@ -87,17 +87,17 @@ def ga_setup_log_write(output, special=False):
     tmplog.close()
 
 
-def ga_log_write_vars(configtype):
-    if configtype == "server":
-        configdict = ga_config_server
-    elif configtype == "agent":
-        configdict = ga_config
-    ga_setup_log_write("%s vars:" % configtype.capitalize())
-    for key, value in sorted(configdict.items()):
-        if "pwd" in key:
-            pass
-        else:
-            ga_setup_log_write("%s - %s" % (key, value), True)
+def ga_log_write_vars():
+    ga_setup_log_write("Setup vars:")
+
+    def write(thatdict):
+        for key, value in sorted(thatdict.items()):
+            if "pwd" in key:
+                pass
+            else:
+                ga_setup_log_write("%s - %s" % (key, value), True)
+    write(ga_config)
+    write(ga_config_server)
 
 
 def ga_setup_pwd_gen(stringlength):
@@ -137,9 +137,9 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
         while True:
             try:
                 if posstype == "str":
-                    usrinput = str(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or "%s" % default)
+                    usrinput = str(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or default)
                 elif posstype == "int":
-                    usrinput = int(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or "%s" % default)
+                    usrinput = int(input(styletype + "\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default) + colorama_fore.RESET).lower() or default)
                 if type(poss) == list:
                     if usrinput in poss:
                         break
@@ -173,9 +173,9 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
             return usrinput
         elif intype == "free":
             if poss != "":
-                ga_setup_string_check(ga_setup_input_posscheck(), maxlength=maxchar, minlength=minchar)
+                return ga_setup_string_check(ga_setup_input_posscheck(), maxlength=maxchar, minlength=minchar)
         elif poss != "":
-            ga_setup_input_posscheck()
+            return ga_setup_input_posscheck()
         elif default != "":
             return str(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or "%s" % default)
         else:
@@ -331,6 +331,7 @@ def ga_setup_configparser_file(file, text):
 
 
 def ga_setup_exit(shell, log):
+    ga_log_write_vars()
     ga_setup_log_write("\nExit. %s.\n\n" % log)
     raise SystemExit(ga_setup_shelloutput_colors("err") + "\n%s!\nYou can find the full setup log at %s.\n\n" % (shell, ga_config["setup_log"]) + colorama_fore.RESET)
 
@@ -390,7 +391,7 @@ if os_path.exists(ga_config["setup_version_file"]) is True or os_path.exists("/e
 
 
     if os_path.exists(ga_config["setup_version_file"]) is True:
-        ga_versionfile_line = ga_setup_configparser_file(ga_config["setup_version_file"], "gaversion=")
+        ga_versionfile_line = ga_setup_configparser_file(ga_config["setup_version_file"], "version=")
         if ga_versionfile_line is False:
             if os_path.exists("/etc/growautomation") is True:
                 ga_setup_shelloutput_text("Growautomation is currently installed. But its version number could not be found", style="warn")
@@ -400,7 +401,7 @@ if os_path.exists(ga_config["setup_version_file"]) is True or os_path.exists("/e
                 ga_config["setup_old"] = False
         else:
             print("A version of growautomation is/was already installed on this system!\n\n"
-                  "Installed version: " + ga_versionfile_line[11:] +
+                  "Installed version: " + ga_versionfile_line[9:] +
                   "\nReplace version: %s" % ga_config["version"])
             ga_config_vars_oldversion_replace()
     elif os_path.exists("/etc/growautomation") is True:
@@ -548,7 +549,7 @@ def ga_config_var_db():
             # other config will be received via sql query
             return "default"
 
-    elif ga_config["setup_type_ss"] is True:
+    else:
         ga_config["sql_server_ip"] = "127.0.0.1"
         ga_config["sql_server_port"] = "3306"
         if ga_config["setup_fresh"] is True:
@@ -705,10 +706,7 @@ ga_ufw = ga_setup_input("Do you want to install the linux software firewall (ufw
 
 ga_setup_shelloutput_header("Logging setup information", "-")
 
-if ga_config["setup_type_ss"] is True:
-    ga_log_write_vars("server")
-elif ga_config["setup_type_as"] is True:
-    ga_log_write_vars("agent")
+ga_log_write_vars()
 
 ga_setup_shelloutput_text("Thank you for providing the setup information.\nThe installation will start now")
 
@@ -1020,7 +1018,9 @@ def ga_setup_infra():
     elif ga_config["setup_old"] is True:
         ga_infra_oldversion_cleanconfig()
 
-    ga_setup_config_file("w", "version=%s\nroot=%s\nname=%s\ntype=%s\n" % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]), ga_config["setup_version_file"])
+    ga_setup_config_file("w", "version=%s\nroot=%s\nname=%s\ntype=%s\n"
+                         % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setup_type"]), ga_config["setup_version_file"])
+    os_system("chmod 664 %s && chown growautomation:growautomation %s %s" % (ga_config["setup_version_file"], ga_config["setup_version_file"], ga_config["setup_log_redirect"]))
     ga_foldercreate(ga_config["path_root"])
     ga_foldercreate(ga_config["path_log"])
     ga_setup_infra_mounts()
@@ -1041,6 +1041,9 @@ def ga_setup_infra_code():
         os_system("cp -r /tmp/controller/code/server/* %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
     os_system("cp /tmp/controller/setup/setup-linux.py %s/main %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
+
+    os_system("find %s -type f -iname '*.py' -exec chmod 754 {} \\; %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
+    os_system("chown -R growautomation:growautomation %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
     ga_pyvers = "%s.%s" % (sys_version_info.major, sys_version_info.minor)
     ga_pyvers_modpath = "/usr/local/lib/python%s/dist-packages/ga" % ga_pyvers
@@ -1241,12 +1244,7 @@ def ga_mysql_write_config(configtype):
 
 
 ga_setup_shelloutput_header("Writing configuration to database", "#")
-if ga_config["setup_type_ss"] is True:
-    ga_mysql_write_config("server")
-    ga_log_write_vars("server")
-elif ga_config["setup_type_as"] is True:
-    ga_mysql_write_config("agent")
-    ga_log_write_vars("agent")
+ga_log_write_vars()
 
 
 ga_setup_shelloutput_header("Setup finished! Please reboot the system", "#")
