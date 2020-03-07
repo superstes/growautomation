@@ -253,9 +253,7 @@ class ga_mysql(object):
 
     def start(self):
         if self.user == "":
-            dbuser = "root"
-        else:
-            dbuser = self.user
+            self.user = "root"
 
         if type(self.input) == str:
             return self.execute(self.input)

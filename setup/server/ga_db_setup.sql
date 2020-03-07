@@ -49,11 +49,11 @@ create table IF NOT EXISTS AgentConfigSectorGroupSetting (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-    group smallint unsigned not null default 1,
+    gid smallint unsigned not null default 1,
     sector smallint unsigned not null,
 	description varchar(50) null,
     primary key (id),
-    foreign key (group) references AgentConfigSectorGroup (id) on update cascade on delete restrict,
+    foreign key (gid) references AgentConfigSectorGroup (id) on update cascade on delete restrict,
     foreign key (sector) references AgentConfigSector (id) on update cascade on delete restrict,
     unique key unique_group_sector (group, sector)
 )engine innodb,
