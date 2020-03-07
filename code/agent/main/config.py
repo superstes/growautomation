@@ -23,8 +23,8 @@
 from ga import owl
 from ga import ant
 
-hostname = ant.line("find", "name=")[6:]
-setuptype = ant.line("find", "type=")[6:]
+hostname = ant.line("find", "name=")[5:]
+setuptype = ant.line("find", "type=")[5:]
 
 
 def command(setting):
@@ -35,7 +35,7 @@ def command(setting):
 
 
 class path:
-    root = ant.line("find", "garoot=", file="/etc/growautomation.version")[8:]
+    root = ant.line("find", "garoot=", file="/etc/growautomation.version")[7:]
     try:
         log = owl.do(command("path_log"))
         backup = owl.do(command("path_backup"))
@@ -45,19 +45,19 @@ class path:
 
 
 class mysql:
-    server_port = ant.line("find", "serverport=")[12:]
+    server_port = ant.line("find", "serverport=")[11:]
     if server_port != "" and server_port is not None:
         server_port = 3306
     if setuptype == "agent":
-        server_ip = ant.line("find", "serverip=")[10:]
-        user = ant.line("find", "agentuser=")[11:]
-        pwd = ant.line("find", "agentpassword=")[15:]
-        localuser = ant.line("find", "localuser=")[11:]
-        localpwd = ant.line("find", "localpassword=")[15:]
+        server_ip = ant.line("find", "serverip=")[9:]
+        user = ant.line("find", "agentuser=")[10:]
+        pwd = ant.line("find", "agentpassword=")[14:]
+        localuser = ant.line("find", "localuser=")[10:]
+        localpwd = ant.line("find", "localpassword=")[14:]
     else:
         server_ip = "127.0.0.1"
-        user = ant.line("find", "serveruser=")[12:]
-        pwd = ant.line("find", "serverpassword=")[16:]
+        user = ant.line("find", "serveruser=")[11:]
+        pwd = ant.line("find", "serverpassword=")[15:]
         sock = owl.do(command("sql_sock"))
 
 
@@ -71,11 +71,12 @@ class core:
 
 def query(setting, customtable=None):
     if customtable is not None:
-        table = customtable
-    if setuptype == "agent":
-        return owl.do("SELECT data FROM ga.%s WHERE setting = '%s' and agent = '%s';" % (table, setting, hostname))
+        if setuptype == "agent":
+            return owl.do("SELECT data FROM ga.%s WHERE setting = '%s' and agent = '%s';" % (customtable, setting, hostname))
+        else:
+            return owl.do("SELECT data FROM ga.%s WHERE setting = '%s';" % (customtable, setting))
     else:
-        return owl.do("SELECT data FROM ga.%s WHERE setting = '%s';" % (table, setting))
+        owl.do(command(setting))
 
 # class old:
     # will not be needed often -> should be queried manually if needed
