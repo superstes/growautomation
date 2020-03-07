@@ -191,16 +191,6 @@ def ga_mnt_creds(outtype, inputstr=""):
         return ga_setup_input("Provide domain for share authentication.", "workgroup")
 
 
-# def ga_setup_varcheck(tmpvar, error=""):
-#     try:
-#         tmpvar
-#         return True
-#     except NameError:
-#         if error != "":
-#             ga_setup_shelloutput_text("WARNING! %s" % error)
-#         return False
-
-
 def ga_setup_keycheck(dictkey):
     dict = ga_config
     if dict[dictkey] is None:
@@ -213,67 +203,73 @@ def ga_setup_keycheck(dictkey):
         return False
 
 
-def ga_mysql_unixsock():
-    global ga_config
-    sql_sock = "/var/run/mysqld/mysqld.sock"
-    if os_path.exists(sql_sock) is False:
-        output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-        outputstr = output.decode("ascii")
-        if outputstr.find("Active: inactive") != -1:
-            os_system("systemctl start mysql.service %s" % ga_config["setup_log_redirect"])
+class ga_mysql(object):
+    def __init__(self, dbinput, user="", pwd="", query=False):
+        self.input = dbinput
+        self.user = user
+        self.pwd = pwd
+        self.query = query
+        self.start()
+
+    def unixsock(self):
+        global ga_config
+        sql_sock = "/var/run/mysqld/mysqld.sock"
         if os_path.exists(sql_sock) is False:
-            sql_customsock = ga_setup_input("Mysql was unable to find the mysql unix socket file at %s.\nThe path can be found in mysql via "
-                                            "the command:\n > show variables like 'socket;'\nProvide the correct path to it.")
-            ga_config["sql_sock"] = sql_customsock
-            return sql_customsock
-    else:
-        ga_config["sql_sock"] = sql_sock
-        return sql_sock
-
-
-def ga_mysql_execute(dbuser, dbpwd, command, query):
-    if ga_config["sql_server_ip"] == "127.0.0.1":
-        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=ga_mysql_unixsock(), user=dbuser, passwd=dbpwd)
-    else:
-        connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=dbuser, passwd=dbpwd)
-    try:
-        curser = connection.cursor(buffered=True)
-        curser.execute(command)
-        if query is True:
-            data = curser.fetchall()
+            output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+            outputstr = output.decode("ascii")
+            if outputstr.find("Active: inactive") != -1:
+                os_system("systemctl start mysql.service %s" % ga_config["setup_log_redirect"])
+            if os_path.exists(sql_sock) is False:
+                sql_customsock = ga_setup_input("Mysql was unable to find the mysql unix socket file at %s.\nThe path can be found in mysql via "
+                                                "the command:\n > show variables like 'socket;'\nProvide the correct path to it.")
+                ga_config["sql_sock"] = sql_customsock
+                return sql_customsock
         else:
-            connection.commit()
-        curser.close()
-        connection.close()
-        if query is True:
-            return data
+            ga_config["sql_sock"] = sql_sock
+            return sql_sock
+
+    def execute(self, command):
+        if ga_config["sql_server_ip"] == "127.0.0.1":
+            connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
         else:
-            return True
-    except mysql.connector.Error as error:
-        connection.rollback()
-        ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
-        return False
-
-
-def ga_mysql(dbinput, inuser="", dbpwd="", query=False):
-    if inuser == "":
-        dbuser = "root"
-    else:
-        dbuser = inuser
-
-    if type(dbinput) == str:
-        return ga_mysql_execute(dbuser, dbpwd, dbinput, query)
-    elif type(dbinput) == list:
-        outputdict = {}
-        anyfalse = True
-        for command in dbinput:
-            output = ga_mysql_execute(dbuser, dbpwd, command, query)
-            outputdict[command] = output
-            if output is False:
-                anyfalse = False
-        if anyfalse is False:
+            connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=self.user, passwd=self.pwd)
+        try:
+            curser = connection.cursor(buffered=True)
+            curser.execute(command)
+            if self.query is True:
+                data = curser.fetchall()
+            else:
+                connection.commit()
+            curser.close()
+            connection.close()
+            if self.query is True:
+                return data
+            else:
+                return True
+        except mysql.connector.Error as error:
+            connection.rollback()
+            ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
             return False
-        return outputdict
+
+    def start(self):
+        if self.user == "":
+            dbuser = "root"
+        else:
+            dbuser = self.user
+
+        if type(self.input) == str:
+            return self.execute(self.input)
+        elif type(self.input) == list:
+            outputdict = {}
+            anyfalse = True
+            for command in self.input:
+                output = self.execute(command)
+                outputdict[command] = output
+                if output is False:
+                    anyfalse = False
+            if anyfalse is False:
+                return False
+            return outputdict
 
 
 def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
@@ -292,34 +288,42 @@ def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
         return False
 
 
-def ga_setup_configparser_mysql_command(search, agent, table):
-    if table == "config":
-        if agent == "":
-            command_table = "Server"
-            command_agents = ""
-        else:
-            command_table = "Agent"
-            command_agents = " and agent = '%s'" % agent
-        return "SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, search, command_agents)
-    elif table == "devicetype" or table == "device":
-        if table == "devicetype": command_table = "DeviceType"
-        elif table == "device": command_table = "Device"
-        return "SELECT data FROM ga.AgentConfig%sSetting WHERE setting = '%s'" % (command_table, search)
+class ga_setup_configparser_mysql(object):
+    def __init__(self, search, user, pwd, agent="", table="config"):
+        self.search = search
+        self.user = user
+        self.pwd = pwd
+        self.agent = agent
+        self.table = table
+        self.start()
 
+    def command(self):
+        if self.table == "config":
+            if self.agent == "":
+                command_table = "Server"
+                command_agents = ""
+            else:
+                command_table = "Agent"
+                command_agents = " and agent = '%s'" % self.agent
+            return "SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, self.search, command_agents)
+        elif self.table == "devicetype" or self.table == "device":
+            if self.table == "devicetype": command_table = "DeviceType"
+            elif self.table == "device": command_table = "Device"
+            return "SELECT data FROM ga.AgentConfig%sSetting WHERE setting = '%s'" % (command_table, self.search)
 
-def ga_setup_configparser_mysql(search, user, pwd, agent="", table="config"):
-    if type(search) == list:
-        itemdatadict = {}
-        for item in search:
-            itemdatadict[item] = ga_mysql(ga_setup_configparser_mysql_command(item, agent, table), user, pwd, True)
-        return itemdatadict
-    elif type(search) == str:
-        data = ga_mysql(ga_setup_configparser_mysql_command(search, agent, table), user, pwd, True)
-        return data
+    def start(self):
+        if type(self.search) == list:
+            itemdatadict = {}
+            for item in self.search:
+                itemdatadict[item] = ga_mysql(self.command(), self.user, self.pwd, True)
+            return itemdatadict
+        elif type(self.search) == str:
+            data = ga_mysql(self.command(), self.user, self.pwd, True)
+            return data
 
 
 def ga_setup_configparser_file(file, text):
-    tmpfile = open(file)
+    tmpfile = open(file, 'r')
     for line in tmpfile.readlines():
         if line.find(text) != -1:
             return line
@@ -555,8 +559,8 @@ def ga_config_var_db():
             else:
                 ga_setup_shelloutput_text("Server SQL connection verified", style="succ")
         else:
-            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[10:]
-            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[10:]
+            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[12:]
+            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[16:]
             while True:
                 if whilecount > 0:
                     ga_setup_shelloutput_text("SQL connection failed. Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/main/main.conf'", style="warn")
@@ -651,7 +655,7 @@ if ga_config["setup_fresh"] is True:
             #                               "serverip or sharename provided.\n")
     else:
         ga_config["mnt_backup"] = False
-        ga_config["mnt_backup_type"] = "no"
+        ga_config["mnt_backup_type"] = "False"
     
     ga_config["path_log"] = ga_setup_input("Want to choose a custom log path?", "/var/log/growautomation")
     ga_config["mnt_log"] = ga_setup_input("Want to mount remote share as log destination? Smb and nfs available.", False)
@@ -687,7 +691,7 @@ if ga_config["setup_fresh"] is True:
             else:
                 ga_mnt_log_creds()
     else:
-        ga_config["mnt_log_type"] = "no"  # for nfs/cifs apt installation
+        ga_config["mnt_log_type"] = "False"  # for nfs/cifs apt installation
 
 ########################################################################################################################
 # always vars
@@ -836,8 +840,8 @@ def ga_sql_agent():
     ga_mysql(["CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
               "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"], "FLUSH PRIVILEGES;"])
 
-    ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s"
-                         % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"]))
+    ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s\nserverport=%s"
+                         % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
     
     if ga_setup_keycheck(ga_config["sql_server_repl_file"]) is False or ga_setup_keycheck(ga_config["sql_server_repl_pos"]) is False:
         ga_setup_shelloutput_text("SQL master slave configuration not possible due to missing information.\nShould be found in mysql dump from server "
@@ -899,8 +903,8 @@ def ga_sql_server_create_agent():
                   "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
                   "FLUSH PRIVILEGES;"], ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
-        ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
-                             % (create_agent_name, ga_config["sql_server_ip"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
+        ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nserverport=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
+                             % (create_agent_name, ga_config["sql_server_ip"], ga_config["sql_server_port"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
 
         ga_setup_shelloutput_header("Creating mysql agent certificate\n", "-")
         ga_openssl_server_cert(create_agent_name)
@@ -1039,117 +1043,123 @@ def ga_setup_infra_code():
     os_system("cp /tmp/controller/setup/setup-linux.py %s/main %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
     ga_pyvers = "%s.%s" % (sys_version_info.major, sys_version_info.minor)
-    ga_pyvers_modpath = "/usr/local/lib/python%s/dist-packages/GA" % ga_pyvers
+    ga_pyvers_modpath = "/usr/local/lib/python%s/dist-packages/ga" % ga_pyvers
     if os_path.exists(ga_pyvers_modpath) is False:
         os_system("ln -s %s %s %s" % (ga_config["path_root"], ga_pyvers_modpath, ga_config["setup_log_redirect"]))
+
+    os_system("ln -s %s %s/backup && ln -s %s %s/log %s" % (ga_config["path_backup"], ga_config["path_root"], ga_config["path_log"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
     ga_setup_config_file("w", "[main]\nname=%s\ntype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
 
 
-def ga_setup_infra_systemd_check(systemd_element, request="exists", out=""):
-    if request == "exists":
-        command = "systemctl list-unit-files | grep %s" % systemd_element
-    elif request == "enabled":
-        command = "systemctl list-unit-files | grep %s | grep enabled" % systemd_element
-    elif request == "status" and systemd_element.find(".service") != -1:
-        command = "systemctl status %s | grep 'Active:'" % systemd_element
-    else:
-        return "Input error."
+# creating systemd service and timers
+class ga_setup_service(object):
+    def __init__(self):
+        self.element = None
+        self.path = None
+        self.start()
 
-    output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-    outputstr = output.decode("ascii")
-    errorstr = error.decode("ascii")
-
-    if request == "exists":
-        if outputstr.find(systemd_element) == -1:
-            return False
-        elif out == "":
-            return True
-        elif out == "info":
-            return outputstr
-        elif out == "err":
-            return errorstr
-    elif request == "status":
-        if outputstr.find("Active:") == -1:
-            return False
-        elif outputstr.find("active (running)") != -1:
-            return True
+    def check(self, request="exists", out=""):
+        if request == "exists":
+            command = "systemctl list-unit-files | grep %s" % self.element
+        elif request == "enabled":
+            command = "systemctl list-unit-files | grep %s | grep enabled" % self.element
+        elif request == "status" and self.element.find(".service") != -1:
+            command = "systemctl status %s | grep 'Active:'" % self.element
         else:
-            return False
+            return "Input error."
 
+        output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+        outputstr = output.decode("ascii")
+        errorstr = error.decode("ascii")
 
-def ga_setup_infra_service_enabled(systemd_element, check=True):
-    if check is True:
-        enabled = ga_setup_infra_systemd_check(systemd_element, "enabled")
-    else:
-        enabled = False
+        if request == "exists":
+            if outputstr.find(self.element) == -1:
+                return False
+            elif out == "":
+                return True
+            elif out == "info":
+                return outputstr
+            elif out == "err":
+                return errorstr
+        elif request == "status":
+            if outputstr.find("Active:") == -1:
+                return False
+            elif outputstr.find("active (running)") != -1:
+                return True
+            else:
+                return False
 
-    if enabled is True:
-        ga_setup_shelloutput_text("%s is already enabled" % systemd_element, style="succ")
-    else:
-        os_system("systemctl enable %s %s" % (systemd_element, ga_config["setup_log_redirect"]))
-        ga_setup_shelloutput_text("Enabled %s" % systemd_element, style="info")
+    def enabled(self, check=True):
+        if check is True:
+            enabled = self.check("enabled")
+        else:
+            enabled = False
 
+        if enabled is True:
+            ga_setup_shelloutput_text("%s is already enabled" % self.element, style="succ")
+        else:
+            os_system("systemctl enable %s %s" % (self.element, ga_config["setup_log_redirect"]))
+            ga_setup_shelloutput_text("Enabled %s" % self.element, style="info")
 
-def ga_setup_infra_service_exists(systemd_element, filepath, check=True):
-    if check is True:
-        exists = ga_setup_infra_systemd_check(systemd_element)
-    else:
-        exists = False
-    if exists is True:
-        ga_setup_shelloutput_text("%s already exists" % systemd_element, style="succ")
-        ga_setup_infra_service_enabled(systemd_element)
-    else:
-        os_system("systemctl link %s %s" % (filepath, ga_config["setup_log_redirect"]))
-        ga_setup_shelloutput_text("Linked %s" % systemd_element, style="info")
-        ga_setup_infra_service_enabled(systemd_element)
+    def exists(self, check=True):
+        if check is True:
+            exists = self.check()
+        else:
+            exists = False
+        if exists is True:
+            ga_setup_shelloutput_text("%s already exists" % self.element, style="succ")
+            self.enabled()
+        else:
+            os_system("systemctl link %s %s" % (self.path, ga_config["setup_log_redirect"]))
+            ga_setup_shelloutput_text("Linked %s" % self.element, style="info")
+            self.enabled()
 
+    def start(self):
+        service_dir = "%s/service/systemd/" % ga_config["path_root"]
 
-def ga_setup_infra_service():
-    service_dir = "%s/service/systemd/" % ga_config["path_root"]
+        if os_path.exists(service_dir) is False:
+            ga_setup_infra_code()
 
-    if os_path.exists(service_dir) is False:
-        ga_setup_infra_code()
+        for file in os_listdir(service_dir):
+            filepath = service_dir + file
+            if os_path.isfile(filepath):
+                if (file.find(".service") != -1 or file.find(".timer") != -1) and file.find("DEFAULT") == -1:
+                    self.element = file
+                    self.path = filepath
+                    self.exists()
+        os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
+        ga_setup_shelloutput_text("Systemd services reloaded", style="info")
 
-    for file in os_listdir(service_dir):
-        filepath = service_dir + file
-        if os_path.isfile(filepath):
-            if (file.find(".service") != -1 or file.find(".timer") != -1) and file.find("DEFAULT") == -1:
-                ga_setup_infra_service_exists(file, filepath)
+    # in work
+    # def ga_setup_infra_timer_add(systemd_element=""):
+    #     ga_timer_path = "%s/service/systemd" % ga_config["path_root"]
+    #     if systemd_element == "":
+    #         ga_config["setup_systemd_add_timer"] = ga_setup_input("Do you want to add a sensor/an action timer?", True)
+    #     elif ga_config["setup_systemd_add_timer"] is True or systemd_element != "":
+    #         while True:
+    #             if systemd_element != "":
+    #                 devicetype = systemd_element
+    #             else:
+    #                 while True:
+    #                     devicetype = ga_setup_input("Please provide the name of the device ")
+    #                     if ga_setup_string_check(devicetype) is True:
+    #                         break
+    #                 # systemd interval -> sql config either from DeviceSettings or DeviceTypeSettings (prio = DeviceSettings)
+    #                 ga_setup_configparser_mysql(devicetype, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"], table="devicetype")
+    #             os_system("cp %s/ga@DEFAULT.timer %s/ga@%s.timer %s" % (ga_timer_path, ga_timer_path, devicetype, ga_config["setup_log_redirect"]))
+    #             ga_replaceline("%s/ga@%s.timer" % (ga_timer_path, devicetype), "Unit=", "Unit=ga@%s.service" % devicetype)
+    #             ga_setup_infra_service_exists(devicetype, ga_timer_path + "/ga@%s.timer" % devicetype, check=False)
+    #             ga_setup_infra_service_enabled(devicetype, check=False)
+    #
+    #             if systemd_element == "":
+    #                 again = ga_setup_input("Do you want to add another timer?", True)
+    #                 if again is False:
+    #                     break
+    #             else:
+    #                 break
 
-    os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
-    ga_setup_shelloutput_text("Systemd services reloaded", style="info")
-
-
-# in work
-# def ga_setup_infra_timer_add(systemd_element=""):
-#     ga_timer_path = "%s/service/systemd" % ga_config["path_root"]
-#     if systemd_element == "":
-#         ga_config["setup_systemd_add_timer"] = ga_setup_input("Do you want to add a sensor/an action timer?", True)
-#     elif ga_config["setup_systemd_add_timer"] is True or systemd_element != "":
-#         while True:
-#             if systemd_element != "":
-#                 devicetype = systemd_element
-#             else:
-#                 while True:
-#                     devicetype = ga_setup_input("Please provide the name of the device ")
-#                     if ga_setup_string_check(devicetype) is True:
-#                         break
-#                 # systemd interval -> sql config either from DeviceSettings or DeviceTypeSettings (prio = DeviceSettings)
-#                 ga_setup_configparser_mysql(devicetype, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"], table="devicetype")
-#             os_system("cp %s/ga@DEFAULT.timer %s/ga@%s.timer %s" % (ga_timer_path, ga_timer_path, devicetype, ga_config["setup_log_redirect"]))
-#             ga_replaceline("%s/ga@%s.timer" % (ga_timer_path, devicetype), "Unit=", "Unit=ga@%s.service" % devicetype)
-#             ga_setup_infra_service_exists(devicetype, ga_timer_path + "/ga@%s.timer" % devicetype, check=False)
-#             ga_setup_infra_service_enabled(devicetype, check=False)
-#
-#             if systemd_element == "":
-#                 again = ga_setup_input("Do you want to add another timer?", True)
-#                 if again is False:
-#                     break
-#             else:
-#                 break
-
-
+# check path inputs for ending / and remove it
 # delete old fstab entries and replace them (ask user)
 # systemd systemd setup for agentdata and serverbackup
 # ga service check for python path /usr/bin/python3 and growautomation root -> change execstart execstop etc
@@ -1202,6 +1212,11 @@ if ga_ufw is True:
 
 ########################################################################################################################
 # post setup tasks
+
+# defining default values
+ga_config["backup_time"] = "2000"
+ga_config["backup_log"] = False
+ga_config["log_level"] = 2
 
 
 def ga_mysql_write_config(configtype):
