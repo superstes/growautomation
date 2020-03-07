@@ -75,10 +75,10 @@ create table IF NOT EXISTS AgentConfigDeviceType (
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
 	description varchar(50) null,
-	type varchar(10) not null unique key,
+	type varchar(10) not null,
 	category varchar(10) not null,
 	primary key (id),
-	index index_type_category (type, category)
+	unique key (type)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -87,7 +87,7 @@ create table IF NOT EXISTS AgentConfigLinkSetting (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
-    link varchar(10) not null,
+    link smallint unsigned not null,
     type varchar(10) not null,
 	description varchar(50) null,
     primary key (id),
@@ -122,7 +122,7 @@ create table IF NOT EXISTS AgentConfigDevice (
 	type varchar(10) not null,
 	description varchar(50) null,
 	primary key (id),
-	foreign key (type) references AgentConfigDeviceType (device) on update cascade on delete restrict
+	foreign key (type) references AgentConfigDeviceType (type) on update cascade on delete restrict
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
