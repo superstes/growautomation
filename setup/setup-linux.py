@@ -698,7 +698,7 @@ if ga_config["setup_type"] == "agent":
     ga_config_var_certs()
 
 ga_ufw = ga_setup_input("Do you want to install the linux software firewall (ufw)?\n"
-                        "It will be configured for growautomation", True)
+                        "It will be configured for growautomation", False)
 
 ########################################################################################################################
 

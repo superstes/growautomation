@@ -88,7 +88,7 @@ create table IF NOT EXISTS AgentConfigLinkSetting (
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
     link varchar(10) not null,
-    type varchar(30) not null,
+    type varchar(10) not null,
 	description varchar(50) null,
     primary key (id),
     foreign key (link) references AgentConfigLink (id) on update cascade on delete restrict,
