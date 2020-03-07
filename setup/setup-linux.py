@@ -357,7 +357,7 @@ else:
     ga_config["setup_warning"] = ga_setup_input("WARNING!\n\nWe recommend using this installation script on dedicated systems.\n"
                                                 "This installation script won't check your already installed programs for compatibility problems.\n"
                                                 "If you already use web-/database or other complex software on this system you should back it up before installing this software.\n"
-                                                "We assume no liability for problems that may be caused by this installation!\n"
+                                                "We assume no liability for problems that may be caused by this installation!\n\n"
                                                 "Accept the risk if you want to continue.", False, style="warn")
     if ga_config["setup_warning"] is False:
         ga_setup_exit("Script cancelled by user\nYou can also install this software manually through the setup "
@@ -399,8 +399,7 @@ if os_path.exists(ga_config["setup_version_file"]) is True or os_path.exists("/e
                 ga_config["setup_old"] = False
         else:
             print("A version of growautomation is/was already installed on this system!\n\n"
-                  "Installed version: " + ga_versionfile_line[9:] +
-                  "\nReplace version: %s" % ga_config["version"])
+                  "Installed version: %s\nReplace version: %s" % (ga_versionfile_line[8:], ga_config["version"]))
             ga_config_vars_oldversion_replace()
     elif os_path.exists("/etc/growautomation") is True:
         ga_setup_shelloutput_text("Growautomation is currently installed. But its version number could not be found", style="warn")
@@ -440,9 +439,9 @@ def ga_config_var_base():
             ga_config["hostname"] = "gacon01"
 
     if ga_config["setup_fresh"] is False:
-        ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "garoot=")[8:]
-        ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "name=")[6:]
-        ga_config["setup_type"] = ga_setup_configparser_file(ga_config["setup_version_file"], "type=")[6:]
+        ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "garoot=")[7:]
+        ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "name=")[5:]
+        ga_config["setup_type"] = ga_setup_configparser_file(ga_config["setup_version_file"], "type=")[5:]
         if ga_config["path_root"] is False:
             ga_setup_shelloutput_text("Growautomation rootpath not found in old versionfile", style="warn")
             ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
@@ -526,8 +525,8 @@ def ga_config_var_db():
                     ga_config["sql_server_repl_pwd"] = ga_setup_input("Please provide sql replication password.", ga_config["sql_server_agent_pwd"])
                     break
         else:
-            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localuser=")[11:]
-            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localpassword=")[15:]
+            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localuser=")[10:]
+            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "localpassword=")[14:]
 
             if ga_mysql_conntest(ga_config["sql_agent_usr"], ga_config["sql_agent_pwd"]) is True:
                 ga_setup_shelloutput_text("Local SQL connection verified", style="succ")
@@ -537,9 +536,9 @@ def ga_config_var_db():
                     ga_setup_shelloutput_text("You can reset/configure the agent database credentials on the "
                                               "growautomation server. Details can be found in the manual: "
                                               "https://git.growautomation.at/tree/master/manual", style="info")
-                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentuser=")[11:]
-                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentpassword=")[15:]
-                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverip=")[10:]
+                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentuser=")[10:]
+                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "agentpassword=")[14:]
+                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverip=")[9:]
                 if ga_mysql_conntest(ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) is True:
                     break
 
@@ -558,8 +557,8 @@ def ga_config_var_db():
             else:
                 ga_setup_shelloutput_text("Server SQL connection verified", style="succ")
         else:
-            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[12:]
-            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[16:]
+            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serveruser=")[11:]
+            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/main/main.conf" % ga_config["path_root"], "serverpassword=")[15:]
             while True:
                 if whilecount > 0:
                     ga_setup_shelloutput_text("SQL connection failed. Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/main/main.conf'", style="warn")
@@ -1220,30 +1219,26 @@ ga_config["backup_log"] = False
 ga_config["log_level"] = 2
 
 
-def ga_mysql_write_config(configtype):
+def ga_mysql_write_config(thatdict, thattype="agent"):
     insertdict = {}
-    if configtype == "server":
-        configdict = ga_config_server
-    elif configtype == "agent":
-        configdict = ga_config
-
-    for key, value in configdict.items():
+    for key, value in thatdict.items():
         if "setup_" in key or "sql_server_agent_pwd" in key or "sql_agent_pwd" in key or "sql_agent_usr" in key or "sql_server_admin_pwd" in key:
             pass
         else:
             insertdict[key] = value
 
     for key, value in sorted(insertdict.items()):
-        if configtype == "agent":
+        if thattype == "agent":
             command = "INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s, '%s');" % ("gasetup", ga_config["hostname"], key, value)
-        elif configtype == "server":
+        else:
             command = "INSERT INTO ga.ServerConfig (author, setting, data) VALUES ('%s', '%s', '%s');" % ("gasetup", key, value)
         ga_mysql(command, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"])
 
 
 ga_setup_shelloutput_header("Writing configuration to database", "#")
 ga_log_write_vars()
-
+ga_mysql_write_config(ga_config_server, "server")
+ga_mysql_write_config(ga_config)
 
 ga_setup_shelloutput_header("Setup finished! Please reboot the system", "#")
 ga_setup_log_write("Setup finished.")
