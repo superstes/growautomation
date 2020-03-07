@@ -33,9 +33,9 @@ class do:
         self.write = write
         self.fallback = False
         self.debug = debug
-        self.ga_mysql_prequesites()
+        self.prequesites()
 
-    def ga_mysql_connection(self, command=None):
+    def connection(self, command=None):
         connection = mysql.connector.connect(host=config.mysql.server_ip, port=config.mysql.server_port, user=config.mysql.user, passwd=config.mysql.pwd)
         try:
             curser = connection.cursor(buffered=True)
@@ -43,10 +43,10 @@ class do:
                 command = self.command
             if self.write is False:
                 @lru_cache()
-                def ga_mysql_connection_readcache(doit):
+                def readcache(doit):
                     curser.execute(doit)
                     return curser.fetchall()
-                data = ga_mysql_connection_readcache(command)
+                data = readcache(command)
             else:
                 curser.execute(command)
                 data = True
@@ -59,7 +59,7 @@ class do:
             print(error)
             return False
 
-    def ga_mysql_prequesites(self):
+    def prequesites(self):
         creds_ok = False
         whilecount = 0
         while creds_ok is False:
@@ -71,17 +71,16 @@ class do:
                 ant.log("Error connecting to database. Check content of %ga_root/main/main.conf file for correct sql login credentials.")
                 raise SystemExit("Error connecting to database. Check content of %ga_root/main/main.conf file for correct sql login credentials.")
 
-            def ga_mysql_conntest(*args, **kwargs):
+            def conntest(*args, **kwargs):
                 if config.setuptype == "agent":
                     table = "AgentConfig"
                 else:
                     table = "ServerConfig"
                 if self.write is False:
-                    data = self.ga_mysql_connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
+                    data = self.connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
                 else:
-                    self.ga_mysql_connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');"
-                                             % config.hostname)
-                    self.ga_mysql_connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % config.hostname)
+                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % config.hostname)
+                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % config.hostname)
                     data = True
                 logvars = config.mysql.server_ip, config.mysql.server_port, config.mysql.user
                 if type(data) == list:
@@ -94,11 +93,11 @@ class do:
                     ant.log("Sql connection to server %s:%s failed with user %s" % logvars)
                     return False
 
-            creds_ok = ga_mysql_conntest()
+            creds_ok = conntest()
             whilecount += 1
 
         if config.setuptype != "agent":
-            def ga_mysql_running():
+            def running():
                 output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
                                                  shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 outputstr = output.decode("ascii")
@@ -111,7 +110,7 @@ class do:
                     return False
             whilecount = 0
             while True:
-                if ga_mysql_running() is False:
+                if running() is False:
                     if whilecount == 0:
                         ant.log("Trying to start mysql service.")
                         os_system("systemctl start mysql.service %s" % ant.log_redirect)
@@ -120,17 +119,17 @@ class do:
                         raise SystemExit("Mysql service not active.")
                 whilecount += 1
 
-        self.ga_mysql_execute()
+        self.execute()
 
-    def ga_mysql_execute(self):
+    def execute(self):
         if type(self.command) == str:
-            return self.ga_mysql_connection()
+            return self.connection()
         elif type(self.command) == list:
             outputdict = {}
             anyfalse = True
             forcount = 1
             for command in self.command:
-                output = self.ga_mysql_connection()
+                output = self.connection()
                 if self.debug is True:
                     outputdict[forcount][command] = output
                 else:
