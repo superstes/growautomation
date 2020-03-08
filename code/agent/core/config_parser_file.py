@@ -21,15 +21,22 @@
 #ga_version0.3
 
 from functools import lru_cache
+from os import path as os_path
+from sys import path as sys_path
 
 from ga.core.smallant import LogWrite
 
 
 class GetConfig(object):
-    def __init__(self, request, file="./core.conf"):
+    def __init__(self, request, file="core.conf"):
         self.file = file
         self.request = request
-        self.parse_file()
+
+    def start(self):
+        if self.file == "core.conf":
+            file = os_path.join(sys_path[0], self.file)
+            self.file = file
+        return self.parse_file()
 
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
