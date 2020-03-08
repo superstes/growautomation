@@ -324,7 +324,7 @@ def ga_setup_configparser_file(file, text):
     tmpfile = open(file, 'r')
     for line in tmpfile.readlines():
         if line.find(text) != -1:
-            return line
+            return line.split("=")[1].strip()
     return False
 
 
@@ -439,9 +439,9 @@ def ga_config_var_base():
             ga_config["hostname"] = "gacon01"
 
     if ga_config["setup_fresh"] is False:
-        ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "garoot=")[7:]
-        ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "name=")[5:]
-        ga_config["setup_type"] = ga_setup_configparser_file(ga_config["setup_version_file"], "type=")[5:]
+        ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "path_root=")
+        ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "hostname=")
+        ga_config["setup_type"] = ga_setup_configparser_file(ga_config["setup_version_file"], "setuptype=")
         if ga_config["path_root"] is False:
             ga_setup_shelloutput_text("Growautomation rootpath not found in old versionfile", style="warn")
             ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
@@ -525,8 +525,8 @@ def ga_config_var_db():
                     ga_config["sql_server_repl_pwd"] = ga_setup_input("Please provide sql replication password.", ga_config["sql_server_agent_pwd"])
                     break
         else:
-            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_user=")[10:]
-            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_pwd=")[14:]
+            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_user=")
+            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_pwd=")
 
             if ga_mysql_conntest(ga_config["sql_agent_usr"], ga_config["sql_agent_pwd"]) is True:
                 ga_setup_shelloutput_text("Local SQL connection verified", style="succ")
@@ -536,9 +536,9 @@ def ga_config_var_db():
                     ga_setup_shelloutput_text("You can reset/configure the agent database credentials on the "
                                               "growautomation server. Details can be found in the manual: "
                                               "https://git.growautomation.at/tree/master/manual", style="info")
-                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")[10:]
-                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")[14:]
-                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_server_ip=")[9:]
+                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")
+                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")
+                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_server_ip=")
                 if ga_mysql_conntest(ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) is True:
                     break
 
@@ -557,8 +557,8 @@ def ga_config_var_db():
             else:
                 ga_setup_shelloutput_text("Server SQL connection verified", style="succ")
         else:
-            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")[11:]
-            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_pwd=")[15:]
+            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")
+            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_pwd=")
             while True:
                 if whilecount > 0:
                     ga_setup_shelloutput_text("SQL connection failed. Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/core/core.conf'", style="warn")
@@ -1049,7 +1049,7 @@ def ga_setup_infra_code():
 
     os_system("ln -s %s %s/backup && ln -s %s %s/log %s" % (ga_config["path_backup"], ga_config["path_root"], ga_config["path_log"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-    ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s" % (ga_config["hostname"], ga_config["setup_type"]))
+    ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s" % (ga_config["hostname"], ga_config["setup_type"], ga_config["path_root"]))
 
 
 # creating systemd service and timers

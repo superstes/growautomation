@@ -30,13 +30,12 @@ class GetConfig(object):
     def __init__(self, request, file="core.conf"):
         self.file = file
         self.request = request
-        self.start()
 
-    def start(self):
+    def __repr__(self):
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
-        return self.parse_file()
+        return str(self.parse_file())
 
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
@@ -55,4 +54,4 @@ class GetConfig(object):
         if response is False or response is None or response == "":
             self.error("file")
         else:
-            return response.split("=")[1]
+            return response.split("=")[1].strip()
