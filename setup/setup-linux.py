@@ -280,7 +280,7 @@ def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
         return False
     else:
         sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
-    if len(list(sqltest)) > 1:
+    if sqltest:
         return True
     else:
         ga_setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
