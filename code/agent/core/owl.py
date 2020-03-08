@@ -97,6 +97,8 @@ class DoSql:
                     else:
                         LogWrite("Mysql service not running.")
                         raise SystemExit("Mysql service not active.")
+                else:
+                    break
                 whilecount += 1
         whilecount = 0
         while creds_ok is False:
