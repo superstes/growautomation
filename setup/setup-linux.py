@@ -215,7 +215,7 @@ class ga_mysql(object):
             self.user = "root"
 
         if type(self.input) == str:
-            return self.execute(self.input)
+            return str(self.execute(self.input))
         elif type(self.input) == list:
             outputdict = {}
             anyfalse = True
@@ -226,7 +226,7 @@ class ga_mysql(object):
                     anyfalse = False
             if anyfalse is False:
                 return False
-            return outputdict
+            return str(outputdict)
 
     def unixsock(self):
         global ga_config
