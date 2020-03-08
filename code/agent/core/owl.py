@@ -36,7 +36,9 @@ class DoSql:
         self.write = write
         self.fallback = False
         self.debug = debug
-        self.prequesites()
+
+    def __repr__(self):
+        return str(self.prequesites())
 
     def connect(self, command=None):
         import mysql.connector
@@ -133,7 +135,7 @@ class DoSql:
 
             creds_ok = conntest()
             whilecount += 1
-        self.execute()
+        return self.execute()
 
     def execute(self):
         if type(self.command) == str:
