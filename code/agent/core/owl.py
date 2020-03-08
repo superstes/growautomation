@@ -22,9 +22,13 @@ import mysql.connector
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
-from ga import ant
-from ga import config
 from functools import lru_cache
+
+from ga.core import ant
+
+
+def owlconfig(setting):
+    return ga.core.config.get(setting, skipsql=True)
 
 
 class do:
@@ -36,7 +40,11 @@ class do:
         self.prequesites()
 
     def connection(self, command=None):
-        connection = mysql.connector.connect(host=config.mysql.server_ip, port=config.mysql.server_port, user=config.mysql.user, passwd=config.mysql.pwd)
+        if self.fallback is True:
+            conndata = "user=%s, passwd=%s" % (owlconfig("mysql_localuser"), owlconfig("mysql_localpwd"))
+        else:
+            conndata = "host=%s, port=%s, user=%s, passwd=%s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user"), owlconfig("mysql_pwd"))
+        connection = mysql.connector.connect(conndata)
         try:
             curser = connection.cursor(buffered=True)
             if command is None:
@@ -56,47 +64,16 @@ class do:
         except mysql.connector.Error as error:
             connection.rollback()
             ant.log("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
+            if self.fallback is True:
+                ant.log("Server: %s, user %s" % ("127.0.0.1", owlconfig("mysql_localuser")))
+            else:
+                ant.log("Server: %s, port %s, user %s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user")))
             print(error)
             return False
 
     def prequesites(self):
         creds_ok = False
-        whilecount = 0
-        while creds_ok is False:
-            if self.fallback is True and self.write is True:
-                ant.log("Error connecting to database. Write operations are not allowed to local fallback database. Check you sql server connection.")
-                raise SystemExit("Error connecting to database. Write operations are not allowed to local fallback database. "
-                                 "Check you sql server connection.")
-            if whilecount > 2:
-                ant.log("Error connecting to database. Check content of %ga_root/main/main.conf file for correct sql login credentials.")
-                raise SystemExit("Error connecting to database. Check content of %ga_root/main/main.conf file for correct sql login credentials.")
-
-            def conntest(*args, **kwargs):
-                if config.setuptype == "agent":
-                    table = "AgentConfig"
-                else:
-                    table = "ServerConfig"
-                if self.write is False:
-                    data = self.connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
-                else:
-                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % config.hostname)
-                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % config.hostname)
-                    data = True
-                logvars = config.mysql.server_ip, config.mysql.server_port, config.mysql.user
-                if type(data) == list:
-                    return True
-                elif type(data) == bool:
-                    if data is False:
-                        ant.log("Sql connection to server %s:%s failed with user %s" % logvars)
-                    return data
-                else:
-                    ant.log("Sql connection to server %s:%s failed with user %s" % logvars)
-                    return False
-
-            creds_ok = conntest()
-            whilecount += 1
-
-        if config.setuptype != "agent":
+        if owlconfig("setuptype") != "agent":
             def running():
                 output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
                                                  shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
@@ -118,7 +95,39 @@ class do:
                         ant.log("Mysql service not running.")
                         raise SystemExit("Mysql service not active.")
                 whilecount += 1
+        whilecount = 0
+        while creds_ok is False:
+            if whilecount == 1 and owlconfig("setuptype") == "agent":
+                ant.log("Failing over to local read-only database")
+                self.fallback = True
+            if self.fallback is True and self.write is True:
+                ant.log("Error connecting to database. Write operations are not allowed to local fallback database. Check you sql server connection.")
+                raise SystemExit("Error connecting to database. Write operations are not allowed to local fallback database. "
+                                 "Check you sql server connection.")
+            if whilecount > 2:
+                ant.log("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
+                raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
 
+            def conntest():
+                if owlconfig("setuptype") == "agent":
+                    table = "AgentConfig"
+                else:
+                    table = "ServerConfig"
+                if self.write is False:
+                    data = self.connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
+                else:
+                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % owlconfig("hostname"))
+                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % owlconfig("hostname"))
+                    data = True
+                if type(data) == list:
+                    return True
+                elif type(data) == bool:
+                    return data
+                else:
+                    return False
+
+            creds_ok = conntest()
+            whilecount += 1
         self.execute()
 
     def execute(self):
