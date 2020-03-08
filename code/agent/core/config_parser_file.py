@@ -33,7 +33,7 @@ class GetConfig(object):
 
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
-        return SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
+        raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
 
     def parse_file_find(self):
         tmpfile = open(self.file, 'r')
