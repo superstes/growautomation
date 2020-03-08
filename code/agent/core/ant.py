@@ -22,19 +22,19 @@
 
 from datetime import datetime
 from os import popen as os_popen
-from os import path as os_path
 from os import system as os_system
+from os import path as os_path
 from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from random import choice as random_choice
 from colorama import Fore as colorama_fore
 # from functools import lru_cache
 
-from ga.core import config
+from ga.core.config import GetConfig
 
 
 # Just vars
-log_redirect = " 2>&1 | tee -a %s" % config.do("path_log")
+log_redirect = " 2>&1 | tee -a %s" % GetConfig("path_log")
 
 # Time formats
 
@@ -49,7 +49,7 @@ date04 = datetime.now().strftime("%d")
 
 
 # Shell output
-class shell(object):
+class ShellOutput(object):
     def __init__(self, output, font="text", style="info", symbol="#"):
         self.output = output
         self.font = font
@@ -84,15 +84,15 @@ class shell(object):
 
 
 # Logs
-class log(object):
+class LogWrite(object):
     def __init__(self, output, scripttype, loglevel=2):
         self.scripttype = scripttype.lower()
         self.output = output
-        self.loglevel = loglevel
+        self.log_level = loglevel
         self.check()
 
     def open(self):
-        logdir = "%s/%s/%s" % (config.do("path_log"), self.scripttype, date02)
+        logdir = "%s/%s/%s" % (GetConfig("path_log"), self.scripttype, date02)
         if os_path.exists(logdir) is False:
             os_system("mkdir -p " + logdir)
         return open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
@@ -104,18 +104,18 @@ class log(object):
         logfile.close()
 
     def check(self):
-        if self.loglevel > config.do("log_level"):
+        if self.loglevel > GetConfig("log_level"):
             return False
         else:
             self.write()
 
 
 # File operations
-class line(object):
+class Line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
         self.file = file
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
-        self.backupdir = "%s/%s" % (config.do("path_backup"), date02)
+        self.backupdir = "%s/%s" % (GetConfig("path_backup"), date02)
         self.action = action
         self.searchfor = search
         self.replacewith = replace
@@ -159,7 +159,6 @@ class line(object):
             os_system("sed -i '%s a %s' %s" % (self.searchfor, self.replacewith, self.file))
 
 
-# General
 def ga_setup_pwd_gen(stringlength):
     chars = string_ascii_letters + string_digits + "!#-_"
     return ''.join(random_choice(chars) for i in range(stringlength))

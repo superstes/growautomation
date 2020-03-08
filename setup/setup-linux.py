@@ -525,8 +525,8 @@ def ga_config_var_db():
                     ga_config["sql_server_repl_pwd"] = ga_setup_input("Please provide sql replication password.", ga_config["sql_server_agent_pwd"])
                     break
         else:
-            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "localuser=")[10:]
-            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "localpassword=")[14:]
+            ga_config["sql_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_user=")[10:]
+            ga_config["sql_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_pwd=")[14:]
 
             if ga_mysql_conntest(ga_config["sql_agent_usr"], ga_config["sql_agent_pwd"]) is True:
                 ga_setup_shelloutput_text("Local SQL connection verified", style="succ")
@@ -536,9 +536,9 @@ def ga_config_var_db():
                     ga_setup_shelloutput_text("You can reset/configure the agent database credentials on the "
                                               "growautomation server. Details can be found in the manual: "
                                               "https://git.growautomation.at/tree/master/manual", style="info")
-                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "agentuser=")[10:]
-                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "agentpassword=")[14:]
-                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "serverip=")[9:]
+                ga_config["sql_server_agent_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")[10:]
+                ga_config["sql_server_agent_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")[14:]
+                ga_config["sql_server_ip"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_server_ip=")[9:]
                 if ga_mysql_conntest(ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"]) is True:
                     break
 
@@ -557,8 +557,8 @@ def ga_config_var_db():
             else:
                 ga_setup_shelloutput_text("Server SQL connection verified", style="succ")
         else:
-            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "serveruser=")[11:]
-            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "serverpassword=")[15:]
+            ga_config["sql_server_admin_usr"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")[11:]
+            ga_config["sql_server_admin_pwd"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_pwd=")[15:]
             while True:
                 if whilecount > 0:
                     ga_setup_shelloutput_text("SQL connection failed. Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/core/core.conf'", style="warn")
@@ -799,7 +799,7 @@ def ga_sql_server():
     ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]),
               "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_server_admin_usr"], "%", ga_config["sql_server_admin_pwd"]), "FLUSH PRIVILEGES;"])
 
-    ga_setup_config_file("a", "\n[db_growautomation]\nserveruser=%s\nserverpassword=%s\n" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
+    ga_setup_config_file("a", "\n[db_growautomation]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"]))
 
     if ga_config["setup_type"] == "server":
         print("Creating mysql server certificate\n")
@@ -835,7 +835,7 @@ def ga_sql_agent():
     ga_mysql(["CREATE USER 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"],
               "GRANT SELECT ON ga.* TO 'gacon'@'localhost' IDENTIFIED BY '%s';" % ga_config["sql_agent_pwd"], "FLUSH PRIVILEGES;"])
 
-    ga_setup_config_file("a", "[db_local]\nlocaluser=gacon\nlocalpassword=%s\n[server]\nagentuser=%s\nagentpassword=%s\nserverip=%s\nserverport=%s"
+    ga_setup_config_file("a", "[db_local]\nsql_local_user=gacon\nsql_local_pwd=%s\n[server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
                          % (ga_config["sql_agent_pwd"], ga_config["sql_server_agent_usr"], ga_config["sql_server_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
     
     if ga_setup_keycheck(ga_config["sql_server_repl_file"]) is False or ga_setup_keycheck(ga_config["sql_server_repl_pos"]) is False:
@@ -898,7 +898,7 @@ def ga_sql_server_create_agent():
                   "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
                   "FLUSH PRIVILEGES;"], ga_config["sql_server_admin_usr"], ga_config["sql_server_admin_pwd"])
 
-        ga_setup_config_file("a", "[db_agent_%s]\nserverip=%s\nserverport=%s\nagentuser=%s\nagentpassword=%s\nreplicauser=%s\nreplicapassword=%s"
+        ga_setup_config_file("a", "[db_agent_%s]\nsql_server_ip=%s\nsql_server_port=%s\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_replica_user=%s\nsql_replica_pwd=%s"
                              % (create_agent_name, ga_config["sql_server_ip"], ga_config["sql_server_port"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
 
         ga_setup_shelloutput_header("Creating mysql agent certificate\n", "-")

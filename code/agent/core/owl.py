@@ -17,21 +17,24 @@
 #
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
-#ga_version0.3
+
+# ga_version0.3
+
 import mysql.connector
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from functools import lru_cache
 
-from ga.core import ant
+from ga.core.smallant import LogWrite
+from ga.core.config import GetConfig
 
 
 def owlconfig(setting):
-    return ga.core.config.do(setting, skipsql=True)
+    return GetConfig(setting, skipsql=True)
 
 
-class do:
+class DoSql:
     def __init__(self, command, write=False, debug=False):
         self.command = command
         self.write = write
@@ -40,10 +43,13 @@ class do:
         self.prequesites()
 
     def connection(self, command=None):
-        if self.fallback is True:
-            conndata = "user=%s, passwd=%s" % (owlconfig("mysql_localuser"), owlconfig("mysql_localpwd"))
+        if owlconfig("setuptype") == "agent":
+            if self.fallback is True:
+                conndata = "user=%s, passwd=%s" % (owlconfig("sql_local_user"), owlconfig("sql_local_pwd"))
+            else:
+                conndata = "host=%s, port=%s, user=%s, passwd=%s" % (owlconfig("sql_server_ip"), owlconfig("sql_server_port"), owlconfig("sql_agent_user"), owlconfig("sql_agent_pwd"))
         else:
-            conndata = "host=%s, port=%s, user=%s, passwd=%s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user"), owlconfig("mysql_pwd"))
+            conndata = "user=%s, passwd=%s" % (owlconfig("sql_admin_user"), owlconfig("sql_admin_pwd"))
         connection = mysql.connector.connect(conndata)
         try:
             curser = connection.cursor(buffered=True)
@@ -63,11 +69,11 @@ class do:
             return data
         except mysql.connector.Error as error:
             connection.rollback()
-            ant.log("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
+            LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True:
-                ant.log("Server: %s, user %s" % ("127.0.0.1", owlconfig("mysql_localuser")))
+                LogWrite("Server: %s, user %s" % ("127.0.0.1", owlconfig("mysql_localuser")))
             else:
-                ant.log("Server: %s, port %s, user %s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user")))
+                LogWrite("Server: %s, port %s, user %s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user")))
             print(error)
             return False
 
@@ -89,23 +95,23 @@ class do:
             while True:
                 if running() is False:
                     if whilecount == 0:
-                        ant.log("Trying to start mysql service.")
-                        os_system("systemctl start mysql.service %s" % ant.log_redirect)
+                        LogWrite("Trying to start mysql service.")
+                        os_system("systemctl start mysql.service %s" % LogWrite_redirect)
                     else:
-                        ant.log("Mysql service not running.")
+                        LogWrite("Mysql service not running.")
                         raise SystemExit("Mysql service not active.")
                 whilecount += 1
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and owlconfig("setuptype") == "agent":
-                ant.log("Failing over to local read-only database")
+                LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
-                ant.log("Error connecting to database. Write operations are not allowed to local fallback database. Check you sql server connection.")
+                LogWrite("Error connecting to database. Write operations are not allowed to local fallback database. Check you sql server connection.")
                 raise SystemExit("Error connecting to database. Write operations are not allowed to local fallback database. "
                                  "Check you sql server connection.")
             if whilecount > 2:
-                ant.log("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
+                LogWrite("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
                 raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
 
             def conntest():
