@@ -38,7 +38,7 @@ class DoSql:
         self.debug = debug
         self.prequesites()
 
-    def connection(self, command=None):
+    def connect(self, command=None):
         import mysql.connector
         if GetConfig("setuptype") == "agent":
             if self.fallback is True:
@@ -119,10 +119,10 @@ class DoSql:
                 else:
                     table = "ServerConfig"
                 if self.write is False:
-                    data = self.connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
+                    data = self.connect("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
                 else:
-                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
-                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % GetConfig("hostname"))
+                    self.connect("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
+                    self.connect("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % GetConfig("hostname"))
                     data = True
                 if type(data) == list:
                     return True
@@ -137,13 +137,13 @@ class DoSql:
 
     def execute(self):
         if type(self.command) == str:
-            return self.connection()
+            return self.connect()
         elif type(self.command) == list:
             outputdict = {}
             anyfalse = True
             forcount = 1
             for command in self.command:
-                output = self.connection()
+                output = self.connect()
                 if self.debug is True:
                     outputdict[forcount][command] = output
                 else:
