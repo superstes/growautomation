@@ -42,12 +42,11 @@ class DoSql:
         import mysql.connector
         if GetConfig("setuptype") == "agent":
             if self.fallback is True:
-                conndata = "user=%s, passwd=%s" % (GetConfig("sql_local_user"), GetConfig("sql_local_pwd"))
+                connection = mysql.connector.connect(user=GetConfig("sql_local_user"), passwd=GetConfig("sql_local_pwd"))
             else:
-                conndata = "host=%s, port=%s, user=%s, passwd=%s" % (GetConfig("sql_server_ip"), GetConfig("sql_server_port"), GetConfig("sql_agent_user"), GetConfig("sql_agent_pwd"))
+                connection = mysql.connector.connect(host=GetConfig("sql_server_ip"), port=GetConfig("sql_server_port"), user=GetConfig("sql_agent_user"), passwd=GetConfig("sql_agent_pwd"))
         else:
-            conndata = "user=%s, passwd=%s" % (GetConfig("sql_admin_user"), GetConfig("sql_admin_pwd"))
-        connection = mysql.connector.connect(conndata)
+            connection = mysql.connector.connect(user=GetConfig("sql_admin_user"), passwd=GetConfig("sql_admin_pwd"))
         try:
             curser = connection.cursor(buffered=True)
             if command is None:
