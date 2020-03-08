@@ -22,7 +22,6 @@
 
 from functools import lru_cache
 from os import path as os_path
-from sys import path as sys_path
 
 from ga.core.smallant import LogWrite
 
@@ -31,10 +30,11 @@ class GetConfig(object):
     def __init__(self, request, file="core.conf"):
         self.file = file
         self.request = request
+        self.start()
 
     def start(self):
         if self.file == "core.conf":
-            file = os_path.join(sys_path[0], self.file)
+            file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
         return self.parse_file()
 
@@ -51,8 +51,8 @@ class GetConfig(object):
 
     @lru_cache()
     def parse_file(self):
-        response = self.parse_file_find().split("=")[1]
+        response = self.parse_file_find()
         if response is False or response is None or response == "":
             self.error("file")
         else:
-            return response
+            return response.split("=")[1]
