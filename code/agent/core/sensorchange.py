@@ -17,25 +17,15 @@
 #
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
+#ga_version0.2
+#check if ga service is available
+    #if not -> create and enable it
+    #if yes
+        #add sensortype
+            #add to core core file
+            #default template -> ask user for core input?
+            #add systemd systemd
 
-#ga_version0.1
+#remove sensortype
+#migrate sensortype -> save core, remove, add, apply core
 
-#Growautomation File-Path Configuration
-
-#General
-root = "/etc/growautomation/"
-logs = "/var/log/growautomation/"
-backup = "/mnt/growautomation/backup/"
-
-config = root + "main/"
-
-#Sensors
-sensors = root + "sensor/"
-
-#Acions
-actions = root + "action/"
-#pumpaction = action + "psu.py"
-#winaaction = action + "wina.py"
-
-#Checks
-checks = root + "check/"

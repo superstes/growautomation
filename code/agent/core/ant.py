@@ -30,7 +30,7 @@ from random import choice as random_choice
 from colorama import Fore as colorama_fore
 # from functools import lru_cache
 
-from ga import config
+from ga.core import config
 
 
 # Just vars
@@ -112,7 +112,7 @@ class log(object):
 
 # File operations
 class line(object):
-    def __init__(self, action, search, replace="", backup=False, file="./main.conf"):
+    def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
         self.backupdir = "%s/%s" % (config.path.backup, date02)
         self.action = action

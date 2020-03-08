@@ -17,15 +17,15 @@
 #
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
-#ga_version0.2
-#check if ga service is available
-    #if not -> create and enable it
-    #if yes
-        #add sensortype
-            #add to main main file
-            #default template -> ask user for main input?
-            #add systemd systemd
 
-#remove sensortype
-#migrate sensortype -> save main, remove, add, apply main
+#ga_version0.3
 
+from ga.core import owl
+from ga.core import config
+
+class startup:
+    # check that mysql connection works
+    # get config from db
+    # check against locally hardwritten config (core.conf/version file)
+    # recreate log/backup links
+    # check for python version -> module link should be updated
