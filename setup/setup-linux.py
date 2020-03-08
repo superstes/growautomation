@@ -265,6 +265,7 @@ class ga_mysql(object):
                 return True
         except mysql.connector.Error as error:
             connection.rollback()
+            ga_setup_log_write("MySql was unable to perform action:\n'%s'\nError message:\n%s" % (command, error))
             ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
             return False
 
@@ -641,7 +642,7 @@ if ga_config["setup_fresh"] is True:
         ga_config["mnt_backup"] = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.", True)
         if ga_config["mnt_backup"] is True:
             ga_setup_fstabcheck()
-            ga_config["mnt_backup_type"] = ga_setup_input("Mount nfs or smb/cifs share as backup destination?", "nfs", "nfs/cifs")
+            ga_config["mnt_backup_type"] = ga_setup_input("Mount nfs or smb/cifs share as backup destination?", "nfs", ["nfs", "cifs"])
             ga_config["mnt_backup_srv"] = ga_setup_input("Provide the server ip.", "192.168.0.201")
             ga_config["mnt_backup_share"] = ga_setup_input("Provide the share name.", "growautomation/backup")
             if ga_config["mnt_backup_type"] == "cifs":
@@ -666,7 +667,7 @@ if ga_config["setup_fresh"] is True:
                 ga_config["mnt_log_type"] = ga_config["mnt_backup_type"]
                 ga_config["mnt_log_server"] = ga_config["mnt_backup_srv"]
         else:
-            ga_config["mnt_log_type"] = ga_setup_input("Mount nfs or smb/cifs share as log destination?", "nfs", "nfs/cifs")
+            ga_config["mnt_log_type"] = ga_setup_input("Mount nfs or smb/cifs share as log destination?", "nfs", ["nfs", "cifs"])
             ga_config["mnt_log_server"] = ga_setup_input("Provide the server ip.", "192.168.0.201")
         ga_config["mnt_log_share"] = ga_setup_input("Provide the share name.", "growautomation/log")
     
