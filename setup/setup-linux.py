@@ -95,7 +95,7 @@ def ga_log_write_vars():
             if "pwd" in key:
                 pass
             else:
-                ga_setup_log_write("%s - %s" % (key, value), True)
+                ga_setup_log_write("%s - %s, " % (key, value), True)
     write(ga_config)
     write(ga_config_server)
 
@@ -209,7 +209,25 @@ class ga_mysql(object):
         self.user = user
         self.pwd = pwd
         self.query = query
-        self.start()
+
+    def __repr__(self):
+        if self.user == "":
+            self.user = "root"
+
+        if type(self.input) == str:
+            output = str(self.execute(self.input))
+        elif type(self.input) == list:
+            outputdict = {}
+            anyfalse = True
+            for command in self.input:
+                output = self.execute(command)
+                outputdict[command] = output
+                if output is False:
+                    anyfalse = False
+            if anyfalse is False:
+                return False
+            output = outputdict
+        return output
 
     def unixsock(self):
         global ga_config
@@ -251,24 +269,6 @@ class ga_mysql(object):
             ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
             return False
 
-    def start(self):
-        if self.user == "":
-            self.user = "root"
-
-        if type(self.input) == str:
-            return self.execute(self.input)
-        elif type(self.input) == list:
-            outputdict = {}
-            anyfalse = True
-            for command in self.input:
-                output = self.execute(command)
-                outputdict[command] = output
-                if output is False:
-                    anyfalse = False
-            if anyfalse is False:
-                return False
-            return outputdict
-
 
 def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
@@ -277,12 +277,14 @@ def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
         else:
             sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True)
     elif dbpwd == "":
+        ga_setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
         return False
     else:
         sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
     if type(sqltest) == list:
         return True
     else:
+        ga_setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
         return False
 
 
@@ -973,6 +975,9 @@ def ga_infra_oldversion_cleanconfig():
     os_system("mysqldump ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
     if ga_mysql_conntest("root", special=True) is True:
         ga_mysql("DROP DATABASE ga;")
+    else:
+        ga_setup_exit("Unable to drop old database. Please drop it manually and restart the setup!",
+                      "Unable to drop old database. Please drop it manually and restart the setup!")
 
 
 def ga_infra_oldversion_backup():
@@ -1222,7 +1227,7 @@ ga_config["log_level"] = 2
 def ga_mysql_write_config(thatdict):
     insertdict = {}
     for key, value in thatdict.items():
-        if "setup_" in key or "pwd" in key or "sql_agent_usr" in key:
+        if "setup_" in key or "pwd" in key:
             pass
         else:
             insertdict[key] = value
