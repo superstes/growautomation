@@ -20,18 +20,87 @@
 
 #ga_version0.3
 
-from ga import owl
-from ga import ant
+from functools import lru_cache
 
-hostname = ant.line("find", "name=")[5:]
-setuptype = ant.line("find", "type=")[5:]
+from ga.core import owl
+from ga.core import ant
 
 
-def command(setting):
-    if setuptype == "agent":
-        return "SELECT data FROM ga.AgentConfig WHERE setting = '%s' and agent = '%s';" % (setting, hostname)
-    else:
-        return "SELECT data FROM ga.ServerConfig WHERE setting = '%s';" % setting
+class get(object):
+    def __init__(self, setting, customtable=None, skipsql=False):
+        self.setting = setting
+        self.request = None
+        self.table = customtable
+        self.skipsql = skipsql
+        self.start()
+
+    def start(self, request=None):
+        if self.request is None:
+            self.setting = self.request
+        parse_file_list = ["setuptype", ]
+        parse_sql_list = ["backup", "backup_time", "backup_log", "log_level"]
+        parse_failover_list = ["path_root", "hostname"]
+        if self.request in parse_file_list:
+            self.parse_file()
+        elif self.request in parse_sql_list:
+            self.parse_sql()
+        elif self.request in parse_failover_list:
+            self.parse_failover()
+        else:
+            self.parse_sql_custom()
+
+    def error(self, parser_type):
+        ant.log("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
+        return SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
+
+    @lru_cache()
+    def parse_file(self):
+        response = ant.line("find", self.request).split("=")[1]
+        if response is False or response is None or response == "":
+            self.error("file")
+        else:
+            return response
+
+    @lru_cache()
+    def parse_sql(self):
+        if self.start("setuptype") == "agent":
+            response = owl.do("SELECT data FROM ga.AgentConfig WHERE setting = '%s' and agent = '%s';" % (self.request, self.start("hostname")))
+        else:
+            response = owl.do("SELECT data FROM ga.ServerConfig WHERE setting = '%s';" % self.request)
+        if response is False or response is None or response == "":
+            self.error("sql")
+
+    @lru_cache()
+    def parse_sql_custom(self):
+        if self.table is None:
+            self.parse_sql()
+        else:
+            if self.start("setuptype") == "agent":
+                return owl.do("SELECT data FROM ga.%s WHERE setting = '%s' and agent = '%s';" % (self.table, self.request, self.start("hostname")))
+            else:
+                return owl.do("SELECT data FROM ga.%s WHERE setting = '%s';" % (self.table, self.request))
+
+    def parse_hardcoded(self):
+        config_dict = {"path_log": "%s/log" % self.start("path_root"), "path_backup": "%s/backup" % self.start("path_root")}
+        if self.request in config_dict.keys():
+            for key, value in config_dict.items():
+                if key.find(self.request) != -1:
+                    return value
+            return False
+        else:
+            return False
+
+    def parse_failover(self):
+        if self.parse_sql() is False or self.parse_sql() is None or self.parse_sql() == "" or self.skipsql is True:
+            if self.parse_file() is False or self.parse_file() is None or self.parse_file() == "":
+                if self.parse_hardcoded() is False:
+                    self.error("all")
+                else:
+                    self.parse_hardcoded()
+            else:
+                self.parse_file()
+        else:
+            self.parse_sql()
 
 
 class path:
@@ -61,22 +130,7 @@ class mysql:
         sock = owl.do(command("sql_sock"))
 
 
-class core:
-    backup = owl.do(command("backup"))
-    if backup is True:
-        backup_time = owl.do(command("backup_time"))
-        backup_log = owl.do(command("backup_log"))
-        loglevel = owl.do(command("log_level"))
 
-
-def query(setting, customtable=None):
-    if customtable is not None:
-        if setuptype == "agent":
-            return owl.do("SELECT data FROM ga.%s WHERE setting = '%s' and agent = '%s';" % (customtable, setting, hostname))
-        else:
-            return owl.do("SELECT data FROM ga.%s WHERE setting = '%s';" % (customtable, setting))
-    else:
-        owl.do(command(setting))
 
 # class old:
     # will not be needed often -> should be queried manually if needed
