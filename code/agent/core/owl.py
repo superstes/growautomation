@@ -20,18 +20,14 @@
 
 # ga_version0.3
 
-import mysql.connector
+
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from functools import lru_cache
 
 from ga.core.smallant import LogWrite
-from ga.core.config import GetConfig
-
-
-def owlconfig(setting):
-    return GetConfig(setting, skipsql=True)
+from ga.core.config_parser_file import GetConfig
 
 
 class DoSql:
@@ -43,13 +39,14 @@ class DoSql:
         self.prequesites()
 
     def connection(self, command=None):
-        if owlconfig("setuptype") == "agent":
+        import mysql.connector
+        if GetConfig("setuptype") == "agent":
             if self.fallback is True:
-                conndata = "user=%s, passwd=%s" % (owlconfig("sql_local_user"), owlconfig("sql_local_pwd"))
+                conndata = "user=%s, passwd=%s" % (GetConfig("sql_local_user"), GetConfig("sql_local_pwd"))
             else:
-                conndata = "host=%s, port=%s, user=%s, passwd=%s" % (owlconfig("sql_server_ip"), owlconfig("sql_server_port"), owlconfig("sql_agent_user"), owlconfig("sql_agent_pwd"))
+                conndata = "host=%s, port=%s, user=%s, passwd=%s" % (GetConfig("sql_server_ip"), GetConfig("sql_server_port"), GetConfig("sql_agent_user"), GetConfig("sql_agent_pwd"))
         else:
-            conndata = "user=%s, passwd=%s" % (owlconfig("sql_admin_user"), owlconfig("sql_admin_pwd"))
+            conndata = "user=%s, passwd=%s" % (GetConfig("sql_admin_user"), GetConfig("sql_admin_pwd"))
         connection = mysql.connector.connect(conndata)
         try:
             curser = connection.cursor(buffered=True)
@@ -71,15 +68,15 @@ class DoSql:
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True:
-                LogWrite("Server: %s, user %s" % ("127.0.0.1", owlconfig("mysql_localuser")))
+                LogWrite("Server: %s, user %s" % ("127.0.0.1", GetConfig("mysql_localuser")))
             else:
-                LogWrite("Server: %s, port %s, user %s" % (owlconfig("mysql.server_ip"), owlconfig("mysql.server_port"), owlconfig("mysql_user")))
+                LogWrite("Server: %s, port %s, user %s" % (GetConfig("mysql.server_ip"), GetConfig("mysql.server_port"), GetConfig("mysql_user")))
             print(error)
             return False
 
     def prequesites(self):
         creds_ok = False
-        if owlconfig("setuptype") != "agent":
+        if GetConfig("setuptype") != "agent":
             def running():
                 output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
                                                  shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
@@ -96,14 +93,14 @@ class DoSql:
                 if running() is False:
                     if whilecount == 0:
                         LogWrite("Trying to start mysql service.")
-                        os_system("systemctl start mysql.service %s" % LogWrite_redirect)
+                        os_system("systemctl start mysql.service %s")
                     else:
                         LogWrite("Mysql service not running.")
                         raise SystemExit("Mysql service not active.")
                 whilecount += 1
         whilecount = 0
         while creds_ok is False:
-            if whilecount == 1 and owlconfig("setuptype") == "agent":
+            if whilecount == 1 and GetConfig("setuptype") == "agent":
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -115,15 +112,15 @@ class DoSql:
                 raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
 
             def conntest():
-                if owlconfig("setuptype") == "agent":
+                if GetConfig("setuptype") == "agent":
                     table = "AgentConfig"
                 else:
                     table = "ServerConfig"
                 if self.write is False:
                     data = self.connection("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
                 else:
-                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % owlconfig("hostname"))
-                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % owlconfig("hostname"))
+                    self.connection("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
+                    self.connection("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % GetConfig("hostname"))
                     data = True
                 if type(data) == list:
                     return True

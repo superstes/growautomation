@@ -29,7 +29,7 @@ date03 = datetime.now().strftime("%m")
 
 
 # Logs
-class LogWrite(object):
+class LogWrite(object):  # does not check loglevel
     def __init__(self, output, scripttype="core", loglevel=2):
         self.scripttype = scripttype.lower()
         self.output = output

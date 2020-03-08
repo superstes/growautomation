@@ -24,6 +24,7 @@ from functools import lru_cache
 
 from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
+from ga.core.config_parser_file import GetConfig as parse_file
 
 
 class GetConfig(object):
@@ -32,7 +33,7 @@ class GetConfig(object):
         self.request = None
         self.table = customtable
         self.skipsql = skipsql
-        self.file = "./core.conf"
+
         self.start()
 
     def start(self, request=None):
@@ -43,7 +44,7 @@ class GetConfig(object):
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
         if self.request in parse_file_list:
-            self.parse_file()
+            parse_file()
         elif self.request in parse_sql_list:
             self.parse_sql()
         elif self.request in parse_failover_list:
@@ -54,21 +55,6 @@ class GetConfig(object):
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
         return SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
-
-    def parse_file_find(self):
-        tmpfile = open(self.file, 'r')
-        for xline in tmpfile.readlines():
-            if xline.find(self.request) != -1:
-                return xline
-        return False
-
-    @lru_cache()
-    def parse_file(self):
-        response = self.parse_file_find().split("=")[1]
-        if response is False or response is None or response == "":
-            self.error("file")
-        else:
-            return response
 
     @lru_cache()
     def parse_sql(self):
