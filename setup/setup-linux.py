@@ -1229,10 +1229,11 @@ def ga_mysql_write_config(thatdict, thattype="agent"):
 
     for key, value in sorted(insertdict.items()):
         if thattype == "agent":
-            command = "INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s, '%s');" % ("gasetup", ga_config["hostname"], key, value)
+            command = "INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value)
         else:
             command = "INSERT INTO ga.ServerConfig (author, setting, data) VALUES ('%s', '%s', '%s');" % ("gasetup", key, value)
         ga_mysql(command, ga_config["setup_sql_usr"], ga_config["setup_sql_pwd"])
+        ga_setup_shelloutput_text("Wrote %s configuration to database. (%s settings)" % (thattype, len(insertdict)), "succ")
 
 
 ga_setup_shelloutput_header("Writing configuration to database", "#")
