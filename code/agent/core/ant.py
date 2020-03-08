@@ -34,7 +34,7 @@ from ga.core import config
 
 
 # Just vars
-log_redirect = " 2>&1 | tee -a %s" % config.path_log
+log_redirect = " 2>&1 | tee -a %s" % config.get("path_log")
 
 # Time formats
 
@@ -65,7 +65,7 @@ class shell(object):
 
     def header(self):
         shellhight, shellwidth = os_popen('stty size', 'r').read().split()
-        print("\n%s\n%s\n%s\n" % (self.symbol * int(shellwidth) - 1, self.output, self.symbol * int(shellwidth) - 1))
+        print("\n%s\n%s\n%s\n" % (self.symbol * (int(shellwidth) - 1), self.output, self.symbol * (int(shellwidth) - 1)))
 
     def colors(self):
         if self.style == "warn":
@@ -92,7 +92,7 @@ class log(object):
         self.check()
 
     def open(self):
-        logdir = "%s/%s/%s" % (config.path_log, self.scripttype, date02)
+        logdir = "%s/%s/%s" % (config.get("path_log"), self.scripttype, date02)
         if os_path.exists(logdir) is False:
             os_system("mkdir -p " + logdir)
         return open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
@@ -104,7 +104,7 @@ class log(object):
         logfile.close()
 
     def check(self):
-        if self.loglevel > config.core.loglevel:
+        if self.loglevel > config.get("log_level"):
             return False
         else:
             self.write()
@@ -113,11 +113,12 @@ class log(object):
 # File operations
 class line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
+        self.file = file
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
-        self.backupdir = "%s/%s" % (config.path.backup, date02)
+        self.backupdir = "%s/%s" % (config.get("path_backup"), date02)
         self.action = action
-        self.search = search
-        self.replace = replace
+        self.searchfor = search
+        self.replacewith = replace
         self.backup = backup
         self.start()
 
@@ -134,28 +135,28 @@ class line(object):
     def find(self):
         tmpfile = open(self.file, 'r')
         for xline in tmpfile.readlines():
-            if xline.find(self.search) != -1:
+            if xline.find(self.searchfor) != -1:
                 return xline
         return False
 
     def delete(self):
         if self.backup == "yes":
-            os_system("sed -i%s '/%s/d' %s && mv %s %s %s" % (self.backupfile, self.search, self.file, self.file, self.backupfile, self.backupdir))
+            os_system("sed -i%s '/%s/d' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.file, self.file, self.backupfile, self.backupdir))
         else:
-            os_system("sed -i '/%s/d' %s" % (self.search, self.file))
+            os_system("sed -i '/%s/d' %s" % (self.searchfor, self.file))
 
     def replace(self):
         if self.backup == "yes":
-            os_system("sed -i%s 's/%s/%s/p' %s && mv %s %s %s" % (self.backupfile, self.search, self.replace, self.file, self.file, self.backupfile, self.backupdir))
+            os_system("sed -i%s 's/%s/%s/p' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.replacewith, self.file, self.file, self.backupfile, self.backupdir))
         else:
-            os_system("sed -i 's/%s/%s/p' %s" % (self.search, self.replace, self.file))
+            os_system("sed -i 's/%s/%s/p' %s" % (self.searchfor, self.replacewith, self.file))
 
     def add(self):
         # insert after linenr / search = linenr
         if self.backup == "yes":
-            os_system("sed -i%s '%s a %s' %s && mv %s %s %s" % (self.backupfile, self.search, self.replace, self.file, self.file, self.backupfile, self.backupdir))
+            os_system("sed -i%s '%s a %s' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.replacewith, self.file, self.file, self.backupfile, self.backupdir))
         else:
-            os_system("sed -i '%s a %s' %s" % (self.search, self.replace, self.file))
+            os_system("sed -i '%s a %s' %s" % (self.searchfor, self.replacewith, self.file))
 
 
 # General
@@ -165,9 +166,9 @@ def ga_setup_pwd_gen(stringlength):
 
 
 # Searches nested keys for values -> gives back the name of the nested keys
-def dict_nested_search(dict, tosearch):
-    for key in dict:
-        for subkey in dict[key]:
+def dict_nested_search(dictionary, tosearch):
+    for key in dictionary:
+        for subkey in dictionary[key]:
             if tosearch in subkey:
                 return subkey
     return None
@@ -185,11 +186,10 @@ def string_check(string, maxlength=10, minlength=2):
         return True
 
 
-def dict_keycheck(dict, dictkey):
-    dict = dict
-    if dict[dictkey] is None:
+def dict_keycheck(dictionary, dictkey):
+    if dictionary[dictkey] is None:
         return False
-    elif dictkey in dict:
+    elif dictkey in dictionary:
         return True
     else:
         return False
