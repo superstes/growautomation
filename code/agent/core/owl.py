@@ -28,7 +28,7 @@ from ga.core import ant
 
 
 def owlconfig(setting):
-    return ga.core.config.get(setting, skipsql=True)
+    return ga.core.config.do(setting, skipsql=True)
 
 
 class do:

@@ -34,7 +34,7 @@ from ga.core import config
 
 
 # Just vars
-log_redirect = " 2>&1 | tee -a %s" % config.get("path_log")
+log_redirect = " 2>&1 | tee -a %s" % config.do("path_log")
 
 # Time formats
 
@@ -92,7 +92,7 @@ class log(object):
         self.check()
 
     def open(self):
-        logdir = "%s/%s/%s" % (config.get("path_log"), self.scripttype, date02)
+        logdir = "%s/%s/%s" % (config.do("path_log"), self.scripttype, date02)
         if os_path.exists(logdir) is False:
             os_system("mkdir -p " + logdir)
         return open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
@@ -104,7 +104,7 @@ class log(object):
         logfile.close()
 
     def check(self):
-        if self.loglevel > config.get("log_level"):
+        if self.loglevel > config.do("log_level"):
             return False
         else:
             self.write()
@@ -115,7 +115,7 @@ class line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
         self.file = file
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
-        self.backupdir = "%s/%s" % (config.get("path_backup"), date02)
+        self.backupdir = "%s/%s" % (config.do("path_backup"), date02)
         self.action = action
         self.searchfor = search
         self.replacewith = replace

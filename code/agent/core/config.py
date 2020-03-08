@@ -26,7 +26,7 @@ from ga.core import owl
 from ga.core import ant
 
 
-class get(object):
+class do(object):
     def __init__(self, setting, customtable=None, skipsql=False):
         self.setting = setting
         self.request = None
