@@ -973,11 +973,7 @@ def ga_infra_oldversion_cleanconfig():
     os_system("mkdir -p %s" % movedir)
     os_system("mv %s %s %s" % (ga_infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
     os_system("mysqldump ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
-    if ga_mysql_conntest("root", special=True) is True:
-        ga_mysql("DROP DATABASE ga;")
-    else:
-        ga_setup_exit("Unable to drop old database. Please drop it manually and restart the setup!",
-                      "Unable to drop old database. Please drop it manually and restart the setup!")
+    ga_mysql("DROP DATABASE ga;")
 
 
 def ga_infra_oldversion_backup():
