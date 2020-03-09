@@ -285,7 +285,7 @@ class ga_mysql(object):
         return self.start()
 
 
-def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False):
+def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
         if check_ga_exists is True:
             sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", query=True, basic=True).list()
@@ -295,6 +295,8 @@ def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False):
         ga_setup_shelloutput_text("SQL connection failed. No password provided and not root.", style="warn")
         ga_setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
         return False
+    elif local is True and check_system is True:
+        sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
     elif local is True:
         sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
     else:
