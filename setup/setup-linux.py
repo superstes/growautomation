@@ -215,9 +215,6 @@ class ga_mysql(object):
         return str(self.start)
 
     def start(self):
-        if self.user == "":
-            self.user = "root"
-
         if type(self.input) == str:
             return self.execute(self.input)
         elif type(self.input) == list:
@@ -250,6 +247,8 @@ class ga_mysql(object):
             return sql_sock
 
     def execute(self, command):
+        if self.user == "":
+            self.user = "root"
         if self.basic is not None:
             if self.user == "root":
                 connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
@@ -382,10 +381,10 @@ else:
     ga_setup_shelloutput_header("Starting Growautomation installation script\n"
                                 "The newest versions can be found at: https://git.growautomation.at", "#")
     ga_config["setup_warning_accept"] = ga_setup_input("WARNING!\n\nWe recommend using this installation script on dedicated systems.\n"
-                                                "This installation script won't check your already installed programs for compatibility problems.\n"
-                                                "If you already use web-/database or other complex software on this system you should back it up before installing this software.\n"
-                                                "We assume no liability for problems that may be caused by this installation!\n\n"
-                                                "Accept the risk if you want to continue.", False, style="warn")
+                                                       "This installation script won't check your already installed programs for compatibility problems.\n"
+                                                       "If you already use web-/database or other complex software on this system you should back it up before installing this software.\n"
+                                                       "We assume no liability for problems that may be caused by this installation!\n\n"
+                                                       "Accept the risk if you want to continue.", False, style="warn")
     if ga_config["setup_warning_accept"] is False:
         ga_setup_exit("Script cancelled by user\nYou can also install this software manually through the setup "
                       "manual.\nIt can be found at: https://git.growautomation.at/tree/master/manual",
