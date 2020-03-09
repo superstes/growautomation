@@ -251,7 +251,10 @@ class ga_mysql(object):
 
     def execute(self, command):
         if self.basic is not None:
-            connection = mysql.connector.connect(unix_socket=self.unixsock(), user="root")
+            if self.user == "root":
+                connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
+            else:
+                connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
         elif ga_config["sql_server_ip"] == "127.0.0.1":
             connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
         else:
@@ -269,7 +272,7 @@ class ga_mysql(object):
                 return data
             else:
                 return True
-        except mysql.connector.Error as error:
+        except (mysql.connector.Error, mysql.connector.errors.ProgrammingError) as error:
             connection.rollback()
             ga_setup_log_write("MySql was unable to perform action:\n'%s'\nError message:\n%s" % (command, error))
             ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
@@ -283,9 +286,9 @@ class ga_mysql(object):
         return self.start()
 
 
-def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
+def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
-        if special is True:
+        if check_ga_exists is True:
             sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", query=True, basic=True).list()
         else:
             sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", query=True, basic=True).list()
@@ -293,6 +296,8 @@ def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
         ga_setup_shelloutput_text("SQL connection failed. No password provided and not root.", style="warn")
         ga_setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
         return False
+    elif local is True:
+        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
     else:
         sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True).list()
     if type(sqltest) == list:
@@ -588,7 +593,7 @@ def ga_config_var_db():
         if ga_config["setup_fresh"] is True:
             ga_config["sql_admin_user"] = ga_setup_input("How should the growautomation database admin user be named?", "gadmin")
             ga_config["sql_admin_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
-            if ga_mysql_conntest("root") is False:
+            if ga_mysql_conntest() is False:
                 ga_setup_shelloutput_text("Unable to connect to local mysql server with root privileges", style="err")
         else:
             ga_config["sql_admin_user"] = ga_setup_configparser_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")
@@ -615,7 +620,7 @@ def ga_config_var_db():
 
                     ga_config["sql_admin_user"] = ga_setup_input("Provide the name of the growautomation database admin user.", "gadmin")
                     ga_config["sql_admin_pwd"] = ga_setup_input("Please provide the password used to connect to the database.", intype="pass")
-                    if ga_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]) is True:
+                    if ga_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], local=True) is True:
                         break
                     whilecount += 1
 
@@ -805,8 +810,8 @@ def ga_sql_all():
     ga_sql_backup_pwd = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
     ga_setup_shelloutput_text("Creating mysql backup user")
     ga_mysql(["CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, "
-             "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"])
-    ga_mysql_conntest("gabackup", ga_sql_backup_pwd)
+             "TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"], basic=True)
+    ga_mysql_conntest("gabackup", ga_sql_backup_pwd, local=True)
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes", style="info")
     ga_setup_shelloutput_text("Example random password:", style="info", point=False)
     print(ga_setup_pwd_gen(ga_config["setup_pwd_length"]))
@@ -830,7 +835,7 @@ def ga_sql_server():
     ga_setup_shelloutput_text("Creating mysql admin user")
     ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]),
               "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"])
-    ga_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"])
+    ga_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], local=True)
     ga_setup_config_file("a", "\n[db_growautomation]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]))
 
     if ga_config["setuptype"] == "server":
@@ -865,7 +870,7 @@ def ga_sql_agent():
     ga_setup_shelloutput_header("Creating local mysql controller user (read only)", "-")
     ga_mysql(["CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]),
               "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], basic=True)
-    ga_mysql_conntest(ga_config["sql_local_user"], ga_config["sql_local_pwd"])
+    ga_mysql_conntest(ga_config["sql_local_user"], ga_config["sql_local_pwd"], local=True)
     ga_setup_config_file("a", "[db_local]\nsql_local_user=%s\nsql_local_pwd=%s\n[server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
                          % (ga_config["sql_local_user"], ga_config["sql_agent_pwd"], ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
     
