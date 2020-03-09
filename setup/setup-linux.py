@@ -280,7 +280,6 @@ class ga_mysql(object):
         return self.start()
 
 
-
 def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
         if special is True:
@@ -339,7 +338,11 @@ def ga_setup_configparser_file(file, text):
     tmpfile = open(file, 'r')
     for line in tmpfile.readlines():
         if line.find(text) != -1:
-            return line.split("=")[1].strip()
+            try:
+                split = line.split("=")[1].strip()
+                return split
+            except (IndexError, ValueError):
+                return False
     return False
 
 
@@ -386,11 +389,7 @@ ga_setup_shelloutput_header("Checking if growautomation is already installed on 
 ga_config["setup_old_version_file"] = os_path.exists(ga_config["setup_version_file"])
 if ga_config["setup_old_version_file"] is True:
     ga_setup_shelloutput_text("Growautomation version file exists", style="info")
-    try:
-        tmpline = ga_setup_configparser_file(ga_config["setup_version_file"], "version=")
-        ga_config["setup_old_version"] = tmpline.split("=")[1]
-    except ValueError:
-        ga_config["setup_old_version"] = None
+    ga_config["setup_old_version"] = ga_setup_configparser_file(ga_config["setup_version_file"], "version=")
 else:
     ga_setup_shelloutput_text("No growautomation version file found", style="info")
 ga_config["setup_old_root"] = os_path.exists("/etc/growautomation")
