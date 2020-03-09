@@ -54,4 +54,8 @@ class GetConfig(object):
         if response is False or response is None or response == "":
             self.error("file")
         else:
-            return response.split("=")[1].strip()
+            try:
+                split = response.split("=")[1].strip()
+                return split
+            except (IndexError, ValueError):
+                self.error("file")
