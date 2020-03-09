@@ -204,11 +204,12 @@ def ga_setup_keycheck(dictkey):
 
 
 class ga_mysql(object):
-    def __init__(self, dbinput, user="", pwd="", query=False):
+    def __init__(self, dbinput, user="", pwd="", query=False, basic=None):
         self.input = dbinput
         self.user = user
         self.pwd = pwd
         self.query = query
+        self.basic = basic
 
     def __repr__(self):
         return str(self.start)
@@ -249,7 +250,9 @@ class ga_mysql(object):
             return sql_sock
 
     def execute(self, command):
-        if ga_config["sql_server_ip"] == "127.0.0.1":
+        if self.basic is not None:
+            connection = mysql.connector.connect(unix_socket=self.unixsock(), user="root")
+        elif ga_config["sql_server_ip"] == "127.0.0.1":
             connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
         else:
             connection = mysql.connector.connect(host=ga_config["sql_server_ip"], port=ga_config["sql_server_port"], user=self.user, passwd=self.pwd)
@@ -397,7 +400,7 @@ if ga_config["setup_old_root"] is True:
     ga_setup_shelloutput_text("Growautomation root path exists", style="info")
 else:
     ga_setup_shelloutput_text("No growautomation (default) root path exists", style="info")
-if ga_mysql("SHOW DATABASES;").find("ga") != -1:
+if ga_mysql("SHOW DATABASES;", basic=True).find("ga") != -1:
     ga_config["setup_old_db"] = True
     ga_setup_shelloutput_text("Growautomation database exists", style="info")
 else:
