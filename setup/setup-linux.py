@@ -211,11 +211,14 @@ class ga_mysql(object):
         self.query = query
 
     def __repr__(self):
+        return str(self.start)
+
+    def start(self):
         if self.user == "":
             self.user = "root"
 
         if type(self.input) == str:
-            return str(self.execute(self.input))
+            return self.execute(self.input)
         elif type(self.input) == list:
             outputdict = {}
             anyfalse = True
@@ -226,7 +229,7 @@ class ga_mysql(object):
                     anyfalse = False
             if anyfalse is False:
                 return False
-            return str(outputdict)
+            return outputdict
 
     def unixsock(self):
         global ga_config
@@ -269,19 +272,29 @@ class ga_mysql(object):
             ga_setup_shelloutput_text("MySql was unable to perform action '%s'.\nError message:\n%s" % (command, error), style="warn")
             return False
 
+    def find(self, findstr):
+        data = str(self.execute(self.input))
+        return data.find(findstr)
+
+    def list(self):
+        return self.start()
+
+
 
 def ga_mysql_conntest(dbuser="", dbpwd="", special=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
         if special is True:
-            sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", "root", query=True)
+            sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", "root", query=True).list()
         else:
-            sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True)
+            sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", "root", query=True).list()
     elif dbpwd == "":
         ga_setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
         return False
     else:
-        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True)
-    if sqltest:
+        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, True).list()
+    if type(sqltest) == list:
+        return True
+    elif sqltest:
         return True
     else:
         ga_setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
@@ -369,10 +382,30 @@ else:
 ga_setup_shelloutput_header("Checking if growautomation is already installed on the system", "#")
 
 # check if growautomation is already installed
-if os_path.exists(ga_config["setup_version_file"]) is True or os_path.exists("/etc/growautomation") is True:
-    ga_setup_shelloutput_text("Growautomation version file or default root path found", style="info")
 
+ga_config["setup_old_version_file"] = os_path.exists(ga_config["setup_version_file"])
+if ga_config["setup_old_version_file"] is True:
+    ga_setup_shelloutput_text("Growautomation version file exists", style="info")
+    try:
+        tmpline = ga_setup_configparser_file(ga_config["setup_version_file"], "version=")
+        ga_config["setup_old_version"] = tmpline.split("=")[1]
+    except ValueError:
+        ga_config["setup_old_version"] = None
+else:
+    ga_setup_shelloutput_text("No growautomation version file found", style="info")
+ga_config["setup_old_root"] = os_path.exists("/etc/growautomation")
+if ga_config["setup_old_root"] is True:
+    ga_setup_shelloutput_text("Growautomation root path exists", style="info")
+else:
+    ga_setup_shelloutput_text("No growautomation (default) root path exists", style="info")
+if ga_mysql("SHOW DATABASES;").find("ga") != -1:
+    ga_config["setup_old_db"] = True
+    ga_setup_shelloutput_text("Growautomation database exists", style="info")
+else:
+    ga_config["setup_old_db"] = False
+    ga_setup_shelloutput_text("No growautomation database found", style="info")
 
+if ga_config["setup_old_version_file"] is True or ga_config["setup_old_root"] is True or ga_config["setup_old_db"] is True:
     def ga_config_vars_oldversion_replace():
         global ga_config
         ga_config["setup_old"] = True
@@ -390,20 +423,21 @@ if os_path.exists(ga_config["setup_version_file"]) is True or os_path.exists("/e
                           "User chose that currently installed ga should not be overwritten")
 
 
-    if os_path.exists(ga_config["setup_version_file"]) is True:
-        ga_versionfile_line = ga_setup_configparser_file(ga_config["setup_version_file"], "version=")
-        if ga_versionfile_line is False:
-            if os_path.exists("/etc/growautomation") is True:
+    if ga_config["setup_old_version_file"] is True:
+        if ga_config["setup_old_version"] is None:
+            if ga_config["setup_old_root"] is True:
                 ga_setup_shelloutput_text("Growautomation is currently installed. But its version number could not be found", style="warn")
                 ga_config_vars_oldversion_replace()
+            elif ga_config["setup_old_db"] is True:
+                ga_config_vars_oldversion_replace()
             else:
-                ga_setup_shelloutput_text("No data for previous growautomation installation found. Installing as new", style="warn")
+                ga_setup_shelloutput_text("Error verifying existing growautomation installation. Installing as new", style="warn")
                 ga_config["setup_old"] = False
         else:
             print("A version of growautomation is/was already installed on this system!\n\n"
-                  "Installed version: %s\nReplace version: %s" % (ga_versionfile_line[8:], ga_config["version"]))
+                  "Installed version: %s\nReplace version: %s" % (ga_config["setup_old_version"], ga_config["version"]))
             ga_config_vars_oldversion_replace()
-    elif os_path.exists("/etc/growautomation") is True:
+    elif ga_config["setup_old_root"] is True:
         ga_setup_shelloutput_text("Growautomation is currently installed. But its version number could not be found", style="warn")
         ga_config_vars_oldversion_replace()
 else:
@@ -1218,6 +1252,7 @@ if ga_ufw is True:
 ga_config["backup_time"] = "2000"
 ga_config["backup_log"] = False
 ga_config["log_level"] = 2
+ga_config["install_timestamp"] = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
 
 def ga_mysql_write_config(thatdict):
