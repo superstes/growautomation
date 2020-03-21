@@ -263,6 +263,9 @@ class ga_mysql(object):
             curser.execute(command)
             if self.query is True:
                 data = curser.fetchall()
+                if curser.rowcount() < 1:
+                    data = False
+                    ga_setup_log_write("MySql did not receive any data.\nCommand: '%s'" % command)
             else:
                 connection.commit()
             curser.close()
@@ -485,6 +488,7 @@ def ga_config_var_base():
         ga_config["path_root"] = ga_setup_configparser_file(ga_config["setup_version_file"], "path_root=")
         ga_config["hostname"] = ga_setup_configparser_file(ga_config["setup_version_file"], "hostname=")
         ga_config["setuptype"] = ga_setup_configparser_file(ga_config["setup_version_file"], "setuptype=")
+        ga_config["log_level"] = ga_setup_configparser_file(ga_config["setup_version_file"], "log_level=")
         if ga_config["path_root"] is False:
             ga_setup_shelloutput_text("Growautomation rootpath not found in old versionfile", style="warn")
             ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
@@ -518,6 +522,7 @@ def ga_config_var_base():
             ga_config["path_old_root"] = ga_setup_input("Please provide the install path of your current installation (for backup).", "/etc/growautomation")
         else:
             ga_config["path_old_root"] = False
+        ga_config["log_level"] = ga_setup_input("Want to change the log level?", "1", ["0", "1", "2", "3"])
         ga_config_var_base_name()
 
     if ga_config["setuptype"] == "server" or ga_config["setuptype"] == "standalone":
@@ -1086,7 +1091,7 @@ def ga_setup_infra_code():
 
     os_system("ln -s %s %s/backup && ln -s %s %s/log %s" % (ga_config["path_backup"], ga_config["path_root"], ga_config["path_log"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-    ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"]))
+    ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
 
 # creating systemd service and timers
@@ -1246,7 +1251,6 @@ if ga_ufw is True:
 # defining default values
 ga_config["backup_time"] = "2000"
 ga_config["backup_log"] = False
-ga_config["log_level"] = 2
 ga_config["install_timestamp"] = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
 
