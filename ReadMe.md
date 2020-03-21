@@ -14,16 +14,13 @@ Version: 0.2.5
 - writing installation manual
 - finishing the installation script
 - creating a troubleshooing script to gather error logs
+- implementing device sectors (_allows separate data processing for multiple physical separated areas_)
+- implementing device-type linking (_p.e. earth humidity sensor and water pump action_)
 
 ## On hold projects
 - designing a clean plug&play alternative for connecting sensors
     - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/images/cable-topology.jpg" float="middle" width="50%" height="50%" border="4" alt="cable topology example">
 - documenting server installation on intel nuc
-- implementing actionblocks and actiontypes
-    - to provide custom linking of sensors and actions
-        - being able to add new sensormodels and actions without changing the main code
-    - to provide a simplified configuration for users
-    - example: <br /> <img src="https://github.com/growautomation-at/controller/blob/master/images/actionblocks.jpg" float="middle" width="50%" height="50%" border="4" alt="actionblock example">
 
 ## Future projects
 - webserver for observation and manual actions
