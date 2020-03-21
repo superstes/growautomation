@@ -24,18 +24,33 @@ from os import system as os_system
 from os import path as os_path
 from datetime import datetime
 
-date02 = datetime.now().strftime("%Y")
-date03 = datetime.now().strftime("%m")
+from ga.core.config_parser_file import GetConfig
+
+
+def now(format):
+    return datetime.now().strftime(format)
+
+
+date02 = now("%Y")
+date03 = now("%m")
 
 
 # Logs
-class LogWrite(object):  # does not check loglevel
-    def __init__(self, output, scripttype="core", loglevel=2):
+class LogWrite(object):
+    def __init__(self, output, scripttype="core", loglevel=1):
         self.scripttype = scripttype.lower()
         self.output = output
         self.log_level = loglevel
-        self.log_path = "../log"
-        self.write()
+        self.log_path = "../log/"
+
+    def __repr__(self):
+        try:
+            if self.log_level > GetConfig("log_level"):
+                return False
+            else:
+                self.write()
+        except AttributeError:
+            self.write()
 
     def open(self):
         logdir = "%s/%s/%s" % (self.log_path, self.scripttype, date02)
