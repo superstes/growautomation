@@ -21,6 +21,7 @@
 #ga_version0.3
 
 from datetime import datetime
+from datetime import timedelta
 from os import popen as os_popen
 from os import system as os_system
 from os import path as os_path
@@ -38,14 +39,21 @@ log_redirect = " 2>&1 | tee -a %s" % GetConfig("path_log")
 
 # Time formats
 
-time01 = datetime.now().strftime("%H-%M-%S")
-time02 = datetime.now().strftime("%H:%M:%S")
-time03 = datetime.now().strftime("%H-%M")
 
-date01 = datetime.now().strftime("%Y-%m-%d")
-date02 = datetime.now().strftime("%Y")
-date03 = datetime.now().strftime("%m")
-date04 = datetime.now().strftime("%d")
+def now(format):
+    return datetime.now().strftime(format)
+
+
+time01 = now("%H-%M-%S")
+time02 = now("%H:%M:%S")
+time03 = now("%H-%M")
+
+date01 = now("%Y-%m-%d")
+date02 = now("%Y")
+date03 = now("%m")
+date04 = now("%d")
+
+timestamp = "%Y-%m-%d %H:%M:%S"
 
 
 # Shell output
@@ -85,11 +93,16 @@ class ShellOutput(object):
 
 # Logs
 class LogWrite(object):
-    def __init__(self, output, scripttype, loglevel=2):
+    def __init__(self, output, scripttype="core", loglevel=1):
         self.scripttype = scripttype.lower()
         self.output = output
         self.log_level = loglevel
-        self.check()
+
+    def __repr__(self):
+        if self.log_level > GetConfig("log_level"):
+            return False
+        else:
+            self.write()
 
     def open(self):
         logdir = "%s/%s/%s" % (GetConfig("path_log"), self.scripttype, date02)
@@ -103,12 +116,6 @@ class LogWrite(object):
         logfile.write("\n%s\n" % self.output)
         logfile.close()
 
-    def check(self):
-        if self.loglevel > GetConfig("log_level"):
-            return False
-        else:
-            self.write()
-
 
 # File operations
 class Line(object):
@@ -120,9 +127,8 @@ class Line(object):
         self.searchfor = search
         self.replacewith = replace
         self.backup = backup
-        self.start()
 
-    def start(self):
+    def __repr__(self):
         if self.action == "find":
             self.find()
         elif self.action == "delete":
@@ -192,3 +198,10 @@ def dict_keycheck(dictionary, dictkey):
         return True
     else:
         return False
+
+
+def time_subtract(subtract, timeformat=timestamp, both=False):
+    calculated = (datetime.now() - timedelta(seconds=subtract)).strftime(timeformat)
+    if both is True:
+        return datetime.now().strftime(timeformat), calculated
+    return calculated

@@ -25,9 +25,14 @@ from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from functools import lru_cache
+from inspect import getfile as inspect_getfile
+from inspect import currentframe as inspect_currentframe
 
 from ga.core.smallant import LogWrite
 from ga.core.config_parser_file import GetConfig
+
+
+LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
 
 
 class DoSql:
@@ -51,19 +56,23 @@ class DoSql:
         else:
             connection = mysql.connector.connect(user="%s" % GetConfig("sql_admin_user"), passwd="%s" % GetConfig("sql_admin_pwd"))
         try:
-            curser = connection.cursor(buffered=True)
+            cursor = connection.cursor(buffered=True)
             if command is None:
                 command = self.command
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
-                    curser.execute(doit)
-                    return curser.fetchall()
+                    cursor.execute(doit)
+                    output = cursor.fetchall()
+                    if cursor.rowcount < 0:
+                        return False
+                    else:
+                        return output
                 data = readcache(command)
             else:
-                curser.execute(command)
+                cursor.execute(command)
                 data = True
-            curser.close()
+            cursor.close()
             connection.close()
             return data
         except mysql.connector.Error as error:

@@ -21,17 +21,22 @@
 #ga_version0.3
 
 from functools import lru_cache
+from inspect import getfile as inspect_getfile
+from inspect import currentframe as inspect_currentframe
 
 from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
 from ga.core.config_parser_file import GetConfig as parse_file
 
+LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
+
 
 class GetConfig(object):
-    def __init__(self, setting, customtable=None, skipsql=False):
+    def __init__(self, setting, CustomTable=None, SkipSql=False, CustomAnd=None):
         self.setting = setting
-        self.table = customtable
-        self.skipsql = skipsql
+        self.table = CustomTable
+        self.skipsql = SkipSql
+        self.customand = CustomAnd
 
     def __repr__(self):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
@@ -45,6 +50,8 @@ class GetConfig(object):
             output = self.parse_sql_custom()
         else:
             self.error("all")
+        if output is False:
+            self.error("sql")
         return str(output)
 
     def error(self, parser_type):
@@ -66,11 +73,13 @@ class GetConfig(object):
     def parse_sql_custom(self):
         if self.table is None:
             self.parse_sql()
-        else:
-            if parse_file("setuptype") == "agent":
-                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s' and agent = '%s';" % (self.table, self.setting, parse_file("hostname")))
+        elif self.customand is not None:
+            if self.table.find("Type") != -1:
+                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s' AND type = '%s';" % (self.table, self.setting, self.customand))
             else:
-                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s';" % (self.table, self.setting))
+                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s' AND %s;" % (self.table, self.setting, self.customand))
+        else:
+            return DoSql("SELECT data FROM ga.%s WHERE setting = '%s';" % (self.table, self.setting))
 
     def parse_hardcoded(self):
         config_dict = {"path_log": "%s/log" % parse_file("path_root"), "path_backup": "%s/backup" % parse_file("path_root"), "sql_server_port": "3306"}
