@@ -1,11 +1,12 @@
 create database IF NOT EXISTS ga;
 use ga;
-create table IF NOT EXISTS AgentDataDevice (
+
+create table IF NOT EXISTS AgentData (
 	id int unsigned not null auto_increment,
 	created timestamp not null default current_timestamp,
 	agent varchar(10) not null,
 	data varchar(10) not null,
-	unit tinyint unsigned not null default 1,
+	device varchar(10) not null,
 	primary key (id)
 )engine innodb,
  character set utf8,
@@ -45,7 +46,7 @@ create table IF NOT EXISTS AgentConfigSectorGroup (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfigSectorGroupSetting (
+create table IF NOT EXISTS AgentConfigSectorGroupLink (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(10) not null,
