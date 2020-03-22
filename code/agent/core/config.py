@@ -18,7 +18,7 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-#ga_version0.3
+# ga_version 0.3
 
 from functools import lru_cache
 from inspect import getfile as inspect_getfile
@@ -32,11 +32,11 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), logleve
 
 
 class GetConfig(object):
-    def __init__(self, setting, CustomTable=None, SkipSql=False, CustomAnd=None):
+    def __init__(self, setting, nosql=False, filter=None, belonging=None):
         self.setting = setting
-        self.table = CustomTable
-        self.skipsql = SkipSql
-        self.customand = CustomAnd
+        self.nosql = nosql
+        self.filter = filter
+        self.belonging = belonging
 
     def __repr__(self):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
@@ -46,7 +46,7 @@ class GetConfig(object):
             output = parse_file()
         elif self.setting in parse_failover_list:
             output = self.parse_failover()
-        elif self.skipsql is False:
+        elif self.nosql is False:
             output = self.parse_sql_custom()
         else:
             self.error("all")
@@ -59,11 +59,11 @@ class GetConfig(object):
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
     @lru_cache()
-    def parse_sql(self):
-        if parse_file("setuptype") == "agent":
-            response = DoSql("SELECT data FROM ga.AgentConfig WHERE setting = '%s' and agent = '%s';" % (self.setting, parse_file("hostname")))
+    def parse_sql(self, command=None):
+        if command is not None:
+            response = DoSql(command)
         else:
-            response = DoSql("SELECT data FROM ga.ServerConfig WHERE setting = '%s';" % self.setting)
+            response = DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';" % (self.setting, parse_file("hostname")))
         if response is False or response is None or response == "":
             self.error("sql")
         else:
@@ -71,16 +71,16 @@ class GetConfig(object):
 
     @lru_cache()
     def parse_sql_custom(self):
-        if self.table is None:
-            self.parse_sql()
-        elif self.customand is not None:
-            if self.table.find("Type") != -1:
-                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s' AND type = '%s';" % (self.table, self.setting, self.customand))
-            else:
-                return DoSql("SELECT data FROM ga.%s WHERE setting = '%s' AND %s;" % (self.table, self.setting, self.customand))
+        if self.filter is not None and self.belonging is not None:
+            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND belonging = '%s' AND %s;" % (self.setting, self.belonging, self.filter))
+        elif self.filter is not None:
+            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND %s;" % (self.setting, self.filter))
+        elif self.belonging is not None:
+            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND belonging = '%s';" % (self.setting, self.belonging))
         else:
-            return DoSql("SELECT data FROM ga.%s WHERE setting = '%s';" % (self.table, self.setting))
+            return self.parse_sql()
 
+    @lru_cache()
     def parse_hardcoded(self):
         config_dict = {"path_log": "%s/log" % parse_file("path_root"), "path_backup": "%s/backup" % parse_file("path_root"), "sql_server_port": "3306"}
         if parse_file("setuptype") != "agent":
@@ -96,7 +96,7 @@ class GetConfig(object):
 
     def parse_failover(self):
         parse_sql_output = self.parse_sql()
-        if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.skipsql is True:
+        if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.nosql is True:
             parse_file_output = parse_file(self.setting)
             if parse_file_output is False or parse_file_output is None or parse_file_output == "":
                 if self.parse_hardcoded() is False:
