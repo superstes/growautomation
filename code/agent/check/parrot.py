@@ -36,13 +36,6 @@ def LocalLogWrite(log, loglevel):
     LogWrite(log, "check", loglevel)
 
 
-def query(command):
-    output = DoSql(command)
-    if output is False:
-        LocalLogWrite("No data received from query %s." % command, loglevel=3)
-    return output
-
-
 LocalLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
 
 
@@ -54,15 +47,15 @@ class ActionLoader:
 
     def __repr__(self):
         for device in self.device_sector_dict.keys():
-            device_type_setting = query("SELECT setting,data FROM AgentConfigDeviceTypeSetting WHERE type = '%s';" % self.type)
-            device_setting = query("SELECT setting,data FROM AgentConfigDeviceTypeSetting WHERE device = '%s';" % device)
+            device_type_setting = GetConfig(output="setting,data", belonging=self.type)
+            device_setting = GetConfig(output="setting,data", belonging=device)
             device_setting.extend(y for y in device_type_setting if y not in device_setting)
             self.device_setting_dict = {device: device_setting}
         self.action_prequesits()
 
     def action_prequesits(self):
-        function = GetConfig("function", "AgentConfigDeviceTypeSetting", CustomAnd=self.type)
-        if GetConfig("boomerang", "AgentConfigDeviceTypeSetting", CustomAnd=self.type) == "True":
+        function = GetConfig(setting="function", belonging=self.type)
+        if GetConfig(setting="boomerang", belonging=self.type) == "True":
             self.action_start(function, boomerang=True)
         else:
             self.action_start(function)
@@ -91,25 +84,31 @@ class SectorCheck:
         self.type = list(sector_dict.values())[0]
 
     def __repr__(self):
-        link_exist_list = query("SELECT id FROM AgentConfigLink;")
-        link_inuse_list = query("SELECT link FROM AgentConfigLinkSetting WHERE type = '%s';" % self.type)
+        self.check_type_links()
+
+    def check_type_links(self):
+        link_exist_list = GetConfig(setting="link", table="group")
+        link_inuse_list = GetConfig(setting="link", belonging=self.type, table="group")
         for link in link_inuse_list:
             if link in link_exist_list:
                 self.check_action_sector(link)
 
     def check_action_sector(self, link):
-        device_type_list = query("SELECT AgentConfigDeviceType.type FROM AgentConfigDeviceType INNER JOIN AgentConfigLinkSetting ON AgentConfigLinkSetting.type = AgentConfigDeviceType.type "
-                                 "WHERE AgentConfigDeviceType.category = 'action' AND AgentConfigLinkSetting.link = '%s';" % link)
+        device_type_list = GetConfig(setting="link", filter="gid = '%s'" % link, table="group")
+        for device in reversed(device_type_list):
+            if GetConfig(setting=device, table="object") != "action":
+                device_type_list.remove(device)
         for device_type in device_type_list:
-            if GetConfig("enabled", "AgentConfigDeviceTypeSetting", CustomAnd=device_type) != "1":
+            if GetConfig(setting="enabled", belonging=device_type) != "1":
                 device_type_list.remove(device_type)
-                LocalLogWrite("Action %s is disabled." % device_type)
+                LocalLogWrite("Action %s is disabled." % device_type, loglevel=2)
                 pass
-            device_list = query("SELECT AgentConfigDevice.device FROM AgentConfigDevice INNER JOIN AgentConfigDeviceSetting ON AgentConfigDevice.device = AgentConfigDeviceSetting.device "
-                                "WHERE AgentConfigDevice.type = '%s' AND AgentConfigDeviceSetting.setting = 'enabled' AND AgentConfigDeviceSetting.data = '1';" % device_type)
+            device_list = GetConfig(filter="class = '%s'" % device_type, table="object")
+            for device in reversed(device_list):
+                if GetConfig(setting="enabled", belonging=device) != "1":
+                    device_list.remove(device)
             for device in device_list:
-                device_sector_dict = {device: query("SELECT AgentConfigDeviceSetting.data FROM AgentConfigDevice INNER JOIN AgentConfigDeviceSetting ON AgentConfigDevice.device = "
-                                                    "AgentConfigDeviceSetting.device WHERE AgentConfigDeviceSetting.setting = 'sectors' AND AgentConfigDevice.device = '%s';" % device)}
+                device_sector_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
@@ -140,9 +139,9 @@ class ThresholdCheck:
         self.type = input_type
 
     def __repr__(self):
-        if query("SELECT category FROM ga.AgentConfigDeviceType WHERE type = '%s'" % self.type) == "sensor":
-            if GetConfig("enabled", "AgentConfigDeviceTypeSetting", CustomAnd=self.type) == "True":
-                threshold = GetConfig("threshold", "AgentConfigDeviceTypeSetting", CustomAnd=self.type)
+        if GetConfig(setting=self.type, table="object") == "sensor":
+            if GetConfig(setting="enabled", belonging=self.type) == "1":
+                threshold = GetConfig(setting="threshold", belonging=self.type)
                 for sector in self.get_sector_list():
                     average_data_list = []
                     for device, device_sector in self.get_device_dict().items():
@@ -163,18 +162,17 @@ class ThresholdCheck:
                 SectorCheck(sector_dict)
 
     def get_device_dict(self):
-        device_list = query("SELECT AgentConfigDevice.device FROM AgentConfigDevice INNER JOIN AgentConfigDeviceType ON AgentConfigDevice.type = AgentConfigDeviceType.type WHERE "
-                            "AgentConfigDeviceType.type = '%s';" % self.type)
+        device_list = GetConfig(filter="class = '%s'" % self.type, table="object")
         for device in device_list:
-            if query("SELECT data FROM AgentConfigDeviceSetting WHERE device = '%s' AND setting = 'enabled';" % device) == "1":
-                device_dict = {device: query("SELECT data FROM AgentConfigDeviceSetting WHERE device = '%s' AND setting = 'sectors';")}
+            if GetConfig(setting="enabled", belonging=device) == "1":
+                device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             else:
                 LocalLogWrite("Device %s is disabled." % device, loglevel=3)
                 pass
         return device_dict
 
     def get_sector_list(self):
-        sector_exist_list = query("SELECT id FROM AgentConfigSector;")
+        sector_exist_list = GetConfig(setting="sector", table="group")
         sector_inuse_list = []
         for sector in self.get_device_dict().values():
             if sector.find(",") != -1:
@@ -188,8 +186,8 @@ class ThresholdCheck:
         return sector_list
 
     def get_data(self, device):
-        time_now, time_before = time_subtract(GetConfig("time_check", "AgentConfigDeviceTypeSetting", CustomAnd=self.type), both=True)
-        return query("SELECT data FROM ga.AgentData WHERE changed => '%s' AND changed <= '%s' AND device = '%s';" % (time_now, time_before, device))
+        time_now, time_before = time_subtract(GetConfig(setting="time_check", belonging=self.type), both=True)
+        return GetConfig(table="data", belonging=device, filter="changed => '%s' AND changed <= '%s' AND device = '%s'" % (time_now, time_before, device))
 
     def get_average_data(self, device):
         if type(device) == "list":

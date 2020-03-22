@@ -32,11 +32,13 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), logleve
 
 
 class GetConfig(object):
-    def __init__(self, setting, nosql=False, filter=None, belonging=None):
+    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
         self.setting = setting
         self.nosql = nosql
         self.filter = filter
         self.belonging = belonging
+        self.output = output
+        self.table = table
 
     def __repr__(self):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
@@ -71,12 +73,46 @@ class GetConfig(object):
 
     @lru_cache()
     def parse_sql_custom(self):
-        if self.filter is not None and self.belonging is not None:
-            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND belonging = '%s' AND %s;" % (self.setting, self.belonging, self.filter))
-        elif self.filter is not None:
-            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND %s;" % (self.setting, self.filter))
-        elif self.belonging is not None:
-            return self.parse_sql("SELECT data FROM ga.Setting WHERE setting = '%s' AND belonging = '%s';" % (self.setting, self.belonging))
+        command = ["SELECT", "data", "FROM ga.Setting WHERE"]
+        custom = False
+        if self.table is not None:
+            if self.table == "group":
+                command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
+            elif self.table == "object":
+                command = ["SELECT", "type", "FROM ga.Object WHERE"]
+            elif self.table == "data":
+                command = ["SELECT", "data", "FROM ga.Data WHERE"]
+        if self.output is not None:
+            command[1], custom = self.output, True
+        if self.setting is not None:
+            if self.table is not None:
+                if self.table == "group":
+                    command.append("type = '%s'" % self.setting)
+                elif self.table == "object":
+                    command.append("name = '%s'" % self.setting)
+                elif self.table == "data":
+                    command.append("agent = '%s'" % self.setting)
+            else:
+                command.append("setting = '%s'" % self.setting)
+            custom = True
+        if self.belonging is not None:
+            if self.setting is not None:
+                prefix = "AND"
+            else:
+                prefix = ""
+            if self.table is not None:
+                if self.table == "group":
+                    insert = "member"
+                elif self.table == "data":
+                    insert = "agent"
+            else:
+                insert = "belonging"
+            command[3], custom = "%s %s = '%s'" % (prefix, insert, self.belonging), True
+        if self.filter is not None:
+            command.append("AND %s" % self.filter)
+            custom = True
+        if custom is True:
+            return self.parse_sql(' '.join(command) + ";")
         else:
             return self.parse_sql()
 
