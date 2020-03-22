@@ -1,204 +1,94 @@
 create database IF NOT EXISTS ga;
 use ga;
 
-create table IF NOT EXISTS AgentData (
+create table IF NOT EXISTS Data (
 	id int unsigned not null auto_increment,
 	created timestamp not null default current_timestamp,
-	agent varchar(10) not null,
-	data varchar(10) not null,
-	device varchar(10) not null,
+	agent varchar(20) not null,
+	data varchar(20) not null,
+	device varchar(20) not null,
 	primary key (id)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfig (
+create table IF NOT EXISTS Category (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	agent varchar(10) not null,
-	setting varchar(30) not null,
-	data varchar(100) not null,
+	author varchar(20) not null,
+	name varchar(30) not null unique key,
+	description varchar(50) null,
+	primary key (id)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+create table IF NOT EXISTS ObjectReference (
+	id smallint unsigned not null auto_increment,
+	changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(20) not null,
+	name varchar(30) not null unique key,
+	description varchar(50) null,
+	primary key (id)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+create table IF NOT EXISTS Object (
+	id smallint unsigned not null auto_increment,
+	changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(20) not null,
+	name varchar(20) not null unique key,
+	parent varchar(20) default null,
+	class varchar(20) default null,
+	type varchar(30) not null,
 	description varchar(50) null,
 	primary key (id),
-	unique key unique_agent_setting (agent, setting)
+	foreign key (class) references ObjectReference (name) on update cascade on delete cascade,
+	foreign key (parent) references ObjectReference (name) on update cascade on delete cascade,
+	foreign key (type) references Category (name) on update cascade on delete cascade
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfigSector (
+create table IF NOT EXISTS Setting (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	description varchar(50) not null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigSectorGroup (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	description varchar(50) not null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigSectorGroupLink (
-    id smallint unsigned not null auto_increment,
-    changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-    gid smallint unsigned not null default 1,
-    sector smallint unsigned not null,
-	description varchar(50) null,
-    primary key (id),
-    foreign key (gid) references AgentConfigSectorGroup (id) on update cascade on delete restrict,
-    foreign key (sector) references AgentConfigSector (id) on update cascade on delete restrict,
-    unique key unique_gid_sector (gid, sector)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigLink (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	description varchar(50) not null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigDeviceType (
-	id tinyint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	description varchar(50) null,
-	type varchar(10) not null,
-	category varchar(10) not null,
-	primary key (id),
-	unique key (type)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigLinkSetting (
-    id smallint unsigned not null auto_increment,
-    changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-    link smallint unsigned not null,
-    type varchar(10) not null,
-	description varchar(50) null,
-    primary key (id),
-    foreign key (link) references AgentConfigLink (id) on update cascade on delete restrict,
-    foreign key (type) references AgentConfigDeviceType (type) on update cascade on delete restrict,
-    unique key unique_link_type (link, type)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigDeviceTypeSetting (
-    id smallint unsigned not null auto_increment,
-    changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-    type varchar(10) not null,
+	author varchar(20) not null,
+    type varchar(30) not null,
+	belonging varchar(20) not null,
     setting varchar(30) not null,
 	data varchar(100) not null,
 	description varchar(50) null,
     primary key (id),
-    foreign key (type) references AgentConfigDeviceType (type) on update cascade on delete restrict,
-    unique key unique_type_setting (type, setting)
+    foreign key (belonging) references Object (name) on update cascade on delete cascade,
+    foreign key (type) references Category (name) on update cascade on delete cascade,
+    unique key unique_type_name_setting (type, name, setting)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS AgentConfigDevice (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	agent varchar(10) not null,
-	device varchar(10) not null unique key,
-	type varchar(10) not null,
-	description varchar(50) null,
-	primary key (id),
-	foreign key (type) references AgentConfigDeviceType (type) on update cascade on delete restrict
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS AgentConfigDeviceSetting (
+create table IF NOT EXISTS Grouping (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-    device varchar(10) not null,
-    setting varchar(30) not null,
-	data varchar(100) not null,
+	author varchar(20) not null,
+    gid smallint unsigned not null,
+	type varchar(30) not null,
+    member varchar(20) not null,
 	description varchar(50) null,
     primary key (id),
-    foreign key (device) references AgentConfigDevice (device) on update cascade on delete restrict,
-    unique key unique_device_setting (device, setting)
+    foreign key (member) references Object (name) on update cascade on delete cascade,
+    foreign key (type) references Category (name) on update cascade on delete cascade,
+    unique key unique_gid_type_member (gid, type, member)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS ServerConfig (
+create table IF NOT EXISTS Agent (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	setting varchar(30) not null unique key,
-	data varchar(100) not null,
-	description varchar(50) null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS ServerConfigWeb (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	setting varchar(30) not null unique key,
-	data varchar(100) not null,
-	description varchar(50) null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS ServerConfigWebUser (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	username varchar(30) not null unique key,
-	password varchar(200) not null,
-	description varchar(50) null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS ServerConfigWebUserSetting (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null,
-	username varchar(30) not null,
-	setting varchar(30) not null unique key,
-	data varchar(100) not null,
-	description varchar(50) null,
-	primary key (id),
-	foreign key (username) references ServerConfigWebUser (username) on update cascade on delete restrict,
-    unique key unique_device_setting (username, setting)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS ServerConfigAgents (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(10) not null, 
-	agent varchar(10) not null unique key,
+	author varchar(20) not null,
+	agent varchar(20) not null unique key,
 	description varchar(50) null,
 	version varchar(10) not null,
 	enabled tinyint unsigned not null default 1,
