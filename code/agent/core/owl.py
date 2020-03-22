@@ -125,15 +125,11 @@ class DoSql:
                 raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
 
             def conntest():
-                if GetConfig("setuptype") == "agent":
-                    table = "AgentConfig"
-                else:
-                    table = "ServerConfig"
                 if self.write is False:
-                    data = self.connect("SELECT * FROM ga.%s ORDER BY changed DESC LIMIT 10;" % table)
+                    data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;")
                 else:
-                    self.connect("INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
-                    self.connect("DELETE FROM ga.AgentConfig WHERE author = 'owl' and agent = '%s';" % GetConfig("hostname"))
+                    self.connect("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('owl', 'agent', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
+                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"))
                     data = True
                 if type(data) == list:
                     return True
@@ -165,3 +161,18 @@ class DoSql:
             if anyfalse is False:
                 return False
             return outputdict
+
+    def list(self):
+        return self.prequesites()
+
+    def find(self, searchfor):
+        if type(self.command) == str:
+            data = str(self.execute())
+            output = data.find(searchfor)
+        elif type(self.command) == list:
+            sqllist = self.execute()
+            output = []
+            for x in sqllist:
+                output.append(x.find(searchfor))
+
+        return data.find(searchfor)
