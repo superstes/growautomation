@@ -83,16 +83,3 @@ create table IF NOT EXISTS Grouping (
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
-
-create table IF NOT EXISTS Agent (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(20) not null,
-	agent varchar(20) not null unique key,
-	description varchar(50) null,
-	version varchar(10) not null,
-	enabled tinyint unsigned not null default 1,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
