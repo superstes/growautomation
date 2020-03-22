@@ -18,6 +18,8 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+# ga_version 0.3
+
 ########################################################################################################################
 
 from os import popen as os_popen
@@ -37,7 +39,7 @@ from subprocess import PIPE as subprocess_pipe
 # basic vars
 ga_config = {}
 ga_config_server = {}
-ga_config["version"] = "0.2"
+ga_config["version"] = "0.3"
 ga_config["setup_version_file"] = "/etc/growautomation.version"
 ga_config["setup_log_path"] = "/var/log/growautomation/"
 ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
@@ -291,7 +293,7 @@ class ga_mysql(object):
 def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False):
     if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
         if check_ga_exists is True:
-            sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", query=True, basic=True).list()
+            sqltest = ga_mysql("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", query=True, basic=True).list()
         else:
             sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", query=True, basic=True).list()
     elif dbpwd == "":
@@ -301,9 +303,9 @@ def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, c
     elif local is True and check_system is True:
         sqltest = ga_mysql("SELECT * FROM mysql.help_category LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
     elif local is True:
-        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
+        sqltest = ga_mysql("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True, basic=True).list()
     else:
-        sqltest = ga_mysql("SELECT * FROM ga.AgentConfig ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True).list()
+        sqltest = ga_mysql("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", dbuser, dbpwd, query=True).list()
     if type(sqltest) == list:
         ga_setup_shelloutput_text("SQL connection verified", style="succ")
         return True
@@ -314,37 +316,24 @@ def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, c
 
 
 class ga_setup_configparser_mysql(object):
-    def __init__(self, search, user, pwd, agent="", table="config"):
+    def __init__(self, search, user, pwd, hostname):
         self.search = search
         self.user = user
         self.pwd = pwd
-        self.agent = agent
-        self.table = table
-        self.start()
+        self.hostname = hostname
 
-    def command(self):
-        if self.table == "config":
-            if self.agent == "":
-                command_table = "Server"
-                command_agents = ""
-            else:
-                command_table = "Agent"
-                command_agents = " and agent = '%s'" % self.agent
-            return "SELECT data FROM ga.%sConfig WHERE name = '%s'%s" % (command_table, self.search, command_agents)
-        elif self.table == "devicetype" or self.table == "device":
-            if self.table == "devicetype": command_table = "DeviceType"
-            elif self.table == "device": command_table = "Device"
-            return "SELECT data FROM ga.AgentConfig%sSetting WHERE setting = '%s'" % (command_table, self.search)
-
-    def start(self):
+    def __repr__(self):
         if type(self.search) == list:
             itemdatadict = {}
             for item in self.search:
-                itemdatadict[item] = ga_mysql(self.command(), self.user, self.pwd, True)
+                itemdatadict[item] = ga_mysql(self.command(item), self.user, self.pwd, True)
             return itemdatadict
         elif type(self.search) == str:
-            data = ga_mysql(self.command(), self.user, self.pwd, True)
+            data = ga_mysql(self.command(self.search), self.user, self.pwd, True)
             return data
+    
+    def command(self, setting):
+        return "SELECT data FROM ga.Setting WHERE belonging = '%s' and setting = '%s';" % (self.hostname, setting)
 
 
 def ga_setup_configparser_file(file, text):
@@ -662,7 +651,7 @@ if ga_config["setup_fresh"] is False:
                             "mnt_log_server", "mnt_log_share", "mnt_log_usr", "mnt_log_pwd", "mnt_log_dom", "ga_ufw"]
     ga_config_list_server = []
     if ga_config["setuptype"] == "server":
-        ga_configdict_sql = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"])
+        ga_configdict_sql = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], ga_config["hostname"])
     elif ga_config["setuptype"] == "standalone":
         ga_configdict_sql_agent = ga_setup_configparser_mysql("ga_config_list_agent", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], ga_config["hostname"])
         ga_configdict_sql_server = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], ga_config["hostname"])
@@ -739,8 +728,8 @@ if ga_config["setup_fresh"] is True:
 if ga_config["setuptype"] == "agent":
     ga_config_var_certs()
 
-ga_ufw = ga_setup_input("Do you want to install the linux software firewall? (ufw)\n"
-                        "It will be configured for growautomation.", False)
+# ga_ufw = ga_setup_input("Do you want to install the linux software firewall? (ufw)\n"
+#                         "It will be configured for growautomation.", False)
 
 ########################################################################################################################
 
@@ -868,7 +857,7 @@ def ga_sql_agent():
         elif line.find("Master_Log_Pos: ") != -1:
             ga_config["sql_server_repl_pos"] = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
 
-    ga_sql_server_agent_id = ga_mysql("SELECT id FROM ga.ServerConfigAgents WHERE controller = %s;" % ga_config["hostname"], ga_config["sql_agent_user"],
+    ga_sql_server_agent_id = ga_mysql("SELECT data FROM ga.Setting WHERE belonging = '%s' AND setting = 'id';" % ga_config["hostname"], ga_config["sql_agent_user"],
                                       ga_config["sql_agent_pwd"], query=True)
     ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1", "server-id = %s" % (int(ga_sql_server_agent_id) + 100))
     os_system("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
@@ -898,11 +887,11 @@ def ga_sql_server_create_agent():
     ga_setup_shelloutput_header("Registering a new growautomation agent to the server", "#")
     create_agent = ga_setup_input("Do you want to register an agent to the ga-server?", True)
     if create_agent is True:
-        server_agent_list = ga_mysql("SELECT controller FROM ga.ServerConfigAgents WHERE enabled = 1;", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], query=True)
+        server_agent_list = ga_mysql("SELECT name FROM ga.Object WHERE type = 'agent';", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], query=True).list()
         if len(server_agent_list) > 0:
             ga_setup_shelloutput_text("List of registered agents:\n%s\n" % server_agent_list, style="info")
         else:
-            ga_setup_shelloutput_text("No agents are registered/enabled yet.\n", style="info")
+            ga_setup_shelloutput_text("No agents are registered.\n", style="info")
 
         create_agent_namelen = 0
         while create_agent_namelen > 10:
@@ -931,7 +920,7 @@ def ga_sql_server_create_agent():
 
         ga_mysql(["CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
                   "GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
-                  "FLUSH PRIVILEGES;", "INSERT INTO ga.ServerConfigAgents (author, controller, description) VALUES (%s, %s, %s);"
+                  "FLUSH PRIVILEGES;", "INSERT INTO ga.Agent (author, controller, description) VALUES (%s, %s, %s);"
                   % ("gasetup", create_agent_name, create_agent_desc)], ga_config["sql_admin_user"], ga_config["sql_admin_pwd"])
 
         create_replica_usr = create_agent_name + "replica"
@@ -947,17 +936,17 @@ def ga_sql_server_create_agent():
         ga_openssl_server_cert(create_agent_name)
 
 
-def ga_ufw_setup():
-    ga_setup_shelloutput_header("Configuring firewall", "-")
-    os_system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80 proto tcp && ufw allow out to any port 443 proto tcp && "
-              "ufw allow out to any port 22 proto tcp && ufw allow out to any port 53 proto udp && ufw allow out to any port 53 proto tcp && ufw allow out to any port 123 proto udp && "
-              "ufw allow proto tcp from 192.168.0.0/16 to any port 22 && ufw allow proto tcp from 172.16.0.0/12 to any port 22 && ufw allow proto tcp from 10.0.0.0/10 to any port 22 %s"
-              % ga_config["setup_log_redirect"])
-    if ga_config["setuptype"] == "server" or ga_config["setuptype"] == "agent":
-        os_system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
-    ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\nSSH and MySql connections from public ip ranges will be denied!", True)
-    if ga_ufw_enable is True:
-        os_system("ufw enable %s" % ga_config["setup_log_redirect"])
+# def ga_ufw_setup():
+#     ga_setup_shelloutput_header("Configuring firewall", "-")
+#     os_system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80 proto tcp && ufw allow out to any port 443 proto tcp && "
+#               "ufw allow out to any port 22 proto tcp && ufw allow out to any port 53 proto udp && ufw allow out to any port 53 proto tcp && ufw allow out to any port 123 proto udp && "
+#               "ufw allow proto tcp from 192.168.0.0/16 to any port 22 && ufw allow proto tcp from 172.16.0.0/12 to any port 22 && ufw allow proto tcp from 10.0.0.0/10 to any port 22 %s"
+#               % ga_config["setup_log_redirect"])
+#     if ga_config["setuptype"] == "server" or ga_config["setuptype"] == "agent":
+#         os_system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
+#     ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\nSSH and MySql connections from public ip ranges will be denied!", True)
+#     if ga_ufw_enable is True:
+#         os_system("ufw enable %s" % ga_config["setup_log_redirect"])
 
 
 ########################################################################################################################
@@ -1241,8 +1230,8 @@ if ga_config["setuptype"] == "server":
 elif ga_config["setuptype"] == "agent":
     ga_sql_agent()
 
-if ga_ufw is True:
-    ga_ufw_setup()
+# if ga_ufw is True:
+#     ga_ufw_setup()
 
 
 ########################################################################################################################
@@ -1264,13 +1253,11 @@ def ga_mysql_write_config(thatdict):
 
     for key, value in sorted(insertdict.items()):
         if ga_config["setuptype"] == "agent":
-            command = "INSERT INTO ga.AgentConfig (author, agent, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value)
+            command = "INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('%s', 'agent', '%s', '%s', '%s');" % ("gasetup", ga_config("hostname"), key, value)
             ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
-            table = "ga.AgentConfig"
         else:
-            ga_mysql("INSERT INTO ga.ServerConfig (author, setting, data) VALUES ('%s', '%s', '%s');" % ("gasetup", key, value), basic=True)
-            table = "ga.ServerConfig"
-    ga_setup_shelloutput_text("Wrote %s settings to database table %sConfig ()" % (len(insertdict), table), style="succ", point=False)
+            ga_mysql("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('%s', 'server', '%s', '%s', '%s');" % ("gasetup", ga_config("hostname"), key, value), basic=True)
+    ga_setup_shelloutput_text("Wrote %s settings to database table ga.Setting ()" % len(insertdict), style="succ", point=False)
 
 
 ga_setup_shelloutput_header("Writing configuration to database", "#")
