@@ -174,5 +174,4 @@ class DoSql:
             output = []
             for x in sqllist:
                 output.append(x.find(searchfor))
-
-        return data.find(searchfor)
+        return output
