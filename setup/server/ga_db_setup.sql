@@ -63,7 +63,7 @@ create table IF NOT EXISTS Setting (
     primary key (id),
     foreign key (belonging) references Object (name) on update cascade on delete cascade,
     foreign key (type) references Category (name) on update cascade on delete cascade,
-    unique key unique_type_name_setting (type, name, setting)
+    unique key unique_type_belonging_setting (type, belonging, setting)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
