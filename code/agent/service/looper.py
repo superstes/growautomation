@@ -16,7 +16,7 @@ class Job(Thread):
     def __init__(self, interval, execute, *args, **kwargs):
         Thread.__init__(self)
         self.stopped = Event()
-        self.interval = interval
+        self.interval = timedelta(seconds=interval)
         self.execute = execute
         self.args = args
         self.kwargs = kwargs
@@ -31,15 +31,12 @@ class Job(Thread):
 
 
 class Loop:
-    def __init__(self, seconds):
+    def __init__(self):
         self.jobs = []
-        self.seconds = seconds
 
-    def __repr__(self):
-        interval = timedelta(seconds=self.seconds)
-
+    def job(self, time):
         def decorator(f):
-            self.add_job(f, interval)
+            self.add_job(f, time)
             return f
         return decorator
 
@@ -53,7 +50,7 @@ class Loop:
         while True:
             try:
                 time_sleep(1)
-            except Exception:
+            except SystemExit:
                 self.stop()
                 break
 
@@ -73,6 +70,7 @@ class Loop:
         for j in self.jobs:
             LogWrite("Stopping job {}".format(j.execute))
             j.stop()
+        return SystemExit
 
     def exit(self, reason):
         LogWrite("Shutting down because of sig%s interrupt" % reason)
