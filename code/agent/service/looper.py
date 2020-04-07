@@ -48,14 +48,11 @@ class Loop:
         if not deamon:
             self.block_root_process()
 
-    def thread(self, sleeptime, thread_name):
+    def thread(self, sleeptime, thread_name, *args, **kwargs):
         def decorator(function):
-            self.add_thread(function, timedelta(seconds=sleeptime), thread_name)
+            self.jobs.append(Job(timedelta(sleeptime), function, thread_name, *args, **kwargs))
             return function
         return decorator
-
-    def add_thread(self, function, sleep, name, *args, **kwargs):
-        self.jobs.append(Job(sleep, function, name, *args, **kwargs))
 
     def block_root_process(self):
         while True:
