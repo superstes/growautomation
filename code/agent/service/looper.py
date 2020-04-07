@@ -24,7 +24,7 @@ class Job(Thread):
         LogWrite("Thread of function  '%s' stopped" % self.execute.__name__, loglevel=3)
 
     def run(self):
-        LogWrite("Thread of function  '%s' started" % self.execute.__name__, loglevel=4)
+        LogWrite("Thread of function  '%s' started for '%s'" % (self.execute.__name__, self.name), loglevel=4)
         while not self.state_stop.wait(self.interval.total_seconds()):
             self.execute(*self.args, **self.kwargs)
             if self.state_stop.isSet():
@@ -36,21 +36,24 @@ class Loop:
     def __init__(self):
         self.jobs = []
 
-    def start(self, deamon=True):
-        if deamon is False:
+    def start(self, daemon=True, single_thread=None):
+        if daemon is False:
             LogWrite("Starting threads in foreground", loglevel=3)
         else:
             LogWrite("Starting threads in background", loglevel=3)
-        for j in self.jobs:
-            j.daemon = deamon
-            j.start()
-
-        if not deamon:
+        if single_thread is not None:
+            single_thread.daemon = daemon
+            single_thread.start()
+        else:
+            for j in self.jobs:
+                j.daemon = daemon
+                j.start()
+        if not daemon:
             self.block_root_process()
 
-    def thread(self, sleeptime, thread_name, *args, **kwargs):
+    def thread(self, sleep_time, thread_name, *args, **kwargs):
         def decorator(function):
-            self.jobs.append(Job(timedelta(sleeptime), function, thread_name, *args, **kwargs))
+            self.jobs.append(Job(timedelta(sleep_time), function, thread_name, *args, **kwargs))
             return function
         return decorator
 
@@ -67,13 +70,18 @@ class Loop:
             j.stop()
         LogWrite("All threads stopped. Exiting loop", loglevel=2)
 
-    def stop_thread(self, name_list):
+    def stop_thread(self, thread_name):
         to_process_list = self.jobs
         for j in to_process_list:
-            if j.name in name_list:
+            if j.name == thread_name:
                 j.stop()
                 self.jobs.remove(j)
                 LogWrite("Thread %s stopped." % j.name, loglevel=2)
+
+    def reload_thread(self, sleep_time, thread_name, *args, **kwargs):
+        self.stop_thread(thread_name)
+        self.thread(sleep_time, thread_name, *args, **kwargs)
+        self.start(single_thread=thread_name)
 
     def list(self):
         job_name_list = []
