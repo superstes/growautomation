@@ -9,13 +9,14 @@ from ga.core.ant import LogWrite
 
 
 class Job(Thread):
-    def __init__(self, interval, execute, *args, **kwargs):
+    def __init__(self, interval, execute, name, *args, **kwargs):
         Thread.__init__(self)
         self.state_stop = Event()
         self.interval = interval
         self.execute = execute
         self.args = args
         self.kwargs = kwargs
+        self.name = name
 
     def stop(self):
         self.state_stop.set()
@@ -45,18 +46,18 @@ class Loop:
             j.start()
 
         if not deamon:
-            self.block()
+            self.block_root_process()
 
-    def job(self, sleeptime):
+    def thread(self, sleeptime, thread_name):
         def decorator(function):
-            self.add_job(function, timedelta(seconds=sleeptime))
+            self.add_thread(function, timedelta(seconds=sleeptime), thread_name)
             return function
         return decorator
 
-    def add_job(self, function, sleep, *args, **kwargs):
-        self.jobs.append(Job(sleep, function, *args, **kwargs))
+    def add_thread(self, function, sleep, name, *args, **kwargs):
+        self.jobs.append(Job(sleep, function, name, *args, **kwargs))
 
-    def block(self):
+    def block_root_process(self):
         while True:
             try:
                 time_sleep(1)
@@ -68,3 +69,17 @@ class Loop:
         for j in self.jobs:
             j.stop()
         LogWrite("All threads stopped. Exiting loop", loglevel=2)
+
+    def stop_thread(self, name_list):
+        to_process_list = self.jobs
+        for j in to_process_list:
+            if j.name in name_list:
+                j.stop()
+                self.jobs.remove(j)
+                LogWrite("Thread %s stopped." % j.name, loglevel=2)
+
+    def list(self):
+        job_name_list = []
+        for j in self.jobs:
+            job_name_list.append(j.name)
+        return job_name_list
