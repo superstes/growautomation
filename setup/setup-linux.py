@@ -132,7 +132,7 @@ def ga_setup_fstabcheck():
                                       "those lines to disable them", style="warn")
 
 
-def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", maxchar=10, minchar=2):
+def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=10, min_value=2):
     styletype = ga_setup_shelloutput_colors(style)
 
     def ga_setup_input_posscheck():
@@ -175,13 +175,25 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
             return usrinput
         elif intype == "free":
             if poss != "":
-                return ga_setup_string_check(ga_setup_input_posscheck(), maxlength=maxchar, minlength=minchar)
+                return ga_setup_string_check(ga_setup_input_posscheck(), maxlength=max_value, minlength=min_value)
+            else:
+                return ga_setup_string_check(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default,
+                                             maxlength=max_value, minlength=min_value)
         elif poss != "":
             return ga_setup_input_posscheck()
         elif default != "":
             return str(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or "%s" % default)
         else:
             return str(input(styletype + "\n%s\n > " % prompt + colorama_fore.RESET).lower())
+    elif type(default) == int:
+        min_value, max_value = 1, 10000
+        usrinput = 0
+        while usrinput < int(min_value) or usrinput > int(max_value):
+            if (usrinput < int(min_value) or usrinput > int(max_value)) and whilecount > 0:
+                ga_setup_shelloutput_text("Input error. Value should be between 1 and 1209600.\n", style="warn")
+            whilecount += 1
+            usrinput = int(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
+        return usrinput
 
 
 def ga_mnt_creds(outtype, inputstr=""):
@@ -648,7 +660,7 @@ if ga_config["setup_fresh"] is False:
     ga_config_list_agent = ["backup", "path_backup", "mnt_backup", "mnt_backup_type", "mnt_backup_server",
                             "mnt_backup_share", "mnt_backup_usr", "mnt_backup_pwd", "mnt_backup_dom", "path_log",
                             "mnt_log", "mnt_shared_creds", "mnt_shared_server", "mnt_shared_type", "mnt_log_type",
-                            "mnt_log_server", "mnt_log_share", "mnt_log_usr", "mnt_log_pwd", "mnt_log_dom", "ga_ufw"]
+                            "mnt_log_server", "mnt_log_share", "mnt_log_usr", "mnt_log_pwd", "mnt_log_dom"]
     ga_config_list_server = []
     if ga_config["setuptype"] == "server":
         ga_configdict_sql = ga_setup_configparser_mysql("ga_config_list_server", ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], ga_config["hostname"])
@@ -727,9 +739,6 @@ if ga_config["setup_fresh"] is True:
 # always vars
 if ga_config["setuptype"] == "agent":
     ga_config_var_certs()
-
-# ga_ufw = ga_setup_input("Do you want to install the linux software firewall? (ufw)\n"
-#                         "It will be configured for growautomation.", False)
 
 ########################################################################################################################
 
@@ -936,19 +945,6 @@ def ga_sql_server_create_agent():
         ga_openssl_server_cert(create_agent_name)
 
 
-# def ga_ufw_setup():
-#     ga_setup_shelloutput_header("Configuring firewall", "-")
-#     os_system("ufw default deny outgoing && ufw default deny incoming && ufw allow out to any port 80 proto tcp && ufw allow out to any port 443 proto tcp && "
-#               "ufw allow out to any port 22 proto tcp && ufw allow out to any port 53 proto udp && ufw allow out to any port 53 proto tcp && ufw allow out to any port 123 proto udp && "
-#               "ufw allow proto tcp from 192.168.0.0/16 to any port 22 && ufw allow proto tcp from 172.16.0.0/12 to any port 22 && ufw allow proto tcp from 10.0.0.0/10 to any port 22 %s"
-#               % ga_config["setup_log_redirect"])
-#     if ga_config["setuptype"] == "server" or ga_config["setuptype"] == "agent":
-#         os_system("ufw allow 3306/tcp from 192.168.0.0/16 && ufw allow 3306/tcp from 172.16.0.0/12 && ufw allow 3306/tcp from 10.0.0.0/10 %s" % ga_config["setup_log_redirect"])
-#     ga_ufw_enable = ga_setup_input("Firewall rules were configured. Do you want to enable them?\nSSH and MySql connections from public ip ranges will be denied!", True)
-#     if ga_ufw_enable is True:
-#         os_system("ufw enable %s" % ga_config["setup_log_redirect"])
-
-
 ########################################################################################################################
 
 
@@ -971,9 +967,6 @@ def ga_setup_apt():
             os_system("apt-get -y install nfs-common %s" % ga_config["setup_log_redirect"])
         elif ga_config["mnt_backup_type"] == "cifs" or ga_config["mnt_log_type"] == "cifs":
             os_system("apt-get -y install cifs-utils %s" % ga_config["setup_log_redirect"])
-
-    if ga_ufw is True:
-        os_system("apt-get -y install ufw %s" % ga_config["setup_log_redirect"])
 
 
 def ga_setup_pip():
@@ -1082,134 +1075,11 @@ def ga_setup_infra_code():
 
     ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
-
-# creating systemd service and timers
-class ga_setup_service(object):
-    def __init__(self):
-        self.element = None
-        self.path = None
-        self.start()
-
-    def check(self, request="exists", out=""):
-        if request == "exists":
-            command = "systemctl list-unit-files | grep %s" % self.element
-        elif request == "enabled":
-            command = "systemctl list-unit-files | grep %s | grep enabled" % self.element
-        elif request == "status" and self.element.find(".service") != -1:
-            command = "systemctl status %s | grep 'Active:'" % self.element
-        else:
-            return "Input error."
-
-        output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-        outputstr = output.decode("ascii")
-        errorstr = error.decode("ascii")
-
-        if request == "exists":
-            if outputstr.find(self.element) == -1:
-                return False
-            elif out == "":
-                return True
-            elif out == "info":
-                return outputstr
-            elif out == "err":
-                return errorstr
-        elif request == "status":
-            if outputstr.find("Active:") == -1:
-                return False
-            elif outputstr.find("active (running)") != -1:
-                return True
-            else:
-                return False
-
-    def enabled(self, check=True):
-        if check is True:
-            enabled = self.check("enabled")
-        else:
-            enabled = False
-
-        if enabled is True:
-            ga_setup_shelloutput_text("%s is already enabled" % self.element, style="succ")
-        else:
-            os_system("systemctl enable %s %s" % (self.element, ga_config["setup_log_redirect"]))
-            ga_setup_shelloutput_text("Enabled %s" % self.element, style="info")
-
-    def exists(self, check=True):
-        if check is True:
-            exists = self.check()
-        else:
-            exists = False
-        if exists is True:
-            ga_setup_shelloutput_text("%s already exists" % self.element, style="succ")
-            self.enabled()
-        else:
-            os_system("systemctl link %s %s" % (self.path, ga_config["setup_log_redirect"]))
-            ga_setup_shelloutput_text("Linked %s" % self.element, style="info")
-            self.enabled()
-
-    def start(self):
-        service_dir = "%s/service/systemd/" % ga_config["path_root"]
-
-        if os_path.exists(service_dir) is False:
-            ga_setup_infra_code()
-
-        for file in os_listdir(service_dir):
-            filepath = service_dir + file
-            if os_path.isfile(filepath):
-                if (file.find(".service") != -1 or file.find(".timer") != -1) and file.find("DEFAULT") == -1:
-                    self.element = file
-                    self.path = filepath
-                    self.exists()
-        os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
-        ga_setup_shelloutput_text("Systemd services reloaded", style="info")
-
-    # in work
-    # def ga_setup_infra_timer_add(systemd_element=""):
-    #     ga_timer_path = "%s/service/systemd" % ga_config["path_root"]
-    #     if systemd_element == "":
-    #         ga_config["setup_systemd_add_timer"] = ga_setup_input("Do you want to add a sensor/an action timer?", True)
-    #     elif ga_config["setup_systemd_add_timer"] is True or systemd_element != "":
-    #         while True:
-    #             if systemd_element != "":
-    #                 devicetype = systemd_element
-    #             else:
-    #                 while True:
-    #                     devicetype = ga_setup_input("Please provide the name of the device ")
-    #                     if ga_setup_string_check(devicetype) is True:
-    #                         break
-    #                 # systemd interval -> sql config either from DeviceSettings or DeviceTypeSettings (prio = DeviceSettings)
-    #                 ga_setup_configparser_mysql(devicetype, ga_config["setup_sql_user"], ga_config["setup_sql_pwd"], table="devicetype")
-    #             os_system("cp %s/ga@DEFAULT.timer %s/ga@%s.timer %s" % (ga_timer_path, ga_timer_path, devicetype, ga_config["setup_log_redirect"]))
-    #             ga_replaceline("%s/ga@%s.timer" % (ga_timer_path, devicetype), "Unit=", "Unit=ga@%s.service" % devicetype)
-    #             ga_setup_infra_service_exists(devicetype, ga_timer_path + "/ga@%s.timer" % devicetype, check=False)
-    #             ga_setup_infra_service_enabled(devicetype, check=False)
-    #
-    #             if systemd_element == "":
-    #                 again = ga_setup_input("Do you want to add another timer?", True)
-    #                 if again is False:
-    #                     break
-    #             else:
-    #                 break
-
-# check path inputs for ending / and remove it
-# delete old fstab entries and replace them (ask user)
-# systemd systemd setup for agentdata and serverbackup
-# ga service check for python path /usr/bin/python3 and growautomation root -> change execstart execstop etc
-# ga_config["backup"] should do something.. but what?
-# simple setup -> preconfigure most settings
-# advanced setup -> like now
-# dont repeat output if wrong input -> only warning
-# oldconf
-#    db functions for oldconfig checken -> less to do?
-#    should certs be renewed?
-#    tell user that type cant be changed without replace option (done already?)
-#    adv setup value overwrite x5 or so (manually)
-# ufw error ERROR: Couldn't determine iptables version
-# keepconfig -> doesnt get setup_type / doesnt start basic vars function
-# mysql bug workaround MySql was unable to perform action 'CREATE USER
-# check all string inputs with ga_setup_string_check (reference in input function if poss/default is str?)
-# replaceline error if not found ?
-# configure first sensors / actions -> with systemd timers
-
+    service_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"]
+    ga_replaceline(service_path, "ExecStart=", "ExecStart=/usr/bin/python3 %s" % service_path)
+    os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
+    os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
+    ga_setup_shelloutput_text("Linked and enabled growautomation service", style="info")
 
 ga_setup_infra()
 ga_setup_infra_code()
@@ -1230,8 +1100,39 @@ if ga_config["setuptype"] == "server":
 elif ga_config["setuptype"] == "agent":
     ga_sql_agent()
 
-# if ga_ufw is True:
-#     ga_ufw_setup()
+########################################################################################################################
+# create devicetypes and devices
+
+
+def get_devicetype():
+    while_devicetype = ga_setup_input("Do you want to add devicetypes?", True)
+    while_devicetype_count = 0
+    sensor_dict, action_dict = {}, {}
+    while while_devicetype:
+        d_name = ga_setup_input("Provide a unique name.", default="sensor01", intype="free")
+        d_type = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action"], intype="free")
+        d_function = ga_setup_input("Which function should be started for the devicetype? (just provide the name of the file)", intype="free", maxchar=50)
+        d_timer = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
+        if d_type == "action":
+            d_boomerang = ga_setup_input("Will this function reverse itself (p.e. window opener that needs to open/close)?", False)
+        else:
+            d_unit = ga_setup_input("Provide the unit for the sensor input.", "°C", intype="free")
+            d_threshold = ga_setup_input("Provide a threshold value for the sensor.\nIf this value is exceeded the linked action will be started.", default=26, max_value=1000000, min_value=1)
+            d_time_check = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
+        if d_type == "sensor":
+            sensor_dict[d_name] = [d_type, d_function, d_timer, d_unit, d_threshold, d_time_check]
+        else:
+            action_dict[d_name] = [d_type, d_function, d_timer, d_boomerang]
+        while_devicetype = ga_setup_input("Want to add another devicetype?", True)
+
+
+def create_links():
+    print("nothing yet")
+
+def create_device():
+    print("nothing yet")
+    # sensor
+    # action
 
 
 ########################################################################################################################
@@ -1252,6 +1153,11 @@ def ga_mysql_write_config(thatdict):
             insertdict[key] = value
 
     for key, value in sorted(insertdict.items()):
+        if type(value) == bool:
+            if value is True:
+                value = 1
+            else:
+                value = 0
         if ga_config["setuptype"] == "agent":
             command = "INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('%s', 'agent', '%s', '%s', '%s');" % ("gasetup", ga_config("hostname"), key, value)
             ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
@@ -1265,5 +1171,27 @@ ga_log_write_vars()
 writedict = {**ga_config_server, **ga_config}
 ga_mysql_write_config(writedict)
 
+ga_setup_shelloutput_header("Starting growautomation service", "#")
+os_system("systemctl start growautomation.service %s" % ga_config["setup_log_redirect"])
+
 ga_setup_shelloutput_header("Setup finished! Please reboot the system", "#")
 ga_setup_log_write("Setup finished.")
+
+# check path inputs for ending / and remove it
+# delete old fstab entries and replace them (ask user)
+# systemd systemd setup for agentdata and serverbackup
+# ga service check for python path /usr/bin/python3 and growautomation root -> change execstart execstop etc
+# ga_config["backup"] should do something.. but what?
+# simple setup -> preconfigure most settings
+# advanced setup -> like now
+# dont repeat output if wrong input -> only warning
+# oldconf
+#    db functions for oldconfig checken -> less to do?
+#    should certs be renewed?
+#    tell user that type cant be changed without replace option (done already?)
+#    adv setup value overwrite x5 or so (manually)
+# keepconfig -> doesnt get setup_type / doesnt start basic vars function
+# mysql bug workaround MySql was unable to perform action 'CREATE USER
+# check all string inputs with ga_setup_string_check (reference in input function if poss/default is str?)
+# replaceline error if not found ?
+# check to link systemd service
