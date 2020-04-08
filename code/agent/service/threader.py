@@ -43,7 +43,7 @@ class Loop:
             LogWrite("Starting threads in background", loglevel=3)
             for job in self.jobs:
                 if single_thread is not None:
-                    if job == single_thread:
+                    if job.name == single_thread:
                         job.daemon = daemon
                         job.start()
                 else:
