@@ -41,13 +41,14 @@ class Loop:
             LogWrite("Starting threads in foreground", loglevel=3)
         else:
             LogWrite("Starting threads in background", loglevel=3)
-        if single_thread is not None:
-            single_thread.daemon = daemon
-            single_thread.start()
-        else:
-            for j in self.jobs:
-                j.daemon = daemon
-                j.start()
+            for job in self.jobs:
+                if single_thread is not None:
+                    if job == single_thread:
+                        job.daemon = daemon
+                        job.start()
+                else:
+                    job.daemon = daemon
+                    job.start()
         if not daemon:
             self.block_root_process()
 
@@ -66,17 +67,17 @@ class Loop:
                 raise SystemExit
 
     def stop(self):
-        for j in self.jobs:
-            j.stop()
+        for job in self.jobs:
+            job.stop()
         LogWrite("All threads stopped. Exiting loop", loglevel=2)
 
     def stop_thread(self, thread_name):
         to_process_list = self.jobs
-        for j in to_process_list:
-            if j.name == thread_name:
-                j.stop()
-                self.jobs.remove(j)
-                LogWrite("Thread %s stopped." % j.name, loglevel=2)
+        for job in to_process_list:
+            if job.name == thread_name:
+                job.stop()
+                self.jobs.remove(job)
+                LogWrite("Thread %s stopped." % job.name, loglevel=2)
 
     def reload_thread(self, sleep_time, thread_name, *args, **kwargs):
         self.stop_thread(thread_name)
@@ -85,6 +86,6 @@ class Loop:
 
     def list(self):
         job_name_list = []
-        for j in self.jobs:
-            job_name_list.append(j.name)
+        for job in self.jobs:
+            job_name_list.append(job.name)
         return job_name_list
