@@ -114,9 +114,13 @@ class Service:
 
     def run(self):
         try:
+            while_count = 0
             while True:
-                sleep(60)
+                if while_count == 288:
+                    self.reload()
+                sleep(300)
                 self.status()
+                while_count += 1
         except Exception as error:
             LogWrite("Stopping service because of runtime error:\n%s" % error)
             self.stop()
