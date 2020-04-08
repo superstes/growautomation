@@ -1,16 +1,16 @@
 [Unit]
 Description=Growautomation Service
 After=network.target
-#After=mysqld.service
+After=mariadb.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py start '%i'
-ExecStop=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py stop '%i'
-ExecReload=/usr/bin/python3 /etc/growautomation/agent/service/ga.service.py reload '%i'
+ExecStart=/usr/bin/python3 /etc/growautomation/agent/service/service.py
+ExecReload=/bin/kill -10 $MAINPID
+TimeoutStopSec=30
 User=growautomation
 Group=growautomation
-Restart=always
+Restart=on-failure
 RestartSec=5s
 
 [Install]
