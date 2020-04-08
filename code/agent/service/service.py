@@ -41,17 +41,11 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 class Service:
     def __init__(self):
-        signal(SIGTERM, self.signal_handler("stop"))
-        signal(SIGUSR1, self.signal_handler("reload"))
+        signal(SIGTERM, self.stop())
+        signal(SIGUSR1, self.reload())
         self.input = sys_argv[1]
         self.name_dict = {}
         self.core_list = ["check", "prestart"]
-
-    def signal_handler(self, action):
-        if action == "stop":
-            self.stop()
-        elif action == "reload":
-            self.reload()
 
     def get_timer_dict(self):
         name_dict = {}
