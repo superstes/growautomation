@@ -93,10 +93,10 @@ class ShellOutput(object):
 
 # Logs
 class LogWrite(object):
-    def __init__(self, output, scripttype="core", loglevel=1):
+    def __init__(self, output, scripttype="core", level=1):
         self.scripttype = scripttype.lower()
         self.output = output
-        self.log_level = loglevel
+        self.log_level = level
 
     def __repr__(self):
         if self.log_level > GetConfig("log_level"):

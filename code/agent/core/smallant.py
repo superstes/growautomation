@@ -37,10 +37,10 @@ date03 = now("%m")
 
 # Logs
 class LogWrite(object):
-    def __init__(self, output, scripttype="core", loglevel=1):
+    def __init__(self, output, scripttype="core", level=1):
         self.scripttype = scripttype.lower()
         self.output = output
-        self.log_level = loglevel
+        self.log_level = level
         self.log_path = "../log/"
 
     def __repr__(self):

@@ -28,7 +28,7 @@ from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
 from ga.core.config_parser_file import GetConfig as parse_file
 
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
+LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class GetConfig(object):

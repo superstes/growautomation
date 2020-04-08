@@ -39,7 +39,7 @@ class GetConfig(object):
 
     def error(self, parser_type):
         from ga.core.smallant import LogWrite
-        LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
+        LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
 

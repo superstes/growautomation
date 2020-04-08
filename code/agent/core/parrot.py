@@ -18,7 +18,7 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-#ga_version0.3
+# ga_version 0.3
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -26,17 +26,16 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from time import sleep
 
-from ga.core.owl import DoSql
 from ga.core.config import GetConfig
 from ga.core.ant import LogWrite
 from ga.core.ant import time_subtract
 
 
-def LocalLogWrite(log, loglevel):
-    LogWrite(log, "check", loglevel)
+def LocalLogWrite(log, level):
+    LogWrite(log, "check", level)
 
 
-LocalLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
+LocalLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class ActionLoader:
@@ -70,12 +69,12 @@ class ActionLoader:
             output1, error1 = start(command + " start")
             sleep(time_wait)
             output2, error2 = start(command + " stop")
-            LocalLogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), loglevel=2)
-            LocalLogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), loglevel=3)
+            LocalLogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2)
+            LocalLogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3)
         else:
             output, error = start(command)
-            LocalLogWrite("Function %s called.\nError:\n%s" % (function, error), loglevel=2)
-            LocalLogWrite("Output:\n%s" % output, loglevel=3)
+            LocalLogWrite("Function %s called.\nError:\n%s" % (function, error), level=2)
+            LocalLogWrite("Output:\n%s" % output, level=3)
 
 
 class SectorCheck:
@@ -101,7 +100,7 @@ class SectorCheck:
         for device_type in device_type_list:
             if GetConfig(setting="enabled", belonging=device_type) != "1":
                 device_type_list.remove(device_type)
-                LocalLogWrite("Action %s is disabled." % device_type, loglevel=2)
+                LocalLogWrite("Action %s is disabled." % device_type, level=2)
                 pass
             device_list = GetConfig(filter="class = '%s'" % device_type, table="object")
             for device in reversed(device_list):
@@ -112,7 +111,7 @@ class SectorCheck:
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
-                    LocalLogWrite("Device %s is in none of the following sectors: %s" % (device, self.sector_list), loglevel=3)
+                    LocalLogWrite("Device %s is in none of the following sectors: %s" % (device, self.sector_list), level=3)
                     del device_sector_dict[device]
                     pass
                 device_sector_dict[device] = sector_list
@@ -148,16 +147,16 @@ class ThresholdCheck:
                         if self.check_device_sector(device_sector, sector) is True:
                             average_data = self.get_average_data(device)
                             average_data_list.append(average_data)
-                            LocalLogWrite("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), loglevel=3)
+                            LocalLogWrite("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3)
                         else:
-                            LocalLogWrite("Device %s not in sector %s." % (device, sector), loglevel=3)
+                            LocalLogWrite("Device %s not in sector %s." % (device, sector), level=3)
                             pass
                     sector_average = sum(average_data_list) / len(average_data_list)
                     if sector_average >= threshold:
-                        LocalLogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.type, sector, sector_average, threshold), loglevel=2)
+                        LocalLogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.type, sector, sector_average, threshold), level=2)
                         sector_dict = {sector: self.type}
                     else:
-                        LocalLogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.type, sector, sector_average, threshold), loglevel=2)
+                        LocalLogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.type, sector, sector_average, threshold), level=2)
                         pass
                 SectorCheck(sector_dict)
 
@@ -167,7 +166,7 @@ class ThresholdCheck:
             if GetConfig(setting="enabled", belonging=device) == "1":
                 device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             else:
-                LocalLogWrite("Device %s is disabled." % device, loglevel=3)
+                LocalLogWrite("Device %s is disabled." % device, level=3)
                 pass
         return device_dict
 
