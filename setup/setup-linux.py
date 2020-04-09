@@ -132,7 +132,7 @@ def ga_setup_fstabcheck():
                                       "those lines to disable them", style="warn")
 
 
-def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=10, min_value=2):
+def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2):
     styletype = ga_setup_shelloutput_colors(style)
 
     def ga_setup_input_posscheck():
@@ -1104,36 +1104,142 @@ elif ga_config["setuptype"] == "agent":
 # create devicetypes and devices
 
 
-def get_devicetype():
-    while_devicetype = ga_setup_input("Do you want to add devicetypes?", True)
-    while_devicetype_count = 0
-    sensor_dict, action_dict = {}, {}
-    while while_devicetype:
-        d_name = ga_setup_input("Provide a unique name.", default="sensor01", intype="free")
-        d_type = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action"], intype="free")
-        d_function = ga_setup_input("Which function should be started for the devicetype? (just provide the name of the file)", intype="free", maxchar=50)
-        d_timer = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
-        if d_type == "action":
-            d_boomerang = ga_setup_input("Will this function reverse itself (p.e. window opener that needs to open/close)?", False)
+class GetObject:
+    def __init__(self):
+        self.object_dict = {}
+        self.setting_dict = {}
+        self.group_dict = {}
+
+    def __repr__(self):
+        ga_setup_shelloutput_header("Basic device setup", "#")
+        ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
+        self.get_devicetype()
+
+    def get_devicetype(self):
+        dt_object_dict = {}
+        while_devicetype = ga_setup_input("Do you want to add devicetypes?\n"
+                                          "Info: must be created for every sensor/action hardware model; they provide per model configuration", True)
+        while_count = 0
+        while while_devicetype:
+            while_count += 1
+            setting_dict = {}
+            name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
+            dt_object_dict[name] = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
+            setting_dict["function"] = ga_setup_input("Which function should be started for the devicetype?\n"
+                                                      "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name], intype="free", maxchar=50)
+            setting_dict["timer"] = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
+            if dt_object_dict[name] == "action":
+                setting_dict["boomerang"] = ga_setup_input("Will this function reverse itself?\np.e. window opener that needs to open/close", False)
+            else:
+                setting_dict["unit"] = ga_setup_input("Provide the unit for the sensor input.", "°C", intype="free")
+                setting_dict["threshold"] = ga_setup_input("Provide a threshold value for the sensor.\nInfo: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
+                setting_dict["time_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
+            self.setting_dict[name] = setting_dict
+            while_devicetype = ga_setup_input("Want to add another devicetype?", True)
+        if while_count > 0:
+            self.object_dict["devicetype"] = dt_object_dict
+            self.create_device()
         else:
-            d_unit = ga_setup_input("Provide the unit for the sensor input.", "°C", intype="free")
-            d_threshold = ga_setup_input("Provide a threshold value for the sensor.\nIf this value is exceeded the linked action will be started.", default=26, max_value=1000000, min_value=1)
-            d_time_check = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
-        if d_type == "sensor":
-            sensor_dict[d_name] = [d_type, d_function, d_timer, d_unit, d_threshold, d_time_check]
-        else:
-            action_dict[d_name] = [d_type, d_function, d_timer, d_boomerang]
-        while_devicetype = ga_setup_input("Want to add another devicetype?", True)
+            return
+
+    def create_device(self):
+        d_object_dict = {}
+
+        def to_create(to_ask, info):
+            create = ga_setup_input("Do you want to add a %s\nInfo: %s?" % (to_ask, info), True)
+            create_dict = {}
+            while create:
+                setting_dict = {}
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="ah01", intype="free")
+                create_dict[name] = ga_setup_input("Provide its devicetype.", default="AirHumidity", intype="free")
+                setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\n"
+                                                            "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
+                if setting_dict["connection"] == "downlink":
+                    setting_dict["downlink"] = ga_setup_input("Provide the name of the downlink to which the device is connected to.\n"
+                                                              "Info: the downlink must also be added as device", default="dl01", intype="free")
+                setting_dict["port"] = ga_setup_input("Provide the portnumber to which the device is/will be connected.", default=2, intype="free")
+                self.setting_dict[name] = setting_dict
+                create = ga_setup_input("Want to add another %s?" % to_ask, True)
+            d_object_dict[to_ask] = create_dict
+
+        to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\nCheck the documentation for more informations: https://docs.growautomation.at")
+        to_create("sensor", "any kind of device that provides data to growautomation")
+        to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
+        self.object_dict["device"] = d_object_dict
+        self.create_group()
+
+    def create_group(self):
+        def to_create(to_ask, info, info_member):
+            create_count, create_dict = 0, {}
+            create = ga_setup_input("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True)
+            while create:
+                member_list = []
+                member_count, add_member = 0, True
+                while add_member:
+                    if member_count == 0:
+                        info = "\nInfo: %s" % info_member
+                    else:
+                        info = ""
+                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), intype="free"))
+                    member_count += 1
+                    if member_count > 1:
+                        add_member = ga_setup_input("Want to add another member?", True)
+                create_dict[create_count] = member_list
+                create_count += 1
+                create = ga_setup_input("Want to add another %s?" % to_ask, True)
+            return create_dict
+
+        self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device or devicetype")
+        self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
+        self.write_config()
+
+    def write_config(self):
+        ga_setup_shelloutput_header("Writing configuration to database", "-")
+
+        def insert(command):
+            if ga_config["setuptype"] == "agent":
+                return ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
+            else:
+                return ga_mysql(command, basic=True)
+
+        ga_setup_shelloutput_text("Writing object configuration")
+        object_count = 0
+        for object_type, packed_values in self.object_dict.items():
+            def unpack_values(values, parent="NULL"):
+                count = 0
+                for object_name, object_class in sorted(values.items()):
+                    insert("INSERT INTO Object (author,name,parent,class,type) VALUES ('setup','%s',%s,'%s','%s');" % (object_name, parent, object_class, object_type))
+                    count += 1
+                return count
+            if object_type == "device":
+                for subtype, packed_subvalues in packed_values:
+                    object_count += unpack_values(packed_subvalues, "'%s'" % ga_config("hostname"))
+            else:
+                object_count += unpack_values(packed_values)
+        ga_setup_shelloutput_text("%s objects were added" % object_count, style="info")
+
+        ga_setup_shelloutput_text("Writing object settings")
+        setting_count = 0
+        for object_name, packed_values in self.setting_dict.items():
+            for setting, data in sorted(packed_values.items()):
+                insert("INSERT INTO Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                setting_count += 1
+        ga_setup_shelloutput_text("%s object settings were added" % setting_count, style="info")
+
+        ga_setup_shelloutput_text("Writing group configuration")
+        group_count, member_count = 0, 0
+        for group_type, packed_values in self.group_dict.items():
+            for group_id, group_member_list in packed_values.items():
+                insert("INSERT INTO Grp (author,type) VALUES ('setup','%s');" % group_type)
+                sql_gid = insert("SELECT gid FROM Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
+                for member in sorted(group_member_list):
+                    insert("INSERT INTO Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
+                    member_count += 1
+                group_count += 1
+        ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
 
 
-def create_links():
-    print("nothing yet")
-
-def create_device():
-    print("nothing yet")
-    # sensor
-    # action
-
+GetObject()
 
 ########################################################################################################################
 # post setup tasks
@@ -1194,4 +1300,3 @@ ga_setup_log_write("Setup finished.")
 # mysql bug workaround MySql was unable to perform action 'CREATE USER
 # check all string inputs with ga_setup_string_check (reference in input function if poss/default is str?)
 # replaceline error if not found ?
-# check to link systemd service
