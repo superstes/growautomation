@@ -142,6 +142,7 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
     styletype = ga_setup_shelloutput_colors(style)
 
     if neg and adv is False:
+        print("\n%s\nConfig: %s\n" % (prompt, default))
         return default
 
     def ga_setup_input_posscheck():
