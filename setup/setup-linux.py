@@ -245,7 +245,10 @@ class ga_mysql(object):
         if debug:
             print(type(self.input), self.input)
         if type(self.input) == str:
-            return self.execute(self.input)
+            output = self.execute(self.input)
+            if debug:
+                print(type(output), output)
+            return output
         elif type(self.input) == list:
             output_list = []
             anyfalse = True
