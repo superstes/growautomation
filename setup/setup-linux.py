@@ -194,6 +194,8 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
             whilecount += 1
             usrinput = int(input("\n%s\n(Default: %s)\n > " % (prompt, default)).lower() or "%s" % default)
         return usrinput
+    else:
+        raise KeyError
 
 
 def ga_mnt_creds(outtype, inputstr=""):
@@ -1113,6 +1115,12 @@ class GetObject:
     def __repr__(self):
         ga_setup_shelloutput_header("Basic device setup", "#")
         ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
+        self.add_core()
+
+    def add_core(self):
+        core_object_dict = {}
+        core_object_dict["check"] = "NULL"
+        self.object_dict["core"] = core_object_dict
         self.get_devicetype()
 
     def get_devicetype(self):
@@ -1208,12 +1216,16 @@ class GetObject:
             def unpack_values(values, parent="NULL"):
                 count = 0
                 for object_name, object_class in sorted(values.items()):
-                    insert("INSERT INTO Object (author,name,parent,class,type) VALUES ('setup','%s',%s,'%s','%s');" % (object_name, parent, object_class, object_type))
+                    if object_class != "NULL":
+                        object_class = "'%s'" % object_class
+                    if parent != "NULL":
+                        parent = "'%s'" % parent
+                    insert("INSERT INTO Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
                     count += 1
                 return count
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values:
-                    object_count += unpack_values(packed_subvalues, "'%s'" % ga_config("hostname"))
+                    object_count += unpack_values(packed_subvalues, ga_config("hostname"))
             else:
                 object_count += unpack_values(packed_values)
         ga_setup_shelloutput_text("%s objects were added" % object_count, style="info")
