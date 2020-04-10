@@ -50,7 +50,7 @@ try:
     if sys_argv[1] == "debug":
         debug = True
 except IndexError:
-    debut = False
+    debug = False
 
 ########################################################################################################################
 
@@ -141,7 +141,7 @@ def ga_setup_fstabcheck():
 def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2, neg=False):
     styletype = ga_setup_shelloutput_colors(style)
 
-    if neg and adv:
+    if neg and adv is False:
         return default
 
     def ga_setup_input_posscheck():
