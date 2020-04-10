@@ -33,6 +33,7 @@ from random import choice as random_choice
 from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from sys import version_info as sys_version_info
+from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 
@@ -45,6 +46,8 @@ ga_config["setup_log_path"] = "/var/log/growautomation/"
 ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
 ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 
+if sys_argv[1] == "debug":
+    debug = True
 
 ########################################################################################################################
 
@@ -132,10 +135,10 @@ def ga_setup_fstabcheck():
                                       "those lines to disable them", style="warn")
 
 
-def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2, advanced=False):
+def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2, neg=False):
     styletype = ga_setup_shelloutput_colors(style)
 
-    if advanced and adv:
+    if neg and adv:
         return default
 
     def ga_setup_input_posscheck():
@@ -235,14 +238,20 @@ class ga_mysql(object):
         self.start()
 
     def start(self):
+        if debug:
+            print(type(self.input), self.input)
         if type(self.input) == str:
             return self.execute(self.input)
         elif type(self.input) == list:
             output_list = []
             anyfalse = True
             for command in self.input:
+                if debug:
+                    print(type(command), command)
                 output = self.execute(command)
                 output_list.append(output)
+                if debug:
+                    print(type(output), output)
                 if output is False:
                     anyfalse = False
             if anyfalse is False:
@@ -529,12 +538,12 @@ def ga_config_var_base():
                                                         "Agree if you have already installed/updated the ga server or disagree to stop the installation.", False, style="warn")
             if ga_config["setup_yousure"] is False:
                 ga_setup_exit("Stopping script. Server was not installed before agent", "User has not installed the server before the agent")
-        ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation")
+        ga_config["path_root"] = ga_setup_input("Want to choose a custom install path?", "/etc/growautomation", neg=True)
         if ga_config["setup_old"] and ga_config["setup_old_backup"] is True:
             ga_config["path_old_root"] = ga_setup_input("Please provide the install path of your current installation (for backup).", "/etc/growautomation")
         else:
             ga_config["path_old_root"] = False
-        ga_config["log_level"] = ga_setup_input("Want to change the log level?", "1", ["0", "1", "2", "3", "4"])
+        ga_config["log_level"] = ga_setup_input("Want to change the log level?", "1", ["0", "1", "2", "3", "4", "5"], neg=True)
         ga_config_var_base_name()
 
     if ga_config["setuptype"] == "server" or ga_config["setuptype"] == "standalone":
@@ -551,16 +560,16 @@ def ga_config_var_base():
 def ga_config_var_setup():
     global ga_config
     ga_setup_shelloutput_header("Checking setup options", "-")
-    ga_config["setup_pwd_length"] = int(ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen"))
+    ga_config["setup_pwd_length"] = int(ga_setup_input("This setup will generate random passwords for you.\nPlease define the length of those random passwords!", "12", "8-99", "passgen", neg=True))
 
-    ga_config["setup_ca"] = ga_setup_input("Need to import internal ca certificate for git/pip? Mainly needed if your firewall uses ssl inspection.", False)
+    ga_config["setup_ca"] = ga_setup_input("Need to import internal ca certificate for git/pip? Mainly needed if your firewall uses ssl inspection.", False, neg=True)
 
     if ga_config["setup_ca"] is True:
         ga_config["setup_ca_path"] = ga_setup_input("Provide path to the ca file.", "/etc/ssl/certs/internalca.cer")
     else:
         ga_config["setup_ca_path"] = "notprovided"
 
-    ga_config["setup_linuxupgrade"] = ga_setup_input("Want to upgrade your existing software packages before growautomation installation?", True)
+    ga_config["setup_linuxupgrade"] = ga_setup_input("Want to upgrade your existing software packages before growautomation installation?", True, neg=True)
 
 
 def ga_config_var_db():
@@ -609,7 +618,7 @@ def ga_config_var_db():
         ga_config["sql_server_ip"] = "127.0.0.1"
         ga_config["sql_server_port"] = "3306"
         if ga_config["setup_fresh"] is True:
-            ga_config["sql_admin_user"] = ga_setup_input("How should the growautomation database admin user be named?", "gadmin")
+            ga_config["sql_admin_user"] = ga_setup_input("How should the growautomation database admin user be named?", "gadmin", neg=True)
             ga_config["sql_admin_pwd"] = ga_setup_pwd_gen(ga_config["setup_pwd_length"])
             if ga_mysql_conntest() is False:
                 ga_setup_shelloutput_text("Unable to connect to local mysql server with root privileges", style="err")
@@ -689,10 +698,10 @@ if ga_config["setup_fresh"] is False:
 if ga_config["setup_fresh"] is True:
     ga_setup_shelloutput_header("Checking directory information", "-")
 
-    ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/")
-    ga_config["backup"] = ga_setup_input("Want to enable backup?", True)
+    ga_config["path_backup"] = ga_setup_input("Want to choose a custom backup path?", "/mnt/growautomation/backup/", neg=True)
+    ga_config["backup"] = ga_setup_input("Want to enable backup?", True, neg=True)
     if ga_config["backup"] is True:
-        ga_config["mnt_backup"] = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.", True)
+        ga_config["mnt_backup"] = ga_setup_input("Want to mount remote share as backup destination? Smb and nfs available.", False, neg=True)
         if ga_config["mnt_backup"] is True:
             ga_setup_fstabcheck()
             ga_config["mnt_backup_type"] = ga_setup_input("Mount nfs or smb/cifs share as backup destination?", "nfs", ["nfs", "cifs"])
@@ -710,8 +719,8 @@ if ga_config["setup_fresh"] is True:
         ga_config["mnt_backup"] = False
         ga_config["mnt_backup_type"] = "False"
     
-    ga_config["path_log"] = ga_setup_input("Want to choose a custom log path?", "/var/log/growautomation")
-    ga_config["mnt_log"] = ga_setup_input("Want to mount remote share as log destination? Smb and nfs available.", False)
+    ga_config["path_log"] = ga_setup_input("Want to choose a custom log path?", "/var/log/growautomation", neg=True)
+    ga_config["mnt_log"] = ga_setup_input("Want to mount remote share as log destination? Smb and nfs available.", False, neg=True)
     if ga_config["mnt_log"] is True:
         ga_setup_fstabcheck()
         if ga_config["mnt_backup"] is True:
@@ -1132,6 +1141,7 @@ class GetObject:
 
     def get_devicetype(self):
         dt_object_dict = {}
+        ga_setup_shelloutput_header("Devicetypes", "-")
         while_devicetype = ga_setup_input("Do you want to add devicetypes?\n"
                                           "Info: must be created for every sensor/action hardware model; they provide per model configuration", True)
         while_count = 0
@@ -1179,8 +1189,11 @@ class GetObject:
                 create = ga_setup_input("Want to add another %s?" % to_ask, True)
             d_object_dict[to_ask] = create_dict
 
+        ga_setup_shelloutput_header("Downlinks", "-")
         to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\nCheck the documentation for more informations: https://docs.growautomation.at")
+        ga_setup_shelloutput_header("Sensors", "-")
         to_create("sensor", "any kind of device that provides data to growautomation")
+        ga_setup_shelloutput_header("Actions", "-")
         to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
         self.object_dict["device"] = d_object_dict
         self.create_group()
@@ -1206,7 +1219,9 @@ class GetObject:
                 create = ga_setup_input("Want to add another %s?" % to_ask, True)
             return create_dict
 
+        ga_setup_shelloutput_header("Sectors", "-")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device or devicetype")
+        ga_setup_shelloutput_header("Devicetype links", "-")
         self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
         self.write_config()
 
