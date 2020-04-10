@@ -235,16 +235,16 @@ class ga_mysql(object):
         if type(self.input) == str:
             return self.execute(self.input)
         elif type(self.input) == list:
-            outputdict = {}
+            output_list = []
             anyfalse = True
             for command in self.input:
                 output = self.execute(command)
-                outputdict[command] = output
+                output_list.append(output)
                 if output is False:
                     anyfalse = False
             if anyfalse is False:
                 return False
-            return outputdict
+            return output_list
 
     def unixsock(self):
         global ga_config
@@ -328,7 +328,7 @@ def ga_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, c
         ga_setup_shelloutput_text("SQL connection verified", style="succ")
         return sqltest
     else:
-        ga_setup_shelloutput_text("SQL connection failed.", style="warn")
+        ga_setup_shelloutput_text("SQL connection failed", style="warn")
         ga_setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
         return False
 
@@ -825,8 +825,7 @@ def ga_sql_all():
               "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"], basic=True)
     ga_mysql_conntest("gabackup", ga_sql_backup_pwd, local=True, check_system=True)
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes", style="info")
-    ga_setup_shelloutput_text("Example random password:", style="info", point=False)
-    ga_setup_shelloutput_text(ga_setup_pwd_gen(ga_config["setup_pwd_length"]), style="info")
+    ga_setup_shelloutput_text("Example random password: %s" % ga_setup_pwd_gen(ga_config["setup_pwd_length"]), style="info", point=False)
     ga_setup_shelloutput_text("\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
     os_system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
