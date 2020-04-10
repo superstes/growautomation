@@ -109,7 +109,7 @@ def ga_setup_pwd_gen(stringlength):
 
 def ga_setup_string_check(string, maxlength=10, minlength=2):
     char_blacklist = "!%$§?^´`µ{}()°><|\\*ÄÖÜüöä@,"
-    if type(string) != "str":
+    if type(string) != str:
         ga_setup_shelloutput_text("Input error. Expected string, got %s" % type(string), style="warn")
         return False
     elif len(string) > maxlength or len(string) < minlength:
@@ -177,11 +177,14 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
                 usrinput = int(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
             return usrinput
         elif intype == "free":
-            if poss != "":
-                return ga_setup_string_check(ga_setup_input_posscheck(), maxlength=max_value, minlength=min_value)
-            else:
-                return ga_setup_string_check(input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default,
-                                             maxlength=max_value, minlength=min_value)
+            if poss == "":
+                while True:
+                    if default == "":
+                        usrinput = input(styletype + "\n%s\n > " % prompt + colorama_fore.RESET).lower() or default
+                    else:
+                        usrinput = input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default
+                    if ga_setup_string_check(usrinput, maxlength=max_value, minlength=min_value):
+                        return usrinput
         elif poss != "":
             return ga_setup_input_posscheck()
         elif default != "":
@@ -1121,7 +1124,9 @@ class GetObject:
     def add_core(self):
         ga_setup_shelloutput_header("Basic device setup", "#")
         ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
-        core_object_dict = {"check": "NULL"}
+        core_object_dict = {}
+        core_object_dict["check"] = "NULL"
+        core_object_dict["backup"] = "NULL"
         self.object_dict["core"] = core_object_dict
         self.get_devicetype()
 
@@ -1136,7 +1141,8 @@ class GetObject:
             name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
             dt_object_dict[name] = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
             setting_dict["function"] = ga_setup_input("Which function should be started for the devicetype?\n"
-                                                      "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name], intype="free", maxchar=50)
+                                                      "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
+                                                      default="AirHumidity.py", intype="free", max_value=50)
             setting_dict["timer"] = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
             if dt_object_dict[name] == "action":
                 setting_dict["boomerang"] = ga_setup_input("Will this function reverse itself?\np.e. window opener that needs to open/close", False)
@@ -1156,14 +1162,15 @@ class GetObject:
         d_object_dict = {}
 
         def to_create(to_ask, info):
-            create = ga_setup_input("Do you want to add a %s\nInfo: %s?" % (to_ask, info), True)
+            create = ga_setup_input("Do you want to add a %s\nInfo: %s" % (to_ask, info), True)
             create_dict = {}
             while create:
                 setting_dict = {}
                 name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="ah01", intype="free")
                 create_dict[name] = ga_setup_input("Provide its devicetype.", default="AirHumidity", intype="free")
-                setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\n"
-                                                            "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
+                if to_ask != "downlink":
+                    setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\n"
+                                                                "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
                 if setting_dict["connection"] == "downlink":
                     setting_dict["downlink"] = ga_setup_input("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device", default="dl01", intype="free")
@@ -1222,11 +1229,11 @@ class GetObject:
                         object_class = "'%s'" % object_class
                     if parent != "NULL":
                         parent = "'%s'" % parent
-                    insert("INSERT INTO Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
+                    insert("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
                     count += 1
                 return count
             if object_type == "device":
-                for subtype, packed_subvalues in packed_values:
+                for subtype, packed_subvalues in packed_values.items():
                     object_count += unpack_values(packed_subvalues, ga_config("hostname"))
             else:
                 object_count += unpack_values(packed_values)
@@ -1236,7 +1243,7 @@ class GetObject:
         setting_count = 0
         for object_name, packed_values in self.setting_dict.items():
             for setting, data in sorted(packed_values.items()):
-                insert("INSERT INTO Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                insert("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
                 setting_count += 1
         ga_setup_shelloutput_text("%s object settings were added" % setting_count, style="info")
 
@@ -1244,10 +1251,10 @@ class GetObject:
         group_count, member_count = 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
-                insert("INSERT INTO Grp (author,type) VALUES ('setup','%s');" % group_type)
-                sql_gid = insert("SELECT gid FROM Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
+                insert("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
+                sql_gid = insert("SELECT gid FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
                 for member in sorted(group_member_list):
-                    insert("INSERT INTO Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
+                    insert("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
