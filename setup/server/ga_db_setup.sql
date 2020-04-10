@@ -88,7 +88,7 @@ create table IF NOT EXISTS Grouping (
     primary key (id),
     foreign key (member) references Object (name) on update cascade on delete cascade,
     foreign key (gid) references Grp (id) on update cascade on delete cascade,
-    unique key unique_gid_type_member (gid, type, member)
+    unique key unique_gid_member (gid, member)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
