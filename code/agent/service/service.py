@@ -45,7 +45,8 @@ class Service:
         signal(SIGUSR1, self.reload())
         self.input = sys_argv[1]
         self.name_dict = {}
-        self.core_list = ["check", "prestart"]
+        self.core_list = GetConfig(table="object", filter="type = 'core'")
+        self.start()
 
     def get_timer_dict(self):
         name_dict = {}

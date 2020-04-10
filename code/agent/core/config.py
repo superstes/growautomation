@@ -109,7 +109,11 @@ class GetConfig(object):
                 insert = "belonging"
             command[3], custom = "%s %s = '%s'" % (prefix, insert, self.belonging), True
         if self.filter is not None:
-            command.append("AND %s" % self.filter)
+            if self.setting is not None or self.belonging is not None:
+                prefix = "AND "
+            else:
+                prefix = ""
+            command.append("%s%s" % (prefix, self.filter))
             custom = True
         if custom is True:
             return self.parse_sql(' '.join(command) + ";")
