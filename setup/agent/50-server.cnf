@@ -77,14 +77,12 @@ relay-log              = /var/log/mysql/mysql-relay-bin.log
 max_binlog_size        = 100M
 #binlog_do_db           = include_database_name
 #binlog_ignore_db       = exclude_database_name
-replicate-do-table     = ga.AgentConfigActionLinks
-replicate-do-table     = ga.AgentConfigActionSectors
-replicate-do-table     = ga.AgentConfigActionTypes
-replicate-do-table     = ga.AgentConfigActions
-replicate-do-table     = ga.AgentConfigDownlinkTypes
-replicate-do-table     = ga.AgentConfigDownlinks
-replicate-do-table     = ga.AgentConfigMain
-replicate-do-table     = ga.AgentConfigSensors
+replicate-do-table     = ga.Category
+replicate-do-table     = ga.ObjectReference
+replicate-do-table     = ga.Object
+replicate-do-table     = ga.Setting
+replicate-do-table     = ga.Grp
+replicate-do-table     = ga.Grouping
 
 #
 # * Security Features
