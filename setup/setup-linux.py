@@ -46,8 +46,11 @@ ga_config["setup_log_path"] = "/var/log/growautomation/"
 ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
 ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 
-if sys_argv[1] == "debug":
-    debug = True
+try:
+    if sys_argv[1] == "debug":
+        debug = True
+except IndexError:
+    debut = False
 
 ########################################################################################################################
 
