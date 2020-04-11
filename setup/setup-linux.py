@@ -1111,6 +1111,7 @@ def ga_setup_infra_code():
     ga_replaceline(service_path, "ExecStart=", "ExecStart=\/usr\/bin\/python3 %s" % service_path.replace("/", "\/"))
     os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
     os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
+    os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
     ga_setup_shelloutput_text("Linked and enabled growautomation service", style="info")
 
 ga_setup_infra()
@@ -1323,8 +1324,11 @@ class GetObject:
         setting_count = 0
         for object_name, packed_values in self.setting_dict.items():
             for setting, data in sorted(packed_values.items()):
-                sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
-                setting_count += 1
+                if data == "":
+                    pass
+                else:
+                    sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                    setting_count += 1
         ga_setup_shelloutput_text("%s object settings were added" % setting_count, style="info")
 
         ga_setup_shelloutput_text("Writing group configuration")
@@ -1333,7 +1337,7 @@ class GetObject:
             for group_id, group_member_list in packed_values.items():
                 sql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
                 sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
-                sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;", query=True)
+                sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type, query=True)
                 for member in sorted(group_member_list):
                     sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                     member_count += 1
