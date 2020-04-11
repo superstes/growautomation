@@ -56,10 +56,13 @@ except IndexError:
 
 
 # shell output
-def ga_setup_shelloutput_header(output, symbol):
+def ga_setup_shelloutput_header(output, symbol, line=False):
     shellhight, shellwidth = os_popen('stty size', 'r').read().split()
-    print("\n%s\n%s\n%s\n" % (symbol * (int(shellwidth) - 1), output, symbol * (int(shellwidth) - 1)))
-    ga_setup_log_write("\n%s\n%s\n%s\n" % (symbol * 36, output, symbol * 36))
+    if line:
+        print(symbol * (int(shellwidth) - 1))
+    else:
+        print("\n%s\n%s\n%s\n" % (symbol * (int(shellwidth) - 1), output, symbol * (int(shellwidth) - 1)))
+        ga_setup_log_write("\n%s\n%s\n%s\n" % (symbol * 36, output, symbol * 36))
 
 
 def ga_setup_shelloutput_colors(style):
@@ -77,7 +80,7 @@ def ga_setup_shelloutput_colors(style):
 
 def ga_setup_shelloutput_text(output, style="", point=True):
     styletype = ga_setup_shelloutput_colors(style)
-    if point is True:
+    if point:
         print(styletype + "%s.\n" % output + colorama_fore.RESET)
     else:
         print(styletype + "%s\n" % output + colorama_fore.RESET)
@@ -184,11 +187,10 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
                 usrinput = int(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
             return usrinput
         elif intype == "free":
-            if poss != "":
-                usrinput = ga_setup_input_posscheck()
-
             while True:
-                if default == "":
+                if poss != "":
+                    usrinput = ga_setup_input_posscheck()
+                elif default == "":
                     usrinput = input(styletype + "\n%s\n > " % prompt + colorama_fore.RESET).lower() or default
                 else:
                     usrinput = input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default
@@ -1143,7 +1145,7 @@ class GetObject:
 
     def add_core(self):
         ga_setup_shelloutput_header("Basic device setup", "#")
-        ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
+        ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
         core_object_dict = {}
         core_object_dict["check"] = "NULL"
         core_object_dict["backup"] = "NULL"
@@ -1157,6 +1159,7 @@ class GetObject:
                                           "Info: must be created for every sensor/action hardware model; they provide per model configuration", True)
         while_count = 0
         while while_devicetype:
+            ga_setup_shelloutput_header("", symbol="-", line=True)
             while_count += 1
             setting_dict = {}
             name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
@@ -1165,13 +1168,21 @@ class GetObject:
                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
                                                       default="AirHumidity.py", intype="free", max_value=50)
             setting_dict["function_arg"] = ga_setup_input("Provide system arguments to pass to you function -> if you need it.\n"
-                                                          "Info: pe. if one function can provide data to multiple devicetypes", intype="free", max_value=75)
-            setting_dict["timer"] = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
+                                                          "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
             if dt_object_dict[name] == "action":
-                setting_dict["boomerang"] = ga_setup_input("Will this function reverse itself?\np.e. window opener that needs to open/close", False)
-            else:
+                setting_dict["boomerang"] = ga_setup_input("Will this type need to reverse itself?\np.e. window opener that needs to open/close", False)
+                if setting_dict["boomerang"]:
+                    setting_dict["boomerang_type"] = ga_setup_input("How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free")
+                    if setting_dict["boomerang_type"] == "time":
+                        setting_dict["boomerang_time"] = ga_setup_input("Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10)
+            elif dt_object_dict[name] == "sensor":
+                setting_dict["timer"] = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
                 setting_dict["unit"] = ga_setup_input("Provide the unit for the sensor input.", "°C", intype="free")
-                setting_dict["threshold"] = ga_setup_input("Provide a threshold value for the sensor.\nInfo: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
+                setting_dict["threshold_max"] = ga_setup_input("Provide a maximum threshold value for the sensor.\n"
+                                                               "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
+                setting_dict["threshold_optimal"] = ga_setup_input("Provide a optimal threshold value for the sensor.\n"
+                                                                   "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
+
                 setting_dict["time_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
             self.setting_dict[name] = setting_dict
             while_devicetype = ga_setup_input("Want to add another devicetype?", True)
@@ -1188,6 +1199,7 @@ class GetObject:
             create = ga_setup_input("Do you want to add a %s\nInfo: %s" % (to_ask, info), True)
             create_dict = {}
             while create:
+                ga_setup_shelloutput_header("", symbol="-", line=True)
                 setting_dict = {}
                 name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="ah01", intype="free")
                 create_dict[name] = ga_setup_input("Provide its devicetype.", default="AirHumidity", intype="free")
@@ -1216,6 +1228,7 @@ class GetObject:
             create_count, create_dict = 0, {}
             create = ga_setup_input("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True)
             while create:
+                ga_setup_shelloutput_header("", symbol="-", line=True)
                 member_list = []
                 member_count, add_member = 0, True
                 while add_member:
