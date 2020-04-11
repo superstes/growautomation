@@ -1164,7 +1164,7 @@ class GetObject:
             ga_setup_shelloutput_header("", symbol="-", line=True)
             setting_dict = {}
             if while_count > 0:
-                name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % dt_object_dict.keys(), default="AirHumidity", intype="free")
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free")
             else:
                 name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
             dt_object_dict[name] = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
@@ -1194,7 +1194,7 @@ class GetObject:
                 setting_dict["time_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
             self.setting_dict[name] = setting_dict
             while_count += 1
-            while_devicetype = ga_setup_input("Want to add another devicetype?", True)
+            while_devicetype = ga_setup_input("Want to add another devicetype?", True, style="info")
         if while_count > 0:
             self.object_dict["devicetype"] = dt_object_dict
             self.create_device()
@@ -1210,29 +1210,41 @@ class GetObject:
             while create:
                 ga_setup_shelloutput_header("", symbol="-", line=True)
                 setting_dict = {}
-                name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % self.get_nested_dict_list(d_object_dict), default="ah01", intype="free")
-                create_dict[name] = ga_setup_input("Provide its devicetype.", default=self.get_object_list(cat="devicetype")[0], poss=self.get_object_list(cat="devicetype"), intype="free")
+                dt_list = [name for value in d_object_dict.values() if dict(value).keys() == to_ask for name in dict(value).values()]
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free")
+                create_dict[name] = ga_setup_input("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free")
                 if to_ask != "downlink":
-                    if len(self.get_object_list(cat="devicetype", subcat="downlink")) > 0:
+                    dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
+                    if len(dl_list) > 0:
                         setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\n"
                                                                     "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
                     else:
                         setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
                                                                     "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True)
-                if setting_dict["connection"] == "downlink":
-                    setting_dict["downlink"] = ga_setup_input("Provide the name of the downlink to which the device is connected to.\n"
-                                                              "Info: the downlink must also be added as device", poss=self.get_nested_dict_list(d_object_dict, search_key="downlink"), intype="free")
+                    if setting_dict["connection"] == "downlink":
+                        setting_dict["downlink"] = ga_setup_input("Provide the name of the downlink to which the device is connected to.\n"
+                                                                  "Info: the downlink must also be added as device", poss=dl_list, intype="free")
                 setting_dict["port"] = ga_setup_input("Provide the portnumber to which the device is/will be connected.", default=2, intype="free")
                 self.setting_dict[name] = setting_dict
-                create = ga_setup_input("Want to add another %s?" % to_ask, True)
+                create = ga_setup_input("Want to add another %s?" % to_ask, True, style="info")
             d_object_dict[to_ask] = create_dict
 
-        ga_setup_shelloutput_header("Downlinks", "-")
-        to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\nCheck the documentation for more informations: https://docs.growautomation.at")
-        ga_setup_shelloutput_header("Sensors", "-")
-        to_create("sensor", "any kind of device that provides data to growautomation")
-        ga_setup_shelloutput_header("Actions", "-")
-        to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
+        def check_type(name):
+            if len([x for key, value in self.object_dict.items() if key == "devicetype" for x in dict(value).values() if x == name]) > 0:
+                return True
+            else:
+                return False
+
+        if check_type("downlink"):
+            ga_setup_shelloutput_header("Downlinks", "-")
+            to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\n"
+                                  "Check the documentation for more informations: https://docs.growautomation.at")
+        if check_type("sensor"):
+            ga_setup_shelloutput_header("Sensors", "-")
+            to_create("sensor", "any kind of device that provides data to growautomation")
+        if check_type("action"):
+            ga_setup_shelloutput_header("Actions", "-")
+            to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
         self.object_dict["device"] = d_object_dict
         self.create_group()
 
@@ -1250,18 +1262,16 @@ class GetObject:
                     else:
                         info = ""
                     if to_ask == "sector":
-                        posslist = self.get_object_list(subtract=member_list, cat="device")
+                        posslist = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
                     elif to_ask == "link":
-                        posslist = self.get_object_list(subtract=member_list, cat="devicetype")
-
-                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=posslist, default=posslist[0], intype="free"))
-
+                        posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
+                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=list(set(posslist) - set(member_list)), default=posslist[0], intype="free"))
                     member_count += 1
                     if member_count > 1:
-                        add_member = ga_setup_input("Want to add another member?", True)
+                        add_member = ga_setup_input("Want to add another member?", True, style="info")
                 create_dict[create_count] = member_list
                 create_count += 1
-                create = ga_setup_input("Want to add another %s?" % to_ask, True)
+                create = ga_setup_input("Want to add another %s?" % to_ask, True, style="info")
             return create_dict
 
         ga_setup_shelloutput_header("Sectors", "-")
@@ -1281,16 +1291,17 @@ class GetObject:
 
         ga_setup_shelloutput_text("Writing object configuration")
         insert("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config("hostname"))
+        [insert("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % key) for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
                 count = 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
+                        insert("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
                         object_class = "'%s'" % object_class
                     if parent != "NULL":
                         parent = "'%s'" % parent
-                    insert("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
                     insert("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
                     count += 1
                 return count
@@ -1315,7 +1326,7 @@ class GetObject:
             for group_id, group_member_list in packed_values.items():
                 insert("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
                 insert("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
-                sql_gid = insert("SELECT gid FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
+                sql_gid = insert("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
                 for member in sorted(group_member_list):
                     insert("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                     member_count += 1
@@ -1328,7 +1339,7 @@ class GetObject:
                 subcat = True
             if subcat is not None:
                 if subcat:
-                    object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items()]
+                    object_list = [name for key, value in self.object_dict.items() if key == cat for name in dict(value).values()]
                 else:
                     object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items() if subkey == subcat]
             else:
@@ -1339,23 +1350,6 @@ class GetObject:
             return list(set(object_list) - set(subtract))
         else:
             return object_list
-
-    def get_nested_dict_list(self, input_dict, search_key=None, output_nested_key=True):
-        for key, value in input_dict.items():
-            def nested_search(nested_dict):
-                if output_nested_key:
-                    return dict(nested_dict).keys()
-                else:
-                    return dict(nested_dict).values()
-
-            if search_key is not None:
-                if key == search_key:
-                    nested_search(value)
-            else:
-                nested_search(value)
-
-
-
 
 
 GetObject()
@@ -1384,10 +1378,10 @@ def ga_mysql_write_config(thatdict):
             else:
                 value = 0
         if ga_config["setuptype"] == "agent":
-            command = "INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('%s', 'agent', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value)
+            command = "INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value)
             ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
         else:
-            ga_mysql("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('%s', 'server', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value), basic=True)
+            ga_mysql("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value), basic=True)
     ga_setup_shelloutput_text("Wrote %s settings to database table ga.Setting ()" % len(insertdict), style="succ", point=False)
 
 
