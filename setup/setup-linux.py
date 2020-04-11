@@ -114,7 +114,7 @@ def ga_setup_pwd_gen(stringlength):
 
 
 def ga_setup_string_check(string, maxlength=10, minlength=2):
-    char_blacklist = "!%$§?^´`µ{}()°><|\\*ÄÖÜüöä@,"
+    char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,"
     if type(string) != str:
         ga_setup_shelloutput_text("Input error. Expected string, got %s" % type(string), style="warn")
         return False
@@ -184,14 +184,17 @@ def ga_setup_input(prompt, default="", poss="", intype="", style="", posstype="s
                 usrinput = int(input("\n%s\n(Poss: %s - Default: %s)\n > " % (prompt, poss, default)).lower() or "%s" % default)
             return usrinput
         elif intype == "free":
-            if poss == "":
-                while True:
-                    if default == "":
-                        usrinput = input(styletype + "\n%s\n > " % prompt + colorama_fore.RESET).lower() or default
-                    else:
-                        usrinput = input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default
-                    if ga_setup_string_check(usrinput, maxlength=max_value, minlength=min_value):
-                        return usrinput
+            if poss != "":
+                usrinput = ga_setup_input_posscheck()
+
+            while True:
+                if default == "":
+                    usrinput = input(styletype + "\n%s\n > " % prompt + colorama_fore.RESET).lower() or default
+                else:
+                    usrinput = input(styletype + "\n%s\n(Default: %s)\n > " % (prompt, default) + colorama_fore.RESET).lower() or default
+                if ga_setup_string_check(usrinput, maxlength=max_value, minlength=min_value):
+                    return usrinput
+
         elif poss != "":
             return ga_setup_input_posscheck()
         elif default != "":
@@ -843,6 +846,7 @@ def ga_sql_all():
     ga_mysql(["DROP USER 'gabackup'@'localhost';", "CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd,
               "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"], basic=True)
     ga_mysql_conntest("gabackup", ga_sql_backup_pwd, local=True, check_system=True)
+    ga_setup_shelloutput_header("Setting up mysql db", "-")
     ga_setup_shelloutput_text("Set a secure password and answer all other questions with Y/yes", style="info")
     ga_setup_shelloutput_text("Example random password: %s" % ga_setup_pwd_gen(ga_config["setup_pwd_length"]), style="info", point=False)
     ga_setup_shelloutput_text("\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
@@ -1160,6 +1164,8 @@ class GetObject:
             setting_dict["function"] = ga_setup_input("Which function should be started for the devicetype?\n"
                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
                                                       default="AirHumidity.py", intype="free", max_value=50)
+            setting_dict["function_arg"] = ga_setup_input("Provide system arguments to pass to you function -> if you need it.\n"
+                                                          "Info: pe. if one function can provide data to multiple devicetypes", intype="free", max_value=75)
             setting_dict["timer"] = ga_setup_input("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
             if dt_object_dict[name] == "action":
                 setting_dict["boomerang"] = ga_setup_input("Will this function reverse itself?\np.e. window opener that needs to open/close", False)
