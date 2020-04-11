@@ -1210,7 +1210,7 @@ class GetObject:
             while create:
                 ga_setup_shelloutput_header("", symbol="-", line=True)
                 setting_dict = {}
-                dt_list = [name for value in d_object_dict.values() if dict(value).keys() == to_ask for name in dict(value).values()]
+                dt_list = [name for nested in self.object_dict.values() for name, typ in dict(nested).items() if typ == to_ask]
                 name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free")
                 create_dict[name] = ga_setup_input("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free")
                 if to_ask != "downlink":
@@ -1290,7 +1290,7 @@ class GetObject:
                 return ga_mysql(command, basic=True)
 
         ga_setup_shelloutput_text("Writing object configuration")
-        insert("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config("hostname"))
+        insert("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
         [insert("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % key) for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
@@ -1307,7 +1307,7 @@ class GetObject:
                 return count
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values.items():
-                    object_count += unpack_values(packed_subvalues, ga_config("hostname"))
+                    object_count += unpack_values(packed_subvalues, ga_config["hostname"])
             else:
                 object_count += unpack_values(packed_values)
         ga_setup_shelloutput_text("%s objects were added" % object_count, style="info")
@@ -1324,7 +1324,7 @@ class GetObject:
         group_count, member_count = 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
-                insert("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
+                insert("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
                 insert("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
                 sql_gid = insert("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
                 for member in sorted(group_member_list):
@@ -1332,24 +1332,6 @@ class GetObject:
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
-
-    def get_object_list(self, subtract=None, cat=None, subcat=None):
-        if cat is not None:
-            if cat == "device":
-                subcat = True
-            if subcat is not None:
-                if subcat:
-                    object_list = [name for key, value in self.object_dict.items() if key == cat for name in dict(value).values()]
-                else:
-                    object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items() if subkey == subcat]
-            else:
-                object_list = [name for key, value in self.object_dict.items() if key == cat for name in dict(value).keys()]
-        else:
-            object_list = [name for value in self.object_dict.values() for name in dict(value).keys()]
-        if subtract is not None:
-            return list(set(object_list) - set(subtract))
-        else:
-            return object_list
 
 
 GetObject()
