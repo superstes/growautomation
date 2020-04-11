@@ -1152,6 +1152,7 @@ class GetObject:
         self.setting_dict["backup"] = {"timer": 86400, "function": "backup.py"}
         core_object_dict["backup"] = "NULL"
         self.object_dict["core"] = core_object_dict
+        self.object_dict["agent"] = {ga_config["hostname"]: "NULL"}
         self.get_devicetype()
 
     def get_devicetype(self):
@@ -1283,26 +1284,32 @@ class GetObject:
     def write_config(self):
         ga_setup_shelloutput_header("Writing configuration to database", "-")
 
-        def insert(command):
+        def sql(command, query=False):
             if ga_config["setuptype"] == "agent":
-                return ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
+                if query:
+                    return ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], query=True).start()
+                else:
+                    return ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
             else:
-                return ga_mysql(command, basic=True)
+                if query:
+                    return ga_mysql(command, basic=True, query=True).start()
+                else:
+                    return ga_mysql(command, basic=True)
 
         ga_setup_shelloutput_text("Writing object configuration")
-        insert("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
-        [insert("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % key) for key in self.object_dict.keys()]
+        sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
+        [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % key) for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
                 count = 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
-                        insert("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
+                        sql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
                         object_class = "'%s'" % object_class
-                    if parent != "NULL":
+                    if parent != "NULL" and parent.find("'") == -1:
                         parent = "'%s'" % parent
-                    insert("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
+                    sql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
                     count += 1
                 return count
             if object_type == "device":
@@ -1316,7 +1323,7 @@ class GetObject:
         setting_count = 0
         for object_name, packed_values in self.setting_dict.items():
             for setting, data in sorted(packed_values.items()):
-                insert("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
                 setting_count += 1
         ga_setup_shelloutput_text("%s object settings were added" % setting_count, style="info")
 
@@ -1324,11 +1331,11 @@ class GetObject:
         group_count, member_count = 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
-                insert("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
-                insert("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
-                sql_gid = insert("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
+                sql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
+                sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
+                sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;", query=True)
                 for member in sorted(group_member_list):
-                    insert("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
+                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
