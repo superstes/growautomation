@@ -1267,7 +1267,8 @@ class GetObject:
                         posslist = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
                     elif to_ask == "link":
                         posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
-                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=list(set(posslist) - set(member_list)), default=posslist[0], intype="free"))
+                    current_posslist = list(set(posslist) - set(member_list))
+                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free"))
                     member_count += 1
                     if member_count > 1:
                         add_member = ga_setup_input("Want to add another member?", True, style="info")
@@ -1339,7 +1340,7 @@ class GetObject:
                 sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
                 sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type, query=True)
                 for member in sorted(group_member_list):
-                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
+                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (''.join(i for i in sql_gid if i.isdigit()), member))
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
