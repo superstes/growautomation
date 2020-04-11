@@ -136,6 +136,7 @@ class SectorCheck:
 class ThresholdCheck:
     def __init__(self, input_type):
         self.type = input_type
+        self.check_range = None
 
     def __repr__(self):
         if GetConfig(setting=self.type, table="object") == "sensor":
@@ -185,7 +186,9 @@ class ThresholdCheck:
         return sector_list
 
     def get_data(self, device):
-        time_now, time_before = time_subtract(GetConfig(setting="time_check", belonging=self.type), both=True)
+        if self.check_range is None:
+            self.check_range = int(GetConfig(setting="range", belonging="check"))
+        time_now, time_before = time_subtract(int(GetConfig(setting="timer", belonging=self.type)) * self.check_range, both=True)
         return GetConfig(table="data", belonging=device, filter="changed => '%s' AND changed <= '%s' AND device = '%s'" % (time_now, time_before, device))
 
     def get_average_data(self, device):
