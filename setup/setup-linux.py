@@ -1162,13 +1162,15 @@ class GetObject:
         while_count = 0
         while while_devicetype:
             ga_setup_shelloutput_header("", symbol="-", line=True)
-            while_count += 1
             setting_dict = {}
-            name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % self.get_object_list(cat="devicetype"), default="AirHumidity", intype="free")
+            if while_count > 0:
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % dt_object_dict.keys(), default="AirHumidity", intype="free")
+            else:
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
             dt_object_dict[name] = ga_setup_input("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
             setting_dict["function"] = ga_setup_input("Which function should be started for the devicetype?\n"
                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
-                                                      default="AirHumidity.py", intype="free", max_value=50)
+                                                      default="%s.py" % name, intype="free", max_value=50)
             setting_dict["function_arg"] = ga_setup_input("Provide system arguments to pass to you function -> if you need it.\n"
                                                           "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
             if dt_object_dict[name] == "action":
@@ -1191,6 +1193,7 @@ class GetObject:
 
                 setting_dict["time_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
             self.setting_dict[name] = setting_dict
+            while_count += 1
             while_devicetype = ga_setup_input("Want to add another devicetype?", True)
         if while_count > 0:
             self.object_dict["devicetype"] = dt_object_dict
@@ -1207,8 +1210,8 @@ class GetObject:
             while create:
                 ga_setup_shelloutput_header("", symbol="-", line=True)
                 setting_dict = {}
-                name = ga_setup_input("Provide a unique name - at max 20 characters long.", default="ah01", intype="free")
-                create_dict[name] = ga_setup_input("Provide its devicetype.", default="AirHumidity", poss=self.get_object_list(cat="devicetype"), intype="free")
+                name = ga_setup_input("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % self.get_nested_dict_list(d_object_dict), default="ah01", intype="free")
+                create_dict[name] = ga_setup_input("Provide its devicetype.", default=self.get_object_list(cat="devicetype")[0], poss=self.get_object_list(cat="devicetype"), intype="free")
                 if to_ask != "downlink":
                     if len(self.get_object_list(cat="devicetype", subcat="downlink")) > 0:
                         setting_dict["connection"] = ga_setup_input("How is the device connected to the growautomation agent?\n"
@@ -1218,7 +1221,7 @@ class GetObject:
                                                                     "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True)
                 if setting_dict["connection"] == "downlink":
                     setting_dict["downlink"] = ga_setup_input("Provide the name of the downlink to which the device is connected to.\n"
-                                                              "Info: the downlink must also be added as device", poss=self.get_object_list(cat="devicetype", subcat="downlink"), intype="free")
+                                                              "Info: the downlink must also be added as device", poss=self.get_nested_dict_list(d_object_dict, search_key="downlink"), intype="free")
                 setting_dict["port"] = ga_setup_input("Provide the portnumber to which the device is/will be connected.", default=2, intype="free")
                 self.setting_dict[name] = setting_dict
                 create = ga_setup_input("Want to add another %s?" % to_ask, True)
@@ -1246,7 +1249,13 @@ class GetObject:
                         info = "\nInfo: %s" % info_member
                     else:
                         info = ""
-                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=self.get_object_list(subtract=member_list), intype="free"))
+                    if to_ask == "sector":
+                        posslist = self.get_object_list(subtract=member_list, cat="device")
+                    elif to_ask == "link":
+                        posslist = self.get_object_list(subtract=member_list, cat="devicetype")
+
+                    member_list.append(ga_setup_input("Provide a name for member %s%s." % (member_count + 1, info), poss=posslist, default=posslist[0], intype="free"))
+
                     member_count += 1
                     if member_count > 1:
                         add_member = ga_setup_input("Want to add another member?", True)
@@ -1256,7 +1265,7 @@ class GetObject:
             return create_dict
 
         ga_setup_shelloutput_header("Sectors", "-")
-        self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device or devicetype")
+        self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
         ga_setup_shelloutput_header("Devicetype links", "-")
         self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
         self.write_config()
@@ -1313,10 +1322,15 @@ class GetObject:
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
 
-    def get_object_list(self, subtract=None, cat=None, subcat=None, value=False):
+    def get_object_list(self, subtract=None, cat=None, subcat=None):
         if cat is not None:
+            if cat == "device":
+                subcat = True
             if subcat is not None:
-                object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items() if subkey == subcat]
+                if subcat:
+                    object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items()]
+                else:
+                    object_list = [name for key, value in self.object_dict.items() if key == cat for subkey, name in dict(value).items() if subkey == subcat]
             else:
                 object_list = [name for key, value in self.object_dict.items() if key == cat for name in dict(value).keys()]
         else:
@@ -1325,6 +1339,23 @@ class GetObject:
             return list(set(object_list) - set(subtract))
         else:
             return object_list
+
+    def get_nested_dict_list(self, input_dict, search_key=None, output_nested_key=True):
+        for key, value in input_dict.items():
+            def nested_search(nested_dict):
+                if output_nested_key:
+                    return dict(nested_dict).keys()
+                else:
+                    return dict(nested_dict).values()
+
+            if search_key is not None:
+                if key == search_key:
+                    nested_search(value)
+            else:
+                nested_search(value)
+
+
+
 
 
 GetObject()
