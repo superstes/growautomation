@@ -27,6 +27,8 @@ from subprocess import PIPE as subprocess_pipe
 from functools import lru_cache
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
+from inspect import getframeinfo as inspect_getframeinfo
+from time import sleep as time_sleep
 
 from ga.core.smallant import LogWrite
 from ga.core.config_parser_file import GetConfig
@@ -44,6 +46,7 @@ class DoSql:
         self.prequesites()
 
     def connect(self, command=None):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         import mysql.connector
         if GetConfig("setuptype") == "agent":
             if self.fallback is True: connection = mysql.connector.connect(user="%s" % GetConfig("sql_local_user"), passwd="%s" % GetConfig("sql_local_pwd"))
@@ -51,10 +54,11 @@ class DoSql:
                                                        user="%s" % GetConfig("sql_agent_user"), passwd="%s" % GetConfig("sql_agent_pwd"))
         else: connection = mysql.connector.connect(user="%s" % GetConfig("sql_admin_user"), passwd="%s" % GetConfig("sql_admin_pwd"))
         try:
+            if self.debug: print("connection:", type(connection), connection)
             cursor = connection.cursor(buffered=True)
             if command is None:
                 command = self.command
-            if self.debug: print("Input:", type(command), command)
+            if self.debug: print("command:", type(command), command)
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
@@ -67,17 +71,18 @@ class DoSql:
                 data = True
             cursor.close()
             connection.close()
-            if self.debug: print("Output:", type(data), data)
+            if self.debug: print("output:", type(data), data)
             return data
         except mysql.connector.Error as error:
+            if self.debug: print("mysql error:", error)
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", GetConfig("mysql_localuser")))
             else: LogWrite("Server: %s, port %s, user %s" % (GetConfig("mysql.server_ip"), GetConfig("mysql.server_port"), GetConfig("mysql_user")))
-            print(error)
             return False
 
     def prequesites(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         creds_ok = False
         if GetConfig("setuptype") != "agent":
             def running():
@@ -88,17 +93,20 @@ class DoSql:
             whilecount = 0
             while True:
                 if running() is False:
+                    if self.debug: print("mysql not running")
                     if whilecount == 0:
                         LogWrite("Trying to start mysql service.")
                         os_system("systemctl start mysql.service %s")
                     else:
-                        LogWrite("Mysql service not running.")
-                        raise SystemExit("Mysql service not active.")
+                        LogWrite("Not able to start mysql service.")
+                        raise SystemExit("Not able to start mysql service.")
                 else: break
+                time_sleep(5)
                 whilecount += 1
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and GetConfig("setuptype") == "agent":
+                if self.debug: print("mysql not running")
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -115,13 +123,16 @@ class DoSql:
                     self.connect("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('owl', 'agent', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
                     self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"))
                     data = True
-                return True if type(data) == list else data if type(data) == bool else False
+                result = True if type(data) == list else data if type(data) == bool else False
+                if self.debug: print("conntest:", type(result), result)
+                return result
 
             creds_ok = conntest()
             whilecount += 1
         return self.execute()
 
     def execute(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype(), "command:", type(self.command), self.command)
         if type(self.command) == str:
             return self.connect()
         elif type(self.command) == list:
@@ -134,6 +145,7 @@ class DoSql:
             return False if anyfalse is False else outputdict
 
     def find(self, searchfor):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype(), "\nsearch for:", type(searchfor), searchfor)
         if type(self.command) == str:
             data = str(self.execute())
             output = data.find(searchfor)
@@ -141,4 +153,5 @@ class DoSql:
             sqllist = self.execute()
             output = []
             for x in sqllist: output.append(x.find(searchfor))
+        if self.debug: print("output:", type(output), output)
         return output

@@ -33,6 +33,7 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
+from inspect import getframeinfo as inspect_getframeinfo
 
 Threader = Loop()
 
@@ -40,39 +41,40 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class Service:
-    def __init__(self):
+    def __init__(self, debug=False):
         signal(SIGTERM, self.stop())
         signal(SIGUSR1, self.reload())
         self.input = sys_argv[1]
         self.name_dict = {}
-        self.core_list = GetConfig(table="object", filter="type = 'core'")
-        self.debug = False
-        try:
-            if sys_argv[1] == "debug": self.debug = True
-        except IndexError: pass
+        self.core_list = self.get_config(table="object", filter="type = 'core'")
+        self.debug = debug
         self.start()
 
     def get_timer_dict(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         name_dict = {}
-        path_root = GetConfig("path_root")
-        for row in GetConfig(setting="timer", output="belonging,data"):
-            if row[0] in self.core_list or GetConfig(setting="enabled", belonging=row[0]) == "1":
-                if GetConfig(output="type", table="object", setting=row[0]) is not "device": function = GetConfig(setting="function", belonging=row[0])
+        path_root = self.get_config(setting="path_root")
+        for row in self.get_config(setting="timer", output="belonging,data"):
+            if row[0] in self.core_list or self.get_config(setting="enabled", belonging=row[0]) == "1":
+                if self.get_config(output="type", table="object", setting=row[0]) is not "device": function = self.get_config(setting="function", belonging=row[0])
                 else:
-                    devicetype = GetConfig(output="class", table="object", setting=row[0])
-                    if GetConfig(setting="enabled", belonging=devicetype) == "1":
-                        function = GetConfig(setting="function", belonging=devicetype)
+                    devicetype = self.get_config(output="class", table="object", setting=row[0])
+                    if self.get_config(setting="enabled", belonging=devicetype) == "1":
+                        function = self.get_config(setting="function", belonging=devicetype)
                     else: pass
                 if row[0] in self.core_list: path_function = "%s/core/%s" % (path_root, function)
                 else: path_function = "%s/sensor/%s" % (path_root, function)
                 name_dict[row[0]] = [row[1], path_function]
             else: pass
+            if self.debug: print(type(name_dict), name_dict)
         return name_dict
 
     def start(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
+            if self.debug: print("function:", type(function), function, "interval:", type(interval), interval)
 
             @Threader.thread(interval, thread_name)
             def thread_function():
@@ -85,6 +87,7 @@ class Service:
         self.run()
 
     def reload(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         name_dict_overwrite = {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
             if thread_name_reload in self.name_dict.keys():
@@ -96,11 +99,13 @@ class Service:
                             name_dict_overwrite[thread_name_reload] = [interval_reload, function_reload]
                             Threader.reload_thread(interval_reload, thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
+        if self.debug: print("overwrite:", type(name_dict_overwrite), name_dict_overwrite)
         self.name_dict = name_dict_overwrite
         self.status()
         self.run()
 
     def stop(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
@@ -108,16 +113,29 @@ class Service:
         raise SystemExit
 
     def status(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         systemd_notify(systemd_notification.STATUS, "Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
+        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         try:
             while_count = 0
             while True:
-                if while_count == 288: self.reload()
+                if self.debug: print("run loop count:", while_count)
+                if while_count == 287: self.reload()
                 sleep(300)
                 self.status()
                 while_count += 1
         except Exception as error:
+            if self.debug: print("runtime exception:", error)
             LogWrite("Stopping service because of runtime error:\n%s" % error)
             self.stop()
+
+    def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
+        return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug)
+
+
+try:
+    Service(debug=True) if sys_argv[1] == "debug" else Service()
+except IndexError:
+    Service()
