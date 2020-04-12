@@ -22,7 +22,7 @@
 
 from ga.core.config import GetConfig
 from ga.core.ant import LogWrite
-
+from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
 
 from systemd.daemon import notify as systemd_notify
@@ -46,7 +46,7 @@ class Service:
         self.debug = debug
         self.custom_args = custom_args
         self.name_dict = {}
-        self.init_exit = False
+        self.init_exit, self.init_exit_count = False, 0
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
@@ -118,7 +118,10 @@ class Service:
         self.exit()
 
     def exit(self):
-        print("Growautomation Service: Tschau!")
+        if self.init_exit_count == 0:
+            ShellOutput(font="line", symbol="#")
+            print("\n\nGrowautomation Service: Tschau!\n")
+            ShellOutput(font="line", symbol="#")
         raise SystemExit
 
     def status(self):
