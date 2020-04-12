@@ -25,14 +25,14 @@ class Job(Thread):
         self.debug = debug
 
     def stop(self):
-        if self.debug: print("threader - thread stopping", self.name, "|function", self.execute.__name__)
+        if self.debug: print("threader - thread stopping", self.name)
         self.state_stop.set()
         self.join()
-        LogWrite("Thread of function  '%s' stopped" % self.execute.__name__, level=3)
+        LogWrite("Stopped thread" % self.name, level=3)
 
     def run(self):
-        LogWrite("Thread of function  '%s' started for '%s'" % (self.execute.__name__, self.name), level=4)
-        if self.debug: print("threader - thread starting", self.name, "|function", self.execute.__name__)
+        LogWrite("Starting thread '%s'" % self.name, level=4)
+        if self.debug: print("threader - thread starting", self.name)
         if self.run_once:
             self.execute()
             Loop.stop_thread(self.name)
@@ -40,8 +40,8 @@ class Job(Thread):
             while not self.state_stop.wait(self.interval.total_seconds()):
                 self.execute()
                 if self.state_stop.isSet():
-                    if self.debug: print("threader - thread exiting", self.name, "|function", self.execute.__name__)
-                    LogWrite("Exiting thread of function '%s'" % self.execute.__name__, level=4)
+                    if self.debug: print("threader - thread exiting", self.name)
+                    LogWrite("Exiting thread '%s'" % self.name, level=4)
                     break
 
 
