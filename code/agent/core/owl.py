@@ -121,8 +121,7 @@ class DoSql:
                 @lru_cache()
                 def readcache(doit):
                     cursor.execute(doit)
-                    output = cursor.fetchall()
-                    return False if cursor.rowcount < 0 else output
+                    return False if cursor.rowcount < 0 else cursor.fetchone() if cursor.rowcount == 1 else cursor.fetchall()
                 data = readcache(command)
             else:
                 cursor.execute(command)

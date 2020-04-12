@@ -58,7 +58,7 @@ class Service:
                 if self.get_config(output="type", table="object", setting=row[0]) is not "device": function = self.get_config(setting="function", belonging=row[0])
                 else:
                     devicetype = self.get_config(output="class", table="object", setting=row[0])
-                    if self.get_config(setting="enabled", belonging=devicetype) == "1":
+                    if self.get_config(setting="enabled", belonging=devicetype).find("1") != -1:
                         function = self.get_config(setting="function", belonging=devicetype)
                     else: pass
                 if row[0] in self.core_list: path_function = "%s/core/%s" % (path_root, function)
@@ -132,7 +132,7 @@ class Service:
             self.stop()
 
     def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
-        return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug)
+        return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug).start()
 
 
 try:

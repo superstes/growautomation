@@ -49,7 +49,7 @@ class GetConfig(object):
                                "sql_server_port", "sql_sock"]
         output = parse_file() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
             else self.error("all")
-        return self.error("sql") if output is False else str(output)
+        return self.error("sql") if output is False else output
 
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
