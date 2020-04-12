@@ -119,6 +119,7 @@ class Service:
 
     def exit(self):
         if self.init_exit_count == 0:
+            self.init_exit_count += 1
             ShellOutput(font="line", symbol="#")
             print("\n\nGrowautomation Service: Tschau!\n")
             ShellOutput(font="line", symbol="#")
