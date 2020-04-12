@@ -36,6 +36,7 @@ from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
+from re import sub as re_sub
 
 # basic vars
 ga_config = {}
@@ -537,7 +538,7 @@ def ga_config_var_base():
         if ga_config["setuptype"] is False:
             ga_setup_shelloutput_text("Growautomation setuptype not found in old versionfile.\n\n"
                                       "WARNING!\nTo keep your old configuration the setuptype must be the same as before", style="warn")
-            ga_config["setuptype"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", "agent/standalone/server")
+            ga_config["setuptype"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", ["agent", "standalone", "server"])
             if ga_config["setup_old_backup"] is False:
                 ga_setup_shelloutput_text("Turning on migration backup option - just in case", style="info")
                 ga_config["setup_old_backup"] = True
@@ -1108,6 +1109,7 @@ def ga_setup_infra_code():
     ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
     service_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"]
+    os_system("mv /etc/systemd/system/growautomation.service /tmp")
     ga_replaceline(service_path, "ExecStart=", "ExecStart=\/usr\/bin\/python3 %s" % service_path.replace("/", "\/"))
     os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
     os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
@@ -1340,7 +1342,7 @@ class GetObject:
                 sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
                 sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type, query=True)
                 for member in sorted(group_member_list):
-                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (''.join(i for i in sql_gid if i.isdigit()), member))
+                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (re_sub("[^0-9]", "", sql_gid[0]), member))
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
@@ -1376,7 +1378,7 @@ def ga_mysql_write_config(thatdict):
             ga_mysql(command, ga_config["sql_agent_user"], ga_config["sql_agent_pwd"])
         else:
             ga_mysql("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value), basic=True)
-    ga_setup_shelloutput_text("Wrote %s settings to database table ga.Setting ()" % len(insertdict), style="succ", point=False)
+    ga_setup_shelloutput_text("Wrote %s setup settings to database" % len(insertdict), style="succ", point=False)
 
 
 ga_setup_shelloutput_header("Writing configuration to database", "#")
