@@ -15,21 +15,24 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class Job(Thread):
-    def __init__(self, interval, execute, name, run_once=False):
+    def __init__(self, interval, execute, name, run_once=False, debug=False):
         Thread.__init__(self)
         self.state_stop = Event()
         self.interval = interval
         self.execute = execute
         self.name = name
         self.run_once = run_once
+        self.debug = debug
 
     def stop(self):
+        if self.debug: print("threader - thread stopping", self.name, "|function", self.execute.__name__)
         self.state_stop.set()
         self.join()
         LogWrite("Thread of function  '%s' stopped" % self.execute.__name__, level=3)
 
     def run(self):
         LogWrite("Thread of function  '%s' started for '%s'" % (self.execute.__name__, self.name), level=4)
+        if self.debug: print("threader - thread starting", self.name, "|function", self.execute.__name__)
         if self.run_once:
             self.execute()
             Loop.stop_thread(self.name)
@@ -37,6 +40,7 @@ class Job(Thread):
             while not self.state_stop.wait(self.interval.total_seconds()):
                 self.execute()
                 if self.state_stop.isSet():
+                    if self.debug: print("threader - thread exiting", self.name, "|function", self.execute.__name__)
                     LogWrite("Exiting thread of function '%s'" % self.execute.__name__, level=4)
                     break
 
@@ -44,31 +48,37 @@ class Job(Thread):
 class Loop:
     def __init__(self):
         self.jobs = []
+        self.debug = False
 
     def start(self, daemon=True, single_thread=None):
-        if daemon is False: LogWrite("Starting threads in foreground", level=3)
-        else:
-            LogWrite("Starting threads in background", level=3)
-            for job in self.jobs:
-                if single_thread is not None:
-                    if job.name == single_thread:
-                        job.daemon = daemon
-                        job.start()
-                else:
+        LogWrite("Starting threads in background", level=3)
+        for job in self.jobs:
+            if single_thread is not None:
+                if self.debug: print("threader - starting thread", type(single_thread), single_thread)
+                if job.name == single_thread:
                     job.daemon = daemon
                     job.start()
+            else:
+                if self.debug: print("threader - starting threads")
+                job.daemon = daemon
+                job.start()
         if not daemon: self.block_root_process()
 
-    def thread(self, sleep_time, thread_name):
+    def thread(self, sleep_time: int, thread_name, debug=False):
+        self.debug = debug
+        if self.debug: print("threader - adding job", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
+
         def decorator(function):
             if sleep_time == 0:
                 sleep_time_new = 600
-                self.jobs.append(Job(timedelta(seconds=sleep_time_new), function, thread_name, run_once=True))
-            else: self.jobs.append(Job(timedelta(seconds=sleep_time), function, thread_name))
+                self.jobs.append(Job(timedelta(seconds=sleep_time_new), function, thread_name, run_once=True, debug=self.debug))
+            else: self.jobs.append(Job(timedelta(seconds=sleep_time), function, thread_name, debug=self.debug))
             return function
         return decorator
 
     def block_root_process(self):
+        if self.debug: print("threader - running in foreground")
+        LogWrite("Starting threads in foreground", level=3)
         while True:
             try:
                 time_sleep(1)
@@ -77,10 +87,12 @@ class Loop:
                 raise SystemExit
 
     def stop(self):
+        if self.debug: print("threader - stopping jobs")
         for job in self.jobs: job.stop()
         LogWrite("All threads stopped. Exiting loop", level=2)
 
     def stop_thread(self, thread_name):
+        if self.debug: print("threader - stopping thread", type(thread_name), thread_name)
         to_process_list = self.jobs
         for job in to_process_list:
             if job.name == thread_name:
@@ -88,12 +100,14 @@ class Loop:
                 self.jobs.remove(job)
                 LogWrite("Thread %s stopped." % job.name, level=2)
 
-    def reload_thread(self, sleep_time, thread_name):
+    def reload_thread(self, sleep_time: int, thread_name):
+        if self.debug: print("threader - reloading thread", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
         self.stop_thread(thread_name)
         self.thread(sleep_time, thread_name)
         self.start(single_thread=thread_name)
 
     def list(self):
+        if self.debug: print("threader - listing threads")
         job_name_list = []
         for job in self.jobs: job_name_list.append(job.name)
         return job_name_list
