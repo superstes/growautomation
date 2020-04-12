@@ -54,7 +54,7 @@ class DoSql:
             whilecount = 0
             while True:
                 if running() is False:
-                    if self.debug: print("prequesits mysql not running")
+                    if self.debug: print("owl - prequesits mysql not running")
                     if whilecount == 0:
                         LogWrite("Trying to start mysql service.")
                         os_system("systemctl start mysql.service %s")
@@ -67,7 +67,7 @@ class DoSql:
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and GetConfig("setuptype") == "agent":
-                if self.debug: print("prequesits failing over to local db")
+                if self.debug: print("owl - prequesits failing over to local db")
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -79,13 +79,13 @@ class DoSql:
                 raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
 
             def conntest():
-                if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;")
+                if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
                 else:
-                    self.connect("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('owl', 'agent', '%s', 'conntest', 'ok');" % GetConfig("hostname"))
-                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"))
+                    self.connect("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('owl', 'agent', '%s', 'conntest', 'ok');" % GetConfig("hostname"), connect_debug=False)
+                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
-                if self.debug: print("prequesits conntest:", type(result), result)
+                if self.debug: print("owl - prequesits conntest:", type(result), result)
                 return result
 
             creds_ok = conntest()
@@ -93,7 +93,7 @@ class DoSql:
         return self.execute()
 
     def execute(self):
-        if self.debug: print("execute command:", type(self.command), self.command)
+        if self.debug: print("owl - execute command:", type(self.command), self.command)
         if type(self.command) == str:
             return self.connect()
         elif type(self.command) == list:
@@ -105,7 +105,7 @@ class DoSql:
                 forcount += 1
             return False if not anyfalse else outputdict
 
-    def connect(self, command=None):
+    def connect(self, command=None, connect_debug=True):
         import mysql.connector
         if GetConfig("setuptype") == "agent":
             if self.fallback is True: connection = mysql.connector.connect(user="%s" % GetConfig("sql_local_user"), passwd="%s" % GetConfig("sql_local_pwd"))
@@ -116,7 +116,7 @@ class DoSql:
             cursor = connection.cursor(buffered=True)
             if command is None:
                 command = self.command
-            if self.debug: print("connect command:", type(command), command)
+            if self.debug and connect_debug: print("owl - connect command:", type(command), command)
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
@@ -129,10 +129,10 @@ class DoSql:
                 data = True
             cursor.close()
             connection.close()
-            if self.debug: print("connect output:", type(data), data)
+            if self.debug and connect_debug: print("owl - connect output:", type(data), data)
             return data
         except mysql.connector.Error as error:
-            if self.debug: print("connect error:", error)
+            if self.debug and connect_debug: print("owl - connect error:", error)
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", GetConfig("mysql_localuser")))
@@ -140,7 +140,7 @@ class DoSql:
             return False
 
     def find(self, searchfor):
-        if self.debug: print("find input:", type(searchfor), searchfor)
+        if self.debug: print("owl - find input:", type(searchfor), searchfor)
         if type(self.command) == str:
             data = str(self.execute())
             output = data.find(searchfor)
@@ -148,5 +148,5 @@ class DoSql:
             sqllist = self.execute()
             output = []
             for x in sqllist: output.append(x.find(searchfor))
-        if self.debug: print("find output:", type(output), output)
+        if self.debug: print("owl - find output:", type(output), output)
         return output

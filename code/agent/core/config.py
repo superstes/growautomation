@@ -41,7 +41,9 @@ class GetConfig(object):
         self.table = table
         self.debug = debug
 
-    def __repr__(self):
+    def start(self):
+        if self.debug: print("config - input |setting:", type(self.setting), self.setting, "|nosql:", type(self.nosql), self.nosql, "|output:", type(self.output), self.output,
+                             "|belonging:", type(self.belonging), self.belonging, "|filter:", type(self.filter), self.filter, "|table:", type(self.table), self.table)
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
@@ -87,12 +89,13 @@ class GetConfig(object):
                 if self.table == "group": insert = "member"
                 elif self.table == "data": insert = "agent"
             else: insert = "belonging"
-            command[3], custom = "%s %s = '%s'" % (prefix, insert, self.belonging), True
+            command.append("%s %s = '%s'" % (prefix, insert, self.belonging))
+            custom = True
         if self.filter is not None:
             prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
-        if self.debug: print("parse_sql_custom command:", type(custom), custom, "command:", type(command), command)
+        if self.debug: print("config - parse_sql_custom command:", type(custom), custom, "command:", type(command), command)
         return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
     @lru_cache()
@@ -104,11 +107,11 @@ class GetConfig(object):
         if self.setting in config_dict.keys():
             for key, value in config_dict.items():
                 if key.find(self.setting) != -1:
-                    if self.debug: print(type(key), key, type(value), value)
+                    if self.debug: print("config - hardcoded:", type(key), key, type(value), value)
                     return value
             return False
         else:
-            if self.debug: print("parse_hardcoded setting not found")
+            if self.debug: print("config - hardcoded setting not found")
             return False
 
     def parse_failover(self):
@@ -120,12 +123,12 @@ class GetConfig(object):
                     self.error("all")
                 else:
                     output = self.parse_hardcoded()
-                    if self.debug: print("parse_failover output:", type(output), output)
+                    if self.debug: print("config - failover output:", type(output), output)
                     return output
             else:
-                if self.debug: print("parse_failover output:", type(parse_file_output), parse_file_output)
+                if self.debug: print("config - failover output:", type(parse_file_output), parse_file_output)
                 return parse_file_output
         else:
             output = self.parse_sql()
-            if self.debug: print("parse_failover output:", type(output), output)
+            if self.debug: print("config - failover output:", type(output), output)
             return output

@@ -65,14 +65,15 @@ class Service:
                 else: path_function = "%s/sensor/%s" % (path_root, function)
                 name_dict[row[0]] = [row[1], path_function]
             else: pass
-            if self.debug: print(type(name_dict), name_dict)
+            if self.debug: print("service - timer dict:", type(name_dict), name_dict)
         return name_dict
 
     def start(self):
+        if self.debug: print("service - starting", "|pid: %s" % os_getpid())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
-            if self.debug: print("start function:", type(function), function, "interval:", type(interval), interval)
+            if self.debug: print("service - start |function:", type(function), function, "|interval:", type(interval), interval)
 
             @Threader.thread(interval, thread_name)
             def thread_function():
@@ -85,6 +86,7 @@ class Service:
         self.run()
 
     def reload(self):
+        if self.debug: print("service - reloading config")
         name_dict_overwrite = {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
             if thread_name_reload in self.name_dict.keys():
@@ -96,12 +98,13 @@ class Service:
                             name_dict_overwrite[thread_name_reload] = [interval_reload, function_reload]
                             Threader.reload_thread(interval_reload, thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
-        if self.debug: print("reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
+        if self.debug: print("service - reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
         self.name_dict = name_dict_overwrite
         self.status()
         self.run()
 
     def stop(self):
+        if self.debug: print("service - stopping")
         systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
@@ -109,20 +112,23 @@ class Service:
         raise SystemExit
 
     def status(self):
+        if self.debug: print("service - updating status")
+        if self.debug: print("service - threads: %s |config: %s" % (Threader.list(), self.name_dict))
         systemd_notify(systemd_notification.STATUS, "Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
+        if self.debug: print("service - entering runtime")
         try:
             while_count = 0
             while True:
-                if self.debug: print("run loop count:", while_count)
+                if self.debug: print("service - run loop count:", while_count)
                 if while_count == 287: self.reload()
                 sleep(300)
                 self.status()
                 while_count += 1
-        except Exception as error:
-            if self.debug: print("run error:", error)
-            LogWrite("Stopping service because of runtime error:\n%s" % error)
+        except:
+            if self.debug: print("service - runtime error")
+            LogWrite("Stopping service because of runtime error")
             self.stop()
 
     def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
