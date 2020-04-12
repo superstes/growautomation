@@ -27,7 +27,7 @@ from ga.service.threader import Loop
 
 from systemd.daemon import notify as systemd_notify
 from systemd.daemon import Notification as systemd_notification
-from signal import signal, SIGTERM, SIGUSR1
+import signal
 from time import sleep
 from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
@@ -46,23 +46,22 @@ class Service:
         self.debug = debug
         self.custom_args = custom_args
         self.name_dict = {}
-        self.core_list = self.get_config(table="object", filter="type = 'core'")
-#        signal(SIGTERM, self.stop())
-#        signal(SIGUSR1, self.reload())
+        signal.signal(signal.SIGUSR1, self.reload)
+        signal.signal(signal.SIGTERM, self.stop)
+        signal.signal(signal.SIGINT, self.stop)
         self.start()
 
     def get_timer_dict(self):
-        name_dict = {}
-        path_root = self.get_config(setting="path_root")
+        name_dict, path_root, core_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'")
         for row in self.get_config(setting="timer", output="belonging,data"):
-            if row[0] in self.core_list or self.get_config(setting="enabled", belonging=row[0]) == "1":
+            if row[0] in core_list or self.get_config(setting="enabled", belonging=row[0]) == "1":
                 if self.get_config(output="type", table="object", setting=row[0]) is not "device": function = self.get_config(setting="function", belonging=row[0])
                 else:
                     devicetype = self.get_config(output="class", table="object", setting=row[0])
                     if self.get_config(setting="enabled", belonging=devicetype) == "1":
                         function = self.get_config(setting="function", belonging=devicetype)
                     else: pass
-                if row[0] in self.core_list: path_function = "%s/core/%s" % (path_root, function)
+                if row[0] in core_list: path_function = "%s/core/%s" % (path_root, function)
                 else: path_function = "%s/sensor/%s" % (path_root, function)
                 name_dict[row[0]] = [row[1], path_function]
             else: pass
@@ -70,13 +69,13 @@ class Service:
         return name_dict
 
     def start(self):
-        if self.debug: print("service - starting", "|pid: %s" % os_getpid())
+        if self.debug: print("service - starting", "|pid", os_getpid())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
-            if self.debug: print("service - start |function:", type(function), function, "|interval:", type(interval), interval)
+            if self.debug: print("service - start function", type(function), function, "|interval", type(interval), interval)
 
-            @Threader.thread(int(interval), thread_name)
+            @Threader.thread(int(interval), thread_name, debug=self.debug)
             def thread_function():
                 output, error = subprocess_popen(["/usr/bin/python3 %s" % function], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 if error.decode("ascii") != "": LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
@@ -86,7 +85,7 @@ class Service:
         systemd_notify(systemd_notification.READY)
         self.run()
 
-    def reload(self):
+    def reload(self, signum=None, stack=None):
         if self.debug: print("service - reloading config")
         name_dict_overwrite = {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
@@ -104,8 +103,12 @@ class Service:
         self.status()
         self.run()
 
-    def stop(self):
+    def stop(self, signum=None, stack=None):
         if self.debug: print("service - stopping")
+        LogWrite("Stopping service", level=1)
+        if signum is not None:
+            if self.debug: print("service - got signal", signum)
+            LogWrite("Service received signal %s" % signum, level=2)
         systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
@@ -122,14 +125,14 @@ class Service:
         try:
             while_count = 0
             while True:
-                if self.debug: print("service - run loop count:", while_count)
+                if self.debug: print("service - run loop count:", while_count, "|pid", os_getpid())
                 if while_count == 287: self.reload()
                 sleep(300)
                 self.status()
                 while_count += 1
         except:
             if self.debug: print("service - runtime error")
-            LogWrite("Stopping service because of runtime error")
+            LogWrite("Stopping service because of runtime error", level=2)
             self.stop()
 
     def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
