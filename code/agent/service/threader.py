@@ -28,7 +28,7 @@ class Job(Thread):
         if self.debug: print("threader - thread stopping", self.name)
         self.state_stop.set()
         self.join()
-        LogWrite("Stopped thread" % self.name, level=3)
+        LogWrite("Stopped thread '%s'" % self.name, level=3)
 
     def run(self):
         LogWrite("Starting thread '%s'" % self.name, level=4)
