@@ -54,10 +54,7 @@ class ActionLoader:
 
     def action_prequesits(self):
         function = GetConfig(setting="function", belonging=self.type)
-        if GetConfig(setting="boomerang", belonging=self.type) == "True":
-            self.action_start(function, boomerang=True)
-        else:
-            self.action_start(function)
+        self.action_start(function, boomerang=True) if GetConfig(setting="boomerang", belonging=self.type) == "True" else self.action_start(function)
 
     def action_start(self, function, boomerang=False):
         command = "/usr/bin/python3 %s/action/%s %s" % (GetConfig("path_root"), function, self.device_setting_dict)
@@ -88,26 +85,19 @@ class SectorCheck:
     def check_type_links(self):
         link_exist_list = GetConfig(setting="link", table="group")
         link_inuse_list = GetConfig(setting="link", belonging=self.type, table="group")
-        for link in link_inuse_list:
-            if link in link_exist_list:
-                self.check_action_sector(link)
+        [self.check_action_sector(link) for link in link_inuse_list if link in link_exist_list]
 
     def check_action_sector(self, link):
         device_type_list = GetConfig(setting="link", filter="gid = '%s'" % link, table="group")
-        for device in reversed(device_type_list):
-            if GetConfig(setting=device, table="object") != "action":
-                device_type_list.remove(device)
+        [device_type_list.remove(device) for device in reversed(device_type_list) if GetConfig(setting=device, table="object") != "action"]
         for device_type in device_type_list:
             if GetConfig(setting="enabled", belonging=device_type) != "1":
                 device_type_list.remove(device_type)
                 LocalLogWrite("Action %s is disabled." % device_type, level=2)
                 pass
             device_list = GetConfig(filter="class = '%s'" % device_type, table="object")
-            for device in reversed(device_list):
-                if GetConfig(setting="enabled", belonging=device) != "1":
-                    device_list.remove(device)
-            for device in device_list:
-                device_sector_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
+            [device_list.remove(device) for device in reversed(device_list) if GetConfig(setting="enabled", belonging=device) != "1"]
+            for device in device_list: device_sector_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
@@ -118,19 +108,10 @@ class SectorCheck:
             ActionLoader(device_type, device_sector_dict)
 
     def check_device_sector(self, value):
-        value_sector_list = []
-        if value.find(",") != -1:
-            value_sector_list.append(value.split(","))
-        else:
-            value_sector_list.append(value)
-        output_list = []
-        for sector in self.sector_list:
-            if sector in value_sector_list:
-                output_list.append(sector)
-        if len(output_list) > 0:
-            return output_list
-        else:
-            return False
+        value_sector_list, output_list = [], []
+        value_sector_list.append(value.split(",")) if value.find(",") != -1 else value_sector_list.append(value)
+        [output_list.append(sector) for sector in self.sector_list if sector in value_sector_list]
+        return output_list if len(output_list) > 0 else False
 
 
 class ThresholdCheck:
@@ -164,25 +145,17 @@ class ThresholdCheck:
     def get_device_dict(self):
         device_list = GetConfig(filter="class = '%s'" % self.type, table="object")
         for device in device_list:
-            if GetConfig(setting="enabled", belonging=device) == "1":
-                device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
+            if GetConfig(setting="enabled", belonging=device) == "1": device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             else:
                 LocalLogWrite("Device %s is disabled." % device, level=3)
                 pass
         return device_dict
 
     def get_sector_list(self):
-        sector_exist_list = GetConfig(setting="sector", table="group")
-        sector_inuse_list = []
+        sector_inuse_list, sector_list, sector_exist_list = [], [], GetConfig(setting="sector", table="group")
         for sector in self.get_device_dict().values():
-            if sector.find(",") != -1:
-                sector_inuse_list.append(sector.split(","))
-            else:
-                sector_inuse_list.append(sector)
-        sector_list = []
-        for sector in sector_inuse_list:
-            if sector in sector_exist_list:
-                sector_list.append(sector)
+            sector_inuse_list.append(sector.split(",")) if sector.find(",") != -1 else sector_inuse_list.append(sector)
+        [sector_list.append(sector) for sector in sector_inuse_list if sector in sector_exist_list]
         return sector_list
 
     def get_data(self, device):
@@ -194,21 +167,12 @@ class ThresholdCheck:
     def get_average_data(self, device):
         if type(device) == "list":
             data_list = []
-            for device in device:
-                data_list.append(self.get_data(device))
-        elif type(device) == "str":
-            data_list = self.get_data(device)
-        else:
-            return False
+            [data_list.append(self.get_data(device)) for device in device]
+        elif type(device) == "str": data_list = self.get_data(device)
+        else: return False
         return sum(data_list) / len(data_list)
 
     def check_device_sector(self, value, sector):
         value_sector_list = []
-        if value.find(",") != -1:
-            value_sector_list.append(value.split(","))
-        else:
-            value_sector_list.append(value)
-        if sector in value_sector_list:
-            return True
-        else:
-            return False
+        value_sector_list.append(value.split(",")) if value.find(",") != -1 else value_sector_list.append(value)
+        return True if sector in value_sector_list else False

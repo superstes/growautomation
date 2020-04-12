@@ -46,6 +46,10 @@ class Service:
         self.input = sys_argv[1]
         self.name_dict = {}
         self.core_list = GetConfig(table="object", filter="type = 'core'")
+        self.debug = False
+        try:
+            if sys_argv[1] == "debug": self.debug = True
+        except IndexError: pass
         self.start()
 
     def get_timer_dict(self):
@@ -53,21 +57,16 @@ class Service:
         path_root = GetConfig("path_root")
         for row in GetConfig(setting="timer", output="belonging,data"):
             if row[0] in self.core_list or GetConfig(setting="enabled", belonging=row[0]) == "1":
-                if GetConfig(output="type", table="object", setting=row[0]) is not "device":
-                    function = GetConfig(setting="function", belonging=row[0])
+                if GetConfig(output="type", table="object", setting=row[0]) is not "device": function = GetConfig(setting="function", belonging=row[0])
                 else:
                     devicetype = GetConfig(output="class", table="object", setting=row[0])
                     if GetConfig(setting="enabled", belonging=devicetype) == "1":
                         function = GetConfig(setting="function", belonging=devicetype)
-                    else:
-                        pass
-                if row[0] in self.core_list:
-                    path_function = "%s/core/%s" % (path_root, function)
-                else:
-                    path_function = "%s/sensor/%s" % (path_root, function)
+                    else: pass
+                if row[0] in self.core_list: path_function = "%s/core/%s" % (path_root, function)
+                else: path_function = "%s/sensor/%s" % (path_root, function)
                 name_dict[row[0]] = [row[1], path_function]
-            else:
-                pass
+            else: pass
         return name_dict
 
     def start(self):
@@ -78,8 +77,7 @@ class Service:
             @Threader.thread(interval, thread_name)
             def thread_function():
                 output, error = subprocess_popen(["/usr/bin/python3 %s" % function], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-                if error.decode("ascii") != "":
-                    LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
+                if error.decode("ascii") != "": LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
         self.status()
@@ -97,8 +95,7 @@ class Service:
                         if interval_reload != interval:
                             name_dict_overwrite[thread_name_reload] = [interval_reload, function_reload]
                             Threader.reload_thread(interval_reload, thread_name_reload)
-                        else:
-                            name_dict_overwrite[thread_name] = [interval, function]
+                        else: name_dict_overwrite[thread_name] = [interval, function]
         self.name_dict = name_dict_overwrite
         self.status()
         self.run()
@@ -117,8 +114,7 @@ class Service:
         try:
             while_count = 0
             while True:
-                if while_count == 288:
-                    self.reload()
+                if while_count == 288: self.reload()
                 sleep(300)
                 self.status()
                 while_count += 1

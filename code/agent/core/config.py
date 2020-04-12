@@ -44,17 +44,9 @@ class GetConfig(object):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
-        if self.setting in parse_file_list:
-            output = parse_file()
-        elif self.setting in parse_failover_list:
-            output = self.parse_failover()
-        elif self.nosql is False:
-            output = self.parse_sql_custom()
-        else:
-            self.error("all")
-        if output is False:
-            self.error("sql")
-        return str(output)
+        output = parse_file() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
+            else self.error("all")
+        return self.error("sql") if output is False else str(output)
 
     def error(self, parser_type):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
@@ -62,19 +54,12 @@ class GetConfig(object):
 
     @lru_cache()
     def parse_sql(self, command=None):
-        if command is not None:
-            response = DoSql(command)
-        else:
-            response = DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';" % (self.setting, parse_file("hostname")))
-        if response is False or response is None or response == "":
-            self.error("sql")
-        else:
-            return response
+        response = DoSql(command) if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';" % (self.setting, parse_file("hostname")))
+        return self.error("sql") if response is False or response is None or response == "" else response
 
     @lru_cache()
     def parse_sql_custom(self):
-        command = ["SELECT", "data", "FROM ga.Setting WHERE"]
-        custom = False
+        command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
         if self.table is not None:
             if self.table == "group":
                 command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
@@ -92,33 +77,20 @@ class GetConfig(object):
                     command.append("name = '%s'" % self.setting)
                 elif self.table == "data":
                     command.append("agent = '%s'" % self.setting)
-            else:
-                command.append("setting = '%s'" % self.setting)
+            else: command.append("setting = '%s'" % self.setting)
             custom = True
         if self.belonging is not None:
-            if self.setting is not None:
-                prefix = "AND"
-            else:
-                prefix = ""
+            prefix = "AND" if self.setting is not None else ""
             if self.table is not None:
-                if self.table == "group":
-                    insert = "member"
-                elif self.table == "data":
-                    insert = "agent"
-            else:
-                insert = "belonging"
+                if self.table == "group": insert = "member"
+                elif self.table == "data": insert = "agent"
+            else: insert = "belonging"
             command[3], custom = "%s %s = '%s'" % (prefix, insert, self.belonging), True
         if self.filter is not None:
-            if self.setting is not None or self.belonging is not None:
-                prefix = "AND "
-            else:
-                prefix = ""
+            prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
-        if custom is True:
-            return self.parse_sql(' '.join(command) + ";")
-        else:
-            return self.parse_sql()
+        return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
     @lru_cache()
     def parse_hardcoded(self):
@@ -131,8 +103,7 @@ class GetConfig(object):
                 if key.find(self.setting) != -1:
                     return value
             return False
-        else:
-            return False
+        else: return False
 
     def parse_failover(self):
         parse_sql_output = self.parse_sql()
@@ -141,9 +112,6 @@ class GetConfig(object):
             if parse_file_output is False or parse_file_output is None or parse_file_output == "":
                 if self.parse_hardcoded() is False:
                     self.error("all")
-                else:
-                    return self.parse_hardcoded()
-            else:
-                return parse_file_output
-        else:
-            return self.parse_sql()
+                else: return self.parse_hardcoded()
+            else: return parse_file_output
+        else: return self.parse_sql()

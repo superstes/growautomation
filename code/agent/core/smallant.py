@@ -18,7 +18,7 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-#ga_version0.3
+# ga_version 0.3
 
 from os import system as os_system
 from os import path as os_path
@@ -27,12 +27,11 @@ from datetime import datetime
 from ga.core.config_parser_file import GetConfig
 
 
-def now(format):
-    return datetime.now().strftime(format)
+def now(time_format):
+    return datetime.now().strftime(time_format)
 
 
-date02 = now("%Y")
-date03 = now("%m")
+date02, date03 = now("%Y"), now("%m")
 
 
 # Logs
@@ -45,17 +44,12 @@ class LogWrite(object):
 
     def __repr__(self):
         try:
-            if self.log_level > GetConfig("log_level"):
-                return False
-            else:
-                self.write()
-        except AttributeError:
-            self.write()
+            return False if self.log_level > GetConfig("log_level") else self.write()
+        except AttributeError: self.write()
 
     def open(self):
         logdir = "%s/%s/%s" % (self.log_path, self.scripttype, date02)
-        if os_path.exists(logdir) is False:
-            os_system("mkdir -p " + logdir)
+        if os_path.exists(logdir) is False: os_system("mkdir -p " + logdir)
         return open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
 
     def write(self):

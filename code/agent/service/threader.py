@@ -46,8 +46,7 @@ class Loop:
         self.jobs = []
 
     def start(self, daemon=True, single_thread=None):
-        if daemon is False:
-            LogWrite("Starting threads in foreground", level=3)
+        if daemon is False: LogWrite("Starting threads in foreground", level=3)
         else:
             LogWrite("Starting threads in background", level=3)
             for job in self.jobs:
@@ -58,16 +57,14 @@ class Loop:
                 else:
                     job.daemon = daemon
                     job.start()
-        if not daemon:
-            self.block_root_process()
+        if not daemon: self.block_root_process()
 
     def thread(self, sleep_time, thread_name):
         def decorator(function):
             if sleep_time == 0:
                 sleep_time_new = 600
                 self.jobs.append(Job(timedelta(seconds=sleep_time_new), function, thread_name, run_once=True))
-            else:
-                self.jobs.append(Job(timedelta(seconds=sleep_time), function, thread_name))
+            else: self.jobs.append(Job(timedelta(seconds=sleep_time), function, thread_name))
             return function
         return decorator
 
@@ -80,8 +77,7 @@ class Loop:
                 raise SystemExit
 
     def stop(self):
-        for job in self.jobs:
-            job.stop()
+        for job in self.jobs: job.stop()
         LogWrite("All threads stopped. Exiting loop", level=2)
 
     def stop_thread(self, thread_name):
@@ -99,6 +95,5 @@ class Loop:
 
     def list(self):
         job_name_list = []
-        for job in self.jobs:
-            job_name_list.append(job.name)
+        for job in self.jobs: job_name_list.append(job.name)
         return job_name_list
