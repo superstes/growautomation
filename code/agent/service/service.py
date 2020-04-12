@@ -46,6 +46,7 @@ class Service:
         self.debug = debug
         self.custom_args = custom_args
         self.name_dict = {}
+        self.init_exit = False
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
@@ -112,7 +113,12 @@ class Service:
         systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
+        self.init_exit = True
         self.status()
+        self.exit()
+
+    def exit(self):
+        print("Growautomation Service: Tschau!")
         raise SystemExit
 
     def status(self):
@@ -131,9 +137,11 @@ class Service:
                 self.status()
                 while_count += 1
         except:
-            if self.debug: print("service - runtime error")
-            LogWrite("Stopping service because of runtime error", level=2)
-            self.stop()
+            if self.init_exit is False:
+                if self.debug: print("service - runtime error")
+                LogWrite("Stopping service because of runtime error", level=2)
+                self.stop()
+            else: self.exit()
 
     def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
         return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug).start()
