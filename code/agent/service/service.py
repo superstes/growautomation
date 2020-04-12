@@ -34,6 +34,7 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
+from os import getpid as os_getpid
 
 Threader = Loop()
 
@@ -46,8 +47,8 @@ class Service:
         self.custom_args = custom_args
         self.name_dict = {}
         self.core_list = self.get_config(table="object", filter="type = 'core'")
-        signal(SIGTERM, self.stop())
-        signal(SIGUSR1, self.reload())
+#        signal(SIGTERM, self.stop())
+#        signal(SIGUSR1, self.reload())
         self.start()
 
     def get_timer_dict(self):
@@ -58,7 +59,7 @@ class Service:
                 if self.get_config(output="type", table="object", setting=row[0]) is not "device": function = self.get_config(setting="function", belonging=row[0])
                 else:
                     devicetype = self.get_config(output="class", table="object", setting=row[0])
-                    if self.get_config(setting="enabled", belonging=devicetype).find("1") != -1:
+                    if self.get_config(setting="enabled", belonging=devicetype) == "1":
                         function = self.get_config(setting="function", belonging=devicetype)
                     else: pass
                 if row[0] in self.core_list: path_function = "%s/core/%s" % (path_root, function)
@@ -75,7 +76,7 @@ class Service:
             interval, function = settings[0], settings[1]
             if self.debug: print("service - start |function:", type(function), function, "|interval:", type(interval), interval)
 
-            @Threader.thread(interval, thread_name)
+            @Threader.thread(int(interval), thread_name)
             def thread_function():
                 output, error = subprocess_popen(["/usr/bin/python3 %s" % function], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 if error.decode("ascii") != "": LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
@@ -96,7 +97,7 @@ class Service:
                         interval, function = settings[0], settings[1]
                         if interval_reload != interval:
                             name_dict_overwrite[thread_name_reload] = [interval_reload, function_reload]
-                            Threader.reload_thread(interval_reload, thread_name_reload)
+                            Threader.reload_thread(int(interval_reload), thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
         if self.debug: print("service - reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
         self.name_dict = name_dict_overwrite
