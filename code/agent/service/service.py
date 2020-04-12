@@ -25,7 +25,8 @@ from ga.core.ant import LogWrite
 
 from ga.service.threader import Loop
 
-from systemd.daemon import notify, Notification as systemd_notify, systemd_notification
+from systemd.daemon import notify as systemd_notify
+from systemd.daemon import Notification as systemd_notification
 from signal import signal, SIGTERM, SIGUSR1
 from time import sleep
 from sys import argv as sys_argv
@@ -33,7 +34,6 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
-from inspect import getframeinfo as inspect_getframeinfo
 
 Threader = Loop()
 
@@ -41,17 +41,16 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class Service:
-    def __init__(self, debug=False):
-        signal(SIGTERM, self.stop())
-        signal(SIGUSR1, self.reload())
-        self.input = sys_argv[1]
+    def __init__(self, custom_args=None, debug=False):
+        self.debug = debug
+        self.custom_args = custom_args
         self.name_dict = {}
         self.core_list = self.get_config(table="object", filter="type = 'core'")
-        self.debug = debug
+        signal(SIGTERM, self.stop())
+        signal(SIGUSR1, self.reload())
         self.start()
 
     def get_timer_dict(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         name_dict = {}
         path_root = self.get_config(setting="path_root")
         for row in self.get_config(setting="timer", output="belonging,data"):
@@ -70,11 +69,10 @@ class Service:
         return name_dict
 
     def start(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
-            if self.debug: print("function:", type(function), function, "interval:", type(interval), interval)
+            if self.debug: print("start function:", type(function), function, "interval:", type(interval), interval)
 
             @Threader.thread(interval, thread_name)
             def thread_function():
@@ -87,7 +85,6 @@ class Service:
         self.run()
 
     def reload(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         name_dict_overwrite = {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
             if thread_name_reload in self.name_dict.keys():
@@ -99,13 +96,12 @@ class Service:
                             name_dict_overwrite[thread_name_reload] = [interval_reload, function_reload]
                             Threader.reload_thread(interval_reload, thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
-        if self.debug: print("overwrite:", type(name_dict_overwrite), name_dict_overwrite)
+        if self.debug: print("reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
         self.name_dict = name_dict_overwrite
         self.status()
         self.run()
 
     def stop(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
@@ -113,11 +109,9 @@ class Service:
         raise SystemExit
 
     def status(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         systemd_notify(systemd_notification.STATUS, "Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         try:
             while_count = 0
             while True:
@@ -127,7 +121,7 @@ class Service:
                 self.status()
                 while_count += 1
         except Exception as error:
-            if self.debug: print("runtime exception:", error)
+            if self.debug: print("run error:", error)
             LogWrite("Stopping service because of runtime error:\n%s" % error)
             self.stop()
 
@@ -136,6 +130,11 @@ class Service:
 
 
 try:
-    Service(debug=True) if sys_argv[1] == "debug" else Service()
-except IndexError:
-    Service()
+    if sys_argv[1] is not None:
+        try:
+            if sys_argv[2] is not None: Service(custom_args=sys_argv[2], debug=True) if sys_argv[1] == "debug" else Service()
+        except IndexError: Service(debug=True) if sys_argv[1] == "debug" else Service()
+    elif sys_argv[2] is not None:
+        try: Service(custom_args=sys_argv[2])
+        except IndexError: Service()
+except IndexError: Service()

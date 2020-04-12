@@ -34,10 +34,10 @@ from inspect import currentframe as inspect_currentframe
 # from functools import lru_cache
 
 from ga.core.config import GetConfig
-from ga.core.smallant import SmallLogWrite
+from ga.core.smallant import LogWrite as SmallLogWrite
 
 
-SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), loglevel=2)
+SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 # Just vars

@@ -23,7 +23,6 @@
 from functools import lru_cache
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
-from inspect import getframeinfo as inspect_getframeinfo
 
 from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
@@ -51,20 +50,17 @@ class GetConfig(object):
         return self.error("sql") if output is False else str(output)
 
     def error(self, parser_type):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
     @lru_cache()
     def parse_sql(self, command=None):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
-        response = DoSql(command, debug=self.debug) if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                                      % (self.setting, parse_file("hostname")), debug=self.debug)
+        response = DoSql(command, debug=self.debug).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
+                                                                                              % (self.setting, parse_file("hostname")), debug=self.debug).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
     @lru_cache()
     def parse_sql_custom(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
         if self.table is not None:
             if self.table == "group":
@@ -96,12 +92,11 @@ class GetConfig(object):
             prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
-        if self.debug: print("custom command:", type(custom), custom, "command:", type(command), command)
+        if self.debug: print("parse_sql_custom command:", type(custom), custom, "command:", type(command), command)
         return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
     @lru_cache()
     def parse_hardcoded(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         config_dict = {"path_log": "%s/log" % parse_file("path_root"), "path_backup": "%s/backup" % parse_file("path_root"), "sql_server_port": "3306"}
         if parse_file("setuptype") != "agent":
             config_server_dict = {"sql_server_ip": "127.0.0.1"}
@@ -113,11 +108,10 @@ class GetConfig(object):
                     return value
             return False
         else:
-            if self.debug: print("setting not found in hardcoded list")
+            if self.debug: print("parse_hardcoded setting not found")
             return False
 
     def parse_failover(self):
-        if self.debug: print(inspect_getframeinfo(inspect_currentframe()).functiontype())
         parse_sql_output = self.parse_sql()
         if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.nosql is True:
             parse_file_output = parse_file(self.setting)
@@ -126,12 +120,12 @@ class GetConfig(object):
                     self.error("all")
                 else:
                     output = self.parse_hardcoded()
-                    if self.debug: print("output:", type(output), output)
+                    if self.debug: print("parse_failover output:", type(output), output)
                     return output
             else:
-                if self.debug: print("output:", type(parse_file_output), parse_file_output)
+                if self.debug: print("parse_failover output:", type(parse_file_output), parse_file_output)
                 return parse_file_output
         else:
             output = self.parse_sql()
-            if self.debug: print("output:", type(output), output)
+            if self.debug: print("parse_failover output:", type(output), output)
             return output
