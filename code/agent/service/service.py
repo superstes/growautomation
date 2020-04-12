@@ -25,8 +25,7 @@ from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
 
-from systemd.daemon import notify as systemd_notify
-from systemd.daemon import Notification as systemd_notification
+from systemd import journal as systemd_journald
 import signal
 from time import sleep
 from sys import argv as sys_argv
@@ -83,7 +82,6 @@ class Service:
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
         self.status()
-        systemd_notify(systemd_notification.READY)
         self.run()
 
     def reload(self, signum=None, stack=None):
@@ -100,6 +98,7 @@ class Service:
                             Threader.reload_thread(int(interval_reload), thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
         if self.debug: print("service - reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
+        if len(name_dict_overwrite) > 0: systemd_journald.write("Updated configuration:\n%s" % name_dict_overwrite)
         self.name_dict = name_dict_overwrite
         self.status()
         self.run()
@@ -110,7 +109,6 @@ class Service:
         if signum is not None:
             if self.debug: print("service - got signal", signum)
             LogWrite("Service received signal %s" % signum, level=2)
-        systemd_notify(systemd_notification.STOPPING)
         Threader.stop()
         sleep(10)
         self.init_exit = True
@@ -128,18 +126,20 @@ class Service:
     def status(self):
         if self.debug: print("service - updating status")
         if self.debug: print("service - threads: %s |config: %s" % (Threader.list(), self.name_dict))
-        systemd_notify(systemd_notification.STATUS, "Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
+        systemd_journald.write("Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
         if self.debug: print("service - entering runtime")
         try:
             while_count = 0
             while True:
-                if self.debug: print("service - run loop count:", while_count, "|pid", os_getpid())
-                if while_count == 287: self.reload()
-                sleep(300)
-                self.status()
                 while_count += 1
+                if self.debug: print("service - run loop count:", while_count, "|pid", os_getpid())
+                if while_count == 288:
+                    self.reload()
+                    while_count = 0
+                if 6 % while_count == 0: self.status()
+                sleep(300)
         except:
             if self.init_exit is False:
                 if self.debug: print("service - runtime error")
