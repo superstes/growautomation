@@ -57,19 +57,19 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 
 # Shell output
 class ShellOutput(object):
-    def __init__(self, output, font="text", style="info", symbol="#"):
+    def __init__(self, output=None, font="text", style="info", symbol="#"):
         self.output = output
         self.font = font
         self.style = style
         self.symbol = symbol
+        self.shellhight, self.shellwidth = os_popen('stty size', 'r').read().split()
         self.start()
 
     def start(self):
-        self.header() if self.font == "head" else self.text()
+        self.header() if self.font == "head" else self.line if self.font == "line" else self.text()
 
     def header(self):
-        shellhight, shellwidth = os_popen('stty size', 'r').read().split()
-        print("\n%s\n%s\n%s\n" % (self.symbol * (int(shellwidth) - 1), self.output, self.symbol * (int(shellwidth) - 1)))
+        print("\n%s\n%s\n%s\n" % (self.symbol * (int(self.shellwidth) - 1), self.output, self.symbol * (int(self.shellwidth) - 1)))
 
     def colors(self):
         return colorama_fore.YELLOW if self.style == "warn" else colorama_fore.CYAN if self.style == "info" else colorama_fore.RED if self.style == "err" \
@@ -77,6 +77,9 @@ class ShellOutput(object):
 
     def text(self):
         print(self.colors() + "%s\n" % self.output + colorama_fore.RESET)
+
+    def line(self):
+        print(self.symbol * (int(self.shellwidth) - 1))
 
 
 # Logs
