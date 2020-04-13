@@ -1200,6 +1200,12 @@ class GetObject:
                                                                    "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
 
                 setting_dict["timer_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
+            elif dt_object_dict[name] == "downlink":
+                setting_dict["portcount"] = ga_setup_input("How many ports does this downlink provide?", 4)
+                setting_dict["output_per_port"] = ga_setup_input("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", False)
+                setting_dict["output_format"] = ga_setup_input("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free")
+                if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
+                    setting_dict["output_format_delimeter"] = ga_setup_input("Provide a delimeter to split the output string.", "-", intype="free", max_value=3)
             self.setting_dict[name] = setting_dict
             while_count += 1
             while_devicetype = ga_setup_input("Want to add another devicetype?", True, style="info")
