@@ -114,14 +114,23 @@ class DoSql:
         else: connection = mysql.connector.connect(user="%s" % GetConfig("sql_admin_user"), passwd="%s" % GetConfig("sql_admin_pwd"))
         try:
             cursor = connection.cursor(buffered=True)
-            if command is None:
-                command = self.command
+            if command is None: command = self.command
             if self.debug and connect_debug: print("owl - connect command:", type(command), command)
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
                     cursor.execute(doit)
-                    return False if cursor.rowcount < 0 else cursor.fetchone()[0] if cursor.rowcount == 1 else cursor.fetchall()
+                    if cursor.rowcount < 0: return False
+                    else:
+                        fetch, data_list = cursor.fetchall(), []
+                        for row_tuple in fetch:
+                            if len(row_tuple) == 1:
+                                if self.debug and connect_debug: print("owl - connect |tuple has only one slot", row_tuple)
+                                if row_tuple[0]: data_list.append(row_tuple[0])
+                            else:
+                                if self.debug and connect_debug: print("owl - connect |tuple ok", row_tuple)
+                                data_list.append(row_tuple)
+                        return str(data_list[0]) if len(data_list) == 1 else data_list
                 data = readcache(command)
             else:
                 cursor.execute(command)
