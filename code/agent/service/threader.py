@@ -25,14 +25,14 @@ class Job(Thread):
         self.debug = debug
 
     def stop(self):
-        if self.debug: print("threader - run |thread stopping", self.name)
+        if self.debug: print("threader - Thread(stop) |thread stopping", self.name)
         self.state_stop.set()
         self.join()
         LogWrite("Stopped thread '%s'" % self.name, level=3)
 
     def run(self):
         LogWrite("Starting thread '%s'" % self.name, level=4)
-        if self.debug: print("threader - run |thread starting", self.name)
+        if self.debug: print("threader - Thread(run) |thread starting", self.name)
         if self.run_once:
             self.execute()
             Loop.stop_thread(self.name)
@@ -40,7 +40,7 @@ class Job(Thread):
             while not self.state_stop.wait(self.interval.total_seconds()):
                 self.execute()
                 if self.state_stop.isSet():
-                    if self.debug: print("threader - run |thread exiting", self.name)
+                    if self.debug: print("threader - Thread(run) |thread exiting", self.name)
                     LogWrite("Exiting thread '%s'" % self.name, level=4)
                     break
 
@@ -111,7 +111,7 @@ class Loop:
         self.start_thread(sleep_time, thread_name, debug)
 
     def list(self):
-        if self.debug: print("threader - list | returning thread list")
+        if self.debug: print("threader - list |returning thread list")
         job_name_list = []
         for job in self.jobs: job_name_list.append(job.name)
         return job_name_list
