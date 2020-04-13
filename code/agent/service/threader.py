@@ -100,11 +100,15 @@ class Loop:
                 self.jobs.remove(job)
                 LogWrite("Thread %s stopped." % job.name, level=2)
 
-    def reload_thread(self, sleep_time: int, thread_name):
+    def start_thread(self, sleep_time: int, thread_name, debug=False):
+        if self.debug: print("threader - starting thread", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
+        self.thread(sleep_time, thread_name, debug)
+        self.start(single_thread=thread_name)
+
+    def reload_thread(self, sleep_time: int, thread_name, debug=False):
         if self.debug: print("threader - reloading thread", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
         self.stop_thread(thread_name)
-        self.thread(sleep_time, thread_name)
-        self.start(single_thread=thread_name)
+        self.start_thread(sleep_time, thread_name, debug)
 
     def list(self):
         if self.debug: print("threader - listing threads")
