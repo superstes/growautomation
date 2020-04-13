@@ -36,7 +36,6 @@ from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
-from re import sub as re_sub
 
 # basic vars
 ga_config = {}
@@ -304,10 +303,17 @@ class ga_mysql(object):
             cursor = connection.cursor(buffered=True)
             cursor.execute(command)
             if self.query is True:
-                data = cursor.fetchall()
                 if cursor.rowcount < 1:
                     data = False
                     ga_setup_log_write("MySql did not receive any data.\nCommand: '%s'" % command)
+                else:
+                    fetch, data_list = cursor.fetchall(), []
+                    for row_tuple in fetch:
+                        if len(row_tuple) == 1:
+                            if row_tuple[0]: data_list.append(row_tuple[0])
+                        else:
+                            data_list.append(row_tuple)
+                    return str(data_list[0]) if len(data_list) == 1 else data_list
             else:
                 connection.commit()
             cursor.close()
@@ -538,7 +544,8 @@ def ga_config_var_base():
         if ga_config["setuptype"] is False:
             ga_setup_shelloutput_text("Growautomation setuptype not found in old versionfile.\n\n"
                                       "WARNING!\nTo keep your old configuration the setuptype must be the same as before", style="warn")
-            ga_config["setuptype"] = ga_setup_input("Setup as growautomation standalone, agent or server?", "standalone", ["agent", "standalone", "server"])
+            ga_config["setuptype"] = ga_setup_input("Setup as growautomation standalone, agent or server?\nAgent and Server setup is disabled for now. It will become available after further testing!",
+                                                    "standalone", "standalone", neg=True)  # ["agent", "standalone", "server"]
             if ga_config["setup_old_backup"] is False:
                 ga_setup_shelloutput_text("Turning on migration backup option - just in case", style="info")
                 ga_config["setup_old_backup"] = True
@@ -1006,7 +1013,7 @@ def ga_setup_pip():
     if ga_config["setup_ca"] is True:
         os_system("git core --global http.sslCAInfo %s && python3 -m pip core set global.cert %s %s" % (ga_config["setup_ca_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
     ga_setup_shelloutput_header("Installing python packages", "-")
-    os_system("python3 -m pip install mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s" % ga_config["setup_log_redirect"])
+    os_system("python3 -m pip install systemd mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s" % ga_config["setup_log_redirect"])
 
 
 ga_setup_apt()
@@ -1141,21 +1148,17 @@ elif ga_config["setuptype"] == "agent":
 
 class GetObject:
     def __init__(self):
-        self.object_dict = {}
-        self.setting_dict = {}
-        self.group_dict = {}
+        self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
         self.add_core()
 
     def add_core(self):
         ga_setup_shelloutput_header("Basic device setup", "#")
         ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
         core_object_dict = {}
-        core_object_dict["check"] = "NULL"
-        self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}
-        self.setting_dict["backup"] = {"timer": 86400, "function": "backup.py"}
-        core_object_dict["backup"] = "NULL"
-        self.object_dict["core"] = core_object_dict
-        self.object_dict["agent"] = {ga_config["hostname"]: "NULL"}
+        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"] = "NULL", "NULL", "NULL"
+        self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
+        self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
+        self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {ga_config["hostname"]: "NULL"}
         self.get_devicetype()
 
     def get_devicetype(self):
@@ -1195,7 +1198,7 @@ class GetObject:
                 setting_dict["threshold_optimal"] = ga_setup_input("Provide a optimal threshold value for the sensor.\n"
                                                                    "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
 
-                setting_dict["time_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
+                setting_dict["timer_check"] = ga_setup_input("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
             self.setting_dict[name] = setting_dict
             while_count += 1
             while_devicetype = ga_setup_input("Want to add another devicetype?", True, style="info")
@@ -1302,7 +1305,7 @@ class GetObject:
 
         ga_setup_shelloutput_text("Writing object configuration")
         sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
-        [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s')" % key) for key in self.object_dict.keys()]
+        [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key) for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
@@ -1326,12 +1329,17 @@ class GetObject:
         ga_setup_shelloutput_text("Writing object settings")
         setting_count = 0
         for object_name, packed_values in self.setting_dict.items():
+            packed_values["enabled"] = 1
             for setting, data in sorted(packed_values.items()):
                 if data == "":
                     pass
-                else:
-                    sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
-                    setting_count += 1
+                elif type(data) == bool:
+                    if data is True:
+                        data = 1
+                    else:
+                        data = 0
+                sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                setting_count += 1
         ga_setup_shelloutput_text("%s object settings were added" % setting_count, style="info")
 
         ga_setup_shelloutput_text("Writing group configuration")
@@ -1342,7 +1350,7 @@ class GetObject:
                 sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
                 sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type, query=True)
                 for member in sorted(group_member_list):
-                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (re_sub("[^0-9]", "", sql_gid[0]), member))
+                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                     member_count += 1
                 group_count += 1
         ga_setup_shelloutput_text("%s groups with a total of %s members were added" % (group_count, member_count), style="info")
