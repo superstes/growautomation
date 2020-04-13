@@ -98,15 +98,18 @@ class Service:
         if self.debug: print("service - reload |reloading config")
         name_dict_overwrite, dict_reloaded = {}, {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
+            interval_reload, function_reload = settings_reload[0], settings_reload[1]
             if thread_name_reload in self.name_dict.keys():
                 for thread_name, settings in self.name_dict.items():
                     if thread_name_reload == thread_name:
-                        interval_reload, function_reload = settings[0], settings[1]
                         interval, function = settings[0], settings[1]
                         if interval_reload != interval:
                             name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
-                            Threader.reload_thread(int(interval_reload), thread_name_reload)
+                            Threader.reload_thread(int(interval_reload), thread_name_reload, self.debug)
                         else: name_dict_overwrite[thread_name] = [interval, function]
+            else:
+                name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
+                Threader.start_thread(int(interval_reload), thread_name_reload, self.debug)
         if self.debug: print("service - reload |overwrite_dict:", type(name_dict_overwrite), name_dict_overwrite)
         if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
