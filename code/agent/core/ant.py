@@ -155,10 +155,3 @@ def dict_keycheck(dictionary, dictkey):
 def time_subtract(subtract, timeformat=timestamp, both=False):
     calculated = (datetime.now() - timedelta(seconds=subtract)).strftime(timeformat)
     return datetime.now().strftime(timeformat), calculated if both is True else calculated
-
-def debug_helper(command, debug=False):
-    if debug is True:
-        if type(command) == str:
-            print(command)
-        elif type(command) == list:
-            [print(call) for call in command]

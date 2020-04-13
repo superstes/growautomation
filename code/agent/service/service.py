@@ -23,7 +23,7 @@
 from ga.core.config import GetConfig
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
-from ga.core.ant import debug_helper
+from ga.core.smallant import debug_helper
 from ga.service.threader import Loop
 
 from systemd import journal as systemd_journal

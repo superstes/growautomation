@@ -31,6 +31,7 @@ from time import sleep as time_sleep
 
 from ga.core.smallant import LogWrite
 from ga.core.config_parser_file import GetConfig
+from ga.core.smallant import debug_helper
 
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
@@ -54,7 +55,7 @@ class DoSql:
             whilecount = 0
             while True:
                 if running() is False:
-                    if self.debug: print("owl - prequesits mysql not running")
+                    debug_helper("owl - prequesits |mysql not running", self.debug)
                     if whilecount == 0:
                         LogWrite("Trying to start mysql service.")
                         os_system("systemctl start mysql.service %s")
@@ -67,7 +68,7 @@ class DoSql:
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and GetConfig("setuptype") == "agent":
-                if self.debug: print("owl - prequesits failing over to local db")
+                debug_helper("owl - prequesits |failing over to local db", self.debug)
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -85,7 +86,7 @@ class DoSql:
                     self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
-                if self.debug: print("owl - prequesits conntest:", type(result), result)
+                debug_helper("owl - prequesits |conntest %s %s" % (type(result), result), self.debug)
                 return result
 
             creds_ok = conntest()
@@ -93,7 +94,7 @@ class DoSql:
         return self.execute()
 
     def execute(self):
-        if self.debug: print("owl - execute command:", type(self.command), self.command)
+        debug_helper("owl - execute |command %s %s" % (type(self.command), self.command), self.debug)
         if type(self.command) == str:
             return self.connect()
         elif type(self.command) == list:
@@ -115,7 +116,7 @@ class DoSql:
         try:
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
-            if self.debug and connect_debug: print("owl - connect command:", type(command), command)
+            if connect_debug: print("owl - connect |command %s %s" % (type(command), command), self.debug)
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
@@ -125,10 +126,10 @@ class DoSql:
                         fetch, data_list = cursor.fetchall(), []
                         for row_tuple in fetch:
                             if len(row_tuple) == 1:
-                                if self.debug and connect_debug: print("owl - connect |tuple has only one slot", row_tuple)
+                                if connect_debug: debug_helper("owl - connect |tuple has only one slot %s" % row_tuple, self.debug)
                                 if row_tuple[0]: data_list.append(row_tuple[0])
                             else:
-                                if self.debug and connect_debug: print("owl - connect |tuple ok", row_tuple)
+                                if connect_debug: debug_helper("owl - connect |tuple ok %s" % row_tuple, self.debug)
                                 data_list.append(row_tuple)
                         return str(data_list[0]) if len(data_list) == 1 else data_list
                 data = readcache(command)
@@ -137,10 +138,10 @@ class DoSql:
                 data = True
             cursor.close()
             connection.close()
-            if self.debug and connect_debug: print("owl - connect output:", type(data), data)
+            if connect_debug: debug_helper("owl - connect |output %s %s" % (type(data), data), self.debug)
             return data
         except mysql.connector.Error as error:
-            if self.debug and connect_debug: print("owl - connect error:", error)
+            if connect_debug: debug_helper("owl - connect |error %s" % error, self.debug)
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", GetConfig("mysql_localuser")))
@@ -148,7 +149,7 @@ class DoSql:
             return False
 
     def find(self, searchfor):
-        if self.debug: print("owl - find input:", type(searchfor), searchfor)
+        debug_helper("owl - find |input %s %s" % (type(searchfor), searchfor), self.debug)
         if type(self.command) == str:
             data = str(self.execute())
             output = data.find(searchfor)
@@ -156,5 +157,5 @@ class DoSql:
             sqllist = self.execute()
             output = []
             for x in sqllist: output.append(x.find(searchfor))
-        if self.debug: print("owl - find output:", type(output), output)
+        debug_helper("owl - find |output %s %s" % (type(output), output), self.debug)
         return output
