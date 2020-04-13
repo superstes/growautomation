@@ -25,9 +25,9 @@ from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
 
-from systemd import journal as systemd_journald
+from systemd import journal as systemd_journal
 import signal
-from time import sleep
+from time import time_sleep
 from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
@@ -35,9 +35,8 @@ from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from os import getpid as os_getpid
 
-Threader = Loop()
-
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+Threader = Loop()
 
 
 class Service:
@@ -85,12 +84,14 @@ class Service:
 
             @Threader.thread(int(interval), thread_name, debug=self.debug)
             def thread_function():
-                output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+                output, error = subprocess_popen(["/usr/bin/python3 %s %s %s" % (function, thread_name, self.debug)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 if error.decode("ascii") != "":
                     LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
                     if self.debug: print("service - function error for thread", thread_name, "|error", error.decode("ascii").strip())
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
+        systemd_journal.write("Finished starting service.")
+        self.status()
         self.run()
 
     def reload(self, signum=None, stack=None):
@@ -107,48 +108,50 @@ class Service:
                             Threader.reload_thread(int(interval_reload), thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
         if self.debug: print("service - reload |overwrite_dict:", type(name_dict_overwrite), name_dict_overwrite)
-        if len(dict_reloaded) > 0: systemd_journald.write("Updated configuration:\n%s" % dict_reloaded)
+        if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
-        self.run()
+        systemd_journal("Finised configuration reload.")
+        self.status()
 
     def stop(self, signum=None, stack=None):
         if self.debug: print("service - stop |stopping")
         LogWrite("Stopping service", level=1)
+        systemd_journal("Stopping service.")
         if signum is not None:
             if self.debug: print("service - stop |got signal", signum)
             LogWrite("Service received signal %s" % signum, level=2)
         Threader.stop()
-        sleep(10)
+        time_sleep(10)
         self.init_exit = True
-        self.status()
+        systemd_journal("Service stopped.")
         self.exit()
 
     def exit(self):
         if self.exit_count == 0:
             self.exit_count += 1
             ShellOutput(font="line", symbol="#")
-            print("\n\nGrowautomation Service: Farewell! See you.\n")
+            print("\n\nGrowautomation Service: Farewell! It has been my honor to serve you.\n")
+            systemd_journal.write("Growautomation Service: Farewell! It has been my honor to serve you.")
             ShellOutput(font="line", symbol="#")
         raise SystemExit
 
     def status(self):
         if self.debug: print("service - status |updating status")
         if self.debug: print("service - status |threads: %s |config: %s" % (Threader.list(), self.name_dict))
-        systemd_journald.write("Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
+        systemd_journal.write("Threads running:\n%s\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
-        self.status()
         if self.debug: print("service - run |entering runtime")
         try:
-            while_count = 0
+            while_count, tired_time = 0, 300
             while True:
                 while_count += 1
-                if self.debug: print("service - run |loop count:", while_count, "|pid", os_getpid())
+                if self.debug: print("service - run |loop count", while_count, "|loop runtime", tired_time * (while_count - 1), "|pid", os_getpid())
                 if while_count == 288:
                     self.reload()
                     while_count = 0
                 if while_count % 6 == 0: self.status()
-                sleep(300)
+                time_sleep(tired_time)
         except:
             if self.init_exit is False:
                 if self.debug: print("service - run |runtime error")
