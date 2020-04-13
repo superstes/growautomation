@@ -27,7 +27,7 @@ from ga.service.threader import Loop
 
 from systemd import journal as systemd_journal
 import signal
-from time import time_sleep
+from time import sleep as time_sleep
 from sys import argv as sys_argv
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
