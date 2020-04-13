@@ -45,25 +45,25 @@ class Service:
         self.debug = debug
         self.custom_args = custom_args
         self.name_dict = {}
-        self.init_exit, self.init_exit_count = False, 0
+        self.init_exit, self.exit_count = False, 0
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root, core_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'")
-        for row in self.get_config(setting="timer", output="belonging,data"):
-            if row[0] in core_list or self.get_config(setting="enabled", belonging=row[0]) == "1":
-                if self.get_config(output="type", table="object", setting=row[0]) is not "device": function = self.get_config(setting="function", belonging=row[0])
-                else:
-                    devicetype = self.get_config(output="class", table="object", setting=row[0])
-                    if self.get_config(setting="enabled", belonging=devicetype) == "1":
-                        function = self.get_config(setting="function", belonging=devicetype)
+        name_dict, path_root, core_list, sensor_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'"), \
+                                                       self.get_config(output="name", table="object", filter="type = 'sensor'")
+        for belonging in self.get_config(setting="timer", output="belonging,data"):
+            if belonging[0] in core_list or self.get_config(setting="enabled", belonging=belonging[0]) == "1":
+                if belonging[0] in sensor_list:
+                    if self.get_config(setting="enabled", belonging=self.get_config(output="class", table="object", setting=belonging[0])) == "1":
+                        function = "%s/sensor/%s" % (path_root, self.get_config(setting="function", belonging="sensor_master"))
+                        name_dict["check_%s" % belonging[0]] = [self.get_config(setting="time_check"), function]
                     else: pass
-                if row[0] in core_list: path_function = "%s/core/%s" % (path_root, function)
-                else: path_function = "%s/sensor/%s" % (path_root, function)
-                name_dict[row[0]] = [row[1], path_function]
+                elif belonging[0] in core_list: function = "%s/core/%s" % (path_root, self.get_config(setting="function", belonging=belonging[0]))
+                else: pass
+                name_dict[belonging[0]] = [belonging[1], function]
             else: pass
             if self.debug: print("service - timer dict:", type(name_dict), name_dict)
         return name_dict
@@ -77,8 +77,10 @@ class Service:
 
             @Threader.thread(int(interval), thread_name, debug=self.debug)
             def thread_function():
-                output, error = subprocess_popen(["/usr/bin/python3 %s" % function], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-                if error.decode("ascii") != "": LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
+                output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+                if error.decode("ascii") != "":
+                    LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
+                    if self.debug: print("service - function error for thread", thread_name, "|error", error.decode("ascii").strip())
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
         self.run()
@@ -114,10 +116,10 @@ class Service:
         self.exit()
 
     def exit(self):
-        if self.init_exit_count == 0:
-            self.init_exit_count += 1
+        if self.exit_count == 0:
+            self.exit_count += 1
             ShellOutput(font="line", symbol="#")
-            print("\n\nGrowautomation Service: Tschau!\n")
+            print("\n\nGrowautomation Service: Farewell! See you.\n")
             ShellOutput(font="line", symbol="#")
         raise SystemExit
 
@@ -152,10 +154,5 @@ class Service:
 
 try:
     if sys_argv[1] is not None:
-        try:
-            if sys_argv[2] is not None: Service(custom_args=sys_argv[2], debug=True) if sys_argv[1] == "debug" else Service()
-        except IndexError: Service(debug=True) if sys_argv[1] == "debug" else Service()
-    elif sys_argv[2] is not None:
-        try: Service(custom_args=sys_argv[2])
-        except IndexError: Service()
+        Service(debug=True) if sys_argv[1] == "debug" else Service()
 except IndexError: Service()
