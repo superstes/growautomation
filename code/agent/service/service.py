@@ -110,20 +110,20 @@ class Service:
         if self.debug: print("service - reload |overwrite_dict:", type(name_dict_overwrite), name_dict_overwrite)
         if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
-        systemd_journal("Finised configuration reload.")
+        systemd_journal.write("Finished configuration reload.")
         self.status()
 
     def stop(self, signum=None, stack=None):
         if self.debug: print("service - stop |stopping")
         LogWrite("Stopping service", level=1)
-        systemd_journal("Stopping service.")
+        systemd_journal.write("Stopping service.")
         if signum is not None:
             if self.debug: print("service - stop |got signal", signum)
             LogWrite("Service received signal %s" % signum, level=2)
         Threader.stop()
         time_sleep(10)
         self.init_exit = True
-        systemd_journal("Service stopped.")
+        systemd_journal.write("Service stopped.")
         self.exit()
 
     def exit(self):
