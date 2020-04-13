@@ -82,7 +82,7 @@ class Service:
             interval, function = settings[0], settings[1]
             debug_helper("service - start |function %s %s |interval %s %s" % (type(function), function, type(interval), interval), self.debug)
 
-            @Threader.thread(int(interval), thread_name, debug=self.debug, self.debug)
+            @Threader.thread(int(interval), thread_name, debug=self.debug)
             def thread_function():
                 output, error = subprocess_popen(["/usr/bin/python3 %s %s %s" % (function, thread_name, self.debug)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 if error.decode("ascii") != "":
