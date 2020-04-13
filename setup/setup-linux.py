@@ -1090,6 +1090,7 @@ def ga_setup_infra():
 # code setup
 def ga_setup_infra_code():
     ga_setup_shelloutput_header("Setting up growautomation code", "#")
+    os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
     if os_path.exists("/tmp/controller") is True:
         os_system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
 
@@ -1115,8 +1116,8 @@ def ga_setup_infra_code():
 
     ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
-    service_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"]
-    os_system("mv /etc/systemd/system/growautomation.service /tmp")
+    service_path = "%s/service/systemd/service.py" % ga_config["path_root"]
+    os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
     ga_replaceline(service_path, "ExecStart=", "ExecStart=\/usr\/bin\/python3 %s" % service_path.replace("/", "\/"))
     os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
     os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
