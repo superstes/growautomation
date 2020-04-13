@@ -4,6 +4,7 @@
 # ga_version0.3
 
 from ga.core.ant import LogWrite
+from ga.core.ant import debug_helper
 
 from threading import Thread, Event
 from time import sleep as time_sleep
@@ -25,14 +26,14 @@ class Job(Thread):
         self.debug = debug
 
     def stop(self):
-        if self.debug: print("threader - Thread(stop) |thread stopping", self.name)
+        debug_helper("threader - Thread(stop) |thread stopping %s" % self.name, self.debug)
         self.state_stop.set()
         self.join()
         LogWrite("Stopped thread '%s'" % self.name, level=3)
 
     def run(self):
         LogWrite("Starting thread '%s'" % self.name, level=4)
-        if self.debug: print("threader - Thread(run) |thread starting", self.name)
+        debug_helper("threader - Thread(run) |thread starting %s" % self.name, self.debug)
         if self.run_once:
             self.execute()
             Loop.stop_thread(self.name)
@@ -40,7 +41,7 @@ class Job(Thread):
             while not self.state_stop.wait(self.interval.total_seconds()):
                 self.execute()
                 if self.state_stop.isSet():
-                    if self.debug: print("threader - Thread(run) |thread exiting", self.name)
+                    debug_helper("threader - Thread(run) |thread exiting %s" % self.name, self.debug)
                     LogWrite("Exiting thread '%s'" % self.name, level=4)
                     break
 
@@ -54,19 +55,19 @@ class Loop:
         LogWrite("Starting threads in background", level=3)
         for job in self.jobs:
             if single_thread is not None:
-                if self.debug: print("threader - start |starting thread", type(single_thread), single_thread)
+                debug_helper("threader - start |starting thread %s %s" % (type(single_thread), single_thread), self.debug)
                 if job.name == single_thread:
                     job.daemon = daemon
                     job.start()
             else:
-                if self.debug: print("threader - start |starting threads")
+                debug_helper("threader - start |starting threads", self.debug)
                 job.daemon = daemon
                 job.start()
         if not daemon: self.block_root_process()
 
     def thread(self, sleep_time: int, thread_name, debug=False):
         self.debug = debug
-        if self.debug: print("threader - thread |adding job", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
+        debug_helper("threader - thread |adding job |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time), self.debug)
 
         def decorator(function):
             if sleep_time == 0:
@@ -77,7 +78,7 @@ class Loop:
         return decorator
 
     def block_root_process(self):
-        if self.debug: print("threader - block |running threads in foreground")
+        debug_helper("threader - block |running threads in foreground", self.debug)
         LogWrite("Starting threads in foreground", level=3)
         while True:
             try:
@@ -87,12 +88,12 @@ class Loop:
                 raise SystemExit
 
     def stop(self):
-        if self.debug: print("threader - stop |stopping jobs")
+        debug_helper("threader - stop |stopping jobs", self.debug)
         for job in self.jobs: job.stop()
         LogWrite("All threads stopped. Exiting loop", level=2)
 
     def stop_thread(self, thread_name):
-        if self.debug: print("threader - stop_thread |", type(thread_name), thread_name)
+        debug_helper("threader - stop_thread |%s %s" % (type(thread_name), thread_name), self.debug)
         to_process_list = self.jobs
         for job in to_process_list:
             if job.name == thread_name:
@@ -101,17 +102,17 @@ class Loop:
                 LogWrite("Thread %s stopped." % job.name, level=2)
 
     def start_thread(self, sleep_time: int, thread_name, debug=False):
-        if self.debug: print("threader - start_thread |", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
+        debug_helper("threader - start_thread |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time), self.debug)
         self.thread(sleep_time, thread_name, debug)
         self.start(single_thread=thread_name)
 
     def reload_thread(self, sleep_time: int, thread_name, debug=False):
-        if self.debug: print("threader - reload_thread |", type(thread_name), thread_name, "|interval", type(sleep_time), sleep_time)
+        debug_helper("threader - reload_thread |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time), self.debug)
         self.stop_thread(thread_name)
         self.start_thread(sleep_time, thread_name, debug)
 
     def list(self):
-        if self.debug: print("threader - list |returning thread list")
+        debug_helper("threader - list |returning thread list", self.debug)
         job_name_list = []
         for job in self.jobs: job_name_list.append(job.name)
         return job_name_list
