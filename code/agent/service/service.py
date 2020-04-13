@@ -52,19 +52,21 @@ class Service:
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root, core_list, sensor_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'")[0], \
-                                                       self.get_config(output="name", table="object", filter="type = 'sensor'")
-        if self.debug: print("service - timer |vars path_root", path_root, "|core_list", core_list, "|sensor_list", sensor_list)
-        for belonging in self.get_config(setting="timer", output="belonging,data"):
-            if belonging[0] in core_list or self.get_config(setting="enabled", belonging=belonging[0]) == "1":
-                if belonging[0] in sensor_list:
-                    if self.get_config(setting="enabled", belonging=self.get_config(output="class", table="object", setting=belonging[0])) == "1":
+        name_dict, path_root, core_list, sensor_type_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'")[0], \
+                                                       self.get_config(output="name", table="object", filter="class = 'sensor'")
+        if self.debug: print("service - timer |vars path_root", path_root, "|core_list", core_list, "|sensor_type_list", sensor_type_list)
+        for timer_setting in self.get_config(setting="timer", output="belonging,data"):
+            name, timer = timer_setting[0], timer_setting[1]
+            if name in core_list or self.get_config(setting="enabled", belonging=name) == "1":
+                devicetype = self.get_config(output="class", table="object", setting=name)
+                if devicetype in sensor_type_list:
+                    if self.get_config(setting="enabled", belonging=devicetype) == "1":
                         function = "%s/sensor/%s" % (path_root, self.get_config(setting="function", belonging="sensor_master"))
-                        name_dict["check_%s" % belonging[0]] = [self.get_config(setting="time_check"), function]
+                        name_dict["check_%s" % name] = [self.get_config(setting="timer_check", belonging=name), function]
                     else: continue
-                elif belonging[0] in core_list: function = "%s/core/%s" % (path_root, self.get_config(setting="function", belonging=belonging[0]))
+                elif name in core_list: function = "%s/core/%s" % (path_root, self.get_config(setting="function", belonging=name))
                 else: continue
-                name_dict[belonging[0]] = [belonging[1], function]
+                name_dict[name] = [timer, function]
             else: continue
             if self.debug: print("service - timer |dict:", type(name_dict), name_dict)
         return name_dict
