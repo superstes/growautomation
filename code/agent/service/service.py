@@ -81,7 +81,6 @@ class Service:
                 if error.decode("ascii") != "": LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
-        self.status()
         self.run()
 
     def reload(self, signum=None, stack=None):
@@ -100,7 +99,6 @@ class Service:
         if self.debug: print("service - reload overwrite:", type(name_dict_overwrite), name_dict_overwrite)
         if len(dict_reloaded) > 0: systemd_journald.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
-#        self.status()
         self.run()
 
     def stop(self, signum=None, stack=None):
@@ -129,6 +127,7 @@ class Service:
         systemd_journald.write("Threads running:\n%s\n\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
+        self.status()
         if self.debug: print("service - entering runtime")
         try:
             while_count = 0
@@ -138,7 +137,7 @@ class Service:
                 if while_count == 288:
                     self.reload()
                     while_count = 0
-                if 6 % while_count == 0: self.status()
+                if while_count % 6 == 0: self.status()
                 sleep(300)
         except:
             if self.init_exit is False:
