@@ -116,7 +116,7 @@ class DoSql:
         try:
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
-            if connect_debug: print("owl - connect |command %s %s" % (type(command), command), self.debug)
+            if connect_debug: debug_helper("owl - connect |command %s %s" % (type(command), command), self.debug)
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
@@ -126,11 +126,8 @@ class DoSql:
                         fetch, data_list = cursor.fetchall(), []
                         for row_tuple in fetch:
                             if len(row_tuple) == 1:
-                                if connect_debug: debug_helper("owl - connect |tuple has only one slot %s" % row_tuple, self.debug)
                                 if row_tuple[0]: data_list.append(row_tuple[0])
-                            else:
-                                if connect_debug: debug_helper("owl - connect |tuple ok %s" % row_tuple, self.debug)
-                                data_list.append(row_tuple)
+                            else: data_list.append(row_tuple)
                         return str(data_list[0]) if len(data_list) == 1 else data_list
                 data = readcache(command)
             else:
