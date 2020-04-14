@@ -42,9 +42,7 @@ Threader = Loop()
 
 class Service:
     def __init__(self, custom_args=None, debug=False):
-        self.debug = debug
-        self.custom_args = custom_args
-        self.name_dict = {}
+        self.name_dict, self.custom_args, self.debug = {}, custom_args, debug
         self.init_exit, self.exit_count = False, 0
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
@@ -52,9 +50,11 @@ class Service:
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root, core_list, sensor_type_list = {}, self.get_config(setting="path_root"), self.get_config(output="name", table="object", filter="type = 'core'")[0], \
-                                                       self.get_config(output="name", table="object", filter="class = 'sensor'")
-        function_sensor_master, function_check = self.get_config(setting="function", belonging="sensor_master"), self.get_config(setting="function", belonging="check")
+        name_dict, path_root = {}, self.get_config(setting="path_root")
+        core_list = self.get_config(output="name", table="object", filter="type = 'core'")[0]
+        sensor_type_list = self.get_config(output="name", table="object", filter="class = 'sensor'")
+        function_sensor_master = self.get_config(setting="function", belonging="sensor_master")
+        function_check = self.get_config(setting="function", belonging="check")
         debug_helper("service - timer |vars path_root %s |core_list %s |sensor_type_list %s" % (path_root, core_list, sensor_type_list), self.debug)
         for timer_setting in self.get_config(setting="timer", output="belonging,data"):
             name, timer = timer_setting[0], timer_setting[1]
