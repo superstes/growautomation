@@ -20,29 +20,28 @@
 
 # ga_version 0.3
 
+from ga.core.config import GetConfig
+from ga.core.ant import LogWrite
+from ga.core.ant import time_subtract
+
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from time import sleep
-
-from ga.core.config import GetConfig
-from ga.core.ant import LogWrite
-from ga.core.ant import time_subtract
+from sys import argv as sys_argv
+import signal
 
 
-def LocalLogWrite(log, level):
-    LogWrite(log, "check", level)
-
-
-LocalLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class ActionLoader:
-    def __init__(self, device_type, device_sector_dict):
+    def __init__(self, device_type, device_sector_dict, debug=False):
         self.device_sector_dict = device_sector_dict
         self.type = device_type
         self.device_setting_dict = None
+        self.debug = debug
 
     def __repr__(self):
         for device in self.device_sector_dict.keys():
@@ -66,18 +65,19 @@ class ActionLoader:
             output1, error1 = start(command + " start")
             sleep(time_wait)
             output2, error2 = start(command + " stop")
-            LocalLogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2)
-            LocalLogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3)
+            LogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2)
+            LogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3)
         else:
             output, error = start(command)
-            LocalLogWrite("Function %s called.\nError:\n%s" % (function, error), level=2)
-            LocalLogWrite("Output:\n%s" % output, level=3)
+            LogWrite("Function %s called.\nError:\n%s" % (function, error), level=2)
+            LogWrite("Output:\n%s" % output, level=3)
 
 
 class SectorCheck:
-    def __init__(self, sector_dict):
+    def __init__(self, sector_dict, debug=False):
         self.sector_list = list(sector_dict.keys())
         self.type = list(sector_dict.values())[0]
+        self.debug = debug
 
     def __repr__(self):
         self.check_type_links()
@@ -93,19 +93,19 @@ class SectorCheck:
         for device_type in device_type_list:
             if GetConfig(setting="enabled", belonging=device_type) != "1":
                 device_type_list.remove(device_type)
-                LocalLogWrite("Action %s is disabled." % device_type, level=2)
-                pass
+                LogWrite("Action %s is disabled." % device_type, level=2)
+                continue
             device_list = GetConfig(filter="class = '%s'" % device_type, table="object")
             [device_list.remove(device) for device in reversed(device_list) if GetConfig(setting="enabled", belonging=device) != "1"]
             for device in device_list: device_sector_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
-                    LocalLogWrite("Device %s is in none of the following sectors: %s" % (device, self.sector_list), level=3)
+                    LogWrite("Device %s is in none of the following sectors: %s" % (device, self.sector_list), level=3)
                     del device_sector_dict[device]
-                    pass
+                    continue
                 device_sector_dict[device] = sector_list
-            ActionLoader(device_type, device_sector_dict)
+            ActionLoader(device_type, device_sector_dict, self.debug)
 
     def check_device_sector(self, value):
         value_sector_list, output_list = [], []
@@ -115,11 +115,14 @@ class SectorCheck:
 
 
 class ThresholdCheck:
-    def __init__(self, input_type):
-        self.type = input_type
+    def __init__(self, sensor, debug=False):
+        self.sensor = sensor
         self.check_range = None
+        self.debug = debug
 
     def __repr__(self):
+        # checks only devicetypes
+        # will check if input is sensor or type
         if GetConfig(setting=self.type, table="object") == "sensor":
             if GetConfig(setting="enabled", belonging=self.type) == "1":
                 threshold = GetConfig(setting="threshold", belonging=self.type)
@@ -129,26 +132,32 @@ class ThresholdCheck:
                         if self.check_device_sector(device_sector, sector) is True:
                             average_data = self.get_average_data(device)
                             average_data_list.append(average_data)
-                            LocalLogWrite("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3)
+                            LogWrite("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3)
                         else:
-                            LocalLogWrite("Device %s not in sector %s." % (device, sector), level=3)
-                            pass
+                            LogWrite("Device %s not in sector %s." % (device, sector), level=3)
+                            continue
                     sector_average = sum(average_data_list) / len(average_data_list)
                     if sector_average >= threshold:
-                        LocalLogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.type, sector, sector_average, threshold), level=2)
+                        LogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.type, sector, sector_average, threshold), level=2)
                         sector_dict = {sector: self.type}
                     else:
-                        LocalLogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.type, sector, sector_average, threshold), level=2)
-                        pass
-                SectorCheck(sector_dict)
+                        LogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.type, sector, sector_average, threshold), level=2)
+                        continue
+                SectorCheck(sector_dict, self.debug)
+
+    def input_device(self):
+        # if input = device
+
+    def input_devicetype(self):
+        # if input = type
 
     def get_device_dict(self):
         device_list = GetConfig(filter="class = '%s'" % self.type, table="object")
         for device in device_list:
             if GetConfig(setting="enabled", belonging=device) == "1": device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
             else:
-                LocalLogWrite("Device %s is disabled." % device, level=3)
-                pass
+                LogWrite("Device %s is disabled." % device, level=3)
+                continue
         return device_dict
 
     def get_sector_list(self):
@@ -176,3 +185,18 @@ class ThresholdCheck:
         value_sector_list = []
         value_sector_list.append(value.split(",")) if value.find(",") != -1 else value_sector_list.append(value)
         return True if sector in value_sector_list else False
+
+
+try:
+    try:
+        ThresholdCheck(sys_argv[1], debug=True) if sys_argv[2] == "True" else ThresholdCheck(sys_argv[1])
+    except IndexError:
+        ThresholdCheck(sys_argv[1])
+except IndexError:
+    LogWrite("No sensor provided. Exiting.")
+    raise SystemExit
+
+# to do
+# check how to implement signal handling regarding multiple classes
+# signal.signal(signal.SIGTERM, self.stop)
+# signal.signal(signal.SIGINT, self.stop)
