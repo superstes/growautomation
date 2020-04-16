@@ -18,7 +18,7 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-#ga_version0.3
+# ga_version 0.3
 
 from functools import lru_cache
 from os import path as os_path
@@ -26,12 +26,12 @@ from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 
 
-class GetConfig(object):
+class Config(object):
     def __init__(self, request, file="core.conf"):
         self.file = file
         self.request = request
 
-    def __repr__(self):
+    def get(self):
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file

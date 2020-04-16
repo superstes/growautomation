@@ -29,7 +29,7 @@ from inspect import currentframe as inspect_currentframe
 from time import sleep as time_sleep
 
 from ga.core.smallant import LogWrite
-from ga.core.config_parser_file import GetConfig
+from ga.core.config_parser_file import Config
 
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
@@ -44,7 +44,7 @@ class DoSql:
 
     def start(self):
         creds_ok = False
-        if GetConfig("setuptype") != "agent":
+        if Config("setuptype").get() != "agent":
             def running():
                 output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
                                                  shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
@@ -65,7 +65,7 @@ class DoSql:
                 whilecount += 1
         whilecount = 0
         while creds_ok is False:
-            if whilecount == 1 and GetConfig("setuptype") == "agent":
+            if whilecount == 1 and Config("setuptype").get() == "agent":
                 debugger("owl - prequesits |failing over to local db")
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
@@ -80,8 +80,8 @@ class DoSql:
             def conntest():
                 if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
                 else:
-                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"), connect_debug=False)
-                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"), connect_debug=False)
+                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % Config("hostname").get(), connect_debug=False)
+                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get(), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
                 debugger("owl - prequesits |conntest %s %s" % (type(result), result))
@@ -106,11 +106,11 @@ class DoSql:
 
     def connect(self, command=None, connect_debug=True):
         import mysql.connector
-        if GetConfig("setuptype") == "agent":
-            if self.fallback is True: connection = mysql.connector.connect(user="%s" % GetConfig("sql_local_user"), passwd="%s" % GetConfig("sql_local_pwd"))
-            else: connection = mysql.connector.connect(host="%s" % GetConfig("sql_server_ip"), port="%s" % GetConfig("sql_server_port"),
-                                                       user="%s" % GetConfig("sql_agent_user"), passwd="%s" % GetConfig("sql_agent_pwd"))
-        else: connection = mysql.connector.connect(user="%s" % GetConfig("sql_admin_user"), passwd="%s" % GetConfig("sql_admin_pwd"))
+        if Config("setuptype").get() == "agent":
+            if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
+            else: connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+                                                       user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
+        else: connection = mysql.connector.connect(user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
         try:
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
@@ -140,8 +140,8 @@ class DoSql:
             if connect_debug: debugger("owl - connect |error %s" % error)
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
-            if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", GetConfig("mysql_localuser")))
-            else: LogWrite("Server: %s, port %s, user %s" % (GetConfig("mysql.server_ip"), GetConfig("mysql.server_port"), GetConfig("mysql_user")))
+            if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", Config("mysql_localuser").get()))
+            else: LogWrite("Server: %s, port %s, user %s" % (Config("mysql.server_ip").get(), Config("mysql.server_port").get(), Config("mysql_user").get()))
             return False
 
     def find(self, searchfor):
