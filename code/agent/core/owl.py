@@ -20,7 +20,6 @@
 
 # ga_version 0.3
 
-
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
@@ -172,4 +171,3 @@ def debugger(command):
             print(command)
         elif type(command) == list:
             [print(call) for call in command]
-

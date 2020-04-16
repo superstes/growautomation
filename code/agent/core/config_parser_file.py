@@ -61,3 +61,4 @@ class GetConfig(object):
                 return split
             except (IndexError, ValueError):
                 self.error("file")
+
