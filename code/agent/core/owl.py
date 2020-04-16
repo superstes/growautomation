@@ -159,7 +159,9 @@ class DoSql:
 
 @lru_cache()
 def debug_check():
-    debug_state = DoSql.connect(command="SELECT data FROM ga.Setting WHERE setting = 'debug' AND belonging = 'service';", connect_debug=False)
+    command = "SELECT data FROM ga.Setting WHERE setting = 'debug' AND belonging = 'service';"
+    sql = DoSql(command)
+    debug_state = sql.connect(command=command, connect_debug=False)
     return True if debug_state == "1" else False
 
 
