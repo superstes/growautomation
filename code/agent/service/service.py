@@ -20,7 +20,7 @@
 
 # ga_version0.3
 
-from ga.core.config import GetConfig
+from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.core.owl import debugger
@@ -50,25 +50,25 @@ class Service:
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root = {}, GetConfig(setting="path_root")
-        core_list = GetConfig(output="name", table="object", filter="type = 'core'")[0]
-        sensor_type_list = GetConfig(output="name", table="object", filter="class = 'sensor'")
-        function_sensor_master = GetConfig(setting="function", belonging="sensor_master")
-        function_check = GetConfig(setting="function", belonging="check")
+        name_dict, path_root = {}, Config(setting="path_root")
+        core_list = Config(output="name", table="object", filter="type = 'core'").get()[0]
+        sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
+        function_sensor_master = Config(setting="function", belonging="sensor_master").get()
+        function_check = Config(setting="function", belonging="check").get()
         debugger("service - timer |vars path_root %s |core_list %s |sensor_type_list %s" % (path_root, core_list, sensor_type_list))
-        for timer_setting in GetConfig(setting="timer", output="belonging,data"):
+        for timer_setting in Config(setting="timer", output="belonging,data").get():
             name, timer = timer_setting[0], timer_setting[1]
-            if name in core_list or GetConfig(setting="enabled", belonging=name) == "1":
+            if name in core_list or Config(setting="enabled", belonging=name).get() == "1":
                 if name not in core_list:
                     if name in sensor_type_list: devicetype = name
-                    else: devicetype = GetConfig(output="class", table="object", setting=name)
+                    else: devicetype = Config(output="class", table="object", setting=name).get()
                     if devicetype in sensor_type_list:
-                        if GetConfig(setting="enabled", belonging=devicetype) == "1":
+                        if Config(setting="enabled", belonging=devicetype).get() == "1":
                             function = "%s/sensor/%s" % (path_root, function_sensor_master)
-                            name_dict["check_%s" % name] = [GetConfig(setting="timer_check", belonging=name), function_check]
+                            name_dict["check_%s" % name] = [Config(setting="timer_check", belonging=name).get(), function_check]
                         else: continue
                     else: continue
-                elif name in core_list: function = "%s/core/%s" % (path_root, GetConfig(setting="function", belonging=name))
+                elif name in core_list: function = "%s/core/%s" % (path_root, Config(setting="function", belonging=name).get())
                 else: continue
                 name_dict[name] = [timer, function]
             else: continue
@@ -166,13 +166,13 @@ class Service:
     def debug(self, cleanup=False):
         sql_set_debug = "REPLACE INTO ga.Setting (author,belonging,setting,data) VALUES ('service','service','debug','%s');"
         if cleanup:
-            if GetConfig(setting="debug", belonging="service") == "1": DoSql(sql_set_debug % "0")
+            if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0")
         else:
             try:
                 if sys_argv[1] == "debug":
-                    if GetConfig(setting="debug", belonging="service") != "1": DoSql(sql_set_debug % "1")
+                    if Config(setting="debug", belonging="service").get() != "1": DoSql(sql_set_debug % "1")
                 else:
-                    if GetConfig(setting="debug", belonging="service") == "1": DoSql(sql_set_debug % "0")
+                    if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0")
             except IndexError: pass
 
 

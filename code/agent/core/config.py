@@ -32,20 +32,14 @@ from ga.core.config_parser_file import GetConfig as parse_file
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
-class GetConfig(object):
-    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, debug=False):
-        self.setting = setting
-        self.nosql = nosql
-        self.filter = filter
-        self.belonging = belonging
-        self.output = output
-        self.table = table
-        self.debug = debug
+class Config(object):
+    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
+        self.setting, self.nosql, self.filter, self.belonging, self.output, self.table = setting, nosql, filter, belonging, output, table
 
-    def start(self):
+    def get(self):
         debugger("config - input |setting %s %s |nosql %s %s |output %s %s |belonging %s %s |filter %s %s |table %s %s"
-                     % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
-                        type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
+                 % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
+                 type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
@@ -59,8 +53,8 @@ class GetConfig(object):
 
     @lru_cache()
     def parse_sql(self, command=None):
-        response = DoSql(command, debug=self.debug).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                                              % (self.setting, parse_file("hostname")), debug=self.debug).start()
+        response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
+                                                                                              % (self.setting, parse_file("hostname"))).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
     @lru_cache()
