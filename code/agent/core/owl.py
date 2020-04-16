@@ -131,6 +131,7 @@ class DoSql:
                 data = readcache(command)
             else:
                 cursor.execute(command)
+                connection.commit()
                 data = True
             cursor.close()
             connection.close()
