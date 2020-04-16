@@ -81,7 +81,7 @@ class DoSql:
             def conntest():
                 if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
                 else:
-                    self.connect("INSERT INTO ga.Setting (author, type, belonging, setting, data) VALUES ('owl', 'agent', '%s', 'conntest', 'ok');" % GetConfig("hostname"), connect_debug=False)
+                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % GetConfig("hostname"), connect_debug=False)
                     self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % GetConfig("hostname"), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
