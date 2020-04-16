@@ -34,7 +34,7 @@ from inspect import currentframe as inspect_currentframe
 from getpass import getpass
 # from functools import lru_cache
 
-from ga.core.config import GetConfig
+from ga.core.config import Config
 from ga.core.smallant import LogWrite as SmallLogWrite
 
 
@@ -42,7 +42,7 @@ SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), le
 
 
 # Just vars
-log_redirect = " 2>&1 | tee -a %s" % GetConfig("path_log")
+log_redirect = " 2>&1 | tee -a %s" % Config("path_log").get()
 
 # Time formats
 
@@ -91,10 +91,10 @@ class LogWrite(object):
         self.log_level = level
 
     def __repr__(self):
-        return False if self.log_level > GetConfig("log_level") else self.write()
+        return False if self.log_level > Config("log_level").get() else self.write()
 
     def open(self):
-        logdir = "%s/%s/%s" % (GetConfig("path_log"), self.scripttype, date02)
+        logdir = "%s/%s/%s" % (Config("path_log").get(), self.scripttype, date02)
         return os_system("mkdir -p " + logdir) if os_path.exists(logdir) is False else open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
 
     def write(self):
@@ -109,7 +109,7 @@ class Line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
         self.file = file
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
-        self.backupdir = "%s/%s" % (GetConfig("path_backup"), date02)
+        self.backupdir = "%s/%s" % (Config("path_backup").get(), date02)
         self.action = action
         self.searchfor = search
         self.replacewith = replace
@@ -246,4 +246,3 @@ class GetInput:
             return self.user_input
         else:
             raise KeyError
-
