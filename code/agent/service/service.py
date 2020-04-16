@@ -50,7 +50,7 @@ class Service:
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root = {}, Config(setting="path_root")
+        name_dict, path_root = {}, Config(setting="path_root").get()
         core_list = Config(output="name", table="object", filter="type = 'core'").get()[0]
         sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
         function_sensor_master = Config(setting="function", belonging="sensor_master").get()
@@ -166,13 +166,13 @@ class Service:
     def debug(self, cleanup=False):
         sql_set_debug = "REPLACE INTO ga.Setting (author,belonging,setting,data) VALUES ('service','service','debug','%s');"
         if cleanup:
-            if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0")
+            if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0", write=True).start()
         else:
             try:
                 if sys_argv[1] == "debug":
-                    if Config(setting="debug", belonging="service").get() != "1": DoSql(sql_set_debug % "1")
+                    if Config(setting="debug", belonging="service").get() != "1": DoSql(sql_set_debug % "1", write=True).start()
                 else:
-                    if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0")
+                    if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0", write=True).start()
             except IndexError: pass
 
 
