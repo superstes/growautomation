@@ -23,8 +23,9 @@
 from ga.core.config import GetConfig
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
-from ga.core.smallant import debug_helper
+from ga.core.owl import debugger
 from ga.service.threader import Loop
+from ga.core.owl import DoSql
 
 from systemd import journal as systemd_journal
 import signal
@@ -41,53 +42,53 @@ Threader = Loop()
 
 
 class Service:
-    def __init__(self, custom_args=None, debug=False):
-        self.name_dict, self.custom_args, self.debug = {}, custom_args, debug
-        self.init_exit, self.exit_count = False, 0
+    def __init__(self):
+        self.name_dict, self.init_exit, self.exit_count = {}, False, 0
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root = {}, self.get_config(setting="path_root")
-        core_list = self.get_config(output="name", table="object", filter="type = 'core'")[0]
-        sensor_type_list = self.get_config(output="name", table="object", filter="class = 'sensor'")
-        function_sensor_master = self.get_config(setting="function", belonging="sensor_master")
-        function_check = self.get_config(setting="function", belonging="check")
-        debug_helper("service - timer |vars path_root %s |core_list %s |sensor_type_list %s" % (path_root, core_list, sensor_type_list), self.debug)
-        for timer_setting in self.get_config(setting="timer", output="belonging,data"):
+        name_dict, path_root = {}, GetConfig(setting="path_root")
+        core_list = GetConfig(output="name", table="object", filter="type = 'core'")[0]
+        sensor_type_list = GetConfig(output="name", table="object", filter="class = 'sensor'")
+        function_sensor_master = GetConfig(setting="function", belonging="sensor_master")
+        function_check = GetConfig(setting="function", belonging="check")
+        debugger("service - timer |vars path_root %s |core_list %s |sensor_type_list %s" % (path_root, core_list, sensor_type_list))
+        for timer_setting in GetConfig(setting="timer", output="belonging,data"):
             name, timer = timer_setting[0], timer_setting[1]
-            if name in core_list or self.get_config(setting="enabled", belonging=name) == "1":
+            if name in core_list or GetConfig(setting="enabled", belonging=name) == "1":
                 if name not in core_list:
                     if name in sensor_type_list: devicetype = name
-                    else: devicetype = self.get_config(output="class", table="object", setting=name)
+                    else: devicetype = GetConfig(output="class", table="object", setting=name)
                     if devicetype in sensor_type_list:
-                        if self.get_config(setting="enabled", belonging=devicetype) == "1":
+                        if GetConfig(setting="enabled", belonging=devicetype) == "1":
                             function = "%s/sensor/%s" % (path_root, function_sensor_master)
-                            name_dict["check_%s" % name] = [self.get_config(setting="timer_check", belonging=name), function_check]
+                            name_dict["check_%s" % name] = [GetConfig(setting="timer_check", belonging=name), function_check]
                         else: continue
                     else: continue
-                elif name in core_list: function = "%s/core/%s" % (path_root, self.get_config(setting="function", belonging=name))
+                elif name in core_list: function = "%s/core/%s" % (path_root, GetConfig(setting="function", belonging=name))
                 else: continue
                 name_dict[name] = [timer, function]
             else: continue
-            debug_helper("service - timer |dict: %s %s" % (type(name_dict), name_dict), self.debug)
+            debugger("service - timer |dict: %s %s" % (type(name_dict), name_dict))
         return name_dict
 
     def start(self):
-        debug_helper("service - start |starting |pid %s" % os_getpid(), self.debug)
+        self.debug()
+        debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
-            debug_helper("service - start |function %s %s |interval %s %s" % (type(function), function, type(interval), interval), self.debug)
+            debugger("service - start |function %s %s |interval %s %s" % (type(function), function, type(interval), interval))
 
-            @Threader.thread(int(interval), thread_name, debug=self.debug)
+            @Threader.thread(int(interval), thread_name)
             def thread_function():
-                output, error = subprocess_popen(["/usr/bin/python3 %s %s %s" % (function, thread_name, self.debug)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+                output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 if error.decode("ascii") != "":
                     LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
-                    debug_helper("service - function error for thread %s |error %s" % (thread_name, error.decode("ascii").strip()), self.debug)
+                    debugger("service - function error for thread %s |error %s" % (thread_name, error.decode("ascii").strip()))
                 LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
         Threader.start()
         systemd_journal.write("Finished starting service.")
@@ -95,7 +96,7 @@ class Service:
         self.run()
 
     def reload(self, signum=None, stack=None):
-        debug_helper("service - reload |reloading config", self.debug)
+        debugger("service - reload |reloading config")
         name_dict_overwrite, dict_reloaded = {}, {}
         for thread_name_reload, settings_reload in self.get_timer_dict().items():
             interval_reload, function_reload = settings_reload[0], settings_reload[1]
@@ -105,26 +106,27 @@ class Service:
                         interval, function = settings[0], settings[1]
                         if interval_reload != interval:
                             name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
-                            Threader.reload_thread(int(interval_reload), thread_name_reload, self.debug)
+                            Threader.reload_thread(int(interval_reload), thread_name_reload)
                         else: name_dict_overwrite[thread_name] = [interval, function]
             else:
                 name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
-                Threader.start_thread(int(interval_reload), thread_name_reload, self.debug)
-        debug_helper("service - reload |overwrite_dict: %s %s" % (type(name_dict_overwrite), name_dict_overwrite), self.debug)
+                Threader.start_thread(int(interval_reload), thread_name_reload)
+        debugger("service - reload |overwrite_dict: %s %s" % (type(name_dict_overwrite), name_dict_overwrite))
         if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
         systemd_journal.write("Finished configuration reload.")
         self.status()
 
     def stop(self, signum=None, stack=None):
-        debug_helper("service - stop |stopping", self.debug)
+        debugger("service - stop |stopping")
         LogWrite("Stopping service", level=1)
         systemd_journal.write("Stopping service.")
         if signum is not None:
-            debug_helper("service - stop |got signal %s" % signum, self.debug)
+            debugger("service - stop |got signal %s" % signum)
             LogWrite("Service received signal %s" % signum, level=2)
         Threader.stop()
         time_sleep(10)
+        self.debug(cleanup=True)
         self.init_exit = True
         systemd_journal.write("Service stopped.")
         self.exit()
@@ -139,16 +141,16 @@ class Service:
         raise SystemExit
 
     def status(self):
-        debug_helper(["service - status |updating status", "service - status |threads: %s |config: %s" % (Threader.list(), self.name_dict)], self.debug)
+        debugger(["service - status |updating status", "service - status |threads: %s |config: %s" % (Threader.list(), self.name_dict)])
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
-        debug_helper("service - run |entering runtime", self.debug)
+        debugger("service - run |entering runtime")
         try:
             while_count, tired_time = 0, 300
             while True:
                 while_count += 1
-                debug_helper("service - run |loop count %s |loop runtime %s |pid %s" % (while_count, tired_time * (while_count - 1), os_getpid()), self.debug)
+                debugger("service - run |loop count %s |loop runtime %s |pid %s" % (while_count, tired_time * (while_count - 1), os_getpid()))
                 if while_count == 288:
                     self.reload()
                     while_count = 0
@@ -156,15 +158,22 @@ class Service:
                 time_sleep(tired_time)
         except:
             if self.init_exit is False:
-                debug_helper("service - run |runtime error", self.debug)
+                debugger("service - run |runtime error")
                 LogWrite("Stopping service because of runtime error", level=2)
                 self.stop()
             else: self.exit()
 
-    def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
-        return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug).start()
+    def debug(self, cleanup=False):
+        sql_set_debug = "REPLACE INTO ga.Setting (author,belonging,setting,data) VALUES ('service','service','debug','%s');"
+        if cleanup:
+            if GetConfig(setting="debug", belonging="service") == "1": DoSql(sql_set_debug % "0")
+        else:
+            try:
+                if sys_argv[1] == "debug":
+                    if GetConfig(setting="debug", belonging="service") != "1": DoSql(sql_set_debug % "1")
+                else:
+                    if GetConfig(setting="debug", belonging="service") == "1": DoSql(sql_set_debug % "0")
+            except IndexError: pass
 
-try:
-    if sys_argv[1] is not None:
-        Service(debug=True) if sys_argv[1] == "debug" else Service()
-except IndexError: Service()
+
+Service()

@@ -57,10 +57,3 @@ class LogWrite(object):
         logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
         logfile.write("\n%s\n" % self.output)
         logfile.close()
-
-def debug_helper(command, debug=False):
-    if debug is True:
-        if type(command) == str:
-            print(command)
-        elif type(command) == list:
-            [print(call) for call in command]

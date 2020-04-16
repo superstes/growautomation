@@ -26,7 +26,7 @@ from inspect import currentframe as inspect_currentframe
 
 from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
-from ga.core.smallant import debug_helper
+from ga.core.owl import debugger
 from ga.core.config_parser_file import GetConfig as parse_file
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
@@ -43,9 +43,9 @@ class GetConfig(object):
         self.debug = debug
 
     def start(self):
-        debug_helper("config - input |setting %s %s |nosql %s %s |output %s %s |belonging %s %s |filter %s %s |table %s %s"
+        debugger("config - input |setting %s %s |nosql %s %s |output %s %s |belonging %s %s |filter %s %s |table %s %s"
                      % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
-                        type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table), self.debug)
+                        type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
@@ -97,7 +97,7 @@ class GetConfig(object):
             prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
-        debug_helper("config - sql_custom |custom %s %s |command %s %s" % (type(custom), custom, type(command), command), self.debug)
+        debugger("config - sql_custom |custom %s %s |command %s %s" % (type(custom), custom, type(command), command))
         return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
     @lru_cache()
@@ -109,11 +109,11 @@ class GetConfig(object):
         if self.setting in config_dict.keys():
             for key, value in config_dict.items():
                 if key.find(self.setting) != -1:
-                    debug_helper("config - hardcoded |found %s %s %s %s" % (type(key), key, type(value), value), self.debug)
+                    debugger("config - hardcoded |found %s %s %s %s" % (type(key), key, type(value), value))
                     return value
             return False
         else:
-            debug_helper("config - hardcoded |not found", self.debug)
+            debugger("config - hardcoded |not found")
             return False
 
     def parse_failover(self):
@@ -125,12 +125,12 @@ class GetConfig(object):
                     self.error("all")
                 else:
                     output = self.parse_hardcoded()
-                    debug_helper("config - failover |output %s %s" % (type(output), output), self.debug)
+                    debugger("config - failover |output %s %s" % (type(output), output))
                     return output
             else:
-                debug_helper("config - failover |output %s %s" % (type(parse_file_output), parse_file_output), self.debug)
+                debugger("config - failover |output %s %s" % (type(parse_file_output), parse_file_output))
                 return parse_file_output
         else:
             output = self.parse_sql()
-            debug_helper("config - failover |output %s %s" % (type(output), output), self.debug)
+            debugger("config - failover |output %s %s" % (type(output), output))
             return output
