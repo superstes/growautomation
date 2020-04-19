@@ -5,6 +5,7 @@ After=mariadb.service
 
 [Service]
 Type=simple
+ExecStartPre=/usr/bin/python3 /etc/growautomation/service/earlybird.py
 ExecStart=/usr/bin/python3 /etc/growautomation/service/service.py
 ExecReload=/bin/kill -10 $MAINPID
 TimeoutStopSec=30
