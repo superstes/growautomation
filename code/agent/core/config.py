@@ -43,7 +43,7 @@ class Config(object):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
-        output = FileConfig() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
+        output = FileConfig(self.setting).get() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
             else self.error("all")
         return self.error("sql") if output is False else output
 
@@ -54,7 +54,7 @@ class Config(object):
     @lru_cache()
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                                              % (self.setting, FileConfig("hostname"))).start()
+                                                                                              % (self.setting, FileConfig("hostname").get())).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
     @lru_cache()
@@ -91,8 +91,8 @@ class Config(object):
 
     @lru_cache()
     def parse_hardcoded(self):
-        config_dict = {"path_log": "%s/log" % FileConfig("path_root"), "path_backup": "%s/backup" % FileConfig("path_root"), "sql_server_port": "3306"}
-        if FileConfig("setuptype") != "agent":
+        config_dict = {"path_log": "%s/log" % FileConfig("path_root").get(), "path_backup": "%s/backup" % FileConfig("path_root").get(), "sql_server_port": "3306"}
+        if FileConfig("setuptype").get() != "agent":
             config_server_dict = {"sql_server_ip": "127.0.0.1"}
             config_dict = {**config_dict, **config_server_dict}
         if self.setting in config_dict.keys():
@@ -108,7 +108,7 @@ class Config(object):
     def parse_failover(self):
         parse_sql_output = self.parse_sql()
         if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.nosql is True:
-            parse_file_output = FileConfig(self.setting)
+            parse_file_output = FileConfig(self.setting).get()
             if parse_file_output is False or parse_file_output is None or parse_file_output == "":
                 if self.parse_hardcoded() is False:
                     self.error("all")
