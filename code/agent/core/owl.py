@@ -36,11 +36,10 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False, debug=False):
+    def __init__(self, command, write=False):
         self.command = command
         self.write = write
         self.fallback = False
-        self.debug = debug
 
     def start(self):
         creds_ok = False
@@ -159,9 +158,9 @@ class DoSql:
 
 @lru_cache()
 def debug_check():
-    command = "SELECT data FROM ga.Setting WHERE setting = 'debug' AND belonging = 'service';"
-    sql = DoSql(command)
-    debug_state = sql.connect(command=command, connect_debug=False)
+    command = "SELECT data FROM ga.Temp WHERE setting = 'debug' AND belonging = '%s';" % Config("hostname").get()
+    sql_instance = DoSql(command)
+    debug_state = sql_instance.connect(command=command, connect_debug=False)
     return True if debug_state == "1" else False
 
 
@@ -171,3 +170,29 @@ def debugger(command):
             print(command)
         elif type(command) == list:
             [print(call) for call in command]
+
+
+def sql_replace(data_dict, table="setting", debug=False):
+    # first entry in data_dict = value that should be changed
+    # data_dict = {"data": "0", "author": "service", "belonging": "gacon01", "setting": "debug"}
+    if table == "setting": table = "ga.Setting"
+    elif table == "group": table = "ga.Grouping"
+    elif table == "object": table = "ga.Object"
+    elif table == "data": table = "ga.Data"
+    elif table == "tmp": table = "ga.Temp"
+    else: return False
+    command, entrycount = [], 0
+    for key, value in data_dict.items():
+        if entrycount == 0: continue
+        append_str = []
+        if entrycount > 1: append_str.append("AND")
+        append_str.append("%s = '%s'" % (key, value))
+        command.append(' '.join(append_str))
+    debugger("owl - replace |command '.. %s'" % ' '.join(command) + ";")
+    if debug: print("owl - replace |command '.. %s'" % ' '.join(command) + ";")
+    if DoSql(("SELECT data FROM %s WHERE" % table, ' '.join(command) + ";")).start() is False:
+        DoSql("INSERT INTO %s (%s) VALUES (%s);" % (table, ','.join(data_dict.keys()), ','.join(data_dict.values())), write=True).start()
+        return True
+    else:
+        DoSql("UPDATE %s SET %s = '%s' WHERE %s" % (table, data_dict.keys()[0], data_dict.values()[0], command), write=True).start()
+        return True
