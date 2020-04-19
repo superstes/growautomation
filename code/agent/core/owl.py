@@ -52,7 +52,7 @@ class DoSql:
             whilecount = 0
             while True:
                 if running() is False:
-                    debugger("owl - prequesits |mysql not running")
+                    debugger("owl - start |mysql not running")
                     if whilecount == 0:
                         LogWrite("Trying to start mysql service.")
                         os_system("systemctl start mysql.service %s")
@@ -65,7 +65,7 @@ class DoSql:
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and Config("setuptype").get() == "agent":
-                debugger("owl - prequesits |failing over to local db")
+                debugger("owl - start |failing over to local db")
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -83,7 +83,7 @@ class DoSql:
                     self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get(), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
-                debugger("owl - prequesits |conntest %s %s" % (type(result), result))
+                debugger("owl - start |conntest %s %s" % (type(result), result))
                 return result
 
             creds_ok = conntest()
