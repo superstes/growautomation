@@ -18,14 +18,14 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version0.3
+# ga_version 0.3
 
 from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.core.owl import debugger
 from ga.service.threader import Loop
-from ga.core.owl import DoSql
+from ga.core.owl import sql_replace
 
 from systemd import journal as systemd_journal
 import signal
@@ -164,15 +164,18 @@ class Service:
             else: self.exit()
 
     def debug(self, cleanup=False):
-        sql_set_debug = "REPLACE INTO ga.Setting (author,belonging,setting,data) VALUES ('service','service','debug','%s');"
+        data_dict = {"data": "%s", "author": "service", "belonging": Config("hostname").get(), "setting": "debug"}
         if cleanup:
-            if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0", write=True).start()
+            data_dict["data"] = "0"
+            sql_replace(data_dict, table="tmp")
         else:
             try:
                 if sys_argv[1] == "debug":
-                    if Config(setting="debug", belonging="service").get() != "1": DoSql(sql_set_debug % "1", write=True).start()
+                    data_dict["data"] = "1"
+                    sql_replace(data_dict, table="tmp", debug=True)
                 else:
-                    if Config(setting="debug", belonging="service").get() == "1": DoSql(sql_set_debug % "0", write=True).start()
+                    data_dict["data"] = "0"
+                    sql_replace(data_dict, table="tmp")
             except IndexError: pass
 
 
