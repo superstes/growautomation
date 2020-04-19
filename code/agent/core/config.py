@@ -51,20 +51,18 @@ class Config(object):
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
-    @lru_cache()
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                                                                                               % (self.setting, FileConfig("hostname").get())).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
-    @lru_cache()
     def parse_sql_custom(self):
         command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
         if self.table is not None:
             if self.table == "group": command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
             elif self.table == "object": command = ["SELECT", "type", "FROM ga.Object WHERE"]
             elif self.table == "data": command = ["SELECT", "data", "FROM ga.Data WHERE"]
-            elif self.table == "temp": command = ["SELECT", "data", "FROM ga.Temp WHERE"]
+            elif self.table == "tmp": command = ["SELECT", "data", "FROM ga.Temp WHERE"]
         if self.output is not None:
             command[1], custom = self.output, True
         if self.setting is not None:

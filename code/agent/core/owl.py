@@ -19,11 +19,11 @@
 #     Web: https://git.growautomation.at
 
 # ga_version 0.3
+# sql module
 
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
-from functools import lru_cache
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from time import sleep as time_sleep
@@ -115,7 +115,6 @@ class DoSql:
             if command is None: command = self.command
             if connect_debug: debugger("owl - connect |command %s %s" % (type(command), command))
             if self.write is False:
-                @lru_cache()
                 def readcache(doit):
                     cursor.execute(doit)
                     if cursor.rowcount < 1: return False
