@@ -164,8 +164,10 @@ def debug_check():
     return True if debug_state == "1" else False
 
 
-def debugger(command):
-    if debug_check() is True:
+def debugger(command, hard_debug=False):
+    if hard_debug: debug = True
+    else: debug = debug_check()
+    if debug is True:
         if type(command) == str:
             print(command)
         elif type(command) == list:
@@ -174,7 +176,7 @@ def debugger(command):
 
 def sql_replace(data_dict, table="setting", debug=False):
     # first entry in data_dict = value that should be changed
-    # data_dict = {"data": "0", "author": "service", "belonging": "gacon01", "setting": "debug"}
+    debugger("owl - replace |input dict '%s'" % data_dict, hard_debug=debug)
     if table == "setting": table = "ga.Setting"
     elif table == "group": table = "ga.Grouping"
     elif table == "object": table = "ga.Object"
@@ -188,11 +190,10 @@ def sql_replace(data_dict, table="setting", debug=False):
         if entrycount > 1: append_str.append("AND")
         append_str.append("%s = '%s'" % (key, value))
         command.append(' '.join(append_str))
-    debugger("owl - replace |command '.. %s'" % ' '.join(command) + ";")
-    if debug: print("owl - replace |command '.. %s'" % ' '.join(command) + ";")
-    if DoSql(("SELECT data FROM %s WHERE" % table, ' '.join(command) + ";")).start() is False:
+    debugger("owl - replace |command '.. %s'" % ' '.join(command) + ";", hard_debug=debug)
+    if DoSql("SELECT data FROM %s WHERE %s;" % (table, ' '.join(command))).start() is False:
         DoSql("INSERT INTO %s (%s) VALUES (%s);" % (table, ','.join(data_dict.keys()), ','.join(data_dict.values())), write=True).start()
         return True
     else:
-        DoSql("UPDATE %s SET %s = '%s' WHERE %s" % (table, data_dict.keys()[0], data_dict.values()[0], command), write=True).start()
+        DoSql("UPDATE %s SET %s = '%s' WHERE %s" % (table, list(data_dict.keys())[0], list(data_dict.values())[0], command), write=True).start()
         return True
