@@ -35,7 +35,7 @@ class Config(object):
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
-        return str(self.parse_file())
+        return self.parse_file()
 
     def error(self, parser_type):
         from ga.core.smallant import LogWrite
