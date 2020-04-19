@@ -118,7 +118,7 @@ class DoSql:
                 @lru_cache()
                 def readcache(doit):
                     cursor.execute(doit)
-                    if cursor.rowcount < 0: return False
+                    if cursor.rowcount < 1: return False
                     else:
                         fetch, data_list = cursor.fetchall(), []
                         for row_tuple in fetch:
@@ -156,7 +156,6 @@ class DoSql:
         return output
 
 
-@lru_cache()
 def debug_check():
     command = "SELECT data FROM ga.Temp WHERE setting = 'debug' AND belonging = '%s';" % Config("hostname").get()
     sql_instance = DoSql(command)
@@ -185,15 +184,20 @@ def sql_replace(data_dict, table="setting", debug=False):
     else: return False
     command, entrycount = [], 0
     for key, value in data_dict.items():
-        if entrycount == 0: continue
         append_str = []
         if entrycount > 1: append_str.append("AND")
-        append_str.append("%s = '%s'" % (key, value))
-        command.append(' '.join(append_str))
-    debugger("owl - replace |command '.. %s'" % ' '.join(command) + ";", hard_debug=debug)
+        if entrycount > 0:
+            append_str.append("%s = '%s'" % (key, value))
+            command.append(' '.join(append_str))
+        entrycount += 1
+    debugger("owl - replace |command '.. %s';" % ' '.join(command), hard_debug=debug)
     if DoSql("SELECT data FROM %s WHERE %s;" % (table, ' '.join(command))).start() is False:
-        DoSql("INSERT INTO %s (%s) VALUES (%s);" % (table, ','.join(data_dict.keys()), ','.join(data_dict.values())), write=True).start()
+        insert_command = "INSERT INTO %s (%s) VALUES ('%s');" % (table, ','.join(list(data_dict.keys())), '\',\''.join(data_dict.values()))
+        DoSql(insert_command, write=True).start()
+        debugger("owl - replace |insert command '%s'" % insert_command, hard_debug=debug)
         return True
     else:
-        DoSql("UPDATE %s SET %s = '%s' WHERE %s" % (table, list(data_dict.keys())[0], list(data_dict.values())[0], command), write=True).start()
+        update_command = "UPDATE %s SET %s = '%s' WHERE %s;" % (table, list(data_dict.keys())[0], list(data_dict.values())[0], ' '.join(command))
+        DoSql(update_command, write=True).start()
+        debugger("owl - replace |update command '%s'" % update_command, hard_debug=debug)
         return True
