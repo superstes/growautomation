@@ -24,7 +24,7 @@ from os import system as os_system
 from os import path as os_path
 from datetime import datetime
 
-from ga.core.config_parser_file import GetConfig
+from ga.core.config_parser_file import Config
 
 
 def now(time_format):
@@ -44,7 +44,7 @@ class LogWrite(object):
 
     def __repr__(self):
         try:
-            return False if self.log_level > GetConfig("log_level") else self.write()
+            return False if self.log_level > Config("log_level").get() else self.write()
         except AttributeError: self.write()
 
     def open(self):

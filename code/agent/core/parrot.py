@@ -20,9 +20,10 @@
 
 # ga_version 0.3
 
-from ga.core.config import GetConfig
+from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import time_subtract
+from ga.core.owl import debugger
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -37,31 +38,30 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class ActionLoader:
-    def __init__(self, device_type, device_sector_dict, debug=False):
+    def __init__(self, device_type, device_sector_dict):
         self.device_sector_dict = device_sector_dict
         self.type = device_type
         self.device_setting_dict = None
-        self.debug = debug
 
     def __repr__(self):
         for device in self.device_sector_dict.keys():
-            device_type_setting = GetConfig(output="setting,data", belonging=self.type)
-            device_setting = GetConfig(output="setting,data", belonging=device)
+            device_type_setting = Config(output="setting,data", belonging=self.type).get()
+            device_setting = Config(output="setting,data", belonging=device).get()
             device_setting.extend(y for y in device_type_setting if y not in device_setting)
             self.device_setting_dict = {device: device_setting}
         self.action_prequesits()
 
     def action_prequesits(self):
-        function = GetConfig(setting="function", belonging=self.type)
-        self.action_start(function, boomerang=True) if GetConfig(setting="boomerang", belonging=self.type) == "True" else self.action_start(function)
+        function = Config(setting="function", belonging=self.type).get()
+        self.action_start(function, boomerang=True) if Config(setting="boomerang", belonging=self.type).get() == "True" else self.action_start(function)
 
     def action_start(self, function, boomerang=False):
-        command = "/usr/bin/python3 %s/action/%s %s" % (GetConfig("path_root"), function, self.device_setting_dict)
+        command = "/usr/bin/python3 %s/action/%s %s" % (Config("path_root").get(), function, self.device_setting_dict)
 
         def start(DoIt):
             return subprocess_popen([DoIt], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
         if boomerang is True:
-            time_wait = GetConfig("time_wait", "AgentConfigDeviceTypeSetting", CustomAnd=self.type)
+            time_wait = Config("time_wait", "AgentConfigDeviceTypeSetting", CustomAnd=self.type).get()
             output1, error1 = start(command + " start")
             sleep(time_wait)
             output2, error2 = start(command + " stop")
@@ -74,30 +74,29 @@ class ActionLoader:
 
 
 class SectorCheck:
-    def __init__(self, sector_dict, debug=False):
+    def __init__(self, sector_dict):
         self.sector_list = list(sector_dict.keys())
         self.type = list(sector_dict.values())[0]
-        self.debug = debug
 
     def __repr__(self):
         self.check_type_links()
 
     def check_type_links(self):
-        link_exist_list = GetConfig(setting="link", table="group")
-        link_inuse_list = GetConfig(setting="link", belonging=self.type, table="group")
+        link_exist_list = Config(setting="link", table="group").get()
+        link_inuse_list = Config(setting="link", belonging=self.type, table="group").get()
         [self.check_action_sector(link) for link in link_inuse_list if link in link_exist_list]
 
     def check_action_sector(self, link):
-        device_type_list = GetConfig(setting="link", filter="gid = '%s'" % link, table="group")
-        [device_type_list.remove(device) for device in reversed(device_type_list) if GetConfig(setting=device, table="object") != "action"]
+        device_type_list = Config(setting="link", filter="gid = '%s'" % link, table="group").get()
+        [device_type_list.remove(device) for device in reversed(device_type_list) if Config(setting=device, table="object").get() != "action"]
         for device_type in device_type_list:
-            if GetConfig(setting="enabled", belonging=device_type) != "1":
+            if Config(setting="enabled", belonging=device_type).get() != "1":
                 device_type_list.remove(device_type)
                 LogWrite("Action %s is disabled." % device_type, level=2)
                 continue
-            device_list = GetConfig(filter="class = '%s'" % device_type, table="object")
-            [device_list.remove(device) for device in reversed(device_list) if GetConfig(setting="enabled", belonging=device) != "1"]
-            for device in device_list: device_sector_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
+            device_list = Config(filter="class = '%s'" % device_type, table="object").get()
+            [device_list.remove(device) for device in reversed(device_list) if Config(setting="enabled", belonging=device).get() != "1"]
+            for device in device_list: device_sector_dict = {device: Config(setting="sector", belonging=device, table="group").get()}
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
@@ -105,7 +104,7 @@ class SectorCheck:
                     del device_sector_dict[device]
                     continue
                 device_sector_dict[device] = sector_list
-            ActionLoader(device_type, device_sector_dict, self.debug)
+            ActionLoader(device_type, device_sector_dict)
 
     def check_device_sector(self, value):
         value_sector_list, output_list = [], []
@@ -115,17 +114,16 @@ class SectorCheck:
 
 
 class ThresholdCheck:
-    def __init__(self, sensor, debug=False):
+    def __init__(self, sensor):
         self.sensor = sensor
         self.check_range = None
-        self.debug = debug
 
     def __repr__(self):
         # checks only devicetypes
         # will check if input is sensor or type
-        if GetConfig(setting=self.type, table="object") == "sensor":
-            if GetConfig(setting="enabled", belonging=self.type) == "1":
-                threshold = GetConfig(setting="threshold", belonging=self.type)
+        if Config(setting=self.sensor, table="object").get() == "sensor":
+            if Config(setting="enabled", belonging=self.sensor).get() == "1":
+                threshold = Config(setting="threshold", belonging=self.sensor).get()
                 for sector in self.get_sector_list():
                     average_data_list = []
                     for device, device_sector in self.get_device_dict().items():
@@ -138,12 +136,12 @@ class ThresholdCheck:
                             continue
                     sector_average = sum(average_data_list) / len(average_data_list)
                     if sector_average >= threshold:
-                        LogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.type, sector, sector_average, threshold), level=2)
-                        sector_dict = {sector: self.type}
+                        LogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.sensor, sector, sector_average, threshold), level=2)
+                        sector_dict = {sector: self.sensor}
                     else:
-                        LogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.type, sector, sector_average, threshold), level=2)
+                        LogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.sensor, sector, sector_average, threshold), level=2)
                         continue
-                SectorCheck(sector_dict, self.debug)
+                SectorCheck(sector_dict)
 
     def input_device(self):
         # if input = device
@@ -152,16 +150,17 @@ class ThresholdCheck:
         # if input = type
 
     def get_device_dict(self):
-        device_list = GetConfig(filter="class = '%s'" % self.type, table="object")
+        device_list = Config(filter="class = '%s'" % self.sensor, table="object").get()
         for device in device_list:
-            if GetConfig(setting="enabled", belonging=device) == "1": device_dict = {device: GetConfig(setting="sector", belonging=device, table="group")}
+            if Config(setting="enabled", belonging=device).get() == "1": 
+                device_dict = {device: Config(setting="sector", belonging=device, table="group").get()}
             else:
                 LogWrite("Device %s is disabled." % device, level=3)
                 continue
         return device_dict
 
     def get_sector_list(self):
-        sector_inuse_list, sector_list, sector_exist_list = [], [], GetConfig(setting="sector", table="group")
+        sector_inuse_list, sector_list, sector_exist_list = [], [], Config(setting="sector", table="group").get()
         for sector in self.get_device_dict().values():
             sector_inuse_list.append(sector.split(",")) if sector.find(",") != -1 else sector_inuse_list.append(sector)
         [sector_list.append(sector) for sector in sector_inuse_list if sector in sector_exist_list]
@@ -169,9 +168,9 @@ class ThresholdCheck:
 
     def get_data(self, device):
         if self.check_range is None:
-            self.check_range = int(GetConfig(setting="range", belonging="check"))
-        time_now, time_before = time_subtract(int(GetConfig(setting="timer", belonging=self.type)) * self.check_range, both=True)
-        return GetConfig(table="data", belonging=device, filter="changed => '%s' AND changed <= '%s' AND device = '%s'" % (time_now, time_before, device))
+            self.check_range = int(Config(setting="range", belonging="check").get())
+        time_now, time_before = time_subtract(int(Config(setting="timer", belonging=self.sensor).get()) * self.check_range, both=True)
+        return Config(table="data", belonging=device, filter="changed => '%s' AND changed <= '%s' AND device = '%s'" % (time_now, time_before, device)).get()
 
     def get_average_data(self, device):
         if type(device) == "list":
@@ -187,11 +186,7 @@ class ThresholdCheck:
         return True if sector in value_sector_list else False
 
 
-try:
-    try:
-        ThresholdCheck(sys_argv[1], debug=True) if sys_argv[2] == "True" else ThresholdCheck(sys_argv[1])
-    except IndexError:
-        ThresholdCheck(sys_argv[1])
+try: ThresholdCheck(sys_argv[1])
 except IndexError:
     LogWrite("No sensor provided. Exiting.")
     raise SystemExit

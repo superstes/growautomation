@@ -27,46 +27,48 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 import signal
 
-from ga.core.config import GetConfig
+from ga.core.config import Config
 from ga.core.owl import DoSql
 from ga.core.ant import LogWrite
+from ga.core.owl import debugger
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class Balrog:
-    def __init__(self, sensor, debug=False):
-        self.sensor, self.debug = sensor, debug
+    def __init__(self, sensor):
+        self.sensor = sensor
         self.processed_list = []
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        self.devicetype() if self.sensor in self.get_config(output="name", table="object", filter="class = 'sensor'") else self.device(self.sensor)
+        self.devicetype() if self.sensor in Config(output="name", table="object", filter="class = 'sensor'").get() else self.device(self.sensor)
 
     def devicetype(self):
         device_list = []
-        for device in self.get_config(output="name", table="object", filter="class = '%s'" % self.sensor):
-            if not self.get_config(setting="timer", belonging=device): device_list.append(device)
+        for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get():
+            if not Config(setting="timer", belonging=device).get(): device_list.append(device)
         [self.device(device) for device in device_list]
         # ask for threading support when sensor-functions are added
 
     def device(self, device):
         if device in self.processed_list: return False
         else:
-            connection = self.get_config(setting="connection", belonging=device)
+            connection = Config(setting="connection", belonging=device).get()
             if connection == "direct":
-                function = self.get_config(setting="function", belonging=self.get_config(output="class", table="object", setting=device))
-                output, error = subprocess_popen(["/usr/bin/python3 %s %s %s" % (function, self.get_config(setting="port", belonging=device), device)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+                function = Config(setting="function", belonging=Config(output="class", table="object", setting=device).get())
+                output, error = subprocess_popen(["/usr/bin/python3 %s %s %s" % (function, Config(setting="port", belonging=device).get(), device)],
+                                                 shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 output_str, error_str = output.decode("ascii"), error.decode("ascii")
             elif connection == "downlink":
-                self.downlink(device, self.get_config(setting="downlink", belonging=device))
+                self.downlink(device, Config(setting="downlink", belonging=device).get())
             else: return False
 
     def downlink(self, device, downlink):
         def start(setting, data):
             # start downlink function with downlink settings and data (if needed)
 
-        downlink_type = self.get_config(output="class", table="object", setting=downlink)
-        downlink_type_opp = self.get_config(setting="output_per_port", belonging=downlink_type)
+        downlink_type = Config(output="class", table="object", setting=downlink).get()
+        downlink_type_opp = Config(setting="output_per_port", belonging=downlink_type).get()
         if downlink_type_opp == "1":
             # get downlink setting and start()
         elif downlink_type_opp == "0":
@@ -96,9 +98,6 @@ class Balrog:
         #     compare to portcount of downlink -> add dev-null members for ports which are not in use
         # get data from downlink function -> sensor function(downlinksetting_dict, portdict)
         # zip the
-
-    def get_config(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
-        return GetConfig(setting=setting, nosql=nosql, output=output, belonging=belonging, filter=filter, table=table, debug=self.debug).start()
 
     def database(self):
         print("write data from device or downlink function into db")
@@ -141,11 +140,7 @@ class Balrog:
     # psua02webport = 8080
     # psua02outlets = {"1": "pumpa04", "2": "", "3": "", "4": ""}
 
-try:
-    try:
-        Balrog(sys_argv[1], debug=True) if sys_argv[2] == "debug" else Balrog(sys_argv[1])
-    except IndexError:
-        Balrog(sys_argv[1])
+try: Balrog(sys_argv[1])
 except IndexError:
     LogWrite("No sensor provided. Exiting.")
     raise SystemExit
