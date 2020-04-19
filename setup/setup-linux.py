@@ -1117,8 +1117,10 @@ def ga_setup_infra_code():
     ga_setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
     service_path, service_py_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"], "%s/service/service.py" % ga_config["path_root"]
+    earlybird_path = "%s/service/earlybird.py" % ga_config["path_root"]
     os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
     ga_replaceline(service_path, "ExecStart=/usr/bin/python3 /etc/growautomation/service/service.py", "ExecStart=\/usr\/bin\/python3 %s" % service_py_path.replace("/", "\/"))
+    ga_replaceline(service_path, "ExecStartPre=/usr/bin/python3 /etc/growautomation/service/earlybird.py", "ExecStartPre=\/usr\/bin\/python3 %s" % earlybird_path.replace("/", "\/"))
     os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
     os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
     os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
@@ -1156,7 +1158,7 @@ class GetObject:
         ga_setup_shelloutput_header("Basic device setup", "#")
         ga_setup_shelloutput_text("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
         core_object_dict = {}
-        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"] = "NULL", "NULL", "NULL"
+        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
         self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
         self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
         self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {ga_config["hostname"]: "NULL"}
@@ -1203,9 +1205,9 @@ class GetObject:
             elif dt_object_dict[name] == "downlink":
                 setting_dict["portcount"] = ga_setup_input("How many ports does this downlink provide?", 4)
                 setting_dict["output_per_port"] = ga_setup_input("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", False)
-                setting_dict["output_format"] = ga_setup_input("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free")
-                if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
-                    setting_dict["output_format_delimeter"] = ga_setup_input("Provide a delimeter to split the output string.", "-", intype="free", max_value=3)
+#                setting_dict["output_format"] = ga_setup_input("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free")
+#                if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
+#                    setting_dict["output_format_delimeter"] = ga_setup_input("Provide a delimeter to split the output string.", "-", intype="free", max_value=3)
             self.setting_dict[name] = setting_dict
             while_count += 1
             while_devicetype = ga_setup_input("Want to add another devicetype?", True, style="info")
