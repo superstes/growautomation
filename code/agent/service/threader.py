@@ -1,7 +1,7 @@
 # source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-# ga_version0.3
+# ga_version 0.3
 
 from ga.core.ant import LogWrite
 from ga.core.owl import debugger
@@ -25,14 +25,14 @@ class Job(Thread):
         self.run_once = run_once
 
     def stop(self):
-        debugger("threader - Thread(stop) |thread stopping %s" % self.name)
+        debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
         self.state_stop.set()
         self.join()
         LogWrite("Stopped thread '%s'" % self.name, level=3)
 
     def run(self):
         LogWrite("Starting thread '%s'" % self.name, level=4)
-        debugger("threader - Thread(run) |thread starting %s" % self.name)
+        debugger("threader - Thread(run) |thread starting '%s'" % self.name)
         if self.run_once:
             self.execute()
             Loop.stop_thread(self.name)
@@ -40,7 +40,7 @@ class Job(Thread):
             while not self.state_stop.wait(self.interval.total_seconds()):
                 self.execute()
                 if self.state_stop.isSet():
-                    debugger("threader - Thread(run) |thread exiting %s" % self.name)
+                    debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
                     LogWrite("Exiting thread '%s'" % self.name, level=4)
                     break
 
@@ -53,7 +53,7 @@ class Loop:
         LogWrite("Starting threads in background", level=3)
         for job in self.jobs:
             if single_thread is not None:
-                debugger("threader - start |starting thread %s %s" % (type(single_thread), single_thread))
+                debugger("threader - start |starting thread '%s' '%s'" % (type(single_thread), single_thread))
                 if job.name == single_thread:
                     job.daemon = daemon
                     job.start()
@@ -64,7 +64,7 @@ class Loop:
         if not daemon: self.block_root_process()
 
     def thread(self, sleep_time: int, thread_name):
-        debugger("threader - thread |adding job |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - thread |adding job |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
 
         def decorator(function):
             if sleep_time == 0:
@@ -90,7 +90,7 @@ class Loop:
         LogWrite("All threads stopped. Exiting loop", level=2)
 
     def stop_thread(self, thread_name):
-        debugger("threader - stop_thread |%s %s" % (type(thread_name), thread_name))
+        debugger("threader - stop_thread |'%s' '%s'" % (type(thread_name), thread_name))
         to_process_list = self.jobs
         for job in to_process_list:
             if job.name == thread_name:
@@ -99,12 +99,12 @@ class Loop:
                 LogWrite("Thread %s stopped." % job.name, level=2)
 
     def start_thread(self, sleep_time: int, thread_name):
-        debugger("threader - start_thread |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - start_thread |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
         self.thread(sleep_time, thread_name)
         self.start(single_thread=thread_name)
 
     def reload_thread(self, sleep_time: int, thread_name):
-        debugger("threader - reload_thread |%s %s |interval %s %s" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - reload_thread |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
         self.stop_thread(thread_name)
         self.start_thread(sleep_time, thread_name)
 

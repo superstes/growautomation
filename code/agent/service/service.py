@@ -55,7 +55,7 @@ class Service:
         sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
         function_sensor_master = Config(setting="function", belonging="sensor_master").get()
         function_check = Config(setting="function", belonging="check").get()
-        debugger("service - timer |vars path_root %s |core_list %s |sensor_type_list %s" % (path_root, core_list, sensor_type_list))
+        debugger("service - timer |vars path_root '%s' |core_list '%s' |sensor_type_list '%s'" % (path_root, core_list, sensor_type_list))
         for timer_setting in Config(setting="timer", output="belonging,data").get():
             name, timer = timer_setting[0], timer_setting[1]
             if name in core_list or Config(setting="enabled", belonging=name).get() == "1":
@@ -72,7 +72,7 @@ class Service:
                 else: continue
                 name_dict[name] = [timer, function]
             else: continue
-            debugger("service - timer |dict: %s %s" % (type(name_dict), name_dict))
+            debugger("service - timer |dict '%s' '%s'" % (type(name_dict), name_dict))
         return name_dict
 
     def start(self):
@@ -81,15 +81,18 @@ class Service:
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
-            debugger("service - start |function %s %s |interval %s %s" % (type(function), function, type(interval), interval))
+            debugger("service - start |function '%s' '%s' |interval '%s' '%s'" % (type(function), function, type(interval), interval))
 
             @Threader.thread(int(interval), thread_name)
             def thread_function():
+                LogWrite("Starting function '%s' for object %s." % (function, thread_name), level=4)
                 output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-                if error.decode("ascii") != "":
-                    LogWrite("Errors when starting %s:\n%s" % (thread_name, error.decode("ascii").strip()), level=2)
-                    debugger("service - function error for thread %s |error %s" % (thread_name, error.decode("ascii").strip()))
-                LogWrite("Output when starting %s:\n%s" % (thread_name, output.decode("ascii").strip()), level=4)
+                output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
+                if error_str != "":
+                    LogWrite("Error by executing %s:\n'%s'" % (thread_name, error_str), level=2)
+                    debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error_str))
+                LogWrite("Output by processing %s:\n'%s'" % (thread_name, output_str), level=3)
+                debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output_str))
         Threader.start()
         systemd_journal.write("Finished starting service.")
         self.status()
@@ -111,7 +114,7 @@ class Service:
             else:
                 name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
                 Threader.start_thread(int(interval_reload), thread_name_reload)
-        debugger("service - reload |overwrite_dict: %s %s" % (type(name_dict_overwrite), name_dict_overwrite))
+        debugger("service - reload |overwrite_dict '%s' '%s'" % (type(name_dict_overwrite), name_dict_overwrite))
         if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
         systemd_journal.write("Finished configuration reload.")
@@ -122,8 +125,8 @@ class Service:
         LogWrite("Stopping service", level=1)
         systemd_journal.write("Stopping service.")
         if signum is not None:
-            debugger("service - stop |got signal %s" % signum)
-            LogWrite("Service received signal %s" % signum, level=2)
+            debugger("service - stop |got signal '%s'" % signum)
+            LogWrite("Service received signal '%s'" % signum, level=2)
         Threader.stop()
         time_sleep(10)
         self.debug(cleanup=True)
@@ -141,7 +144,7 @@ class Service:
         raise SystemExit
 
     def status(self):
-        debugger(["service - status |updating status", "service - status |threads: %s |config: %s" % (Threader.list(), self.name_dict)])
+        debugger(["service - status |updating status", "service - status |threads '%s' |config '%s'" % (Threader.list(), self.name_dict)])
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
 
     def run(self):
@@ -164,7 +167,7 @@ class Service:
             else: self.exit()
 
     def debug(self, cleanup=False):
-        data_dict = {"data": "%s", "author": "service", "belonging": Config("hostname").get(), "setting": "debug"}
+        data_dict = {"data": None, "author": "service", "belonging": Config("hostname").get(), "setting": "debug"}
         if cleanup:
             data_dict["data"] = "0"
             sql_replace(data_dict, table="tmp")

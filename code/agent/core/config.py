@@ -37,7 +37,7 @@ class Config(object):
         self.setting, self.nosql, self.filter, self.belonging, self.output, self.table = setting, nosql, filter, belonging, output, table
 
     def get(self):
-        debugger("config - input |setting %s %s |nosql %s %s |output %s %s |belonging %s %s |filter %s %s |table %s %s"
+        debugger("config - input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
                  % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
                  type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
@@ -53,7 +53,7 @@ class Config(object):
 
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                                              % (self.setting, FileConfig("hostname").get())).start()
+                                                                            % (self.setting, FileConfig("hostname").get())).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
     def parse_sql_custom(self):
@@ -84,7 +84,7 @@ class Config(object):
             prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
-        debugger("config - sql_custom |custom %s %s |command %s %s" % (type(custom), custom, type(command), command))
+        debugger("config - sql_custom |custom '%s' '%s' |command '%s' '%s'" % (type(custom), custom, type(command), command))
         return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
     @lru_cache()
@@ -96,7 +96,7 @@ class Config(object):
         if self.setting in config_dict.keys():
             for key, value in config_dict.items():
                 if key.find(self.setting) != -1:
-                    debugger("config - hardcoded |found %s %s %s %s" % (type(key), key, type(value), value))
+                    debugger("config - hardcoded |found '%s' '%s' '%s' '%s'" % (type(key), key, type(value), value))
                     return value
             return False
         else:
@@ -112,12 +112,12 @@ class Config(object):
                     self.error("all")
                 else:
                     output = self.parse_hardcoded()
-                    debugger("config - failover |output %s %s" % (type(output), output))
+                    debugger("config - failover |output '%s' '%s'" % (type(output), output))
                     return output
             else:
-                debugger("config - failover |output %s %s" % (type(parse_file_output), parse_file_output))
+                debugger("config - failover |output '%s' '%s'" % (type(parse_file_output), parse_file_output))
                 return parse_file_output
         else:
             output = self.parse_sql()
-            debugger("config - failover |output %s %s" % (type(output), output))
+            debugger("config - failover |output '%s' '%s'" % (type(output), output))
             return output

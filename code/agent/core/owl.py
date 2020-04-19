@@ -83,7 +83,7 @@ class DoSql:
                     self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get(), connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
-                debugger("owl - start |conntest %s %s" % (type(result), result))
+                debugger("owl - start |conntest '%s' '%s'" % (type(result), result))
                 return result
 
             creds_ok = conntest()
@@ -91,7 +91,7 @@ class DoSql:
         return self.execute()
 
     def execute(self):
-        debugger("owl - execute |command %s %s" % (type(self.command), self.command))
+        debugger("owl - execute |command '%s' '%s'" % (type(self.command), self.command))
         if type(self.command) == str:
             return self.connect()
         elif type(self.command) == list:
@@ -113,7 +113,7 @@ class DoSql:
         try:
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
-            if connect_debug: debugger("owl - connect |command %s %s" % (type(command), command))
+            if connect_debug: debugger("owl - connect |command '%s' '%s'" % (type(command), command))
             if self.write is False:
                 def readcache(doit):
                     cursor.execute(doit)
@@ -132,10 +132,10 @@ class DoSql:
                 data = True
             cursor.close()
             connection.close()
-            if connect_debug: debugger("owl - connect |output %s %s" % (type(data), data))
+            if connect_debug: debugger("owl - connect |output '%s' '%s'" % (type(data), data))
             return data
         except mysql.connector.Error as error:
-            if connect_debug: debugger("owl - connect |error %s" % error)
+            if connect_debug: debugger("owl - connect |error '%s'" % error)
             connection.rollback()
             LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
             if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", Config("mysql_localuser").get()))
@@ -143,7 +143,7 @@ class DoSql:
             return False
 
     def find(self, searchfor):
-        debugger("owl - find |input %s %s" % (type(searchfor), searchfor))
+        debugger("owl - find |input '%s' '%s'" % (type(searchfor), searchfor))
         if type(self.command) == str:
             data = str(self.execute())
             output = data.find(searchfor)
@@ -151,7 +151,7 @@ class DoSql:
             sqllist = self.execute()
             output = []
             for x in sqllist: output.append(x.find(searchfor))
-        debugger("owl - find |output %s %s" % (type(output), output))
+        debugger("owl - find |output '%s' '%s'" % (type(output), output))
         return output
 
 
