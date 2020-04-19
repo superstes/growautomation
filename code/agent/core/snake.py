@@ -90,6 +90,7 @@ class Balrog:
             debugger("snake - downlink |opp 1 |input '%s'" % sensor_dict)
             output = self.start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
             debugger("snake - downlink |opp 1 |output '%s'" % output)
+            self.write_data(device, output)
         elif type_opp == "0":
             portcount = Config(setting="portcount", belonging=downlink)
             if self.sensor_type:
