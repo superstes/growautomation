@@ -150,7 +150,7 @@ class Balrog:
             debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
         try_count -= 1
-        data_dict = {"data": "1", "author": "sensor_master", "belonging": Config("hostname").get(), "setting": "lock"}
+        data_dict = {"data": "1", "author": "sensor_master", "belonging": device, "setting": "lock"}
         sql_replace(data_dict, table="tmp")
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
