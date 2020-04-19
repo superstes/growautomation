@@ -27,7 +27,7 @@ from inspect import currentframe as inspect_currentframe
 from ga.core.owl import DoSql
 from ga.core.smallant import LogWrite
 from ga.core.owl import debugger
-from ga.core.config_parser_file import GetConfig as parse_file
+from ga.core.config_parser_file import Config as FileConfig
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -43,7 +43,7 @@ class Config(object):
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
         parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
                                "sql_server_port", "sql_sock"]
-        output = parse_file() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
+        output = FileConfig() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
             else self.error("all")
         return self.error("sql") if output is False else output
 
@@ -54,29 +54,24 @@ class Config(object):
     @lru_cache()
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                                              % (self.setting, parse_file("hostname"))).start()
+                                                                                              % (self.setting, FileConfig("hostname"))).start()
         return self.error("sql") if response is False or response is None or response == "" else response
 
     @lru_cache()
     def parse_sql_custom(self):
         command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
         if self.table is not None:
-            if self.table == "group":
-                command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
-            elif self.table == "object":
-                command = ["SELECT", "type", "FROM ga.Object WHERE"]
-            elif self.table == "data":
-                command = ["SELECT", "data", "FROM ga.Data WHERE"]
+            if self.table == "group": command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
+            elif self.table == "object": command = ["SELECT", "type", "FROM ga.Object WHERE"]
+            elif self.table == "data": command = ["SELECT", "data", "FROM ga.Data WHERE"]
+            elif self.table == "temp": command = ["SELECT", "data", "FROM ga.Temp WHERE"]
         if self.output is not None:
             command[1], custom = self.output, True
         if self.setting is not None:
             if self.table is not None:
-                if self.table == "group":
-                    command.append("type = '%s'" % self.setting)
-                elif self.table == "object":
-                    command.append("name = '%s'" % self.setting)
-                elif self.table == "data":
-                    command.append("agent = '%s'" % self.setting)
+                if self.table == "group": command.append("type = '%s'" % self.setting)
+                elif self.table == "object": command.append("name = '%s'" % self.setting)
+                elif self.table == "data": command.append("agent = '%s'" % self.setting)
             else: command.append("setting = '%s'" % self.setting)
             custom = True
         if self.belonging is not None:
@@ -96,8 +91,8 @@ class Config(object):
 
     @lru_cache()
     def parse_hardcoded(self):
-        config_dict = {"path_log": "%s/log" % parse_file("path_root"), "path_backup": "%s/backup" % parse_file("path_root"), "sql_server_port": "3306"}
-        if parse_file("setuptype") != "agent":
+        config_dict = {"path_log": "%s/log" % FileConfig("path_root"), "path_backup": "%s/backup" % FileConfig("path_root"), "sql_server_port": "3306"}
+        if FileConfig("setuptype") != "agent":
             config_server_dict = {"sql_server_ip": "127.0.0.1"}
             config_dict = {**config_dict, **config_server_dict}
         if self.setting in config_dict.keys():
@@ -113,7 +108,7 @@ class Config(object):
     def parse_failover(self):
         parse_sql_output = self.parse_sql()
         if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.nosql is True:
-            parse_file_output = parse_file(self.setting)
+            parse_file_output = FileConfig(self.setting)
             if parse_file_output is False or parse_file_output is None or parse_file_output == "":
                 if self.parse_hardcoded() is False:
                     self.error("all")
