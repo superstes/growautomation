@@ -50,12 +50,13 @@ class Service:
         self.start()
 
     def get_timer_dict(self):
-        name_dict, path_root = {}, Config(setting="path_root").get()
+        name_dict = {}
         core_list = Config(output="name", table="object", filter="type = 'core'").get()[0]
         sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
         function_sensor_master = Config(setting="function", belonging="sensor_master").get()
         function_check = Config(setting="function", belonging="check").get()
-        debugger("service - timer |vars path_root '%s' |core_list '%s' |sensor_type_list '%s'" % (path_root, core_list, sensor_type_list))
+        function_path = Config(setting="path_root").get() + "/core/%s"
+        debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'" % (function_path, core_list, sensor_type_list))
         for timer_setting in Config(setting="timer", output="belonging,data").get():
             name, timer = timer_setting[0], timer_setting[1]
             if name in core_list or Config(setting="enabled", belonging=name).get() == "1":
@@ -64,13 +65,13 @@ class Service:
                     else: devicetype = Config(output="class", table="object", setting=name).get()
                     if devicetype in sensor_type_list:
                         if Config(setting="enabled", belonging=devicetype).get() == "1":
-                            function = "%s/sensor/%s" % (path_root, function_sensor_master)
-                            name_dict["check_%s" % name] = [Config(setting="timer_check", belonging=name).get(), function_check]
+                            function = function_sensor_master
+                            name_dict["check_%s" % name] = [Config(setting="timer_check", belonging=name).get(), function_path % function_check]
                         else: continue
                     else: continue
-                elif name in core_list: function = "%s/core/%s" % (path_root, Config(setting="function", belonging=name).get())
+                elif name in core_list: function = Config(setting="function", belonging=name).get()
                 else: continue
-                name_dict[name] = [timer, function]
+                name_dict[name] = [timer, function_path % function]
             else: continue
             debugger("service - timer |dict '%s' '%s'" % (type(name_dict), name_dict))
         return name_dict
