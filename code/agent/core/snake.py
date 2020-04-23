@@ -23,9 +23,9 @@
 
 from ga.core.config import Config
 from ga.core.owl import DoSql
-from ga.core.owl import sql_replace
 from ga.core.ant import LogWrite
 from ga.core.smallant import debugger
+from ga.core.globalvars import tmp_dict
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -142,7 +142,7 @@ class Balrog:
         try_count, wait_time, max_try_count = 1, 10, 31
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
-            if Config(setting="lock", belonging=device, table="tmp").get() == "1": time_sleep(wait_time)
+            if tmp_dict["lock_%s" % device] == 1: time_sleep(wait_time)
             else: break
             if try_count > max_try_count:
                 debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
@@ -151,16 +151,14 @@ class Balrog:
             debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
         try_count -= 1
-        data_dict = {"data": "1", "author": "sensor_master", "belonging": device, "setting": "lock"}
-        sql_replace(data_dict, table="tmp")
+        tmp_dict["lock_%s" % device] = 1
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
         LogWrite("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2)
         return True
 
     def unlock(self, device):
-        data_dict = {"data": "0", "author": "sensor_master", "belonging": device, "setting": "lock"}
-        sql_replace(data_dict, table="tmp")
+        tmp_dict["lock_%s" % device] = 0
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
         LogWrite("Unlocked device '%s'." % device, level=2)
