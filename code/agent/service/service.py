@@ -23,9 +23,9 @@
 from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
-from ga.core.smallant import debugger
 from ga.service.threader import Loop
-from ga.core.smallconfig import init_global
+from ga.core.globalvars import init_vars
+from ga.core.smallant import debugger
 
 from systemd import journal as systemd_journal
 import signal
@@ -130,7 +130,6 @@ class Service:
             LogWrite("Service received signal '%s'" % signum, level=2)
         Threader.stop()
         time_sleep(10)
-        self.debug(cleanup=True)
         self.init_exit = True
         systemd_journal.write("Service stopped.")
         self.exit()
@@ -167,15 +166,13 @@ class Service:
                 self.stop()
             else: self.exit()
 
-    def debug(self, cleanup=False):
-        init_global()
-        from ga.core.smallconfig import tmp_dict
-        if cleanup: tmp_dict["debug"] = 0
-        else:
-            try:
-                if sys_argv[1] == "debug": tmp_dict["debug"] = 1
-                else: tmp_dict["debug"] = 0
-            except IndexError: pass
+    def debug(self):
+        init_vars()
+        from ga.core.globalvars import tmp_dict
+        try:
+            if sys_argv[1] == "debug": tmp_dict["debug"] = 1
+            else: tmp_dict["debug"] = 0
+        except (IndexError, NameError): pass
 
 
 Service()

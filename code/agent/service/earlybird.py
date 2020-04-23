@@ -21,8 +21,8 @@
 # ga_version 0.3
 
 from ga.core.owl import DoSql
-from ga.core.smallconfig import debugger
-from ga.core.smallconfig import init_global
+from ga.core.smallant import debugger
+from ga.core.globalvars import init_vars
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
@@ -47,7 +47,6 @@ class Startup:
         # check for python version -> module link should be updated
 
     def stop(self, signum=None, stack=None):
-        self.debug(cleanup=True)
         if signum is not None:
             debugger("service - stop |got signal '%s'" % signum)
             LogWrite("Service received signal '%s'" % signum, level=2)
@@ -71,14 +70,12 @@ class Startup:
             DoSql("DELETE FROM ga.Temp;", write=True).start()
             # check that no locks are set -> set all to 0 or simply remove them (or remove all entries from temp table ?!)
 
-    def debug(self, cleanup=False):
-        init_global()
-        from ga.core.smallconfig import tmp_dict
-        if cleanup: tmp_dict["debug"] = 0
-        else:
-            try:
-                if sys_argv[1] == "debug": tmp_dict["debug"] = 1
-                else: tmp_dict["debug"] = 0
-            except IndexError: pass
+    def debug(self):
+        init_vars()
+        from ga.core.globalvars import tmp_dict
+        try:
+            if sys_argv[1] == "debug": tmp_dict["debug"] = 1
+            else: tmp_dict["debug"] = 0
+        except IndexError: pass
 
 Startup()

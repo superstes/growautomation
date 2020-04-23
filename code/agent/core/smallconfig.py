@@ -61,8 +61,3 @@ class Config(object):
                 return split
             except (IndexError, ValueError):
                 self.error("file")
-
-
-def init_global():
-    global tmp_dict
-    tmp_dict = {}

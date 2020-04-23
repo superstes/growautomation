@@ -61,12 +61,14 @@ class LogWrite(object):
 
 def debugger(command, hard_debug=False):
     try:
-        from ga.core.smallconfig import tmp_dict
+        from ga.core.globalvars import tmp_dict
         if hard_debug: debug = True
-        else: debug = True if tmp_dict["debug"] == 1 else False
+        else:
+            if tmp_dict["debug"] == 1: debug = True
+            else: debug = False
         if debug is True:
             if type(command) == str:
                 print(command)
             elif type(command) == list:
                 [print(call) for call in command]
-    except (IndexError, ValueError): pass
+    except KeyError as error: LogWrite(error)
