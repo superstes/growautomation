@@ -25,7 +25,7 @@ from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.core.smallant import debugger
 from ga.service.threader import Loop
-from ga.core.smallconfig import set_global
+from ga.core.smallconfig import init_global
 
 from systemd import journal as systemd_journal
 import signal
@@ -168,11 +168,13 @@ class Service:
             else: self.exit()
 
     def debug(self, cleanup=False):
-        if cleanup: set_global.tmp_dict["debug"] = 0
+        init_global()
+        from ga.core.smallconfig import tmp_dict
+        if cleanup: tmp_dict["debug"] = 0
         else:
             try:
-                if sys_argv[1] == "debug": set_global.tmp_dict["debug"] = 1
-                else: set_global.tmp_dict["debug"] = 0
+                if sys_argv[1] == "debug": tmp_dict["debug"] = 1
+                else: tmp_dict["debug"] = 0
             except IndexError: pass
 
 

@@ -63,6 +63,6 @@ class Config(object):
                 self.error("file")
 
 
-def set_global():
+def init_global():
     global tmp_dict
     tmp_dict = {}

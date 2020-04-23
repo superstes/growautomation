@@ -21,7 +21,6 @@
 # ga_version 0.3
 
 from ga.core.smallconfig import Config
-from ga.core.smallconfig import get_global
 
 from os import system as os_system
 from os import path as os_path
@@ -62,8 +61,9 @@ class LogWrite(object):
 
 def debugger(command, hard_debug=False):
     try:
+        from ga.core.smallconfig import tmp_dict
         if hard_debug: debug = True
-        else: debug = True if get_global.tmp_dict["debug"] == 1 else False
+        else: debug = True if tmp_dict["debug"] == 1 else False
         if debug is True:
             if type(command) == str:
                 print(command)

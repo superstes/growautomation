@@ -22,7 +22,7 @@
 
 from ga.core.owl import DoSql
 from ga.core.smallconfig import debugger
-from ga.core.smallconfig import set_global
+from ga.core.smallconfig import init_global
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
@@ -72,11 +72,13 @@ class Startup:
             # check that no locks are set -> set all to 0 or simply remove them (or remove all entries from temp table ?!)
 
     def debug(self, cleanup=False):
-        if cleanup: set_global.tmp_dict["debug"] = 0
+        init_global()
+        from ga.core.smallconfig import tmp_dict
+        if cleanup: tmp_dict["debug"] = 0
         else:
             try:
-                if sys_argv[1] == "debug": set_global.tmp_dict["debug"] = 1
-                else: set_global.tmp_dict["debug"] = 0
+                if sys_argv[1] == "debug": tmp_dict["debug"] = 1
+                else: tmp_dict["debug"] = 0
             except IndexError: pass
 
 Startup()
