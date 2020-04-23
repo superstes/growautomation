@@ -71,4 +71,4 @@ def debugger(command, hard_debug=False):
                 print(command)
             elif type(command) == list:
                 [print(call) for call in command]
-    except KeyError as error: LogWrite(error)
+    except (KeyError, ImportError) as error: LogWrite(error)
