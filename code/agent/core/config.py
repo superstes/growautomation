@@ -20,14 +20,14 @@
 
 # ga_version 0.3
 
+from ga.core.owl import DoSql
+from ga.core.smallant import LogWrite
+from ga.core.smallant import debugger
+from ga.core.smallconfig import Config as FileConfig
+
 from functools import lru_cache
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
-
-from ga.core.owl import DoSql
-from ga.core.smallant import LogWrite
-from ga.core.owl import debugger
-from ga.core.config_parser_file import Config as FileConfig
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -62,7 +62,6 @@ class Config(object):
             if self.table == "group": command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
             elif self.table == "object": command = ["SELECT", "type", "FROM ga.Object WHERE"]
             elif self.table == "data": command = ["SELECT", "data", "FROM ga.Data WHERE"]
-            elif self.table == "tmp": command = ["SELECT", "data", "FROM ga.Temp WHERE"]
         if self.output is not None:
             command[1], custom = self.output, True
         if self.setting is not None:

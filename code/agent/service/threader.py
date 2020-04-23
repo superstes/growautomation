@@ -4,7 +4,7 @@
 # ga_version 0.3
 
 from ga.core.ant import LogWrite
-from ga.core.owl import debugger
+from ga.core.smallconfig import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep

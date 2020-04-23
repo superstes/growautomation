@@ -23,9 +23,9 @@
 from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
-from ga.core.owl import debugger
+from ga.core.smallant import debugger
 from ga.service.threader import Loop
-from ga.core.owl import sql_replace
+from ga.core.smallconfig import set_global
 
 from systemd import journal as systemd_journal
 import signal
@@ -168,18 +168,11 @@ class Service:
             else: self.exit()
 
     def debug(self, cleanup=False):
-        data_dict = {"data": None, "author": "service", "belonging": Config("hostname").get(), "setting": "debug"}
-        if cleanup:
-            data_dict["data"] = "0"
-            sql_replace(data_dict, table="tmp")
+        if cleanup: set_global.tmp_dict["debug"] = 0
         else:
             try:
-                if sys_argv[1] == "debug":
-                    data_dict["data"] = "1"
-                    sql_replace(data_dict, table="tmp", debug=True)
-                else:
-                    data_dict["data"] = "0"
-                    sql_replace(data_dict, table="tmp")
+                if sys_argv[1] == "debug": set_global.tmp_dict["debug"] = 1
+                else: set_global.tmp_dict["debug"] = 0
             except IndexError: pass
 
 

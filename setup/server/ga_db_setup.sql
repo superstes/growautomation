@@ -92,16 +92,3 @@ create table IF NOT EXISTS Grouping (
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
-
-create table IF NOT EXISTS Temp (
-    id int unsigned not null auto_increment,
-    changed timestamp not null default current_timestamp on update current_timestamp,
-    author varchar(20) not null,
-    belonging varchar(20) null,
-    setting varchar(20) not null,
-	data varchar(50) null,
-    primary key (id),
-    unique key unique_belonging_name (belonging, setting)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;

@@ -21,16 +21,17 @@
 # ga_version 0.3
 # sql module
 
+from ga.core.smallant import LogWrite
+from ga.core.smallconfig import Config
+from ga.core.smallant import debugger
+
 from os import system as os_system
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from time import sleep as time_sleep
-
-from ga.core.smallant import LogWrite
-from ga.core.config_parser_file import Config
-
+from functools import lru_cache
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -115,6 +116,7 @@ class DoSql:
             if command is None: command = self.command
             if connect_debug: debugger("owl - connect |command '%s' '%s'" % (type(command), command))
             if self.write is False:
+                @lru_cache()
                 def readcache(doit):
                     cursor.execute(doit)
                     if cursor.rowcount < 1: return False
@@ -153,23 +155,6 @@ class DoSql:
             for x in sqllist: output.append(x.find(searchfor))
         debugger("owl - find |output '%s' '%s'" % (type(output), output))
         return output
-
-
-def debug_check():
-    command = "SELECT data FROM ga.Temp WHERE setting = 'debug' AND belonging = '%s';" % Config("hostname").get()
-    sql_instance = DoSql(command)
-    debug_state = sql_instance.connect(command=command, connect_debug=False)
-    return True if debug_state == "1" else False
-
-
-def debugger(command, hard_debug=False):
-    if hard_debug: debug = True
-    else: debug = debug_check()
-    if debug is True:
-        if type(command) == str:
-            print(command)
-        elif type(command) == list:
-            [print(call) for call in command]
 
 
 def sql_replace(data_dict, table="setting", debug=False):

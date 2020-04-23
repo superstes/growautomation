@@ -20,11 +20,12 @@
 
 # ga_version 0.3
 
+from ga.core.smallconfig import Config
+from ga.core.smallconfig import get_global
+
 from os import system as os_system
 from os import path as os_path
 from datetime import datetime
-
-from ga.core.config_parser_file import Config
 
 
 def now(time_format):
@@ -57,3 +58,15 @@ class LogWrite(object):
         logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
         logfile.write("\n%s\n" % self.output)
         logfile.close()
+
+
+def debugger(command, hard_debug=False):
+    try:
+        if hard_debug: debug = True
+        else: debug = True if get_global.tmp_dict["debug"] == 1 else False
+        if debug is True:
+            if type(command) == str:
+                print(command)
+            elif type(command) == list:
+                [print(call) for call in command]
+    except (IndexError, ValueError): pass

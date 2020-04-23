@@ -28,8 +28,8 @@ from inspect import currentframe as inspect_currentframe
 
 class Config(object):
     def __init__(self, request, file="core.conf"):
-        self.file = file
-        self.request = request
+        global tmp_dict
+        self.file, self.request, tmp_dict = file, request, {}
 
     def get(self):
         if self.file == "core.conf":
@@ -62,3 +62,7 @@ class Config(object):
             except (IndexError, ValueError):
                 self.error("file")
 
+
+def set_global():
+    global tmp_dict
+    tmp_dict = {}

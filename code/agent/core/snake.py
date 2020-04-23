@@ -21,6 +21,12 @@
 # ga_version 0.3
 # sensor master module
 
+from ga.core.config import Config
+from ga.core.owl import DoSql
+from ga.core.owl import sql_replace
+from ga.core.ant import LogWrite
+from ga.core.smallant import debugger
+
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from sys import argv as sys_argv
@@ -28,12 +34,6 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 import signal
 from time import sleep as time_sleep
-
-from ga.core.config import Config
-from ga.core.owl import DoSql
-from ga.core.owl import sql_replace
-from ga.core.ant import LogWrite
-from ga.core.owl import debugger
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -49,6 +49,7 @@ class Balrog:
 
     def devicetype(self):
         device_list = []
+        # check all for loops if they will break if only one element is in list -> find clean solution
         for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get():
             if not Config(setting="timer", belonging=device).get() and Config(setting="enabled", belonging=device).get() == "1":
                 device_list.append(device)

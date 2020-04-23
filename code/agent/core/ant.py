@@ -20,6 +20,10 @@
 
 # ga_version 0.3
 
+from ga.core.config import Config
+from ga.core.smallant import LogWrite as SmallLogWrite
+from ga.core.smallant import debugger
+
 from datetime import datetime
 from datetime import timedelta
 from os import popen as os_popen
@@ -33,10 +37,6 @@ from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from getpass import getpass
 # from functools import lru_cache
-
-from ga.core.config import Config
-from ga.core.smallant import LogWrite as SmallLogWrite
-
 
 SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
