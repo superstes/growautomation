@@ -242,7 +242,7 @@ class GetObject:
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
-        with open("%s/maintainance/add_config.tmp" % Config("path_root").get(), 'w') as tmp:
+        with open("%s//maintenance/add_config.tmp" % Config("path_root").get(), 'w') as tmp:
             tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         def sql(command, query=False):
