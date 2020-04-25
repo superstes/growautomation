@@ -32,6 +32,7 @@ from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from os import system as os_system
 from sys import argv as sys_argv
+from random import choice as random_choice
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -119,7 +120,7 @@ class GetObject:
                 setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.",
                                                          default=3600, max_value=1209600, min_value=60).get()
             elif dt_object_dict[name] == "downlink":
-                setting_dict["portcount"] = ShellInput("How many ports does this downlink provide?", default=4).get()
+                setting_dict["portcount"] = ShellInput("How many client-ports does this downlink provide?", default=4).get()
                 setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n"
                                                              "(Or can it only output the data for all of its ports at once?)", default=False).get()
             self.setting_dict[name] = setting_dict
@@ -144,7 +145,7 @@ class GetObject:
             create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
             while create:
                 ShellOutput(symbol="-", font="line")
-                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % list(dt_exist_dict.keys())[0],
+                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(dt_exist_dict.keys()),
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1],
                                                poss=d_exist_list, intype="free").get()
@@ -159,7 +160,7 @@ class GetObject:
                     if setting_dict["connection"] == "downlink":
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device",
-                                                              default=d_dl_list[0], poss=d_dl_list, intype="free").get()
+                                                              default=str(random_choice(d_dl_list)), poss=d_dl_list, intype="free").get()
                         if setting_dict["downlink"] == "notinlist":
                             setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-device to which this device is connected to.\n"
                                                                   "Info: You will need to add this downlink-device in the next run of this config_interface.\n"
@@ -215,7 +216,7 @@ class GetObject:
                     if member_count == 0: info = "\nInfo: %s" % info_member
                     else: info = ""
                     current_posslist = list(set(posslist) - set(member_list))
-                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free").get())
+                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=str(random_choice(current_posslist)), intype="free").get())
                     member_count += 1
                     if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                 create_dict[create_count] = member_list
