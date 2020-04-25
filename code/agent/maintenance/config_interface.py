@@ -26,7 +26,7 @@ from ga.core.ant import ShellOutput
 from ga.core.ant import ShellInput
 from ga.core.ant import LogWrite
 from ga.core.smallant import debugger
-from ga.core.smallant import init_debug
+from ga.core.smallant import debug_init
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe

@@ -25,7 +25,7 @@ from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
 from ga.core.smallant import debugger
-from ga.core.smallant import init_debug
+from ga.core.smallant import debug_init
 
 from systemd import journal as systemd_journal
 import signal

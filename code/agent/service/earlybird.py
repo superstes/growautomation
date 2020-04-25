@@ -22,7 +22,7 @@
 
 from ga.core.owl import DoSql
 from ga.core.smallant import debugger
-from ga.core.smallant import init_debug
+from ga.core.smallant import debug_init
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
