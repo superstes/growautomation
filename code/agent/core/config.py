@@ -36,7 +36,7 @@ class Config(object):
     def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
         self.setting, self.nosql, self.filter, self.belonging, self.output, self.table = setting, nosql, filter, belonging, output, table
 
-    def get(self):
+    def get(self, typ=None):
         debugger("config - input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
                  % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
                  type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
@@ -45,6 +45,8 @@ class Config(object):
                                "sql_server_port", "sql_sock"]
         output = FileConfig(self.setting).get() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
             else self.error("all")
+        if typ is not None:
+            if type(output) == str and typ == "list": output = list(output)
         return self.error("sql") if output is False else output
 
     def error(self, parser_type):
