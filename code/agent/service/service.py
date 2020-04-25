@@ -78,7 +78,7 @@ class Service:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": init_debug()
+            if sys_argv[1] == "debug": debug_init()
         except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self.get_timer_dict()

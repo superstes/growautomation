@@ -43,7 +43,7 @@ class GetObject:
 
     def choose(self):
         try:
-            if sys_argv[1] == "debug": init_debug()
+            if sys_argv[1] == "debug": debug_init()
         except (IndexError, NameError): pass
         ShellOutput("Growautomation - config change module", font="head", symbol="#")
         ShellOutput("Currently only adding of objects is supported", font="text")

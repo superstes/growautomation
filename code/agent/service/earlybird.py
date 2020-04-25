@@ -43,7 +43,7 @@ class Startup:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": init_debug()
+            if sys_argv[1] == "debug": debug_init()
         except (IndexError, NameError): pass
         systemd_journal("Starting service initialization.")
         # recreate log/backup links
@@ -57,7 +57,7 @@ class Startup:
 
     def finish(self):
         try:
-            if sys_argv[1] == "debug": init_debug(on=False)
+            if sys_argv[1] == "debug": debug_init(on=False)
         except (IndexError, NameError): pass
 
     def config(self):
