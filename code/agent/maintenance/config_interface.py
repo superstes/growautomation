@@ -89,7 +89,7 @@ class GetObject:
                 setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
                                                       default="%s.py" % name, intype="free", max_value=50).get()
-                setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to you function -> if you need it.\n"
+                setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the function -> if you need it.\n"
                                                           "Info: pe. if one function can provide data to multiple devicetypes",
                                                           intype="free", min_value=0, max_value=75).get()
             if dt_object_dict[name] == "action":
@@ -242,10 +242,8 @@ class GetObject:
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
-        tmp_config_dump_path = "%s/maintainance/add_config.tmp" % Config("path_root").get()
-        tmp_config_dump = open(tmp_config_dump_path)
-        tmp_config_dump.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
-        tmp_config_dump.close()
+        with open("%s/maintainance/add_config.tmp" % Config("path_root").get(), 'w') as tmp:
+            tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         def sql(command, query=False):
             if Config("setuptype").get() == "agent":
