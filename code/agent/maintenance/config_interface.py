@@ -61,14 +61,11 @@ class GetObject:
         dt_object_dict = {}
         ShellOutput("Devicetypes", symbol="-", font="head")
         while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; they provide per model configuration", True).get()
-        while_count = 0
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
             setting_dict = {}
-            if while_count > 0:
-                name = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free").get()
-            else:
-                name = ShellInput("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free").get()
+            # add all devicetypes from db to the "already existing" output
+            name = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free").get()
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
             setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
                                                   "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
@@ -81,33 +78,26 @@ class GetObject:
                     setting_dict["boomerang_type"] = ShellInput("How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free").get()
                     if setting_dict["boomerang_type"] == "time":
                         setting_dict["boomerang_time"] = ShellInput("Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10).get()
-                    reverse_function = ShellInput("Does reversing need an other function?", False).get()
+                    reverse_function = ShellInput("Does reversing need an other function?", default=False).get()
                     if reverse_function:
                         setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", intype="free", max_value=50).get()
                         setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.", intype="free", min_value=0, max_value=75).get()
             elif dt_object_dict[name] == "sensor":
                 setting_dict["timer"] = ShellInput("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10).get()
-                setting_dict["unit"] = ShellInput("Provide the unit for the sensor input.", "°C", intype="free").get()
+                setting_dict["unit"] = ShellInput("Provide the unit for the sensor input.", default="°C", intype="free").get()
                 setting_dict["threshold_max"] = ShellInput("Provide a maximum threshold value for the sensor.\n"
                                                            "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1).get()
                 setting_dict["threshold_optimal"] = ShellInput("Provide a optimal threshold value for the sensor.\n"
                                                                "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1).get()
 
-                setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60).get()
+                setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.", default=3600, max_value=1209600, min_value=60).get()
             elif dt_object_dict[name] == "downlink":
-                setting_dict["portcount"] = ShellInput("How many ports does this downlink provide?", 4).get()
-                setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", False).get()
-                setting_dict["output_format"] = ShellInput("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free").get()
-                if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
-                    setting_dict["output_format_delimeter"] = ShellInput("Provide a delimeter to split the output string.", "-", intype="free", max_value=3).get()
+                setting_dict["portcount"] = ShellInput("How many ports does this downlink provide?", default=4).get()
+                setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", default=False).get()
             self.setting_dict[name] = setting_dict
-            while_count += 1
-            while_devicetype = ShellInput("Want to add another devicetype?", True, style="info").get()
-        if while_count > 0:
-            self.object_dict["devicetype"] = dt_object_dict
-            self.create_device()
-        else:
-            return
+            while_devicetype = ShellInput("Want to add another devicetype?", default=True, style="info").get()
+        self.object_dict["devicetype"] = dt_object_dict
+        self.create_device()
 
     def create_device(self):
         d_object_dict = {}
@@ -123,6 +113,7 @@ class GetObject:
                 create_dict[name] = ShellInput("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free").get()
                 if to_ask != "downlink":
                     dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
+                    dl_list.append("notinlist")
                     if len(dl_list) > 0:
                         setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
                                                                 "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free").get()
@@ -132,7 +123,9 @@ class GetObject:
                     if setting_dict["connection"] == "downlink":
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device", poss=dl_list, intype="free").get()
-                setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", default=2, intype="free").get()
+                        if setting_dict["downlink"] == "notinlist":
+                            setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-devicetype to which this device is connected to.", default="ads1115", intype="free").get()
+                setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free").get()
                 self.setting_dict[name] = setting_dict
                 create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             d_object_dict[to_ask] = create_dict
