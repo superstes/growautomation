@@ -47,23 +47,11 @@ class GetObject:
         try:
             if sys_argv[1] == "debug": debug_init()
         except (IndexError, NameError): pass
+        # check if tmp_config_dump is currently in folder -> ask to load old config and try to import it into the db
         ShellOutput("Growautomation - config change module", font="head", symbol="#")
         ShellOutput("Currently only adding of objects is supported", font="text")
         self.create_devicetype()
         # mode = ShellInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
-        # if mode is add -> insert if not exists
-        # if mode is modify -> update if exists
-        # if mode is remove -> ya'now
-
-    # def add_core(self):
-    #     ShellOutput("Add", font="head", symbol="#")
-    #     ShellOutput("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", font="text")
-    #     core_object_dict = {}
-    #     core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"] = "NULL", "NULL", "NULL"
-    #     self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
-    #     self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
-    #     self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {GetConfig("hostname"): "NULL"}
-    #     self.create_devicetype()
 
     def create_devicetype(self):
         dt_object_dict, dt_exist_list = {}, []
@@ -242,31 +230,25 @@ class GetObject:
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
-        with open("%s//maintenance/add_config.tmp" % Config("path_root").get(), 'w') as tmp:
+        tmp_config_dump = "%s/maintenance/add_config.tmp" % Config("path_root").get()
+        with open(tmp_config_dump, 'w') as tmp:
             tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
-        def sql(command, query=False):
-            if Config("setuptype").get() == "agent":
-                if query: return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get(), query=True).start()
-                else: return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get())
-            else:
-                if query: return DoSql(command, basic=True, query=True).start()
-                else: return DoSql(command, basic=True)
-
         ShellOutput("Writing object configuration", font="text")
-        sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname").get())
-        [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key) for key in self.object_dict.keys()]
+        DoSql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname"), write=True).start()
+        [DoSql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start() for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
                 count = 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
-                        sql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
+                        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class, write=True).start()
                         object_class = "'%s'" % object_class
                     if parent != "NULL" and parent.find("'") == -1:
                         parent = "'%s'" % parent
-                    sql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
+                    DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
+                          (object_name, parent, object_class, object_type), write=True).start()
                     count += 1
                 return count
             if object_type == "device":
@@ -284,7 +266,7 @@ class GetObject:
                 elif type(data) == bool:
                     if data is True: data = 1
                     else: data = 0
-                sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
+                DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data), write=True).start()
                 setting_count += 1
         ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
 
@@ -292,16 +274,16 @@ class GetObject:
         group_count, member_count = 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
-                sql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
-                sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
-                sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type, query=True)
+                DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
+                DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True).start()
+                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type).start()
                 for member in sorted(group_member_list):
-                    sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
+                    DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member), write=True)
                     member_count += 1
                 group_count += 1
         ShellOutput("%s groups with a total of %s members were added" % (group_count, member_count), style="info", font="text")
 
-        os_system("rm %s" % tmp_config_dump_path)
+        os_system("rm %s" % tmp_config_dump)
 
 
 GetObject()
