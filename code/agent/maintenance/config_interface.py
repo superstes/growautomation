@@ -122,10 +122,10 @@ class GetObject:
                                                                 "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True).get()
                     if setting_dict["connection"] == "downlink":
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
-                                                              "Info: the downlink must also be added as device", poss=dl_list, intype="free").get()
+                                                              "Info: the downlink must also be added as device", default=dl_list[0], poss=dl_list, intype="free").get()
                         if setting_dict["downlink"] == "notinlist":
                             setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-devicetype to which this device is connected to.", default="ads1115", intype="free").get()
-                setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free").get()
+                setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free", min_value=1).get()
                 self.setting_dict[name] = setting_dict
                 create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             d_object_dict[to_ask] = create_dict
@@ -167,7 +167,7 @@ class GetObject:
                     elif to_ask == "link":
                         posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
                     current_posslist = list(set(posslist) - set(member_list))
-                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free")).get()
+                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free").get())
                     member_count += 1
                     if member_count > 1:
                         add_member = ShellInput("Want to add another member?", True, style="info").get()
