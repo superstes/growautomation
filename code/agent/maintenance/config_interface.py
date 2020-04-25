@@ -134,7 +134,7 @@ class GetObject:
         d_object_dict, d_exist_list, dt_exist_dict, d_dl_list, new_dt_dict = {}, [], {}, [], {}
         for name in Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
         for nested in self.object_dict.values():
-            for name, typ in dict(nested).items(): dt_exist_dict[name] = typ, new_dt_dict[name] = typ
+            for name, typ in dict(nested).items(): dt_exist_dict[name], new_dt_dict[name] = typ, typ
         for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): dt_exist_dict[name] = typ
         for name, dt in Config(output="name,class", filter="type = 'device'", table="object").get():
             if Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
@@ -147,8 +147,8 @@ class GetObject:
                 ShellOutput(symbol="-", font="line")
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(current_new_dt_list),
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
-                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1],
-                                               poss=d_exist_list, intype="free").get()
+                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1][0],
+                                               poss=list(dt_exist_dict.keys()), intype="free").get()
                 if to_ask != "downlink":
                     dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items()]
                     debugger("confint - create_device - dt_conntype %s" % dt_conntype)
@@ -175,7 +175,7 @@ class GetObject:
             d_object_dict[to_ask] = create_dict
 
         def check_type(name):
-            if len([x for key, value in self.object_dict.items() if key == "devicetype" for x in dict(value).values() if x == name]) > 0:
+            if len([dt for dt, typ in dt_exist_dict.items() if typ == name]) > 0:
                 return True
             else: return False
 
