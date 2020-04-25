@@ -105,7 +105,8 @@ class ShellInput:
                         if self.user_input in self.poss: break
                     elif type(self.poss) == str:
                         if self.user_input == self.poss: break
-            except KeyError: poss_error()
+            except (KeyError, ValueError): poss_error()
+            while_count += 1
         return self.user_input
 
     def get(self):
