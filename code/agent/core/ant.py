@@ -158,7 +158,7 @@ class ShellInput:
                 except ValueError: self.user_input = 0
             return self.user_input
         else:
-            raise KeyError
+            raise KeyError("Default value was neither str/int/bool | Value: [%s, %s]" % (type(self.default), self.default))
 
 
 # Shell output
