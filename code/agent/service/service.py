@@ -24,8 +24,8 @@ from ga.core.config import Config
 from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
-from ga.core.globalvars import init_vars
 from ga.core.smallant import debugger
+from ga.core.smallant import init_debug
 
 from systemd import journal as systemd_journal
 import signal
@@ -77,7 +77,9 @@ class Service:
         return name_dict
 
     def start(self):
-        self.debug()
+        try:
+            if sys_argv[1] == "debug": init_debug()
+        except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self.get_timer_dict()
         for thread_name, settings in self.name_dict.items():
@@ -165,14 +167,6 @@ class Service:
                 LogWrite("Stopping service because of runtime error", level=2)
                 self.stop()
             else: self.exit()
-
-    def debug(self):
-        init_vars()
-        from ga.core.globalvars import tmp_dict
-        try:
-            if sys_argv[1] == "debug": tmp_dict["debug"] = 1
-            else: tmp_dict["debug"] = 0
-        except (IndexError, NameError): pass
 
 
 Service()

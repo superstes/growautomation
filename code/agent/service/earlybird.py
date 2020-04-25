@@ -22,7 +22,7 @@
 
 from ga.core.owl import DoSql
 from ga.core.smallant import debugger
-from ga.core.globalvars import init_vars
+from ga.core.smallant import init_debug
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
@@ -42,6 +42,9 @@ class Startup:
         self.start()
 
     def start(self):
+        try:
+            if sys_argv[1] == "debug": init_debug()
+        except (IndexError, NameError): pass
         systemd_journal("Starting service initialization.")
         # recreate log/backup links
         # check for python version -> module link should be updated
@@ -51,6 +54,11 @@ class Startup:
             debugger("service - stop |got signal '%s'" % signum)
             LogWrite("Service received signal '%s'" % signum, level=2)
         systemd_journal("Service initialization stopped. Exiting.")
+
+    def finish(self):
+        try:
+            if sys_argv[1] == "debug": init_debug(on=False)
+        except (IndexError, NameError): pass
 
     def config(self):
         # get config from db
@@ -70,12 +78,5 @@ class Startup:
             DoSql("DELETE FROM ga.Temp;", write=True).start()
             # check that no locks are set -> set all to 0 or simply remove them (or remove all entries from temp table ?!)
 
-    def debug(self):
-        init_vars()
-        from ga.core.globalvars import tmp_dict
-        try:
-            if sys_argv[1] == "debug": tmp_dict["debug"] = 1
-            else: tmp_dict["debug"] = 0
-        except IndexError: pass
 
 Startup()
