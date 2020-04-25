@@ -202,15 +202,17 @@ class LogWrite(object):
     def __repr__(self):
         return False if self.log_level > Config("log_level").get() else self.write()
 
-    def open(self):
+    def file(self):
         logdir = "%s/%s/%s" % (Config("path_log").get(), self.scripttype, date02)
-        return os_system("mkdir -p " + logdir) if os_path.exists(logdir) is False else open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
+        if os_path.exists(logdir) is False: os_system("mkdir -p " + logdir)
+        logfile = "%s/%s_%s.log" % (logdir, date03, self.scripttype)
+        if os_path.exists(logfile) is False: os_system("touch %s" % logfile)
+        return logfile
 
     def write(self):
-        logfile = self.open()
-        logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
-        logfile.write("\n%s\n" % self.output)
-        logfile.close()
+        with open(self.file(), 'a') as logfile:
+            logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
+            logfile.write("\n%s\n" % self.output)
 
 
 # File operations
