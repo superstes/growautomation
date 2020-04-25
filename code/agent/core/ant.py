@@ -77,26 +77,35 @@ class ShellInput:
             return True
 
     def poss_check(self):
+        while_count = 0
+
+        def poss_error():
+            if self.neg: ShellOutput("Input error. The following cannot be chosen: %s\n" % self.poss, style="warn", font="text")
+            else: ShellOutput("Input error. Choose one of the following: %s\n" % self.poss, style="warn", font="text")
         while True:
             try:
-                if self.neg is False: poss_string = "Poss:"
-                else: poss_string = "No Poss:"
+                if while_count > 0: poss_error()
+                if self.neg: poss_string = "No Poss"
+                else: poss_string = "Poss"
                 if self.posstype == "str":
-                    self.user_input = str(input(self.style_type + "\n%s\n(%s %s - Default: %s)\n > " % (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower() or self.default)
+                    self.user_input = str(input(self.style_type + "\n%s\n(%s: %s - Default: %s)\n > " %
+                                                (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower()
+                                          or self.default)
                 elif self.posstype == "int":
-                    self.user_input = int(input(self.style_type + "\n%s\n(%s %s - Default: %s)\n > " % (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower() or self.default)
-                if self.neg is False:
-                    if type(self.poss) == list:
-                        if self.user_input in self.poss: break
-                    elif type(self.poss) == str:
-                        if self.user_input == self.poss: break
-                else:
+                    self.user_input = int(input(self.style_type + "\n%s\n(%s: %s - Default: %s)\n > " %
+                                                (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower()
+                                          or self.default)
+                if self.neg:
                     if type(self.poss) == list:
                         if self.user_input not in self.poss: break
                     elif type(self.poss) == str:
                         if self.user_input != self.poss: break
-            except KeyError:
-                ShellOutput("Input error. Choose one of the following: %s\n" % self.poss, style="warn", font="text")
+                else:
+                    if type(self.poss) == list:
+                        if self.user_input in self.poss: break
+                    elif type(self.poss) == str:
+                        if self.user_input == self.poss: break
+            except KeyError: poss_error()
         return self.user_input
 
     def get(self):
