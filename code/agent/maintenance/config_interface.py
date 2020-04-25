@@ -145,12 +145,16 @@ class GetObject:
             current_new_dt_list = [name for name, typ in new_dt_dict.items() if typ == to_ask]
             while create:
                 ShellOutput(symbol="-", font="line")
-                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(current_new_dt_list),
+                try: default_name = random_choice(current_new_dt_list)
+                except IndexError: default_name = random_choice([dt for dt, typ in dt_exist_dict.items() if typ == to_ask])
+                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % default_name,
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1][0],
                                                poss=list(dt_exist_dict.keys()), intype="free").get()
                 if to_ask != "downlink":
-                    dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items()]
+                    if create_dict[name] in new_dt_dict.keys():
+                        dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items() if setting == "connection"][0]
+                    else: dt_conntype = Config(setting="connection", belonging=create_dict[name]).get()
                     debugger("confint - create_device - dt_conntype %s" % dt_conntype)
                     if dt_conntype != "specific": setting_dict["connection"] = dt_conntype
                     else: setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
@@ -182,7 +186,7 @@ class GetObject:
         if check_type("downlink"):
             ShellOutput("Downlinks", symbol="-", font="head")
             to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\n"
-                                  "Check the documentation for more informations: https://docs.growautomation.at")
+                                  "Check the documentation for further information: https://docs.growautomation.at")
         d_dl_list.remove("notinlist")
         self.object_downlink_list = d_dl_list
         if check_type("sensor"):
@@ -200,7 +204,7 @@ class GetObject:
             create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
             if to_ask == "sector":
                 intern_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
-                db_dev_list = Config(output="name", filter="type = 'device'", table="object").get()
+                db_dev_list = Config(output="name", filter="type = 'device'", table="object").get("list")
                 posslist.extend(intern_dev_list), posslist.extend(db_dev_list)
                 [posslist.remove(dev) for dev in self.object_downlink_list]
             elif to_ask == "link":
@@ -227,9 +231,9 @@ class GetObject:
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
         dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "action"]
-        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get())
+        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
         dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
-        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get())
+        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
