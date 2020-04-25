@@ -131,10 +131,10 @@ class GetObject:
         self.create_device()
 
     def create_device(self):
-        d_object_dict, d_exist_list, dt_exist_dict, d_dl_list = {}, [], {}, []
+        d_object_dict, d_exist_list, dt_exist_dict, d_dl_list, new_dt_dict = {}, [], {}, [], {}
         for name in Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
         for nested in self.object_dict.values():
-            for name, typ in dict(nested).items(): dt_exist_dict[name] = typ
+            for name, typ in dict(nested).items(): dt_exist_dict[name] = typ, new_dt_dict[name] = typ
         for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): dt_exist_dict[name] = typ
         for name, dt in Config(output="name,class", filter="type = 'device'", table="object").get():
             if Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
@@ -142,9 +142,10 @@ class GetObject:
 
         def to_create(to_ask, info):
             create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
+            current_new_dt_list = [name for name, typ in new_dt_dict.items() if typ == to_ask]
             while create:
                 ShellOutput(symbol="-", font="line")
-                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(list(dt_exist_dict.keys())),
+                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(current_new_dt_list),
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1],
                                                poss=d_exist_list, intype="free").get()
