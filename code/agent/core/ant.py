@@ -241,8 +241,7 @@ class ShellInput:
                 if (self.user_input < int(min_value) or self.user_input > int(max_value)) and whilecount > 0:
                     ShellOutput("Input error. Value should be between 1 and 1209600.\n", style="warn", font="text")
                 whilecount += 1
-                self.user_input = input("\n%s\n(Default: %s)\n > " % (self.prompt, self.default)).lower() or "%s" % self.default
-                try: int(self.user_input)
+                try: self.user_input = int(input("\n%s\n(Default: %s)\n > " % (self.prompt, self.default)).lower() or "%s" % self.default)
                 except ValueError: self.user_input = 0
             return self.user_input
         else:
