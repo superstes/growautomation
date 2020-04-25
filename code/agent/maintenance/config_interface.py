@@ -76,12 +76,14 @@ class GetObject:
             name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
                                             default="AirHumidity", intype="free", poss=dt_exist_list, neg=True).get(), {}
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
-            if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
-                          default=True).get() is True:
-                setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
-                                                        "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
-                                                        default="direct", poss=["downlink", "direct"], intype="free").get()
-            else: setting_dict["connection"] = "specific"
+            if dt_object_dict[name] != "downlink":
+                if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
+                              default=True).get() is True:
+                    setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
+                                                            "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
+                                                            default="direct", poss=["downlink", "direct"], intype="free").get()
+                else: setting_dict["connection"] = "specific"
+            else: setting_dict["connection"] = "direct"
             if setting_dict["connection"] != "downlink":
                 setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
