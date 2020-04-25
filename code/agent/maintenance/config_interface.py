@@ -23,7 +23,7 @@
 from ga.core.config import Config
 from ga.core.owl import DoSql
 from ga.core.ant import ShellOutput
-from ga.core.ant import GetInput
+from ga.core.ant import ShellInput
 from ga.core.ant import LogWrite
 
 from inspect import getfile as inspect_getfile
@@ -42,7 +42,7 @@ class GetObject:
         ShellOutput("Growautomation - config change module", font="head", symbol="#")
         ShellOutput("Currently only adding of objects is supported", font="text")
         self.create_devicetype()
-        # mode = GetInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
+        # mode = ShellInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
         # if mode is add -> insert if not exists
         # if mode is modify -> update if exists
         # if mode is remove -> ya'now
@@ -60,49 +60,49 @@ class GetObject:
     def create_devicetype(self):
         dt_object_dict = {}
         ShellOutput("Devicetypes", symbol="-", font="head")
-        while_devicetype = GetInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; they provide per model configuration", True)
+        while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; they provide per model configuration", True).get()
         while_count = 0
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
             setting_dict = {}
             if while_count > 0:
-                name = GetInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free")
+                name = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free").get()
             else:
-                name = GetInput("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
-            dt_object_dict[name] = GetInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
-            setting_dict["function"] = GetInput("Which function should be started for the devicetype?\n"
-                                                "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
-                                                default="%s.py" % name, intype="free", max_value=50)
-            setting_dict["function_arg"] = GetInput("Provide system arguments to pass to you function -> if you need it.\n"
-                                                    "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
+                name = ShellInput("Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free").get()
+            dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
+            setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
+                                                  "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
+                                                  default="%s.py" % name, intype="free", max_value=50).get()
+            setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to you function -> if you need it.\n"
+                                                      "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75).get()
             if dt_object_dict[name] == "action":
-                setting_dict["boomerang"] = GetInput("Will this type need to reverse itself?\nInfo: pe. opener that needs to open/close", False)
+                setting_dict["boomerang"] = ShellInput("Will this type need to reverse itself?\nInfo: pe. opener that needs to open/close", False).get()
                 if setting_dict["boomerang"]:
-                    setting_dict["boomerang_type"] = GetInput("How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free")
+                    setting_dict["boomerang_type"] = ShellInput("How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free").get()
                     if setting_dict["boomerang_type"] == "time":
-                        setting_dict["boomerang_time"] = GetInput("Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10)
-                    reverse_function = GetInput("Does reversing need an other function?", False)
+                        setting_dict["boomerang_time"] = ShellInput("Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10).get()
+                    reverse_function = ShellInput("Does reversing need an other function?", False).get()
                     if reverse_function:
-                        setting_dict["boomerang_function"] = GetInput("Provide the name of the function.", intype="free", max_value=50)
-                        setting_dict["function_arg"] = GetInput("Provide system arguments to pass to the reverse function -> if you need it.", intype="free", min_value=0, max_value=75)
+                        setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", intype="free", max_value=50).get()
+                        setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.", intype="free", min_value=0, max_value=75).get()
             elif dt_object_dict[name] == "sensor":
-                setting_dict["timer"] = GetInput("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
-                setting_dict["unit"] = GetInput("Provide the unit for the sensor input.", "°C", intype="free")
-                setting_dict["threshold_max"] = GetInput("Provide a maximum threshold value for the sensor.\n"
-                                                         "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
-                setting_dict["threshold_optimal"] = GetInput("Provide a optimal threshold value for the sensor.\n"
-                                                             "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
+                setting_dict["timer"] = ShellInput("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10).get()
+                setting_dict["unit"] = ShellInput("Provide the unit for the sensor input.", "°C", intype="free").get()
+                setting_dict["threshold_max"] = ShellInput("Provide a maximum threshold value for the sensor.\n"
+                                                           "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1).get()
+                setting_dict["threshold_optimal"] = ShellInput("Provide a optimal threshold value for the sensor.\n"
+                                                               "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1).get()
 
-                setting_dict["timer_check"] = GetInput("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60)
+                setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.", 3600, max_value=1209600, min_value=60).get()
             elif dt_object_dict[name] == "downlink":
-                setting_dict["portcount"] = GetInput("How many ports does this downlink provide?", 4)
-                setting_dict["output_per_port"] = GetInput("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", False)
-                setting_dict["output_format"] = GetInput("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free")
+                setting_dict["portcount"] = ShellInput("How many ports does this downlink provide?", 4).get()
+                setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", False).get()
+                setting_dict["output_format"] = ShellInput("Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free").get()
                 if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
-                    setting_dict["output_format_delimeter"] = GetInput("Provide a delimeter to split the output string.", "-", intype="free", max_value=3)
+                    setting_dict["output_format_delimeter"] = ShellInput("Provide a delimeter to split the output string.", "-", intype="free", max_value=3).get()
             self.setting_dict[name] = setting_dict
             while_count += 1
-            while_devicetype = GetInput("Want to add another devicetype?", True, style="info")
+            while_devicetype = ShellInput("Want to add another devicetype?", True, style="info").get()
         if while_count > 0:
             self.object_dict["devicetype"] = dt_object_dict
             self.create_device()
@@ -113,28 +113,28 @@ class GetObject:
         d_object_dict = {}
 
         def to_create(to_ask, info):
-            create = GetInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), True)
+            create = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), True).get()
             create_dict = {}
             while create:
                 ShellOutput(symbol="-", font="line")
                 setting_dict = {}
                 dt_list = [name for nested in self.object_dict.values() for name, typ in dict(nested).items() if typ == to_ask]
-                name = GetInput("Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free")
-                create_dict[name] = GetInput("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free")
+                name = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free").get()
+                create_dict[name] = ShellInput("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free").get()
                 if to_ask != "downlink":
                     dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
                     if len(dl_list) > 0:
-                        setting_dict["connection"] = GetInput("How is the device connected to the growautomation agent?\n"
-                                                                    "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
+                        setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
+                                                                "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free").get()
                     else:
-                        setting_dict["connection"] = GetInput("How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
-                                                                    "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True)
+                        setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
+                                                                "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True).get()
                     if setting_dict["connection"] == "downlink":
-                        setting_dict["downlink"] = GetInput("Provide the name of the downlink to which the device is connected to.\n"
-                                                                  "Info: the downlink must also be added as device", poss=dl_list, intype="free")
-                setting_dict["port"] = GetInput("Provide the portnumber to which the device is/will be connected.", default=2, intype="free")
+                        setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
+                                                              "Info: the downlink must also be added as device", poss=dl_list, intype="free").get()
+                setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", default=2, intype="free").get()
                 self.setting_dict[name] = setting_dict
-                create = GetInput("Want to add another %s?" % to_ask, True, style="info")
+                create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             d_object_dict[to_ask] = create_dict
 
         def check_type(name):
@@ -159,7 +159,7 @@ class GetObject:
     def create_group(self):
         def to_create(to_ask, info, info_member):
             create_count, create_dict = 0, {}
-            create = GetInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True)
+            create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
             while create:
                 ShellOutput(symbol="-", font="line")
                 member_list = []
@@ -174,13 +174,13 @@ class GetObject:
                     elif to_ask == "link":
                         posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
                     current_posslist = list(set(posslist) - set(member_list))
-                    member_list.append(GetInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free"))
+                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free")).get()
                     member_count += 1
                     if member_count > 1:
-                        add_member = GetInput("Want to add another member?", True, style="info")
+                        add_member = ShellInput("Want to add another member?", True, style="info").get()
                 create_dict[create_count] = member_list
                 create_count += 1
-                create = GetInput("Want to add another %s?" % to_ask, True, style="info")
+                create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             return create_dict
 
         ShellOutput("Sectors", symbol="-", font="head")
@@ -262,3 +262,6 @@ class GetObject:
         ShellOutput("%s groups with a total of %s members were added" % (group_count, member_count), style="info", font="text")
 
         os_system("rm %s" % tmp_config_dump_path)
+
+
+GetObject()

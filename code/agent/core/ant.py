@@ -158,12 +158,11 @@ def time_subtract(subtract, timeformat=timestamp, both=False):
     return datetime.now().strftime(timeformat), calculated if both is True else calculated
 
 
-class GetInput:
+class ShellInput:
     def __init__(self, prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2, neg=False):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
         self.posstype, self.max_value, self.min_value, self.neg = posstype, max_value, min_value, neg
         self.style_type, self.user_input = ShellOutput(style).colors(), ""
-        self.start()
 
     def string_check(self):
         char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,"
@@ -196,7 +195,7 @@ class GetInput:
                 ShellOutput("Input error. Choose one of the following: %s\n" % self.poss, style="warn", font="text")
         return self.user_input
 
-    def start(self):
+    def get(self):
         whilecount = 0
         if type(self.default) == bool:
             while True:
