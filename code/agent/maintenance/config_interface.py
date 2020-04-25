@@ -141,11 +141,10 @@ class GetObject:
         d_dl_list.append("notinlist")
 
         def to_create(to_ask, info):
-            debugger("confint - create_device - create %s" % to_ask)
             create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
             while create:
                 ShellOutput(symbol="-", font="line")
-                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(dt_exist_dict.keys()),
+                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % random_choice(list(dt_exist_dict.keys())),
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1],
                                                poss=d_exist_list, intype="free").get()
@@ -196,7 +195,6 @@ class GetObject:
 
     def create_group(self):
         def to_create(to_ask, info, info_member):
-            debugger("confint - create_group - create %s" % to_ask)
             create_count, create_dict, posslist = 0, {}, []
             create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
             if to_ask == "sector":
