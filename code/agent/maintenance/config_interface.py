@@ -25,10 +25,13 @@ from ga.core.owl import DoSql
 from ga.core.ant import ShellOutput
 from ga.core.ant import ShellInput
 from ga.core.ant import LogWrite
+from ga.core.smallant import debugger
+from ga.core.smallant import init_debug
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from os import system as os_system
+from sys import argv as sys_argv
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
@@ -39,6 +42,9 @@ class GetObject:
         self.choose()
 
     def choose(self):
+        try:
+            if sys_argv[1] == "debug": init_debug()
+        except (IndexError, NameError): pass
         ShellOutput("Growautomation - config change module", font="head", symbol="#")
         ShellOutput("Currently only adding of objects is supported", font="text")
         self.create_devicetype()
@@ -67,6 +73,7 @@ class GetObject:
             # add all devicetypes from db to the "already existing" output
             name = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free").get()
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
+            # ask if type is connected directly or over downlink -> if downlink theres no need for a deticated function
             setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
                                                   "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
                                                   default="%s.py" % name, intype="free", max_value=50).get()
@@ -121,6 +128,7 @@ class GetObject:
                         setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
                                                                 "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True).get()
                     if setting_dict["connection"] == "downlink":
+                        # check for downlink setting in type
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device", default=dl_list[0], poss=dl_list, intype="free").get()
                         if setting_dict["downlink"] == "notinlist":
@@ -133,8 +141,7 @@ class GetObject:
         def check_type(name):
             if len([x for key, value in self.object_dict.items() if key == "devicetype" for x in dict(value).values() if x == name]) > 0:
                 return True
-            else:
-                return False
+            else: return False
 
         if check_type("downlink"):
             ShellOutput("Downlinks", symbol="-", font="head")
@@ -158,27 +165,25 @@ class GetObject:
                 member_list = []
                 member_count, add_member = 0, True
                 while add_member:
-                    if member_count == 0:
-                        info = "\nInfo: %s" % info_member
-                    else:
-                        info = ""
+                    if member_count == 0: info = "\nInfo: %s" % info_member
+                    else: info = ""
                     if to_ask == "sector":
+                        # remove downlink devices from list
                         posslist = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
                     elif to_ask == "link":
                         posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
                     current_posslist = list(set(posslist) - set(member_list))
                     member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free").get())
                     member_count += 1
-                    if member_count > 1:
-                        add_member = ShellInput("Want to add another member?", True, style="info").get()
+                    if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                 create_dict[create_count] = member_list
                 create_count += 1
-                create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
+                create = ShellInput("Want to add another %s?" % to_ask, default=True, style="info").get()
             return create_dict
 
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
-        ShellOutput("Devicetype links", "-", font="head")
+        ShellOutput("Devicetype links", symbol="-", font="head")
         self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
         self.write_config()
 
@@ -192,15 +197,11 @@ class GetObject:
 
         def sql(command, query=False):
             if Config("setuptype").get() == "agent":
-                if query:
-                    return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get(), query=True).start()
-                else:
-                    return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get())
+                if query: return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get(), query=True).start()
+                else: return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get())
             else:
-                if query:
-                    return DoSql(command, basic=True, query=True).start()
-                else:
-                    return DoSql(command, basic=True)
+                if query: return DoSql(command, basic=True, query=True).start()
+                else: return DoSql(command, basic=True)
 
         ShellOutput("Writing object configuration", font="text")
         sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname").get())
@@ -221,8 +222,7 @@ class GetObject:
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values.items():
                     object_count += unpack_values(packed_subvalues, Config("hostname").get())
-            else:
-                object_count += unpack_values(packed_values)
+            else: object_count += unpack_values(packed_values)
         ShellOutput("%s objects were added" % object_count, style="info", font="text")
 
         ShellOutput("Writing object settings", font="text")
@@ -230,13 +230,10 @@ class GetObject:
         for object_name, packed_values in self.setting_dict.items():
             packed_values["enabled"] = 1
             for setting, data in sorted(packed_values.items()):
-                if data == "":
-                    pass
+                if data == "": pass
                 elif type(data) == bool:
-                    if data is True:
-                        data = 1
-                    else:
-                        data = 0
+                    if data is True: data = 1
+                    else: data = 0
                 sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
                 setting_count += 1
         ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
