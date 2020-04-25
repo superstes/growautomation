@@ -222,6 +222,7 @@ class GetObject:
         dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
         dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
         dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
+        # if only one -> splits string -.-
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
@@ -235,8 +236,8 @@ class GetObject:
             tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         ShellOutput("Writing object configuration", font="text")
-        DoSql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname"), write=True).start()
-        [DoSql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start() for key in self.object_dict.keys()]
+        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname").get(), write=True).start()
+        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start() for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
