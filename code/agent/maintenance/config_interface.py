@@ -20,13 +20,17 @@
 
 # ga_version 0.3
 
-from ga.core.config import GetConfig
+from ga.core.config import Config
 from ga.core.owl import DoSql
-#from ga.core.ant import ShellOutputClass
 from ga.core.ant import ShellOutput
 from ga.core.ant import GetInput
+from ga.core.ant import LogWrite
 
-#ShellOutput = ShellOutputClass.start()
+from inspect import getfile as inspect_getfile
+from inspect import currentframe as inspect_currentframe
+from os import system as os_system
+
+LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class GetObject:
@@ -36,22 +40,24 @@ class GetObject:
 
     def choose(self):
         ShellOutput("Growautomation - config change module", font="head", symbol="#")
-        mode = GetInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
+        ShellOutput("Currently only adding of objects is supported", font="text")
+        self.create_devicetype()
+        # mode = GetInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
         # if mode is add -> insert if not exists
         # if mode is modify -> update if exists
         # if mode is remove -> ya'now
 
-    def add_core(self):
-        ShellOutput("Add", font="head", symbol="#")
-        ShellOutput("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", font="text")
-        core_object_dict = {}
-        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"] = "NULL", "NULL", "NULL"
-        self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
-        self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
-        self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {GetConfig("hostname"): "NULL"}
-        self.get_devicetype()
+    # def add_core(self):
+    #     ShellOutput("Add", font="head", symbol="#")
+    #     ShellOutput("Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", font="text")
+    #     core_object_dict = {}
+    #     core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"] = "NULL", "NULL", "NULL"
+    #     self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
+    #     self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
+    #     self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {GetConfig("hostname"): "NULL"}
+    #     self.create_devicetype()
 
-    def get_devicetype(self):
+    def create_devicetype(self):
         dt_object_dict = {}
         ShellOutput("Devicetypes", symbol="-", font="head")
         while_devicetype = GetInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; they provide per model configuration", True)
@@ -185,13 +191,18 @@ class GetObject:
 
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
+        LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
+        tmp_config_dump_path = "%s/maintainance/add_config.tmp" % Config("path_root")
+        tmp_config_dump = open(tmp_config_dump_path)
+        tmp_config_dump.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
+        tmp_config_dump.close()
 
         def sql(command, query=False):
-            if GetConfig["setuptype"] == "agent":
+            if Config("setuptype").get() == "agent":
                 if query:
-                    return DoSql(command, GetConfig["sql_agent_user"], GetConfig["sql_agent_pwd"], query=True).start()
+                    return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get(), query=True).start()
                 else:
-                    return DoSql(command, GetConfig["sql_agent_user"], GetConfig["sql_agent_pwd"])
+                    return DoSql(command, Config("sql_agent_user").get(), Config("sql_agent_pwd").get())
             else:
                 if query:
                     return DoSql(command, basic=True, query=True).start()
@@ -199,7 +210,7 @@ class GetObject:
                     return DoSql(command, basic=True)
 
         ShellOutput("Writing object configuration", font="text")
-        sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % GetConfig("hostname"))
+        sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname").get())
         [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key) for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
@@ -216,7 +227,7 @@ class GetObject:
                 return count
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values.items():
-                    object_count += unpack_values(packed_subvalues, GetConfig("hostname"))
+                    object_count += unpack_values(packed_subvalues, Config("hostname").get())
             else:
                 object_count += unpack_values(packed_values)
         ShellOutput("%s objects were added" % object_count, style="info", font="text")
@@ -249,3 +260,5 @@ class GetObject:
                     member_count += 1
                 group_count += 1
         ShellOutput("%s groups with a total of %s members were added" % (group_count, member_count), style="info", font="text")
+
+        os_system("rm %s" % tmp_config_dump_path)
