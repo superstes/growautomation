@@ -68,9 +68,9 @@ def debugger(command, hard_debug=False):
             else: debug = False
         if debug is True:
             if type(command) == str:
-                print(command)
+                print("debug:", command)
             elif type(command) == list:
-                [print(call) for call in command]
+                [print("debug:", call) for call in command]
     except (KeyError, ImportError) as error: LogWrite(error)
 
 
