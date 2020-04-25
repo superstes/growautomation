@@ -73,14 +73,14 @@ class GetObject:
                                       "they provide per model configuration", True).get()
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
-            name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % dt_exist_list,
+            name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
                                             default="AirHumidity", intype="free", poss=dt_exist_list, neg=True).get(), {}
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
             if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
                           default=True).get() is True:
                 setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
                                                         "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
-                                                        default="direct", poss=["downlink", "direct"], intype="free")
+                                                        default="direct", poss=["downlink", "direct"], intype="free").get()
             else: setting_dict["connection"] = "specific"
             if setting_dict["connection"] != "downlink":
                 setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
@@ -139,7 +139,7 @@ class GetObject:
 
         def to_create(to_ask, info):
             debugger("confint - create_device - create %s" % to_ask)
-            create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), True).get(), {}
+            create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
             while create:
                 ShellOutput(symbol="-", font="line")
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % list(dt_exist_dict.keys())[0],
@@ -156,7 +156,8 @@ class GetObject:
 
                     if setting_dict["connection"] == "downlink":
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
-                                                              "Info: the downlink must also be added as device", default=d_dl_list[0], poss=d_dl_list, intype="free").get()
+                                                              "Info: the downlink must also be added as device",
+                                                              default=d_dl_list[0], poss=d_dl_list, intype="free").get()
                         if setting_dict["downlink"] == "notinlist":
                             setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-device to which this device is connected to.\n"
                                                                   "Info: You will need to add this downlink-device in the next run of this config_interface.\n"
