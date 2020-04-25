@@ -39,6 +39,7 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 class GetObject:
     def __init__(self):
         self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
+        self.object_downlink_list = []
         self.choose()
 
     def choose(self):
@@ -64,77 +65,108 @@ class GetObject:
     #     self.create_devicetype()
 
     def create_devicetype(self):
-        dt_object_dict = {}
+        dt_object_dict, dt_exist_list = {}, []
+        for name in Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
+        debugger("confint - create_devicetype - dt_exist_list %s" % dt_exist_list)
         ShellOutput("Devicetypes", symbol="-", font="head")
-        while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; they provide per model configuration", True).get()
+        while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; "
+                                      "they provide per model configuration", True).get()
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
-            setting_dict = {}
-            # add all devicetypes from db to the "already existing" output
-            name = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free").get()
+            name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % dt_exist_list,
+                                            default="AirHumidity", intype="free", poss=dt_exist_list, neg=True).get(), {}
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
-            # ask if type is connected directly or over downlink -> if downlink theres no need for a deticated function
-            setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
-                                                  "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
-                                                  default="%s.py" % name, intype="free", max_value=50).get()
-            setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to you function -> if you need it.\n"
-                                                      "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75).get()
+            if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
+                          default=True).get() is True:
+                setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
+                                                        "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
+                                                        default="direct", poss=["downlink", "direct"], intype="free")
+            else: setting_dict["connection"] = "specific"
+            if setting_dict["connection"] != "downlink":
+                setting_dict["function"] = ShellInput("Which function should be started for the devicetype?\n"
+                                                      "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
+                                                      default="%s.py" % name, intype="free", max_value=50).get()
+                setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to you function -> if you need it.\n"
+                                                          "Info: pe. if one function can provide data to multiple devicetypes",
+                                                          intype="free", min_value=0, max_value=75).get()
             if dt_object_dict[name] == "action":
-                setting_dict["boomerang"] = ShellInput("Will this type need to reverse itself?\nInfo: pe. opener that needs to open/close", False).get()
+                setting_dict["boomerang"] = ShellInput("Will this type need to reverse itself?\n"
+                                                       "Info: pe. opener that needs to open/close", default=False).get()
                 if setting_dict["boomerang"]:
-                    setting_dict["boomerang_type"] = ShellInput("How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free").get()
+                    setting_dict["boomerang_type"] = ShellInput("How will the reverse be initiated?",
+                                                                default="threshold", poss=["threshold", "time"], intype="free").get()
                     if setting_dict["boomerang_type"] == "time":
-                        setting_dict["boomerang_time"] = ShellInput("Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10).get()
+                        setting_dict["boomerang_time"] = ShellInput("Provide the time after the action will be reversed.",
+                                                                    default=1200, max_value=1209600, min_value=10).get()
                     reverse_function = ShellInput("Does reversing need an other function?", default=False).get()
                     if reverse_function:
                         setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", intype="free", max_value=50).get()
-                        setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.", intype="free", min_value=0, max_value=75).get()
+                        setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.",
+                                                                  intype="free", min_value=0, max_value=75).get()
             elif dt_object_dict[name] == "sensor":
-                setting_dict["timer"] = ShellInput("Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10).get()
+                setting_dict["timer"] = ShellInput("Provide the interval to run the function in seconds.",
+                                                   default=600, max_value=1209600, min_value=10).get()
                 setting_dict["unit"] = ShellInput("Provide the unit for the sensor input.", default="°C", intype="free").get()
                 setting_dict["threshold_max"] = ShellInput("Provide a maximum threshold value for the sensor.\n"
-                                                           "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1).get()
+                                                           "Info: if this value is exceeded the linked action(s) will be started",
+                                                           default=26, max_value=1000000, min_value=1).get()
                 setting_dict["threshold_optimal"] = ShellInput("Provide a optimal threshold value for the sensor.\n"
-                                                               "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1).get()
+                                                               "Info: if this value is reached the linked action(s) will be reversed",
+                                                               default=20, max_value=1000000, min_value=1).get()
 
-                setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.", default=3600, max_value=1209600, min_value=60).get()
+                setting_dict["timer_check"] = ShellInput("How often should the threshold be checked? Interval in seconds.",
+                                                         default=3600, max_value=1209600, min_value=60).get()
             elif dt_object_dict[name] == "downlink":
                 setting_dict["portcount"] = ShellInput("How many ports does this downlink provide?", default=4).get()
-                setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", default=False).get()
+                setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n"
+                                                             "(Or can it only output the data for all of its ports at once?)", default=False).get()
             self.setting_dict[name] = setting_dict
+            dt_exist_list.append(name)
+            debugger("confint - create_devicetype - settings %s" % setting_dict)
             while_devicetype = ShellInput("Want to add another devicetype?", default=True, style="info").get()
         self.object_dict["devicetype"] = dt_object_dict
         self.create_device()
 
     def create_device(self):
-        d_object_dict = {}
+        d_object_dict, d_exist_list, dt_exist_dict, d_dl_list = {}, [], {}, []
+        for name in Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
+        for nested in self.object_dict.values():
+            for name, typ in dict(nested).items(): dt_exist_dict[name] = typ
+        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): dt_exist_dict[name] = typ
+        for name, dt in Config(output="name,class", filter="type = 'device'", table="object").get():
+            if Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
+        d_dl_list.append("notinlist")
 
         def to_create(to_ask, info):
-            create = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), True).get()
-            create_dict = {}
+            debugger("confint - create_device - create %s" % to_ask)
+            create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), True).get(), {}
             while create:
                 ShellOutput(symbol="-", font="line")
-                setting_dict = {}
-                dt_list = [name for nested in self.object_dict.values() for name, typ in dict(nested).items() if typ == to_ask]
-                name = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free").get()
-                create_dict[name] = ShellInput("Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free").get()
+                name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % list(dt_exist_dict.keys())[0],
+                                                intype="free", poss=d_exist_list, neg=True).get(), {}
+                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1],
+                                               poss=d_exist_list, intype="free").get()
                 if to_ask != "downlink":
-                    dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
-                    dl_list.append("notinlist")
-                    if len(dl_list) > 0:
-                        setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
-                                                                "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free").get()
-                    else:
-                        setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
-                                                                "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", neg=True).get()
+                    dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items()]
+                    debugger("confint - create_device - dt_conntype %s" % dt_conntype)
+                    if dt_conntype != "specific": setting_dict["connection"] = dt_conntype
+                    else: setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
+                                                                  "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
+                                                                  default="direct", poss=["downlink", "direct"], intype="free").get()
+
                     if setting_dict["connection"] == "downlink":
-                        # check for downlink setting in type
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
-                                                              "Info: the downlink must also be added as device", default=dl_list[0], poss=dl_list, intype="free").get()
+                                                              "Info: the downlink must also be added as device", default=d_dl_list[0], poss=d_dl_list, intype="free").get()
                         if setting_dict["downlink"] == "notinlist":
-                            setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-devicetype to which this device is connected to.", default="ads1115", intype="free").get()
+                            setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-device to which this device is connected to.\n"
+                                                                  "Info: You will need to add this downlink-device in the next run of this config_interface.\n"
+                                                                  "Warning: If you misconfigure this connection the current %s will not work properly!" % to_ask,
+                                                                  default="ads1115", intype="free").get()
                 setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free", min_value=1).get()
                 self.setting_dict[name] = setting_dict
+                d_exist_list.append(name)
+                debugger("confint - create_device - settings %s" % setting_dict)
+                if to_ask == "downlink": d_dl_list.append(name)
                 create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             d_object_dict[to_ask] = create_dict
 
@@ -147,6 +179,8 @@ class GetObject:
             ShellOutput("Downlinks", symbol="-", font="head")
             to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\n"
                                   "Check the documentation for more informations: https://docs.growautomation.at")
+        d_dl_list.remove("notinlist")
+        self.object_downlink_list = d_dl_list
         if check_type("sensor"):
             ShellOutput("Sensors", symbol="-", font="head")
             to_create("sensor", "any kind of device that provides data to growautomation")
@@ -158,8 +192,18 @@ class GetObject:
 
     def create_group(self):
         def to_create(to_ask, info, info_member):
-            create_count, create_dict = 0, {}
+            debugger("confint - create_group - create %s" % to_ask)
+            create_count, create_dict, posslist = 0, {}, []
             create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
+            if to_ask == "sector":
+                intern_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+                db_dev_list = Config(output="name", filter="type = 'device'", table="object").get()
+                posslist.extend(intern_dev_list), posslist.extend(db_dev_list)
+                [posslist.remove(dev) for dev in self.object_downlink_list]
+            elif to_ask == "link":
+                posslist = dt_action_list
+                posslist.extend(dt_sensor_list)
+            debugger("confint - create_group - posslist %s" % posslist)
             while create:
                 ShellOutput(symbol="-", font="line")
                 member_list = []
@@ -167,30 +211,31 @@ class GetObject:
                 while add_member:
                     if member_count == 0: info = "\nInfo: %s" % info_member
                     else: info = ""
-                    if to_ask == "sector":
-                        # remove downlink devices from list
-                        posslist = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
-                    elif to_ask == "link":
-                        posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
                     current_posslist = list(set(posslist) - set(member_list))
                     member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free").get())
                     member_count += 1
                     if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                 create_dict[create_count] = member_list
                 create_count += 1
+                debugger("confint - create_group - members %s" % member_list)
                 create = ShellInput("Want to add another %s?" % to_ask, default=True, style="info").get()
             return create_dict
 
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
-        ShellOutput("Devicetype links", symbol="-", font="head")
-        self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
+        dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "action"]
+        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get())
+        dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
+        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get())
+        if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
+            ShellOutput("Devicetype links", symbol="-", font="head")
+            self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
         self.write_config()
 
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
-        tmp_config_dump_path = "%s/maintainance/add_config.tmp" % Config("path_root")
+        tmp_config_dump_path = "%s/maintainance/add_config.tmp" % Config("path_root").get()
         tmp_config_dump = open(tmp_config_dump_path)
         tmp_config_dump.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
         tmp_config_dump.close()
