@@ -33,8 +33,9 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class Config(object):
-    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
-        self.setting, self.nosql, self.filter, self.belonging, self.output, self.table = setting, nosql, filter, belonging, output, table
+    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, empty=False):
+        self.setting,  self.filter, self.belonging, self.output, self.table = setting, filter, belonging, output, table
+        self.empty, self.nosql = empty, nosql
 
     def get(self, outtype=None):
         debugger("config - get | input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
@@ -60,6 +61,7 @@ class Config(object):
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                                                                             % (self.setting, FileConfig("hostname").get())).start()
+        if self.empty and not response: return response
         return self.error("sql") if response is False or response is None or response == "" else response
 
     def parse_sql_custom(self):
