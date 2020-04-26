@@ -126,10 +126,14 @@ class Balrog:
         custom_arg = Config(setting="function_arg", belonging=device, empty=True).get()
         if not custom_arg: custom_arg = None
         function = Config(setting="function", belonging=Config(output="class", table="object", setting=device).get()).get()
+        port = Config(setting="port", belonging=device).get()
         devicetype_class = Config(output="class", table="object", setting=Config(output="class", table="object", setting=device).get()).get()
-        function_path = "%s/%s/%s" % (Config(setting="root_path").get(), devicetype_class, function)
+        function_path = "%s/%s/%s" % (Config(setting="path_root").get(), devicetype_class, function)
         LogWrite("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'" % (function_path, custom_arg, device_mapping_dict, setting_dict), level=4)
-        output, error = subprocess_popen(["/usr/bin/python3 %s %s %s %s" % (function_path, Config(setting="port", belonging=device).get(), device_mapping_dict, setting_dict)],
+        debugger("snake - start |function '%s' |port '%s' |device_mapping_dict '%s' |setting_dict '%s'" %
+                 (function_path, port, device_mapping_dict, setting_dict))
+        output, error = subprocess_popen(["/usr/bin/python3 %s %s %s %s" %
+                                          (function_path, port, device_mapping_dict, setting_dict)],
                                          shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
         output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
         LogWrite("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output_str), level=3)
