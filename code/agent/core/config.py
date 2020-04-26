@@ -55,13 +55,13 @@ class Config(object):
         return self.error("sql") if output is False else output
 
     def error(self, parser_type):
+        if self.empty: return False
         LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                                                                             % (self.setting, FileConfig("hostname").get())).start()
-        if self.empty and not response: return response
         return self.error("sql") if response is False or response is None or response == "" else response
 
     def parse_sql_custom(self):
