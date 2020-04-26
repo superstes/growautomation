@@ -39,21 +39,24 @@ function = inspect_getfile(inspect_currentframe())
 LogWrite("Current module: %s" % function, level=2)
 
 try:
-    argument = sys_argv[1]
-    port = sys_argv[2]
-except (IndexError, ValueError) as error:
+    port = sys_argv[1]
+except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
     debugger("%s - sys_argv error: %s" % (function, error))
     raise SystemExit
 try:
-    device_mapping_dict = dict(sys_argv[3])
+    device_mapping_dict = dict(sys_argv[2])
 except (IndexError, ValueError):
     device_mapping = False
-    debugger("%s - sys_argv not device_mapping_dict" % function)
+    debugger("%s - sys_argv no device_mapping_dict" % function)
 try:
-    setting_dict = dict(sys_argv[4])
+    setting_dict = dict(sys_argv[3])
 except (IndexError, ValueError):
-    debugger("%s - sys_argv not setting_dict" % function)
+    debugger("%s - sys_argv no setting_dict" % function)
+try:
+    argument = dict(sys_argv[4])
+except (IndexError, ValueError):
+    debugger("%s - sys_argv no argument" % function)
 
 
 class Device:
