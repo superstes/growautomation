@@ -222,7 +222,7 @@ class Create:
 
         if ShellInput("Do you want to add custom settings?", default=True).get() is False: return False
         while True:
-            object_to_edit = ShellInput("Choose one of the listed objects to edit.\nDeviceTypes: '%s'\nDevices: '%s'"
+            object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nDeviceTypes:\n%s\nDevices:\n%s\n"
                                         % (self.current_dt_dict.keys(), self.current_dev_list), poss=self.current_dev_list,
                                         default=random_choice(self.current_dev_list), intype="free").get()
             add_setting(object_to_edit)
@@ -341,7 +341,7 @@ class Edit:
         object_list.extend(object_agent_list)
         object_list.extend(object_dt_list)
         while True:
-            object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices: %s"
+            object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices:\n%s\n"
                                         % (object_agent_list, object_dt_list, object_dev_list),
                                         poss=object_list, default=random_choice(object_list), intype="free").get()
             what_to_edit = ShellInput("Do you want to edit a object itself or its settings?", poss=["object", "setting"], default="setting", intype="free").get()
@@ -351,7 +351,7 @@ class Edit:
         exit()
 
     def edit_setting(self, object_name):
-        setting_list = Config(output="setting", filter="belonging = '%s'" % object_name)
+        setting_list = Config(output="setting", filter="belonging = '%s'" % object_name).get("list")
         change_dict, setting_count = {}, 0
         while True:
             setting = ShellInput("Choose the setting you want to edit.",
