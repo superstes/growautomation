@@ -51,7 +51,7 @@ class Balrog:
         device_list = []
         # check all for loops if they will break if only one element is in list -> find clean solution
         for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get("list"):
-            if not Config(setting="timer", belonging=device).get() and Config(setting="enabled", belonging=device).get() == "1":
+            if not Config(setting="timer", belonging=device, empty=True).get() and Config(setting="enabled", belonging=device).get() == "1":
                 device_list.append(device)
         for device in device_list:
             if device in self.processed_list: continue
@@ -123,7 +123,7 @@ class Balrog:
             for device in device_mapping_dict.keys():
                 if device.find("dummy") == -1: self.processed_list.append(device)
         self.lock(device)
-        custom_arg = Config(setting="function_arg", belonging=device).get()
+        custom_arg = Config(setting="function_arg", belonging=device, empty=True).get()
         if not custom_arg: custom_arg = None
         function = Config(setting="function", belonging=Config(output="class", table="object", setting=device).get()).get()
         devicetype_class = Config(output="class", table="object", setting=Config(output="class", table="object", setting=device).get()).get()
