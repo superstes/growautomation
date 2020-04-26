@@ -25,6 +25,7 @@ from ga.core.owl import DoSql
 from ga.core.ant import ShellOutput
 from ga.core.ant import ShellInput
 from ga.core.ant import LogWrite
+from ga.core.ant import plural
 from ga.core.smallant import debugger
 from ga.core.smallant import debug_init
 
@@ -294,7 +295,7 @@ class Create:
                 for subtype, packed_subvalues in packed_values.items():
                     object_count += unpack_values(packed_subvalues, Config("hostname").get())
             else: object_count += unpack_values(packed_values)
-        ShellOutput("%s objects were added" % object_count, style="info", font="text")
+        ShellOutput("added %s object%s" % (object_count, plural(object_count)), style="info", font="text")
 
         ShellOutput("Writing object settings", font="text")
         setting_count = 0
@@ -307,7 +308,7 @@ class Create:
                     else: data = 0
                 DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data), write=True).start()
                 setting_count += 1
-        ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
+        ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
 
         ShellOutput("Writing group configuration", font="text")
         group_count, member_count = 0, 0
@@ -320,7 +321,7 @@ class Create:
                     DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member), write=True)
                     member_count += 1
                 group_count += 1
-        ShellOutput("%s groups with a total of %s members were added" % (group_count, member_count), style="info", font="text")
+        ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style="info", font="text")
 
         os_system("rm %s" % tmp_config_dump)
 
@@ -361,7 +362,7 @@ class Edit:
         for setting, data in change_dict.items():
             DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting), write=True).start()
             setting_count += 1
-        ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
+        ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
 
     def edit_object(self, object_name):
         ShellOutput("This option isn't supported yet.")
