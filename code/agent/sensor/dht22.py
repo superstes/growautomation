@@ -63,7 +63,8 @@ class Device:
         else: self.output_dict = True
 
     def start(self):
-        debugger("%s - start |starting get_data |argument '%s' '%s'|port '%s' '%s'" % (type(argument), argument), type(port), port)
+        debugger("%s - start |starting get_data |argument '%s' '%s'|port '%s' '%s'" %
+                 (function, type(argument), argument, type(port), port))
         if self.output_dict: self.data_mapping()
         print(self.data)
         LogWrite("Data was delivered.", level=4)
