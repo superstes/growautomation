@@ -78,8 +78,6 @@ def globalvar(action, key="", value=""):
     if action == "init":
         from ga.core.globalvars import init_vars
         init_vars()
-    elif action == "set":
-        from ga.core.globalvars import tmp_dict
-        tmp_dict[key] = value
-    elif action == "get":
-        return tmp_dict[key]
+    else: from ga.core.globalvars import tmp_dict
+    if action == "set": tmp_dict[key] = value
+    elif action == "get": return tmp_dict[key]
