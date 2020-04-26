@@ -44,13 +44,13 @@ class Balrog:
         self.processed_list, self.lock_list = [], []
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        self.sensor_type = True if self.sensor in Config(output="name", table="object", filter="class = 'sensor'").get() else False
+        self.sensor_type = True if self.sensor in Config(output="name", table="object", filter="class = 'sensor'").get("list") else False
         self.devicetype() if self.sensor_type is True else self.device(self.sensor)
 
     def devicetype(self):
         device_list = []
         # check all for loops if they will break if only one element is in list -> find clean solution
-        for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get():
+        for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get("list"):
             if not Config(setting="timer", belonging=device).get() and Config(setting="enabled", belonging=device).get() == "1":
                 device_list.append(device)
         for device in device_list:
@@ -78,7 +78,7 @@ class Balrog:
         type_opp = Config(setting="output_per_port", belonging=devicetype).get()
 
         def get_setting_dict():
-            type_setting, setting = Config(output="setting,data", belonging=devicetype), Config(output="setting,data", belonging=downlink)
+            type_setting, setting = Config(output="setting,data", belonging=devicetype).get(), Config(output="setting,data", belonging=downlink).get()
             setting_dict, type_setting_dict = {}, {}
             for setting, data in setting: setting_dict[setting] = data
             for setting, data in type_setting:
@@ -93,13 +93,13 @@ class Balrog:
             debugger("snake - downlink |opp 1 |output '%s'" % output)
             self.write_data(device, output)
         elif type_opp == "0":
-            portcount = Config(setting="portcount", belonging=downlink)
+            portcount = Config(setting="portcount", belonging=downlink).get()
             if self.sensor_type:
                 sensor_list, sensor_dict = Config(output="name", setting="downlink", filter="data = '%s'" % downlink).get(), {}
                 for sensor in sensor_list:
                     if Config(output="class", table="object", setting=sensor).get() == self.sensor:
                         if sensor in self.processed_list or Config(setting="enabled", belonging=sensor).get() != "1": continue
-                        sensor_dict[sensor] = Config(setting="port", belonging=sensor)
+                        sensor_dict[sensor] = Config(setting="port", belonging=sensor).get()
             else:
                 sensor_dict = {device: Config(setting="port", belonging=device).get()}
             if len(sensor_dict.keys()) < portcount:
