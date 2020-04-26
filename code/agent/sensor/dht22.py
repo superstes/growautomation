@@ -55,13 +55,12 @@ except IndexError: debugger("%s - sys_argv not setting_dict" % function)
 
 class Device:
     def __init__(self):
-        self.data = ""
+        self.data = self.get_data()
         if not device_mapping: self.output_dict = False
         else: self.output_dict = True
 
     def start(self):
         debugger("%s - start |starting get_data")
-        self.get_data()
         if self.output_dict: self.data_mapping()
         print(self.data)
         LogWrite("Data was delivered.", level=4)
