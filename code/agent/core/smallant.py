@@ -80,4 +80,7 @@ def globalvar(action, key="", value=""):
         init_vars()
     else: from ga.core.globalvars import tmp_dict
     if action == "set": tmp_dict[key] = value
-    elif action == "get": return tmp_dict[key]
+    elif action == "get":
+        try:
+            return tmp_dict[key]
+        except KeyError: return False
