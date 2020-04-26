@@ -40,7 +40,8 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 class Create:
     def __init__(self):
         self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
-        self.current_dev_list, self.current_dt_dict, self.new_dt_dict, self.current_setting_dict = [], {}, {}, {}
+        self.current_dev_list, self.current_dt_dict, self.current_setting_dict = [], {}, {}
+        self.new_dt_dict, self.new_dev_list = {}, []
         self.object_downlink_list = []
         self.start()
 
@@ -55,6 +56,7 @@ class Create:
 
         if self.create_device() is not False:
             self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+            self.new_dev_list.extend(self.current_dev_list)
             for obj, nested in self.setting_dict.items():
                 for setting, data in dict(nested).items():
                     self.current_setting_dict[obj] = setting
@@ -203,9 +205,9 @@ class Create:
             setting_exist_list = Config(output="setting", filter="belonging = '%s'" % object_name).get("list")
             change_dict, setting_count, setting_dict = {}, 0, {}
             while True:
-                setting = ShellInput("Provide the setting name.\n Info: max 30 chars & cannot already exist.", poss=setting_exist_list,
+                setting = ShellInput("Provide the setting name.\nInfo: max 30 chars & cannot already exist.", poss=setting_exist_list,
                                      intype="free", neg=True, max_value=30).get()
-                data = ShellInput("Provide the setting data.\n Info: max 100 chars", intype="free", max_value=100, min_value=1).get()
+                data = ShellInput("Provide the setting data.\nInfo: max 100 chars", intype="free", max_value=100, min_value=1).get()
                 setting_dict[setting] = data
                 if another() is False: break
             if object_name in self.setting_dict.keys():
@@ -297,7 +299,7 @@ class Create:
         ShellOutput("Writing object settings", font="text")
         setting_count = 0
         for object_name, packed_values in self.setting_dict.items():
-            packed_values["enabled"] = 1
+            if object_name in self.new_dev_list: packed_values["enabled"] = 1
             for setting, data in sorted(packed_values.items()):
                 if data == "": pass
                 elif type(data) == bool:
