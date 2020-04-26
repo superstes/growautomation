@@ -62,6 +62,7 @@ class Config(object):
     def parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                                                                             % (self.setting, FileConfig("hostname").get())).start()
+        debugger("config - parse_sql |output '%s' '%s'" % (type(response), response))
         return self.error("sql") if response is False or response is None or response == "" else response
 
     def parse_sql_custom(self):
@@ -114,7 +115,7 @@ class Config(object):
 
     def parse_failover(self):
         parse_sql_output = self.parse_sql()
-        if parse_sql_output is False or parse_sql_output is None or parse_sql_output == "" or self.nosql is True:
+        if parse_sql_output is False or self.nosql is True:
             parse_file_output = FileConfig(self.setting).get()
             if parse_file_output is False or parse_file_output is None or parse_file_output == "":
                 if self.parse_hardcoded() is False:
@@ -127,6 +128,5 @@ class Config(object):
                 debugger("config - failover |output '%s' '%s'" % (type(parse_file_output), parse_file_output))
                 return parse_file_output
         else:
-            output = self.parse_sql()
-            debugger("config - failover |output '%s' '%s'" % (type(output), output))
-            return output
+            debugger("config - failover |output '%s' '%s'" % (type(parse_sql_output), parse_sql_output))
+            return parse_sql_output
