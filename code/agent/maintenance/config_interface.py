@@ -356,7 +356,7 @@ class Edit:
         while True:
             setting = ShellInput("Choose the setting you want to edit.",
                                  poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype="free").get()
-            ShellOutput("\nIts current configuration: %s" % (key, val for key, val in setting_dict.items() if key == setting), style="info")
+            ShellOutput("\nIts current configuration: %s = %s" % (setting, [val for key, val in setting_dict.items() if key == setting][0]), style="info")
             data = ShellInput("Provide the new setting data.\n"
                               "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
                               intype="free", max_value=100, min_value=1).get()
