@@ -56,7 +56,7 @@ class Create:
 
         self.create_device()
         self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
-        self.current_dev_list.extend(Config(output="name", filter="type = 'device'", table="object").get())
+        self.current_dev_list.extend(Config(output="name", filter="type = 'device'", table="object").get("list"))
         for obj, nested in self.setting_dict.items():
             for setting, data in dict(nested).items():
                 self.current_setting_dict[obj] = setting
@@ -261,9 +261,9 @@ class Create:
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
         dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "action"]
-        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get())
+        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
         dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
-        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get())
+        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
         # if only one -> splits string -.-
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
@@ -333,14 +333,15 @@ class Edit:
         self.start()
 
     def start(self):
-        object_agent_list = Config(output="name", table="object", filter="type = 'agent'").get()
-        object_dev_list = Config(output="name", table="object", filter="type = 'device'").get()
-        object_dt_list = Config(output="name", table="object", filter="type = 'devicetype'").get()
-        object_list = object_dev_list
+        object_list = []
+        object_agent_list = Config(output="name", table="object", filter="type = 'agent'").get("list")
+        object_dev_list = Config(output="name", table="object", filter="type = 'device'").get("list")
+        object_dt_list = Config(output="name", table="object", filter="type = 'devicetype'").get("list")
+        object_list.extend(object_dev_list)
         object_list.extend(object_agent_list)
         object_list.extend(object_dt_list)
         while True:
-            object_to_edit = ShellInput("Choose one of the listed objects to edit.\nAgents: %s\nDeviceTypes: %s\nDevices: %s"
+            object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices: %s"
                                         % (object_agent_list, object_dt_list, object_dev_list),
                                         poss=object_list, default=random_choice(object_list), intype="free").get()
             what_to_edit = ShellInput("Do you want to edit a object itself or its settings?", poss=["object", "setting"], default="setting", intype="free").get()
