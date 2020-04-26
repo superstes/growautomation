@@ -355,15 +355,15 @@ class Edit:
         change_dict, setting_count = {}, 0
         while True:
             setting = ShellInput("Choose the setting you want to edit.",
-                                 poss=setting_dict.keys(), default=random_choice(list(setting_dict.keys())), intype="free").get()
-            ShellOutput("Its current configuration: %s" % (key, val for key, val in setting_dict.items() if key == setting), style="info")
+                                 poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype="free").get()
+            ShellOutput("\nIts current configuration: %s" % (key, val for key, val in setting_dict.items() if key == setting), style="info")
             data = ShellInput("Provide the new setting data.\n"
                               "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
                               intype="free", max_value=100, min_value=1).get()
             change_dict[setting] = data
             if ShellInput("Do you want to edit another setting of the object %s" % object_name, default=True).get() is False: break
         for setting, data in change_dict.items():
-            DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting))
+            DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting), write=True).start()
             setting_count += 1
         ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
 
@@ -396,7 +396,7 @@ def choose():
 
 def exit():
     ShellOutput("It was a pleasure to serve you!")
-    raise SystemExit("User chose to exit.")
+    raise SystemExit
 
 
 try:
