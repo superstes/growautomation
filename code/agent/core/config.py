@@ -36,8 +36,8 @@ class Config(object):
     def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None):
         self.setting, self.nosql, self.filter, self.belonging, self.output, self.table = setting, nosql, filter, belonging, output, table
 
-    def get(self, typ=None):
-        debugger("config - input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
+    def get(self):
+        debugger("config - get | input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
                  % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
                  type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
         parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
@@ -45,8 +45,7 @@ class Config(object):
                                "sql_server_port", "sql_sock"]
         output = FileConfig(self.setting).get() if self.setting in parse_file_list else self.parse_failover() if self.setting in parse_failover_list else self.parse_sql_custom() if self.nosql is False \
             else self.error("all")
-        if typ is not None:
-            if type(output) == str and typ == "list": output = list(output)
+        debugger("config - get |output '%s' '%s'" % (type(output), output))
         return self.error("sql") if output is False else output
 
     def error(self, parser_type):
@@ -85,6 +84,8 @@ class Config(object):
             prefix = "AND " if self.setting is not None or self.belonging is not None else ""
             command.append("%s%s" % (prefix, self.filter))
             custom = True
+        if self.filter is None and self.setting is None:
+            command.append("id IS NOT NULL")
         debugger("config - sql_custom |custom '%s' '%s' |command '%s' '%s'" % (type(custom), custom, type(command), command))
         return self.parse_sql(' '.join(command) + ";") if custom is True else self.parse_sql()
 
