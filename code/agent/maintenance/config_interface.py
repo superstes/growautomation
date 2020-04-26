@@ -77,14 +77,14 @@ class Create:
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
             name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
-                                            default="AirHumidity", intype="free", poss=dt_exist_list, neg=True).get(), {}
-            dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free").get()
+                                            default="AirHumidity", poss=dt_exist_list, neg=True).get(), {}
+            dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"]).get()
             if dt_object_dict[name] != "downlink":
                 if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
                               default=True).get() is True:
                     setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
                                                             "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
-                                                            default="direct", poss=["downlink", "direct"], intype="free").get()
+                                                            default="direct", poss=["downlink", "direct"]).get()
                 else: setting_dict["connection"] = "specific"
             else: setting_dict["connection"] = "direct"
             if setting_dict["connection"] != "downlink":
@@ -99,7 +99,7 @@ class Create:
                                                        "Info: pe. opener that needs to open/close", default=False).get()
                 if setting_dict["boomerang"]:
                     setting_dict["boomerang_type"] = ShellInput("How will the reverse be initiated?",
-                                                                default="threshold", poss=["threshold", "time"], intype="free").get()
+                                                                default="threshold", poss=["threshold", "time"]).get()
                     if setting_dict["boomerang_type"] == "time":
                         setting_dict["boomerang_time"] = ShellInput("Provide the time after the action will be reversed.",
                                                                     default=1200, max_value=1209600, min_value=10).get()
@@ -149,7 +149,7 @@ class Create:
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % default_name,
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(self.current_dt_dict.keys()) if name.find(dt) != -1][0],
-                                               poss=list(self.current_dt_dict.keys()), intype="free").get()
+                                               poss=list(self.current_dt_dict.keys())).get()
                 if to_ask != "downlink":
                     if create_dict[name] in self.new_dt_dict.keys():
                         dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items() if setting == "connection"][0]
@@ -158,12 +158,12 @@ class Create:
                     if dt_conntype != "specific": setting_dict["connection"] = dt_conntype
                     else: setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
                                                                   "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
-                                                                  default="direct", poss=["downlink", "direct"], intype="free").get()
+                                                                  default="direct", poss=["downlink", "direct"]).get()
 
                     if setting_dict["connection"] == "downlink":
                         setting_dict["downlink"] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device",
-                                                              default=str(random_choice(d_dl_list)), poss=d_dl_list, intype="free").get()
+                                                              default=str(random_choice(d_dl_list)), poss=d_dl_list).get()
                         if setting_dict["downlink"] == "notinlist":
                             setting_dict["downlink"] = ShellInput("Provide the exact name of the downlink-device to which this device is connected to.\n"
                                                                   "Info: You will need to add this downlink-device in the next run of this config_interface.\n"
