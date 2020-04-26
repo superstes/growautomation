@@ -57,7 +57,7 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 
 
 class ShellInput:
-    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=20, min_value=2, neg=False):
+    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=20, min_value=2, neg=False, lower=True):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
         self.posstype, self.max_value, self.min_value, self.neg,  = posstype, max_value, min_value, neg
         self.style_type, self.output = ShellOutput(style=style).colors(), ""
@@ -92,8 +92,10 @@ class ShellInput:
                     elif self.posstype == "str": user_input = str(user_input)
                 if type(self.poss) == list:
                     if user_input in self.poss: input_ok = True
-                elif type(self.poss) == str:
+                    else: input_ok = False
+                else:
                     if user_input == self.poss: input_ok = True
+                    else: input_ok = False
                 if self.neg: input_ok = not input_ok
                 if input_ok: break
             except (KeyError, ValueError): poss_error()
@@ -101,7 +103,7 @@ class ShellInput:
         return user_input
 
     def get(self):
-        if self.poss != "":
+        if self.poss != "" or type(self.default) == bool:
             if self.neg: self.poss_str = "\nNo Poss: "
             else: self.poss_str = "\nPoss: "
         if self.default != "": self.default_str = "\nDefault: "
@@ -112,10 +114,12 @@ class ShellInput:
                 try:
                     self.output = {"true": True, "false": False, "yes": True, "no": False, "y": True,
                                    "n": False, "f": False, "t": True, "": self.default}[
-                        input(self.style_type + "\n%s%syes/true/no/false%s%s\n > " %
+                        input(self.style_type + "\n%s%syes/no/true/false%s%s\n > " %
                               (self.prompt, self.poss_str, self.default_str, self.default) + colorama_fore.RESET)]
+                    break
                 except KeyError:
                     ShellOutput("WARNING: Invalid input please enter either yes/true/no/false!\n", style="warn", font="text")
+            self.lower = False
         elif type(self.default) == str:
             if self.intype == "pass" and self.default != "":
                 getpass(prompt="\n%s\nRandom: %s\n > " % (self.prompt, self.default)) or "%s" % self.default
@@ -134,19 +138,22 @@ class ShellInput:
                 while True:
                     user_input = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
                                        colorama_fore.RESET) or self.default
-                    if self.string_check(user_input): self.output = user_input
+                    if self.string_check(user_input):
+                        self.output = user_input
+                        break
             elif self.poss != "": self.output = self.poss_check()
             else: self.output = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
                                       colorama_fore.RESET) or "%s" % self.default
         elif type(self.default) == int:
-            user_input, min_value, max_value = 0, 1, 10000
+            user_input, min_value, max_value = 0, 1, 2592000
             while user_input < int(min_value) or user_input > int(max_value):
                 if (user_input < int(min_value) or user_input > int(max_value)) and whilecount > 0:
-                    ShellOutput("Input error. Value should be between 1 and 1209600.\n", style="warn", font="text")
+                    ShellOutput("Input error. Value should be between %s and %s." % (min_value, max_value), style="warn", font="text")
+                else: break
                 whilecount += 1
                 try: user_input = int(input("\n%s%s%s\n > " % (self.prompt, self.default_str, self.default)) or "%s" % self.default)
                 except ValueError: user_input = 0
-            self.output = user_input
+            self.output, self.lower = user_input, False
         else: raise KeyError("Default value was neither str/int/bool | Value: '%s', '%s'" % (type(self.default), self.default))
 
         if self.lower is False: return self.output
