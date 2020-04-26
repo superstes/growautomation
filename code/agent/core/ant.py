@@ -57,20 +57,19 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 
 
 class ShellInput:
-    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="str", max_value=20, min_value=2, neg=False):
+    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=20, min_value=2, neg=False):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
-        self.posstype, self.max_value, self.min_value, self.neg = posstype, max_value, min_value, neg
-        self.style_type, self.user_input = ShellOutput(style=style).colors(), ""
+        self.posstype, self.max_value, self.min_value, self.neg,  = posstype, max_value, min_value, neg
+        self.style_type, self.output = ShellOutput(style=style).colors(), ""
+        self.lower, self.default_str, self.poss_str = "", "", ""
 
-    def string_check(self):
+    def string_check(self, to_check: str):
+        to_check = str(to_check)
         char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,"
-        if type(self.user_input) != str:
-            ShellOutput("Input error. Expected string, got %s" % type(self.user_input), style="warn", font="text")
-            return False
-        elif len(self.user_input) > self.max_value or len(self.user_input) < self.min_value:
+        if len(to_check) > self.max_value or len(to_check) < self.min_value:
             ShellOutput("Input error. Input must be between %s and %s characters long" % (self.min_value, self.max_value), style="warn", font="text")
             return False
-        elif any((char in char_blacklist) for char in self.user_input):
+        elif any((char in char_blacklist) for char in to_check):
             ShellOutput("Input error. Input must not include the following characters: %s" % char_blacklist, style="warn", font="text")
             return False
         else:
@@ -85,80 +84,73 @@ class ShellInput:
         while True:
             try:
                 if while_count > 0: poss_error()
-                if self.neg: poss_string = "No Poss"
-                else: poss_string = "Poss"
-                if self.posstype == "str":
-                    self.user_input = str(input(self.style_type + "\n%s\n(%s: %s - Default: %s)\n > " %
-                                                (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower()
-                                          or self.default)
-                elif self.posstype == "int":
-                    self.user_input = int(input(self.style_type + "\n%s\n(%s: %s - Default: %s)\n > " %
-                                                (self.prompt, poss_string, self.poss, self.default) + colorama_fore.RESET).lower()
-                                          or self.default)
-                if self.neg:
-                    if type(self.poss) == list:
-                        if self.user_input not in self.poss: break
-                    elif type(self.poss) == str:
-                        if self.user_input != self.poss: break
-                else:
-                    if type(self.poss) == list:
-                        if self.user_input in self.poss: break
-                    elif type(self.poss) == str:
-                        if self.user_input == self.poss: break
+                user_input = str(input(self.style_type + "\n%s%s%s%s%s\n > " %
+                                       (self.prompt, self.poss_str, self.poss, self.default_str, self.default) +
+                                       colorama_fore.RESET) or self.default)
+                if self.posstype != "":
+                    if self.posstype == "int": user_input = int(user_input)
+                    elif self.posstype == "str": user_input = str(user_input)
+                if type(self.poss) == list:
+                    if user_input in self.poss: input_ok = True
+                elif type(self.poss) == str:
+                    if user_input == self.poss: input_ok = True
+                if self.neg: input_ok = not input_ok
+                if input_ok: break
             except (KeyError, ValueError): poss_error()
             while_count += 1
-        return self.user_input
+        return user_input
 
     def get(self):
+        if self.poss != "":
+            if self.neg: self.poss_str = "\nNo Poss: "
+            else: self.poss_str = "\nPoss: "
+        if self.default != "": self.default_str = "\nDefault: "
+
         whilecount = 0
         if type(self.default) == bool:
             while True:
                 try:
-                    return {"true": True, "false": False, "yes": True, "no": False, "y": True, "n": False, "f": False, "t": True,
-                            "": self.default}[input(self.style_type + "\n%s\n(Poss: yes/true/no/false - Default: %s)\n > " % (self.prompt, self.default) + colorama_fore.RESET).lower()]
+                    self.output = {"true": True, "false": False, "yes": True, "no": False, "y": True,
+                                   "n": False, "f": False, "t": True, "": self.default}[
+                        input(self.style_type + "\n%s%syes/true/no/false%s%s\n > " %
+                              (self.prompt, self.poss_str, self.default_str, self.default) + colorama_fore.RESET)]
                 except KeyError:
                     ShellOutput("WARNING: Invalid input please enter either yes/true/no/false!\n", style="warn", font="text")
         elif type(self.default) == str:
             if self.intype == "pass" and self.default != "":
-                getpass(prompt="\n%s\n(Random: %s)\n > " % (self.prompt, self.default)) or "%s" % self.default
+                getpass(prompt="\n%s\nRandom: %s\n > " % (self.prompt, self.default)) or "%s" % self.default
             elif self.intype == "pass":
                 getpass(prompt="\n%s\n > " % self.prompt)
             elif self.intype == "passgen":
-                self.user_input = 0
-                while self.user_input < 8 or self.user_input > 99:
-                    if (self.user_input < 8 or self.user_input > 99) and whilecount > 0:
+                user_input = 0
+                while user_input < 8 or user_input > 99:
+                    if (user_input < 8 or user_input > 99) and whilecount > 0:
                         ShellOutput("Input error. Value should be between 8 and 99.\n", style="warn", font="text")
                     whilecount += 1
-                    self.user_input = int(input("\n%s\n(Poss: %s - Default: %s)\n > " % (self.prompt, self.poss, self.default)).lower() or "%s" % self.default)
-                return self.user_input
-            elif self.intype == "free":
+                    user_input = int(input("\n%s%s%s%s%s\n > " % (self.prompt, self.poss_str, self.poss, self.default_str,
+                                                                  self.default)) or "%s" % self.default)
+                self.output = user_input
+            elif self.intype == "free" and self.poss == "":
                 while True:
-                    if self.poss != "":
-                        self.user_input = self.poss_check()
-                    elif self.default == "":
-                        self.user_input = input(self.style_type + "\n%s\n > " % self.prompt + colorama_fore.RESET).lower() or self.default
-                    else:
-                        self.user_input = input(self.style_type + "\n%s\n(Default: %s)\n > " % (self.prompt, self.default) + colorama_fore.RESET).lower() or self.default
-                    if self.string_check():
-                        return self.user_input
-            elif self.poss != "":
-                return self.poss_check()
-            elif self.default != "":
-                return str(input(self.style_type + "\n%s\n(Default: %s)\n > " % (self.prompt, self.default) + colorama_fore.RESET).lower() or "%s" % self.default)
-            else:
-                return str(input(self.style_type + "\n%s\n > " % self.prompt + colorama_fore.RESET).lower())
+                    user_input = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
+                                       colorama_fore.RESET) or self.default
+                    if self.string_check(user_input): self.output = user_input
+            elif self.poss != "": self.output = self.poss_check()
+            else: self.output = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
+                                      colorama_fore.RESET) or "%s" % self.default
         elif type(self.default) == int:
-            min_value, max_value = 1, 10000
-            self.user_input = 0
-            while self.user_input < int(min_value) or self.user_input > int(max_value):
-                if (self.user_input < int(min_value) or self.user_input > int(max_value)) and whilecount > 0:
+            user_input, min_value, max_value = 0, 1, 10000
+            while user_input < int(min_value) or user_input > int(max_value):
+                if (user_input < int(min_value) or user_input > int(max_value)) and whilecount > 0:
                     ShellOutput("Input error. Value should be between 1 and 1209600.\n", style="warn", font="text")
                 whilecount += 1
-                try: self.user_input = int(input("\n%s\n(Default: %s)\n > " % (self.prompt, self.default)).lower() or "%s" % self.default)
-                except ValueError: self.user_input = 0
-            return self.user_input
-        else:
-            raise KeyError("Default value was neither str/int/bool | Value: [%s, %s]" % (type(self.default), self.default))
+                try: user_input = int(input("\n%s%s%s\n > " % (self.prompt, self.default_str, self.default)) or "%s" % self.default)
+                except ValueError: user_input = 0
+            self.output = user_input
+        else: raise KeyError("Default value was neither str/int/bool | Value: '%s', '%s'" % (type(self.default), self.default))
+
+        if self.lower is False: return self.output
+        else: return self.output.lower()
 
 
 # Shell output
@@ -168,11 +160,11 @@ class ShellOutput(object):
         self.font = font
         self.style = style
         self.symbol = symbol
-        self.shellhight, self.shellwidth = os_popen('stty size', 'r').read().split()
         self.start()
 
     def start(self):
-        self.header() if self.font == "head" else self.line if self.font == "line" else self.text() if self.output is not None else None
+        self.header() if self.font == "head" else self.line if self.font == "line" \
+            else self.text() if self.output is not None else None
 
     def header(self):
         print("\n")
@@ -182,20 +174,22 @@ class ShellOutput(object):
         print("\n")
 
     def colors(self):
-        return colorama_fore.YELLOW if self.style == "warn" else colorama_fore.CYAN if self.style == "info" else colorama_fore.RED if self.style == "err" \
+        return colorama_fore.YELLOW if self.style == "warn" else colorama_fore.CYAN if self.style == "info" \
+            else colorama_fore.RED if self.style == "err" \
             else colorama_fore.GREEN if self.style == "succ" else ""
 
     def text(self):
         print(self.colors() + "%s\n" % self.output + colorama_fore.RESET)
 
     def line(self):
-        print(self.symbol * (int(self.shellwidth) - 1))
+        shellhight, shellwidth = os_popen('stty size', 'r').read().split()
+        print(self.symbol * (int(shellwidth) - 1))
 
 
 # Logs
 class LogWrite(object):
-    def __init__(self, output, scripttype="core", level=1):
-        self.scripttype = scripttype.lower()
+    def __init__(self, output, typ="core", level=1):
+        self.typ = typ.lower()
         self.output = output
         self.log_level = level
 
@@ -203,9 +197,9 @@ class LogWrite(object):
         return False if self.log_level > Config("log_level").get() else self.write()
 
     def file(self):
-        logdir = "%s/%s/%s" % (Config("path_log").get(), self.scripttype, date02)
+        logdir = "%s/%s/%s" % (Config("path_log").get(), self.typ, date02)
         if os_path.exists(logdir) is False: os_system("mkdir -p " + logdir)
-        logfile = "%s/%s_%s.log" % (logdir, date03, self.scripttype)
+        logfile = "%s/%s_%s.log" % (logdir, date03, self.typ)
         if os_path.exists(logfile) is False: os_system("touch %s" % logfile)
         return logfile
 
