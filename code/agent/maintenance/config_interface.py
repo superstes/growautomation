@@ -46,20 +46,19 @@ class Create:
 
     def start(self):
         # check if tmp_config_dump is currently in folder -> ask to load old config and try to import it into the db
-        # function to add custom setting to device/dt
-        self.create_devicetype()
-        for nested in self.object_dict.values():
-            for name, typ in dict(nested).items():
-                self.current_dt_dict[name] = typ
-                self.new_dt_dict = self.current_dt_dict
+        if self.create_devicetype() is not False:
+            for nested in self.object_dict.values():
+                for name, typ in dict(nested).items():
+                    self.current_dt_dict[name] = typ
+                    self.new_dt_dict = self.current_dt_dict
         for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): self.current_dt_dict[name] = typ
 
-        self.create_device()
-        self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+        if self.create_device() is not False:
+            self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+            for obj, nested in self.setting_dict.items():
+                for setting, data in dict(nested).items():
+                    self.current_setting_dict[obj] = setting
         self.current_dev_list.extend(Config(output="name", filter="type = 'device'", table="object").get("list"))
-        for obj, nested in self.setting_dict.items():
-            for setting, data in dict(nested).items():
-                self.current_setting_dict[obj] = setting
         for setting, belonging in Config(output="setting,belonging").get():
             self.current_setting_dict[belonging] = setting
 
@@ -201,15 +200,11 @@ class Create:
         def add_setting(object_name):
             def another():
                 return ShellInput("Do you want to add another setting to the object %s" % object_name, default=True).get()
-            setting_exist_list = Config(output="setting", filter="belonging = '%s'" % object_name)
+            setting_exist_list = Config(output="setting", filter="belonging = '%s'" % object_name).get("list")
             change_dict, setting_count, setting_dict = {}, 0, {}
             while True:
                 setting = ShellInput("Provide the setting name.\n Info: max 30 chars & cannot already exist.", poss=setting_exist_list,
-                                     default=random_choice(setting_exist_list), intype="free", neg=True, max_value=30).get()
-                if object_name in self.current_setting_dict.keys() and setting == object_name[self.current_setting_dict]:
-                    ShellOutput("Setting is already present. Cannot create.", style="warn")
-                    if another() is False: break
-                    continue
+                                     intype="free", neg=True, max_value=30).get()
                 data = ShellInput("Provide the setting data.\n Info: max 100 chars", intype="free", max_value=100, min_value=1).get()
                 setting_dict[setting] = data
                 if another() is False: break
@@ -223,7 +218,7 @@ class Create:
         if ShellInput("Do you want to add custom settings?", default=True).get() is False: return False
         while True:
             object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nDeviceTypes:\n%s\nDevices:\n%s\n"
-                                        % (self.current_dt_dict.keys(), self.current_dev_list), poss=self.current_dev_list,
+                                        % (list(self.current_dt_dict.keys()), self.current_dev_list), poss=self.current_dev_list,
                                         default=random_choice(self.current_dev_list), intype="free").get()
             add_setting(object_to_edit)
             if ShellInput("Do you want to add settings to another object?", default=True).get() is False: break
@@ -348,7 +343,6 @@ class Edit:
             if what_to_edit == "setting": self.edit_setting(object_to_edit)
             elif what_to_edit == "object": self.edit_object(object_to_edit)
             if ShellInput("Do you want to edit another object?", default=True).get() is False: break
-        exit()
 
     def edit_setting(self, object_name):
         setting_dict = {setting: data for setting, data in Config(output="setting,data", filter="belonging = '%s'" % object_name).get("list")}
@@ -384,12 +378,15 @@ class Delete:
 
 def choose():
     ShellOutput("Growautomation - config change module", font="head", symbol="#")
+    count = 0
     while True:
+        count += 1
+        if count > 1: ShellOutput(font="line", symbol="#")
         mode = ShellInput("Choose either to add, edit or delete objects.\nType stop if you want to exit.", poss=["add", "edit", "delete", "stop"], default="add", intype="free").get()
         if mode == "add": start = Create()
         elif mode == "edit": start = Edit()
         elif mode == "delete": start = Delete()
-        elif mode == "stop": raise SystemExit("User chose to quit.")
+        elif mode == "stop": exit()
         else: raise SystemExit("Encountered unknown error while choosing config mode.")
         if start is False: continue
 
