@@ -25,7 +25,7 @@ from ga.core.ant import LogWrite
 from ga.core.ant import ShellOutput
 from ga.service.threader import Loop
 from ga.core.smallant import debugger
-from ga.core.smallant import debug_init
+from ga.core.smallant import globalvar
 
 from systemd import journal as systemd_journal
 import signal
@@ -47,6 +47,7 @@ class Service:
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
+        globalvar(action="init")
         self.start()
 
     def get_timer_dict(self):
@@ -78,7 +79,7 @@ class Service:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": debug_init()
+            if sys_argv[1] == "debug": globalvar(action="set", key="debug", value=1)
         except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self.get_timer_dict()

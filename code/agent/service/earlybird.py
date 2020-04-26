@@ -22,7 +22,7 @@
 
 from ga.core.owl import DoSql
 from ga.core.smallant import debugger
-from ga.core.smallant import debug_init
+from ga.core.smallant import globalvar
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
@@ -39,11 +39,12 @@ class Startup:
     def __init__(self):
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
+        globalvar(action="init")
         self.start()
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": debug_init()
+            if sys_argv[1] == "debug": globalvar(action="set", key="debug", value=1)
         except (IndexError, NameError): pass
         systemd_journal("Starting service initialization.")
         # recreate log/backup links
@@ -57,10 +58,11 @@ class Startup:
 
     def finish(self):
         try:
-            if sys_argv[1] == "debug": debug_init(on=False)
+            if sys_argv[1] == "debug": globalvar(action="set", key="debug", value=0)
         except (IndexError, NameError): pass
 
     def config(self):
+        return False
         # get config from db
         # check against locally written config files (core.conf/version file)
 

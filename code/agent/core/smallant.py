@@ -74,9 +74,12 @@ def debugger(command, hard_debug=False):
     except (KeyError, ImportError) as error: LogWrite(error)
 
 
-def debug_init(on=True):
-    from ga.core.globalvars import init_vars
-    init_vars()
-    from ga.core.globalvars import tmp_dict
-    if on: tmp_dict["debug"] = 1
-    else: tmp_dict["debug"] = 0
+def globalvar(action, key="", value=""):
+    if action == "init":
+        from ga.core.globalvars import init_vars
+        init_vars()
+    elif action == "set":
+        from ga.core.globalvars import tmp_dict
+        tmp_dict[key] = value
+    elif action == "get":
+        return tmp_dict[key]

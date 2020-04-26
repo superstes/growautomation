@@ -25,7 +25,7 @@ from ga.core.config import Config
 from ga.core.owl import DoSql
 from ga.core.ant import LogWrite
 from ga.core.smallant import debugger
-from ga.core.globalvars import tmp_dict
+from ga.core.smallant import globalvar
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -123,10 +123,12 @@ class Balrog:
             for device in device_mapping_dict.keys():
                 if device.find("dummy") == -1: self.processed_list.append(device)
         self.lock(device)
+        custom_arg = Config(setting="function_arg", belonging=device).get()
+        if not custom_arg: custom_arg = None
         function = Config(setting="function", belonging=Config(output="class", table="object", setting=device).get()).get()
         devicetype_class = Config(output="class", table="object", setting=Config(output="class", table="object", setting=device).get()).get()
         function_path = "%s/%s/%s" % (Config(setting="root_path").get(), devicetype_class, function)
-        LogWrite("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'" % (function_path, device, device_mapping_dict, setting_dict), level=4)
+        LogWrite("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'" % (function_path, custom_arg, device_mapping_dict, setting_dict), level=4)
         output, error = subprocess_popen(["/usr/bin/python3 %s %s %s %s" % (function_path, Config(setting="port", belonging=device).get(), device_mapping_dict, setting_dict)],
                                          shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
         output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
@@ -142,7 +144,7 @@ class Balrog:
         try_count, wait_time, max_try_count = 1, 10, 31
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
-            if tmp_dict["lock_%s" % device] == 1: time_sleep(wait_time)
+            if globalvar(action="get", key="lock_%s" % device) == 1: time_sleep(wait_time)
             else: break
             if try_count > max_try_count:
                 debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
@@ -151,14 +153,14 @@ class Balrog:
             debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
         try_count -= 1
-        tmp_dict["lock_%s" % device] = 1
+        globalvar(action="set", key="lock_%s" % device, value=1)
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
         LogWrite("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2)
         return True
 
     def unlock(self, device):
-        tmp_dict["lock_%s" % device] = 0
+        globalvar(action="set", key="lock_%s" % device, value=0)
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
         LogWrite("Unlocked device '%s'." % device, level=2)
