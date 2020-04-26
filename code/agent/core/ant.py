@@ -268,3 +268,17 @@ def dict_keycheck(dictionary, dictkey):
 def time_subtract(subtract, timeformat=timestamp, both=False):
     calculated = (datetime.now() - timedelta(seconds=subtract)).strftime(timeformat)
     return datetime.now().strftime(timeformat), calculated if both is True else calculated
+
+
+def plural(data):
+    def base_check(nr):
+        if nr > 1: return "s"
+        else: return ""
+    if type(data) == int: base_check(data)
+    elif type(data) == list: base_check(len(data))
+    elif type(data) == str:
+        try:
+            base_check(int(data))
+        except ValueError:
+            return ""
+    else: return ""
