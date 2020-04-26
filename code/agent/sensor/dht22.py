@@ -41,16 +41,19 @@ LogWrite("Current module: %s" % function, level=2)
 try:
     argument = sys_argv[1]
     port = sys_argv[2]
-except IndexError as error:
+except (IndexError, ValueError) as error:
     LogWrite("System argument error: %s" % error, level=2)
     debugger("%s - sys_argv error: %s" % (function, error))
     raise SystemExit
-try: device_mapping_dict = dict(sys_argv[3])
-except IndexError:
+try:
+    device_mapping_dict = dict(sys_argv[3])
+except (IndexError, ValueError):
     device_mapping = False
     debugger("%s - sys_argv not device_mapping_dict" % function)
-try: setting_dict = dict(sys_argv[4])
-except IndexError: debugger("%s - sys_argv not setting_dict" % function)
+try:
+    setting_dict = dict(sys_argv[4])
+except (IndexError, ValueError):
+    debugger("%s - sys_argv not setting_dict" % function)
 
 
 class Device:
