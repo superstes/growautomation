@@ -37,29 +37,44 @@ from random import choice as random_choice
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
-class GetObject:
+class Create:
     def __init__(self):
         self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
+        self.current_dev_list, self.current_dt_dict, self.new_dt_dict, self.current_setting_dict = [], {}, {}, {}
         self.object_downlink_list = []
-        self.choose()
+        self.start()
 
-    def choose(self):
-        try:
-            if sys_argv[1] == "debug": debug_init()
-        except (IndexError, NameError): pass
+    def start(self):
         # check if tmp_config_dump is currently in folder -> ask to load old config and try to import it into the db
-        ShellOutput("Growautomation - config change module", font="head", symbol="#")
-        ShellOutput("Currently only adding of objects is supported", font="text")
+        # function to add custom setting to device/dt
         self.create_devicetype()
-        # mode = ShellInput("Choose either to add, edit or delete growautomation configuration", poss=["add", "edit", "delete"], defaut="add", intype="free")
+        for nested in self.object_dict.values():
+            for name, typ in dict(nested).items():
+                self.current_dt_dict[name] = typ
+                self.new_dt_dict = self.current_dt_dict
+        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): self.current_dt_dict[name] = typ
+
+        self.create_device()
+        self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+        self.current_dev_list.extend(Config(output="name", filter="type = 'device'", table="object").get("list"))
+        for obj, nested in self.setting_dict.items():
+            for setting, data in dict(nested).items():
+                self.current_setting_dict[obj] = setting
+        for setting, belonging in Config(output="setting,belonging").get():
+            self.current_setting_dict[belonging] = setting
+
+        self.create_custom_setting()
+        self.create_group()
+        self.write_config()
 
     def create_devicetype(self):
-        dt_object_dict, dt_exist_list = {}, []
-        for name in Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
-        debugger("confint - create_devicetype - dt_exist_list %s" % dt_exist_list)
-        ShellOutput("Devicetypes", symbol="-", font="head")
         while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; "
                                       "they provide per model configuration", True).get()
+        if while_devicetype is False: return False
+        dt_object_dict, dt_exist_list = {}, []
+        for name in Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
+        debugger("confint - create_devicetype - dt_exist_list '%s'" % dt_exist_list)
+        ShellOutput("Devicetypes", symbol="-", font="head")
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
             name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
@@ -113,37 +128,34 @@ class GetObject:
                                                              "(Or can it only output the data for all of its ports at once?)", default=False).get()
             self.setting_dict[name] = setting_dict
             dt_exist_list.append(name)
-            debugger("confint - create_devicetype - settings %s" % setting_dict)
+            debugger("confint - create_devicetype - settings '%s'" % setting_dict)
             while_devicetype = ShellInput("Want to add another devicetype?", default=True, style="info").get()
         self.object_dict["devicetype"] = dt_object_dict
-        self.create_device()
 
     def create_device(self):
-        d_object_dict, d_exist_list, dt_exist_dict, d_dl_list, new_dt_dict = {}, [], {}, [], {}
+        if ShellInput("Do you want to create devices?", default=True).get() is False: return False
+        d_object_dict, d_exist_list, d_dl_list = {}, [], []
         for name in Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
-        for nested in self.object_dict.values():
-            for name, typ in dict(nested).items(): dt_exist_dict[name], new_dt_dict[name] = typ, typ
-        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): dt_exist_dict[name] = typ
         for name, dt in Config(output="name,class", filter="type = 'device'", table="object").get():
             if Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
         d_dl_list.append("notinlist")
 
         def to_create(to_ask, info):
             create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
-            current_new_dt_list = [name for name, typ in new_dt_dict.items() if typ == to_ask]
+            current_new_dt_list = [name for name, typ in self.new_dt_dict.items() if typ == to_ask]
             while create:
                 ShellOutput(symbol="-", font="line")
                 try: default_name = random_choice(current_new_dt_list)
-                except IndexError: default_name = random_choice([dt for dt, typ in dt_exist_dict.items() if typ == to_ask])
+                except IndexError: default_name = random_choice([dt for dt, typ in self.current_dt_dict.items() if typ == to_ask])
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % default_name,
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
-                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(dt_exist_dict.keys()) if name.find(dt) != -1][0],
-                                               poss=list(dt_exist_dict.keys()), intype="free").get()
+                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(self.current_dt_dict.keys()) if name.find(dt) != -1][0],
+                                               poss=list(self.current_dt_dict.keys()), intype="free").get()
                 if to_ask != "downlink":
-                    if create_dict[name] in new_dt_dict.keys():
+                    if create_dict[name] in self.new_dt_dict.keys():
                         dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items() if setting == "connection"][0]
                     else: dt_conntype = Config(setting="connection", belonging=create_dict[name]).get()
-                    debugger("confint - create_device - dt_conntype %s" % dt_conntype)
+                    debugger("confint - create_device - dt_conntype '%s'" % dt_conntype)
                     if dt_conntype != "specific": setting_dict["connection"] = dt_conntype
                     else: setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
                                                                   "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
@@ -161,13 +173,13 @@ class GetObject:
                 setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free", min_value=1).get()
                 self.setting_dict[name] = setting_dict
                 d_exist_list.append(name)
-                debugger("confint - create_device - settings %s" % setting_dict)
+                debugger("confint - create_device - settings '%s'" % setting_dict)
                 if to_ask == "downlink": d_dl_list.append(name)
                 create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
             d_object_dict[to_ask] = create_dict
 
         def check_type(name):
-            if len([dt for dt, typ in dt_exist_dict.items() if typ == name]) > 0:
+            if len([dt for dt, typ in self.current_dt_dict.items() if typ == name]) > 0:
                 return True
             else: return False
 
@@ -184,21 +196,51 @@ class GetObject:
             ShellOutput("Actions", symbol="-", font="head")
             to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
         self.object_dict["device"] = d_object_dict
-        self.create_group()
+
+    def create_custom_setting(self):
+        def add_setting(object_name):
+            def another():
+                return ShellInput("Do you want to add another setting to the object %s" % object_name, default=True).get()
+            setting_exist_list = Config(output="setting", filter="belonging = '%s'" % object_name)
+            change_dict, setting_count, setting_dict = {}, 0, {}
+            while True:
+                setting = ShellInput("Provide the setting name.\n Info: max 30 chars & cannot already exist.", poss=setting_exist_list,
+                                     default=random_choice(setting_exist_list), intype="free", neg=True, max_value=30).get()
+                if object_name in self.current_setting_dict.keys() and setting == object_name[self.current_setting_dict]:
+                    ShellOutput("Setting is already present. Cannot create.", style="warn")
+                    if another() is False: break
+                    continue
+                data = ShellInput("Provide the setting data.\n Info: max 100 chars", intype="free", max_value=100, min_value=1).get()
+                setting_dict[setting] = data
+                if another() is False: break
+            if object_name in self.setting_dict.keys():
+                tmp_dict = {key: val for obj, nested in self.setting_dict.items() if obj == object_name for key, val in dict(nested)}
+                debugger("confint - add_setting - merge settings '%s'" % tmp_dict)
+                setting_dict.update(tmp_dict)
+            debugger("confint - add_setting - settings '%s'" % setting_dict)
+            self.setting_dict[object_name] = setting_dict
+
+        if ShellInput("Do you want to add custom settings?", default=True).get() is False: return False
+        while True:
+            object_to_edit = ShellInput("Choose one of the listed objects to edit.\nDeviceTypes: '%s'\nDevices: '%s'"
+                                        % (self.current_dt_dict.keys(), self.current_dev_list), poss=self.current_dev_list,
+                                        default=random_choice(self.current_dev_list), intype="free").get()
+            add_setting(object_to_edit)
+            if ShellInput("Do you want to add settings to another object?", default=True).get() is False: break
 
     def create_group(self):
+        if ShellInput("Do you want to create groups?", default=True).get() is False: return False
+
         def to_create(to_ask, info, info_member):
             create_count, create_dict, posslist = 0, {}, []
             create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
             if to_ask == "sector":
-                intern_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
-                db_dev_list = Config(output="name", filter="type = 'device'", table="object").get("list")
-                posslist.extend(intern_dev_list), posslist.extend(db_dev_list)
+                posslist = self.current_dev_list
                 [posslist.remove(dev) for dev in self.object_downlink_list]
             elif to_ask == "link":
                 posslist = dt_action_list
                 posslist.extend(dt_sensor_list)
-            debugger("confint - create_group - posslist %s" % posslist)
+            debugger("confint - create_group - posslist '%s'" % posslist)
             while create:
                 ShellOutput(symbol="-", font="line")
                 member_list = []
@@ -212,7 +254,7 @@ class GetObject:
                     if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                 create_dict[create_count] = member_list
                 create_count += 1
-                debugger("confint - create_group - members %s" % member_list)
+                debugger("confint - create_group - members '%s'" % member_list)
                 create = ShellInput("Want to add another %s?" % to_ask, default=True, style="info").get()
             return create_dict
 
@@ -226,11 +268,10 @@ class GetObject:
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
-        self.write_config()
 
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
-        LogWrite("Writing configuration to database:\n\nobjects: %s\nsettings: %s\ngroups: %s" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
+        LogWrite("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
         tmp_config_dump = "%s/maintenance/add_config.tmp" % Config("path_root").get()
         with open(tmp_config_dump, 'w') as tmp:
             tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
@@ -287,4 +328,78 @@ class GetObject:
         os_system("rm %s" % tmp_config_dump)
 
 
-GetObject()
+class Edit:
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        object_agent_list = Config(output="name", table="object", filter="type = 'agent'").get()
+        object_dev_list = Config(output="name", table="object", filter="type = 'device'").get()
+        object_dt_list = Config(output="name", table="object", filter="type = 'devicetype'").get()
+        object_list = object_agent_list
+        object_list.extend(object_dev_list)
+        object_list.extend(object_dt_list)
+        while True:
+            object_to_edit = ShellInput("Choose one of the listed objects to edit.\nAgents: %s\nDeviceTypes: %s\nDevices: %s"
+                                        % (object_agent_list, object_dt_list, object_dev_list),
+                                        poss=object_list, default=random_choice(object_list), intype="free").get()
+            what_to_edit = ShellInput("Do you want to edit a object itself or its settings?", poss=["object", "setting"], default="setting", intype="free").get()
+            if what_to_edit == "setting": self.edit_setting(object_to_edit)
+            elif what_to_edit == "object": self.edit_object(object_to_edit)
+            if ShellInput("Do you want to edit another object?", default=True).get() is False: break
+        exit()
+
+    def edit_setting(self, object_name):
+        setting_list = Config(output="setting", filter="belonging = '%s'" % object_name)
+        change_dict, setting_count = {}, 0
+        while True:
+            setting = ShellInput("Choose the setting you want to edit.",
+                                 poss=setting_list, default=random_choice(setting_list), intype="free").get()
+            ShellOutput("Its current configuration: %s" % Config(output="setting,data", setting=setting,
+                                                                 belonging=object_name).get(), style="info")
+            data = ShellInput("Provide the new setting data.\n"
+                              "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
+                              intype="free", max_value=100, min_value=1).get()
+            change_dict[setting] = data
+            if ShellInput("Do you want to edit another setting of the object %s" % object_name, default=True).get() is False: break
+        for setting, data in change_dict:
+            DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting))
+            setting_count += 1
+        ShellOutput("%s object settings were added" % setting_count, style="info", font="text")
+
+    def edit_object(self, object_name):
+        ShellOutput("This option isn't supported yet.")
+        raise SystemExit
+        # need to check dependencies -> add with new name and update settings+dependencies -> after that delete the old named obj
+
+
+class Delete:
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        ShellOutput("Deletion of objects isn't supported yet.")
+        return False
+
+
+def choose():
+    ShellOutput("Growautomation - config change module", font="head", symbol="#")
+    while True:
+        mode = ShellInput("Choose either to add, edit or delete objects.\nType stop if you want to exit.", poss=["add", "edit", "delete", "stop"], defaut="add", intype="free")
+        if mode == "add": start = Create()
+        elif mode == "edit": start = Edit()
+        elif mode == "delete": start = Delete()
+        elif mode == "stop": raise SystemExit("User chose to quit.")
+        else: raise SystemExit("Encountered unknown error while choosing config mode.")
+        if start is False: continue
+
+
+def exit():
+    ShellOutput("It was a pleasure to serve you!")
+    raise SystemExit("User chose to exit.")
+
+
+try:
+    if sys_argv[1] == "debug": debug_init()
+except (IndexError, NameError): pass
+choose()
