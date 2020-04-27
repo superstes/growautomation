@@ -40,6 +40,7 @@ LogWrite("Current module: %s" % function, level=2)
 
 try:
     port = sys_argv[1]
+    argument = sys_argv[4]
 except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
     debugger("%s - sys_argv error: %s" % (function, error))
@@ -53,10 +54,6 @@ try:
     setting_dict = dict(sys_argv[3])
 except (IndexError, ValueError):
     debugger("%s - sys_argv no setting_dict" % function)
-try:
-    argument = dict(sys_argv[4])
-except (IndexError, ValueError):
-    debugger("%s - sys_argv no argument" % function)
 
 
 class Device:
@@ -79,6 +76,7 @@ class Device:
         debugger("%s - data_mapping |%s" % (function, self.data))
 
     def get_data(self):
+        if argument != "humi" and argument != "temp": raise ValueError("Argument (sys-arg#4) must be either 'humi' or 'temp'!")
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, port)
         if argument == "humi": return humidity
         elif argument == "temp": return temperature
