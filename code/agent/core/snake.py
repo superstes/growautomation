@@ -40,7 +40,7 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 class Balrog:
     def __init__(self, sensor):
-        self.sensor = sensor
+        self.sensor, self.own_dt = sensor, None
         self.processed_list, self.lock_list = [], []
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
@@ -48,7 +48,7 @@ class Balrog:
         self.devicetype() if self.sensor_type is True else self.device(self.sensor)
 
     def devicetype(self):
-        device_list = []
+        device_list, self.own_dt = [], self.sensor
         # check all for loops if they will break if only one element is in list -> find clean solution
         for device in Config(output="name", table="object", filter="class = '%s'" % self.sensor).get("list"):
             if not Config(setting="timer", belonging=device, empty=True).get() and Config(setting="enabled", belonging=device).get() == "1":
@@ -59,6 +59,7 @@ class Balrog:
         # ask for threading support when sensor-functions are added
 
     def device(self, device):
+        self.own_dt = Config(output="class", table="object", setting=device).get()
         # if device => self.sensor doesn't need to check if enabled since it was already checked when accepting the timer
         connection = Config(setting="connection", belonging=device).get()
         if connection == "direct":
@@ -123,20 +124,22 @@ class Balrog:
             for device in device_mapping_dict.keys():
                 if device.find("dummy") == -1: self.processed_list.append(device)
         self.lock(device)
-        custom_arg = Config(setting="function_arg", belonging=device, empty=True).get()
+        function = Config(setting="function", belonging=self.own_dt).get()
+        custom_arg = Config(setting="function_arg", belonging=self.own_dt, empty=True).get()
         if not custom_arg: custom_arg = None
-        function = Config(setting="function", belonging=Config(output="class", table="object", setting=device).get()).get()
         port = Config(setting="port", belonging=device).get()
-        devicetype_class = Config(output="class", table="object", setting=Config(output="class", table="object", setting=device).get()).get()
+        devicetype_class = Config(output="class", table="object", setting=self.own_dt).get()
+
         function_path = "%s/%s/%s" % (Config(setting="path_root").get(), devicetype_class, function)
         LogWrite("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'" %
                  (function_path, device, device_mapping_dict, setting_dict), level=4)
-        debugger("snake - start |function '%s' |port '%s' |device_mapping_dict '%s' |setting_dict '%s'" %
-                 (function_path, port, device_mapping_dict, setting_dict))
+        debugger("snake - start |/usr/bin/python3 %s %s %s %s %s" %
+                 (function_path, port, device_mapping_dict, setting_dict, custom_arg))
         output, error = subprocess_popen(["/usr/bin/python3 %s %s %s %s %s" %
                                           (function_path, port, device_mapping_dict, setting_dict, custom_arg)],
                                          shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
         output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
+
         LogWrite("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output_str), level=3)
         debugger("snake - start |output by processing %s '%s'" % (device, output_str))
         if error_str != "":
