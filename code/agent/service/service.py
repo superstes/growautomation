@@ -93,6 +93,7 @@ class Service:
                 output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
                 if error_str != "":
+                    systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error_str))
                     LogWrite("Error by executing %s:\n'%s'" % (thread_name, error_str), level=2)
                     debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error_str))
                 LogWrite("Output by processing %s:\n'%s'" % (thread_name, output_str), level=3)
@@ -148,7 +149,8 @@ class Service:
 
     def status(self):
         debugger(["service - status |updating status", "service - status |threads '%s' |config '%s'" % (Threader.list(), self.name_dict)])
-        systemd_journal.write("Threads running:\n%s\nConfiguration:\n%s" % (Threader.list(), self.name_dict))
+        systemd_journal.write("Threads running:\n%s\nConfiguration:\n" % Threader.list())
+        [systemd_journal.write("'%s': '%s'\n" % (key, value)) for key, value in self.name_dict.items()]
 
     def run(self):
         debugger("service - run |entering runtime")
