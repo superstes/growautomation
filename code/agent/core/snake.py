@@ -25,7 +25,7 @@ from ga.core.config import Config
 from ga.core.owl import DoSql
 from ga.core.ant import LogWrite
 from ga.core.smallant import debugger
-from ga.core.smallant import globalvar
+from ga.core.smallant import share
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -152,7 +152,7 @@ class Balrog:
         try_count, wait_time, max_try_count = 1, 10, 31
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
-            if globalvar(action="get", key="lock_%s" % device) == 1: time_sleep(wait_time)
+            if share(action="get", name="lock_%s" % device, outtypK="int") == 1: time_sleep(wait_time)
             else: break
             if try_count > max_try_count:
                 debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
@@ -161,14 +161,14 @@ class Balrog:
             debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
         try_count -= 1
-        globalvar(action="set", key="lock_%s" % device, value=1)
+        share(action="set", name="lock_%s" % device, data=1)
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
         LogWrite("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2)
         return True
 
     def unlock(self, device):
-        globalvar(action="set", key="lock_%s" % device, value=0)
+        share(action="set", name="lock_%s" % device, data=0)
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
         LogWrite("Unlocked device '%s'." % device, level=2)
