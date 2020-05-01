@@ -25,6 +25,8 @@ from ga.core.smallconfig import Config
 from os import system as os_system
 from os import path as os_path
 from datetime import datetime
+from multiprocessing.managers import SharedMemoryManager
+from multiprocessing.shared_memory import ShareableList
 
 
 def now(time_format):
@@ -59,28 +61,44 @@ class LogWrite(object):
         logfile.close()
 
 
-def debugger(command, hard_debug=False):
-    try:
-        from ga.core.globalvars import tmp_dict
-        if hard_debug: debug = True
-        else:
-            if tmp_dict["debug"] == 1: debug = True
-            else: debug = False
-        if debug is True:
-            if type(command) == str:
-                print("debug:", command)
-            elif type(command) == list:
-                [print("debug:", call) for call in command]
-    except (KeyError, ImportError) as error: LogWrite(error)
-
-
-def globalvar(action, key="", value=""):
+def share(name=None, action="get", data="", outtyp=None):
+    manager = SharedMemoryManager()
     if action == "init":
-        from ga.core.globalvars import init_vars
-        init_vars()
-    else: from ga.core.globalvars import tmp_dict
-    if action == "set": tmp_dict[key] = value
+        manager.start()
+    elif action == "set":
+        memory_list = []
+        if type(data) == dict:
+            for key, value in data.items():
+                memory_list.append("key_'%s'" % key)
+                memory_list.append("val_'%s'" % value)
+        else: memory_list.append(data)
+        ShareableList(memory_list, name="ga_%s" % name)
     elif action == "get":
-        try:
-            return tmp_dict[key]
-        except KeyError: return False
+        memory_list = ShareableList(name="ga_%s" % name)
+        if outtyp == "dict":
+            return_data, last_key = {}, ""
+            for x in memory_list:
+                if x.find("key_'") != -1:
+                    last_key = x.replace("key_'", "")[:-1]
+                    return_data[last_key] = 0
+                elif x.find("val_'") != -1:
+                    return_data[last_key] = x.replace("val_'", "")[:-1]
+                else: continue
+        elif outtyp == "list": return_data = list(memory_list)
+        elif outtyp == "int": return_data = int(memory_list)
+        else: return_data = str(memory_list)
+        return return_data
+    elif action == "cleanup":
+        manager.shutdown()
+    else: return False
+
+
+def debugger(command, hard_debug=False):
+    if hard_debug: debug = True
+    else: debug = bool(shared_memory(name="ga_debug"))
+    if debug is True:
+        if type(command) == str:
+            print("debug:", command)
+        elif type(command) == list:
+            [print("debug:", call) for call in command]
+    else: return False

@@ -22,7 +22,7 @@
 
 from ga.core.owl import DoSql
 from ga.core.smallant import debugger
-from ga.core.smallant import globalvar
+from ga.core.smallant import share
 from ga.core.config import Config
 from ga.core.smallant import LogWrite
 
@@ -39,12 +39,12 @@ class Startup:
     def __init__(self):
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        globalvar(action="init")
+        share(action="init")
         self.start()
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": globalvar(action="set", key="debug", value=1)
+            if sys_argv[1] == "debug": share(action="set", name="debug", data=1)
         except (IndexError, NameError): pass
         systemd_journal("Starting service initialization.")
         # recreate log/backup links
@@ -58,7 +58,7 @@ class Startup:
 
     def finish(self):
         try:
-            if sys_argv[1] == "debug": globalvar(action="set", key="debug", value=0)
+            if sys_argv[1] == "debug": share(action="set", name="debug", data=0)
         except (IndexError, NameError): pass
 
     def config(self):
@@ -68,14 +68,16 @@ class Startup:
 
     def db(self):
         sql = DoSql()
+
         def db_read_test():
             data = sql.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;")
             result = True if type(data) == list else data if type(data) == bool else False
             return result
+
         def db_write_test():
             sql.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % Config("hostname").get())
             sql.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get())
-            data = True
+            return True
         if db_read_test() is True and db_write_test() is True:
             DoSql("DELETE FROM ga.Temp;", write=True).start()
             # check that no locks are set -> set all to 0 or simply remove them (or remove all entries from temp table ?!)
