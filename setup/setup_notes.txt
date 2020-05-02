@@ -35,14 +35,14 @@ May have changed since then
       - GRANT ALL ON ga.* TO 'GA_DB_ADMIN_USER'@'localhost' IDENTIFIED BY 'GA_DB_ADMIN_PASSWORD';
   - add config files
     - create version file
-      echo 'version=GA_VERSION_NR\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE' >> /etc/growautomation.version
+      printf "version=GA_VERSION_NR\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE" > /etc/growautomation.version
     - create core config file
-      - echo '[core]\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE\nlog_level=GA_LOG_LEVEL' >> /etc/growautomation/core/core.conf
-      - echo '[db_server]\nsql_admin_user=GA_DB_ADMIN_USER\nsql_admin_pwd=GA_DB_ADMIN_PASSWORD'
+      - printf "[core]\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE\nlog_level=GA_LOG_LEVEL" > /etc/growautomation/core/core.conf
+      - printf "[db_server]\nsql_admin_user=GA_DB_ADMIN_USER\nsql_admin_pwd=GA_DB_ADMIN_PASSWORD" >> /etc/growautomation/core/core.conf
       - chown growautomation:growauotmation /etc/growautomation/core/core.conf
       - chmod 440 /etc/growautomation/core/core.conf
     - add credentials for db backup
-      - echo '[mysqldump]\nuser=GA_DB_BACKUP_USER\npassword=GA_DB_BACKUP_PASSWORD\n' > /etc/mysql/conf.d/ga.mysqldump.cnf
+      - printf "[mysqldump]\nuser=GA_DB_BACKUP_USER\npassword=GA_DB_BACKUP_PASSWORD\n" > /etc/mysql/conf.d/ga.mysqldump.cnf
   - add sensor/action/downlink functions following the documentation: https://git.growautomation.at/blob/master/manual/agent/
 - add ga service
   - systemctl link /etc/growautomation/service/systemd/growautomation.service
