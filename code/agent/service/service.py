@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -90,7 +90,7 @@ class Service:
             @Threader.thread(int(interval), thread_name)
             def thread_function():
                 LogWrite("Starting function '%s' for object %s." % (function, thread_name), level=4)
-                output, error = subprocess_popen(["/usr/bin/python3 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+                output, error = subprocess_popen(["/usr/bin/python3.8 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
                 output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
                 if error_str != "":
                     systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error_str))
