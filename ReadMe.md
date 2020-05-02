@@ -6,16 +6,19 @@ And provide code samples to the diy community.
 
 __The code is currently not in a stable state !__
 
-Version: 0.2.5
+Version: 0.4
 
 ## Currently active projects
-- rewriting the whole core modules to support dynamic configuration (_v0.3_)
-- modules to add and remove DeviceTypes/Devices easily
 - writing installation manual
-- finishing the installation script
-- creating a troubleshooing script to gather error logs
-- implementing device sectors (_allows separate data processing for multiple physical separated areas_)
-- implementing device-type linking (_p.e. earth humidity sensor and water pump action_)
+- updating the installation script
+
+## New features
+- version 0.3
+    - service to dynamically start sensor data-collection and action-checks in threads
+    - rewriting the whole core modules to support dynamic configuration
+    - configuration interface to add and remove DeviceTypes/Devices easily
+    - device sectors for limit actions to a physical area
+    - linking of sensor and action devicetypes for easy action management
 
 ## On hold projects
 - designing a clean plug&play alternative for connecting sensors
@@ -23,8 +26,11 @@ Version: 0.2.5
 - documenting server installation on intel nuc
 
 ## Future projects
+- creating a troubleshooing script to gather error logs
+- implement server/agent cofiguration
 - webserver for observation and manual actions
 - implementation of an air speed sensor
 - implementation of 3d-printable window openers (with dc motors)
 - checking clean solutions to implement analog sensors on the raspberry pi (p.e. ADS1115)
 - testing a standalone solution with higher quality hardware (_gpio alternatives [?]_)
+  
