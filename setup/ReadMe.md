@@ -1,27 +1,13 @@
-# Setup Types:
+# Base setup
 
-## 1. Standalone
-Sensordata is gathered, processed and stored on the same device.
-
-+ Simple
-+ No network(ing) required
-- Only for singe agent deployments
-- Backup of the agent would be necessary if data loss isn't acceptable
-- Lifetime of the agent hardware may be abbreviated
-0 Agents are most often exposed to high humidity and heat
-
-## 2. Agent-Server Setup
-Sensordata is gathered on the agent.
-Sensordata and logs are stored on the server.
-The agent fetches data from the server database for the action processing.
-
-+ Multiple agents supported
-+ Data can be stored in a better physical environment than the agents
-+ Data can be stored on better hardware
-+ Agents can easily be added or removed
-+ Server can be secured in a seperated network
-+ Safer/Cleaner setup-type - agents can fail without leading to data loss
-- Komplexer than the standalone setup
-- More hardware needed
-- Network connection between agent and server is required
-- Backup of the server would be necessary if data loss isn't acceptable
+## How to setup
+  - automated:
+  <br> copy the 'setup.sh' to your system and start it with root privileges 
+  <br> <br> 
+    - exclamor:
+    <br> We recommend using this installation script on dedicated systems.
+    <br> This installation script won't check your already installed programs for compatibility problems.
+    <br> If you already use web-/database or other complex software on this system you should back it up before installing this software.
+    <br> We assume no liability for problems that may be caused by this installation! <br><br>
+  - manually:
+  <br> follow the information in the 'setup_notes.txt'

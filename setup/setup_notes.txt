@@ -1,0 +1,55 @@
+Written for version 0.4
+May have changed since then
+
+# this manual will not support to change the default installation path
+# you need to replace all variables leading 'GA_'
+#  GA_SETUP_TYPE will normally be 'standalone'
+#  GA_LOG_LEVEL will normally be '1'
+
+### Install manually
+- install software packages
+  - install python 3.8 or higher -> you might need to compile it from source
+    you can find a compiler script here: https://git.growautomation.at/blob/master/setup/python/
+  - apt-get -y install git mariadb-server mariadb-client
+  - /usr/bin/python3.8 -m pip install systemd mysql-connector-python RPi.GPIO --default-timeout=100
+  - you may need to install other python3 modules for your needed sensors
+    more information: https://git.growautomation.at/blob/master/manual/hardware/
+- install growautomation
+  - install core
+    cd /tmp
+    useradd growautomation
+    git clone https://github.com/growautomation-at/controller.git
+    mkdir /etc/growautomation
+    cp -r /tmp/controller/code/agent/* /etc/growautomation
+    chown -R growautomation:growautomation /etc/growautomation
+    chmod -R 755 /etc/growautomation
+  - configure database
+    - mysql_secure_installation -> set pwd and apply all security options
+    - add database 'ga'
+    - add backup user
+      - DROP USER 'GA_DB_BACKUP_USER'@'localhost';
+      - CREATE USER 'GA_DB_BACKUP_USER'@'localhost' IDENTIFIED BY 'GA_DB_BACKUP_PASSWORD';
+      - GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'GA_DB_BACKUP_USER'@'localhost' IDENTIFIED BY 'GA_DB_BACKUP_PASSWORD';
+    - add db admin user
+      - CREATE USER 'GA_DB_ADMIN_USER'@'localhost' IDENTIFIED BY 'GA_DB_ADMIN_PASSWORD';
+      - GRANT ALL ON ga.* TO 'GA_DB_ADMIN_USER'@'localhost' IDENTIFIED BY 'GA_DB_ADMIN_PASSWORD';
+  - add config files
+    - create version file
+      echo 'version=GA_VERSION_NR\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE' >> /etc/growautomation.version
+    - create core config file
+      - echo '[core]\npath_root=/etc/growautomation\nhostname=GA_HOSTNAME\nsetuptype=GA_SETUP_TYPE\nlog_level=GA_LOG_LEVEL' >> /etc/growautomation/core/core.conf
+      - echo '[db_server]\nsql_admin_user=GA_DB_ADMIN_USER\nsql_admin_pwd=GA_DB_ADMIN_PASSWORD'
+      - chown growautomation:growauotmation /etc/growautomation/core/core.conf
+      - chmod 440 /etc/growautomation/core/core.conf
+    - add credentials for db backup
+      - echo '[mysqldump]\nuser=GA_DB_BACKUP_USER\npassword=GA_DB_BACKUP_PASSWORD\n' > /etc/mysql/conf.d/ga.mysqldump.cnf
+  - add sensor/action/downlink functions following the documentation: https://git.growautomation.at/blob/master/manual/agent/
+- add ga service
+  - systemctl link /etc/growautomation/service/systemd/growautomation.service
+  - systemctl enable growautomation.service
+  - systemctl daemon-reload
+- add basic configuration to db
+  - core config
+    run the /etc/growautomation/maintenance/config_interface.py with the 'setup' argument
+  - sensors/actions
+    run the /etc/growautomation/maintenance/config_interface.py with the 'add' argument

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -23,8 +23,12 @@
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from os import popen as os_popen
+from sys import argv as sys_argv
 
-repo_path = "/tmp/controller/setup/agent"
+try:
+    repo_path = "%s/python" % sys_argv[1]
+except (IndexError, NameError):
+    repo_path = "/tmp/controller/setup/python"
 shellhight, shellwidth = os_popen('stty size', 'r').read().split()
 
 
