@@ -9,6 +9,7 @@ __The code is currently not in a stable state !__
 Version: 0.4
 
 ## Currently active projects
+- rewriting setup script to use core modules
 - writing installation manual
 - updating the installation script
 
