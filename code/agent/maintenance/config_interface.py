@@ -18,16 +18,16 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.config import Config
-from ga.core.owl import DoSql
-from ga.core.ant import ShellOutput
-from ga.core.ant import ShellInput
-from ga.core.ant import LogWrite
-from ga.core.ant import plural
-from ga.core.smallant import debugger
-from ga.core.smallant import debug_init
+from ..core.config import Config
+from ..core.owl import DoSql
+from ..core.ant import ShellOutput
+from ..core.ant import ShellInput
+from ..core.ant import LogWrite
+from ..core.ant import plural
+from ..core.smallant import debugger
+from ..core.smallant import share
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -400,6 +400,8 @@ def exit():
 
 
 try:
-    if sys_argv[1] == "debug": debug_init()
+    if sys_argv[1] == "debug":
+        share(action="init")
+        share(action="set", name="debug", data=1)
 except (IndexError, NameError): pass
 choose()

@@ -18,13 +18,13 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.owl import DoSql
-from ga.core.smallant import debugger
-from ga.core.smallant import share
-from ga.core.config import Config
-from ga.core.smallant import LogWrite
+from ..core.owl import DoSql
+from ..core.smallant import debugger
+from ..core.smallant import share
+from ..core.config import Config
+from ..core.smallant import LogWrite
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe

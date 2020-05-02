@@ -18,14 +18,16 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 # sql module
 
-from ga.core.smallant import LogWrite
-from ga.core.smallconfig import Config
-from ga.core.smallant import debugger
+from .smallant import LogWrite
+from .smallconfig import Config
+from .smallant import debugger
+from .smallant import process
 
 from os import system as os_system
+from os import path as os_path
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
@@ -37,9 +39,8 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False):
-        self.command = command
-        self.write = write
+    def __init__(self, command, write=False, user=None, pwd=None):
+        self.command, self.write, self.user, self.pwd = command, write, user, pwd
         self.fallback = False
 
     def start(self):
@@ -106,11 +107,20 @@ class DoSql:
 
     def connect(self, command=None, connect_debug=True):
         import mysql.connector
-        if Config("setuptype").get() == "agent":
+        if self.user is not None:
+            if self.user == "root":
+                connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
+            else:
+                if Config("setuptype").get() == "agent":
+                    connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+                                                         user=self.user, passwd=self.pwd)
+                else:
+                    connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
+        elif Config("setuptype").get() == "agent":
             if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
             else: connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
                                                        user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
-        else: connection = mysql.connector.connect(user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
+        else: connection = mysql.connector.connect(unix_socket=self.unixsock(), user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
         try:
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
@@ -143,6 +153,14 @@ class DoSql:
             if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", Config("mysql_localuser").get()))
             else: LogWrite("Server: %s, port %s, user %s" % (Config("mysql.server_ip").get(), Config("mysql.server_port").get(), Config("mysql_user").get()))
             return False
+
+    def unixsock(self):
+        sql_sock = process(command="cat /etc/mysql/mariadb.conf.d/50-server.cnf | grep 'socket                  ='").split("=")[1].strip()
+        if os_path.exists(sql_sock) is False:
+            if process(command="systemctl status mysql.service | grep 'Active:'").find("Active: inactive") != -1:
+                os_system("systemctl start mysql.service")
+                time_sleep(5)
+        return sql_sock
 
     def find(self, searchfor):
         debugger("owl - find |input '%s' '%s'" % (type(searchfor), searchfor))

@@ -18,15 +18,18 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.smallconfig import Config
+from .smallconfig import Config
 
 from os import system as os_system
 from os import path as os_path
 from datetime import datetime
+from subprocess import Popen as subprocess_popen
+from subprocess import PIPE as subprocess_pipe
 from multiprocessing.managers import SharedMemoryManager
 from multiprocessing.shared_memory import ShareableList
+from functools import lru_cache
 
 
 def now(time_format):
@@ -95,10 +98,17 @@ def share(name=None, action="get", data="", outtyp=None):
 
 def debugger(command, hard_debug=False):
     if hard_debug: debug = True
-    else: debug = bool(shared_memory(name="ga_debug"))
+    else: debug = True if share(name="debug") == "1" else False
     if debug is True:
         if type(command) == str:
             print("debug:", command)
         elif type(command) == list:
             [print("debug:", call) for call in command]
     else: return False
+
+
+@lru_cache()
+def process(command, out_error=False):
+    output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+    if out_error is False: return output.decode("ascii")
+    else: return output.decode("ascii"), error.decode("ascii")

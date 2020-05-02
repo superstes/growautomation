@@ -18,11 +18,11 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.config import Config
-from ga.core.smallant import LogWrite as SmallLogWrite
-from ga.core.smallant import debugger
+from .config import Config
+from .smallant import LogWrite as SmallLogWrite
+from .smallant import debugger
 
 from datetime import datetime
 from datetime import timedelta

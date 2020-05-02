@@ -1,10 +1,10 @@
 # source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.ant import LogWrite
-from ga.core.smallant import debugger
+from ..core.ant import LogWrite
+from ..core.smallant import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep
