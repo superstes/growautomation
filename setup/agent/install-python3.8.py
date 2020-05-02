@@ -18,6 +18,8 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
+# ga_version 0.4
+
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from os import popen as os_popen
@@ -55,7 +57,7 @@ def compile():
 def pre_compiled(script):
     print("#" * (int(shellwidth) - 1))
     print("Installing pre-compiled package.\n")
-    process("tar -xvzf %s/%s" % (repo_path, script))
+    process("tar -xvzf %s/%s /usr/local/bin/" % (repo_path, script))
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
