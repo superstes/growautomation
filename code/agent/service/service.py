@@ -26,13 +26,12 @@ from ..core.ant import LogWrite
 from ..core.ant import ShellOutput
 from ..core.smallant import debugger
 from ..core.smallant import share
+from ..core.smallant import process
 
 from systemd import journal as systemd_journal
 import signal
 from time import sleep as time_sleep
 from sys import argv as sys_argv
-from subprocess import Popen as subprocess_popen
-from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from os import getpid as os_getpid
@@ -90,14 +89,13 @@ class Service:
             @Threader.thread(int(interval), thread_name)
             def thread_function():
                 LogWrite("Starting function '%s' for object %s." % (function, thread_name), level=4)
-                output, error = subprocess_popen(["/usr/bin/python3.8 %s %s" % (function, thread_name)], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-                output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
-                if error_str != "":
-                    systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error_str))
-                    LogWrite("Error by executing %s:\n'%s'" % (thread_name, error_str), level=2)
-                    debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error_str))
-                LogWrite("Output by processing %s:\n'%s'" % (thread_name, output_str), level=3)
-                debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output_str))
+                output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
+                if error != "":
+                    systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
+                    LogWrite("Error by executing %s:\n'%s'" % (thread_name, error), level=2)
+                    debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
+                LogWrite("Output by processing %s:\n'%s'" % (thread_name, output), level=3)
+                debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
         Threader.start()
         systemd_journal.write("Finished starting service.")
         self.status()

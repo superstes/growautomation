@@ -26,12 +26,11 @@ from .owl import DoSql
 from .ant import LogWrite
 from .smallant import debugger
 from .smallant import share
+from .smallant import process
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from sys import argv as sys_argv
-from subprocess import Popen as subprocess_popen
-from subprocess import PIPE as subprocess_pipe
 import signal
 from time import sleep as time_sleep
 
@@ -135,24 +134,21 @@ class Balrog:
                  (function_path, device, device_mapping_dict, setting_dict), level=4)
         debugger("snake - start |/usr/bin/python3 %s %s %s %s %s" %
                  (function_path, port, device_mapping_dict, setting_dict, custom_arg))
-        output, error = subprocess_popen(["/usr/bin/python3 %s %s %s %s %s" %
-                                          (function_path, port, device_mapping_dict, setting_dict, custom_arg)],
-                                         shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-        output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
-
-        LogWrite("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output_str), level=3)
-        debugger("snake - start |output by processing %s '%s'" % (device, output_str))
-        if error_str != "":
-            LogWrite("Error by executing %s:\n'%s'" % (device, error_str), level=2)
-            debugger("snake - start |error by executing %s '%s'" % (device, error_str))
-        if device_mapping_dict is None: return output_str
-        else: return dict(output_str)
+        output, error = process("/usr/bin/python3 %s %s %s %s %s" %
+                                (function_path, port, device_mapping_dict, setting_dict, custom_arg), out_error=True)
+        LogWrite("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output), level=3)
+        debugger("snake - start |output by processing %s '%s'" % (device, output))
+        if error != "":
+            LogWrite("Error by executing %s:\n'%s'" % (device, error), level=2)
+            debugger("snake - start |error by executing %s '%s'" % (device, error))
+        if device_mapping_dict is None: return output
+        else: return dict(output)
 
     def lock(self, device):
         try_count, wait_time, max_try_count = 1, 10, 31
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
-            if share(action="get", name="lock_%s" % device, outtypK="int") == 1: time_sleep(wait_time)
+            if share(action="get", name="lock_%s" % device, outtyp="int") == 1: time_sleep(wait_time)
             else: break
             if try_count > max_try_count:
                 debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)

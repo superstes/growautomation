@@ -18,18 +18,17 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 # check module
 
-from ga.core.config import Config
-from ga.core.ant import LogWrite
-from ga.core.ant import time_subtract
-from ga.core.owl import debugger
+from .config import Config
+from .ant import LogWrite
+from .ant import time_subtract
+from .smallant import debugger
+from .smallant import process
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
-from subprocess import Popen as subprocess_popen
-from subprocess import PIPE as subprocess_pipe
 from time import sleep
 from sys import argv as sys_argv
 import signal
@@ -40,8 +39,7 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 class ActionLoader:
     def __init__(self, device_type, device_sector_dict):
-        self.device_sector_dict = device_sector_dict
-        self.type = device_type
+        self.device_sector_dict, self.type = device_sector_dict, device_type
         self.device_setting_dict = None
 
     def __repr__(self):
@@ -58,18 +56,15 @@ class ActionLoader:
 
     def action_start(self, function, boomerang=False):
         command = "/usr/bin/python3 %s/action/%s %s" % (Config("path_root").get(), function, self.device_setting_dict)
-
-        def start(DoIt):
-            return subprocess_popen([DoIt], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
         if boomerang is True:
             time_wait = Config("time_wait", "AgentConfigDeviceTypeSetting", CustomAnd=self.type).get()
-            output1, error1 = start(command + " start")
+            output1, error1 = process(command + " start", out_error=True)
             sleep(time_wait)
-            output2, error2 = start(command + " stop")
+            output2, error2 = process(command + " stop", out_error=True)
             LogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2)
             LogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3)
         else:
-            output, error = start(command)
+            output, error = process(command, out_error=True)
             LogWrite("Function %s called.\nError:\n%s" % (function, error), level=2)
             LogWrite("Output:\n%s" % output, level=3)
 
@@ -145,10 +140,10 @@ class ThresholdCheck:
                 SectorCheck(sector_dict)
 
     def input_device(self):
-        # if input = device
+        print("no")
 
     def input_devicetype(self):
-        # if input = type
+        print("no")
 
     def get_device_dict(self):
         device_list = Config(filter="class = '%s'" % self.sensor, table="object").get()

@@ -26,10 +26,7 @@ from smallconfig import Config
 from smallant import debugger
 from smallant import process
 
-from os import system as os_system
 from os import path as os_path
-from subprocess import Popen as subprocess_popen
-from subprocess import PIPE as subprocess_pipe
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from time import sleep as time_sleep
@@ -45,20 +42,14 @@ class DoSql:
 
     def start(self):
         def running():
-            output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
-                                             shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-            outputstr = output.decode("ascii")
+            outputstr = process("systemctl status mysql.service | grep 'Active:'")
             return False if outputstr.find("Active:") == -1 else True if outputstr.find("active (running)") != -1 else False
         whilecount, creds_ok = 0, False
         while True:
             if running() is False:
                 debugger("owl - start |mysql not running")
-                if whilecount == 0:
-                    LogWrite("Trying to start mysql service.")
-                    os_system("systemctl start mysql.service %s")
-                else:
-                    LogWrite("Not able to start mysql service.")
-                    raise SystemExit("Not able to start mysql service.")
+                if process("systemctl start mysql.service").find("Not able to start") != -1:
+                    return False
             else: break
             time_sleep(5)
             whilecount += 1
@@ -105,21 +96,21 @@ class DoSql:
 
     def connect(self, command=None, connect_debug=True):
         import mysql.connector
-        if self.user is not None:
-            if self.user == "root":
-                connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
-            else:
-                if Config("setuptype").get() == "agent":
-                    connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
-                                                         user=self.user, passwd=self.pwd)
-                else:
-                    connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
-        elif Config("setuptype").get() == "agent":
-            if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
-            else: connection = mysql.connector.connect(unix_socket=self.unixsock(), host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
-                                                       user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
-        else: connection = mysql.connector.connect(unix_socket=self.unixsock(), user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
         try:
+            if self.user is not None:
+                if self.user == "root":
+                    connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
+                else:
+                    if Config("setuptype").get() == "agent":
+                        connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+                                                             user=self.user, passwd=self.pwd)
+                    else:
+                        connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
+            elif Config("setuptype").get() == "agent":
+                if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
+                else: connection = mysql.connector.connect(unix_socket=self.unixsock(), host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+                                                           user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
+            else: connection = mysql.connector.connect(unix_socket=self.unixsock(), user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
             if connect_debug: debugger("owl - connect |command '%s' '%s'" % (type(command), command))
@@ -144,21 +135,24 @@ class DoSql:
             connection.close()
             if connect_debug: debugger("owl - connect |output '%s' '%s'" % (type(data), data))
             return data
-        except mysql.connector.Error as error:
+        except (mysql.connector.Error, mysql.connector.errors.InterfaceError) as error:
             if connect_debug: debugger("owl - connect |error '%s'" % error)
-            connection.rollback()
-            LogWrite("Mysql connection failed.\nCommand: %s\nError: %s" % (command, error))
-            if self.fallback is True: LogWrite("Server: %s, user %s" % ("127.0.0.1", Config("mysql_localuser").get()))
-            else: LogWrite("Server: %s, port %s, user %s" % (Config("mysql.server_ip").get(), Config("mysql.server_port").get(), Config("mysql_user").get()))
+            try:
+                connection.rollback()
+            except UnboundLocalError: pass
+            LogWrite("Mysql connection failed.\nUser: %s\nCommand: %s\nError: %s" % (self.user, command, error))
             return False
 
     def unixsock(self):
-        sql_sock = process(command="cat /etc/mysql/mariadb.conf.d/50-server.cnf | grep 'socket                  ='").split("=")[1].strip()
-        if os_path.exists(sql_sock) is False:
-            if process(command="systemctl status mysql.service | grep 'Active:'").find("Active: inactive") != -1:
-                os_system("systemctl start mysql.service")
-                time_sleep(5)
-        return sql_sock
+        try:
+            sql_sock = process(command="cat /etc/mysql/mariadb.conf.d/50-server.cnf | grep 'socket                  ='").split("=")[1].strip()
+            if os_path.exists(sql_sock) is False:
+                if process(command="systemctl status mysql.service | grep 'Active:'").find("Active: inactive") != -1:
+                    if process("systemctl start mysql.service").find("Not able to start") != -1:
+                        return False
+                    time_sleep(5)
+            return sql_sock
+        except IndexError: return False
 
     def find(self, searchfor):
         debugger("owl - find |input '%s' '%s'" % (type(searchfor), searchfor))
