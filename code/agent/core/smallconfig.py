@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -26,7 +26,7 @@ from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 
 
-class Config(object):
+class Config:
     def __init__(self, request, file="core.conf"):
         global tmp_dict
         self.file, self.request, tmp_dict = file, request, {}
@@ -38,17 +38,20 @@ class Config(object):
         return self.parse_file()
 
     def error(self, parser_type):
-        from ga.core.smallant import LogWrite
-        LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
-        LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
-        raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.request))
+        from smallant import LogWrite
+        LogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
+        LogWrite("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request))
+        print("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request))
+        return False
 
     def parse_file_find(self):
-        tmpfile = open(self.file, 'r')
-        for xline in tmpfile.readlines():
-            if xline.find(self.request) != -1:
-                return xline
-        return False
+        try:
+            tmpfile = open(self.file, 'r')
+            for xline in tmpfile.readlines():
+                if xline.find(self.request) != -1:
+                    return xline
+            return False
+        except FileNotFoundError: return False
 
     @lru_cache()
     def parse_file(self):
