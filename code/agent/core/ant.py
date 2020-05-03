@@ -37,7 +37,7 @@ from inspect import currentframe as inspect_currentframe
 from getpass import getpass
 # from functools import lru_cache
 
-SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+SmallLogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 # Just vars
@@ -57,7 +57,7 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 class ShellInput:
     def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=20, min_value=2, neg=False, lower=True):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
-        self.posstype, self.max_value, self.min_value, self.neg,  = posstype, max_value, min_value, neg
+        self.posstype, self.max_value, self.min_value, self.neg, self.lower = posstype, max_value, min_value, neg, lower
         self.style_type, self.output = ShellOutput(style=style).colors(), ""
         self.lower, self.default_str, self.poss_str = "", "", ""
 
