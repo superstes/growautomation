@@ -51,16 +51,18 @@ try:
     from ..code.agent.core.owl import DoSql
     from ..code.agent.core.ant import ShellInput
     from ..code.agent.core.ant import ShellOutput
+    from ..code.agent.core.smallant import share
 except ImportError:
     from owl import DoSql
     from ant import ShellInput
     from ant import ShellOutput
+    from smallant import share
 
 try:
     if sys_argv[1] == "debug":
-        debug = True
-except IndexError:
-    debug = False
+        share(action="init")
+        share(action="set", name="debug", data=1)
+except IndexError: pass
 
 ########################################################################################################################
 
@@ -69,9 +71,9 @@ def setup_input(prompt, default="", poss="", intype="", style="", posstype="", m
     if petty is True and setup_advanced is False:
         print("\n%s\nConfig: %s\n" % (prompt, default))
         return default
-    ShellInput(prompt, default=default, poss=poss, intype=intype, style=style, posstype=posstype, 
-               max_value=max_value, min_value=min_value, neg=neg, lower=lower)
-    
+    return ShellInput(prompt, default=default, poss=poss, intype=intype, style=style, posstype=posstype,
+                      max_value=max_value, min_value=min_value, neg=neg, lower=lower).get()
+
 
 def setup_log_write(output, special=False):
     if os_path.exists(ga_config["setup_log_path"]) is False:
