@@ -33,31 +33,34 @@ from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 
-os_system("/usr/bin/python3.8 -m pip install mysql-connector-python colorama")
-
-from colorama import Fore as colorama_fore
-
-from .owl import DoSql
-from .ant import ShellInput
-from .ant import ShellOutput
-
 # basic vars
 ga_config = {}
 ga_config_server = {}
 ga_config["version"] = "0.4"
+ga_config["python_min_version"] = "3.8"
 ga_config["setup_version_file"] = "/etc/growautomation.version"
 ga_config["setup_log_path"] = "/var/log/growautomation/"
 ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
 ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
+
+os_system("/usr/bin/python%s -m pip install wheel mysql-connector-python colorama" % ga_config["python_min_version"])
+
+from colorama import Fore as colorama_fore
+
+try:
+    from ..code.agent.core.owl import DoSql
+    from ..code.agent.core.ant import ShellInput
+    from ..code.agent.core.ant import ShellOutput
+except ImportError:
+    from owl import DoSql
+    from ant import ShellInput
+    from ant import ShellOutput
 
 try:
     if sys_argv[1] == "debug":
         debug = True
 except IndexError:
     debug = False
-
-# prechecks
-ShellOutput(font="head", output="Installing setup dependencies", symbol="#")
 
 ########################################################################################################################
 
@@ -200,7 +203,7 @@ setup_log_write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
 # check for root privileges
 if os_getuid() != 0:
-    setup_exit("This script needs to be run with root privileges", "Script not started as root")
+    setup_exit(shell="This script needs to be run with root privileges", log="Script not started as root")
 
 else:
     ShellOutput(font="head", output="Starting Growautomation installation script\n"
@@ -214,6 +217,13 @@ else:
         setup_exit("Script cancelled by user\nYou can also install this software manually through the setup "
                    "manual.\nIt can be found at: https://git.growautomation.at/tree/master/manual",
                    "Setupwarning not accepted by user")
+
+if os_path.exists("/usr/bin/python%s" % ga_config["python_min_version"]):
+    ga_config["python_path"] = "/usr/bin/python%s" % ga_config["python_min_version"]
+else:
+    ga_config["python_path"] = setup_input(prompt="Please provide the path to your python%s binary!\n"
+                                                  "Info: could not be found under the default path '/usr/bin/'" % ga_config["python_min_version"],
+                                           default="/usr/local/bin/python%s" % ga_config["python_min_version"], intype="free")
 
 ShellOutput(font="head", output="Checking if growautomation is already installed on the system", symbol="#")
 
@@ -230,7 +240,7 @@ if ga_config["setup_old_root"] is True:
     ShellOutput(font="text", output="Growautomation default root path exists", style="info")
 else:
     ShellOutput(font="text", output="No growautomation default root path exists", style="info")
-if DoSql(command="SHOW DATABASES;").find("ga") != -1:
+if DoSql(command="SHOW DATABASES;", user="root").find("ga") != -1:
     ga_config["setup_old_db"] = True
     ShellOutput(font="text", output="Growautomation database exists", style="info")
 else:
@@ -609,7 +619,7 @@ def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
 
 
 def ga_replaceline(file, replace, insert):
-    os_system("sed -i 's/%s/%s/p' %s %s" % (replace, insert, file, ga_config["setup_log_redirect"]))
+    os_system("sed -i 's^%s^%s^p' %s %s" % (replace, insert, file, ga_config["setup_log_redirect"]))
 
 
 def ga_openssl_setup():
@@ -709,7 +719,7 @@ def ga_sql_agent():
     else:
         DoSql(command=["CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s;"
                        % (ga_config["sql_server_ip"], ga_config["sql_server_repl_user"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"],
-                       ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root").start()
+                          ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root").start()
 
     ShellOutput(font="head", output="Linking mysql certificate", symbol="-")
     os_system("ln -s %s /etc/mysql/ssl/cacert.pem && ln -s %s /etc/mysql/ssl/server-cert.pem && ln -s %s /etc/mysql/ssl/server-key.pem %s"
@@ -778,6 +788,7 @@ def setup_apt():
     os_system("apt-get update" + ga_config["setup_log_redirect"])
     if ga_config["setup_linuxupgrade"] is True:
         os_system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
+        os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
 
     os_system("apt-get -y install mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
 
@@ -795,9 +806,11 @@ def setup_apt():
 
 def setup_pip():
     if ga_config["setup_ca"] is True:
-        os_system("git core --global http.sslCAInfo %s && /usr/bin/python3.8 -m pip core set global.cert %s %s" % (ga_config["setup_ca_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
+        os_system("%s -m pip config set global.cert %s %s" % (ga_config["python_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
+        os_system("git config --global http.sslVerify true && git config --global http.sslCAInfo %s %s" % (ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
     ShellOutput(font="head", output="Installing python packages", symbol="-")
-    os_system("/usr/bin/python3.8 -m pip install systemd mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s" % ga_config["setup_log_redirect"])
+    os_system("%s -m pip install systemd mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s"
+              % (ga_config["python_path"], ga_config["setup_log_redirect"]))
 
 
 setup_apt()
@@ -834,7 +847,7 @@ def ga_infra_oldversion_backup():
     if os_path.exists(oldbackup + "/ga.dbdump.sql") is False or \
             os_path.exists(oldbackup + "/growautomation/") is False:
         ShellOutput(font="text", output="Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
-                                  "to get to Shell -> 'fg' to get back)\nBackuppath: %s" % oldbackup, style="warn")
+                    "to get to Shell -> 'fg' to get back)\nBackuppath: %s" % oldbackup, style="warn")
         ga_config["setup_old_backup_failed_yousure"] = setup_input(prompt="Please verify that you want to continue the setup", default=False)
     else:
         ga_config["setup_old_backup_failed_yousure"] = True
@@ -864,7 +877,7 @@ def setup_infra():
         ga_infra_oldversion_cleanconfig()
 
     setup_config_file("w", "version=%s\npath_root=%s\nhostname=%s\nsetuptype=%s\n"
-                         % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setuptype"]), ga_config["setup_version_file"])
+                      % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setuptype"]), ga_config["setup_version_file"])
     os_system("chmod 664 %s && chown growautomation:growautomation %s %s" % (ga_config["setup_version_file"], ga_config["setup_version_file"], ga_config["setup_log_redirect"]))
     ga_foldercreate(ga_config["path_root"])
     ga_foldercreate(ga_config["path_log"])
@@ -875,9 +888,8 @@ def setup_infra():
 def setup_infra_code():
     ShellOutput(font="head", output="Setting up growautomation code", symbol="#")
     os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
-    if os_path.exists("/tmp/controller") is True:
-        os_system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
-
+    # if os_path.exists("/tmp/controller") is True:
+    #     os_system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
     # os_system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
 
     if ga_config["setup_type_as"] is True:
@@ -900,12 +912,11 @@ def setup_infra_code():
 
     setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
-    service_path, service_py_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"], "%s/service/service.py" % ga_config["path_root"]
-    earlybird_path = "%s/service/earlybird.py" % ga_config["path_root"]
+    service_system_path, service_py_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"], "%s/service/" % ga_config["path_root"]
     os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
-    ga_replaceline(service_path, "ExecStart=/usr/bin/python3.8 /etc/growautomation/service/service.py", "ExecStart=\/usr\/bin\/python3.8 %s" % service_py_path.replace("/", "\/"))
-    ga_replaceline(service_path, "ExecStartPre=/usr/bin/python3.8 /etc/growautomation/service/earlybird.py", "ExecStartPre=\/usr\/bin\/python3.8 %s" % earlybird_path.replace("/", "\/"))
-    os_system("systemctl link %s %s" % (service_path, ga_config["setup_log_redirect"]))
+    ga_replaceline(service_system_path, "ExecStart=%s /etc/growautomation/service/service.py", "ExecStart=%s %s/service.py" % (ga_config["python_path"], service_py_path))
+    ga_replaceline(service_system_path, "ExecStartPre=%s /etc/growautomation/service/earlybird.py", "ExecStartPre=%s %s/earlybird.py" % (ga_config["python_path"], service_py_path))
+    os_system("systemctl link %s %s" % (service_system_path, ga_config["setup_log_redirect"]))
     os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
     os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
     ShellOutput(font="text", output="Linked and enabled growautomation service", style="info")
