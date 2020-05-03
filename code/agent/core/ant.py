@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -20,9 +20,8 @@
 
 # ga_version 0.4
 
-from .config import Config
-from .smallant import LogWrite as SmallLogWrite
-from .smallant import debugger
+from smallconfig import Config
+from smallant import LogWrite as SmallLogWrite
 
 from datetime import datetime
 from datetime import timedelta
@@ -42,10 +41,9 @@ SmallLogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), le
 
 
 # Just vars
-log_redirect = " 2>&1 | tee -a %s" % Config("path_log").get()
+# log_redirect = " 2>&1 | tee -a %s" % Config("path_log").get()
 
 # Time formats
-
 
 def now(time_format):
     return datetime.now().strftime(time_format)
@@ -126,10 +124,10 @@ class ShellInput:
             elif self.intype == "pass":
                 getpass(prompt="\n%s\n > " % self.prompt)
             elif self.intype == "passgen":
-                user_input = 0
-                while user_input < 8 or user_input > 99:
-                    if (user_input < 8 or user_input > 99) and whilecount > 0:
-                        ShellOutput("Input error. Value should be between 8 and 99.\n", style="warn", font="text")
+                user_input, maxnr, minnr = 0, int(self.max_value), int(self.min_value)
+                while user_input < minnr or user_input > maxnr:
+                    if (user_input < minnr or user_input > maxnr) and whilecount > 0:
+                        ShellOutput("Input error. Value should be between %s and %s.\n" % (minnr, maxnr), style="warn", font="text")
                     whilecount += 1
                     user_input = int(input("\n%s%s%s%s%s\n > " % (self.prompt, self.poss_str, self.poss, self.default_str,
                                                                   self.default)) or "%s" % self.default)
@@ -163,10 +161,7 @@ class ShellInput:
 # Shell output
 class ShellOutput(object):
     def __init__(self, output=None, font="text", style="", symbol="#"):
-        self.output = output
-        self.font = font
-        self.style = style
-        self.symbol = symbol
+        self.output, self.font,  self.style, self.symbol = output, font, style, symbol
         self.start()
 
     def start(self):
@@ -197,8 +192,7 @@ class ShellOutput(object):
 class LogWrite(object):
     def __init__(self, output, typ="core", level=1):
         self.typ = typ.lower()
-        self.output = output
-        self.log_level = level
+        self.output, self.log_level = output, level
 
     def __repr__(self):
         return False if self.log_level > Config("log_level").get() else self.write()
@@ -219,13 +213,9 @@ class LogWrite(object):
 # File operations
 class Line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
-        self.file = file
+        self.file, self.backup, self.searchfor, self.action, self.replacewith = file, backup, search, action, relace
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
         self.backupdir = "%s/%s" % (Config("path_backup").get(), date02)
-        self.action = action
-        self.searchfor = search
-        self.replacewith = replace
-        self.backup = backup
 
     def __repr__(self):
         self.find() if self.action == "find" else self.delete() if self.action == "delete" else self.replace() if self.action == "replace" else self.add() if self.action == "add" else None

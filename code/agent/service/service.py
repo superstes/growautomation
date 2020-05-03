@@ -20,10 +20,10 @@
 
 # ga_version 0.4
 
+from threader import Loop
 from ..core.config import Config
 from ..core.ant import LogWrite
 from ..core.ant import ShellOutput
-from .threader import Loop
 from ..core.smallant import debugger
 from ..core.smallant import share
 

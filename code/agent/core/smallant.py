@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -20,7 +20,7 @@
 
 # ga_version 0.4
 
-from .smallconfig import Config
+from smallconfig import Config
 
 from os import system as os_system
 from os import path as os_path

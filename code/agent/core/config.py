@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -20,10 +20,10 @@
 
 # ga_version 0.4
 
-from .owl import DoSql
-from .smallant import LogWrite
-from .smallant import debugger
-from .smallconfig import Config as FileConfig
+from owl import DoSql
+from smallant import LogWrite
+from smallant import debugger
+from smallconfig import Config as FileConfig
 
 from functools import lru_cache
 from inspect import getfile as inspect_getfile

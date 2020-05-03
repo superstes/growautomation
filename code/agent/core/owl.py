@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -21,10 +21,10 @@
 # ga_version 0.4
 # sql module
 
-from .smallant import LogWrite
-from .smallconfig import Config
-from .smallant import debugger
-from .smallant import process
+from smallant import LogWrite
+from smallconfig import Config
+from smallant import debugger
+from smallant import process
 
 from os import system as os_system
 from os import path as os_path
@@ -39,7 +39,7 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False, user=None, pwd=None):
+    def __init__(self, command, write=False, user=None, pwd=None, local=False):
         self.command, self.write, self.user, self.pwd = command, write, user, pwd
         self.fallback = False
 
@@ -118,7 +118,7 @@ class DoSql:
                     connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
         elif Config("setuptype").get() == "agent":
             if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
-            else: connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+            else: connection = mysql.connector.connect(unix_socket=self.unixsock(), host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
                                                        user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
         else: connection = mysql.connector.connect(unix_socket=self.unixsock(), user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
         try:
