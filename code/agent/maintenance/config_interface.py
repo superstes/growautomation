@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -67,6 +67,15 @@ class Create:
 
         self.create_custom_setting()
         self.create_group()
+        self.write_config()
+
+    def create_core(self, setup_setting_dict):
+        core_object_dict = {}
+        self.setting_dict[setup_setting_dict["hostname"]] = setup_setting_dict
+        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
+        self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
+        self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
+        self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {setup_setting_dict["hostname"]: "NULL"}
         self.write_config()
 
     def create_devicetype(self):
@@ -379,17 +388,39 @@ class Delete:
         return False
 
 
+class Setup:
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        setup_dict = {}
+        setup_dict["hostname"] = ShellInput(prompt="Provide the name of this growautomation host.", default="gacon01")
+        setup_dict["setuptype"] = ShellInput(prompt="Setup as growautomation standalone, agent or server?\n"
+                                                    "Agent and Server setup is disabled for now. It will become available after further testing!",
+                                             poss="standalone", default="standalone")  # ["agent", "standalone", "server"]
+        setup_dict["path_root"] = ShellInput(prompt="Want to choose a custom install path?", default="/etc/growautomation")
+        setup_dict["log_level"] = ShellInput(prompt="Want to change the log level?", default="1", poss=["0", "1", "2", "3", "4", "5"])
+        setup_dict["backup"] = ShellInput("Want to enable backup?", default=True)
+        setup_dict["path_backup"] = ShellInput(prompt="Want to choose a custom backup path?", default="/mnt/growautomation/backup/")
+        setup_dict["backup"] = ShellInput(prompt="Want to enable backup?", default=True)
+        setup_dict["path_log"] = ShellInput(prompt="Want to choose a custom log path?", default="/var/log/growautomation")
+        Create().create_core(setup_dict)
+        ShellOutput("This setup is currently not complete. 2020-05-02")
+        return False
+
+
 def choose():
     ShellOutput("Growautomation - config change module", font="head", symbol="#")
     count = 0
     while True:
         count += 1
         if count > 1: ShellOutput(font="line", symbol="#")
-        mode = ShellInput("Choose either to add, edit or delete objects.\nType stop if you want to exit.", poss=["add", "edit", "delete", "stop"], default="add", intype="free").get()
+        mode = ShellInput("Choose either to add, edit or delete objects.\nType exit if you want to exit.", poss=["add", "edit", "delete", "exit", "setup"], default="add", intype="free").get()
         if mode == "add": start = Create()
         elif mode == "edit": start = Edit()
         elif mode == "delete": start = Delete()
-        elif mode == "stop": exit()
+        elif mode == "setup": start = Setup()
+        elif mode == "exit": exit()
         else: raise SystemExit("Encountered unknown error while choosing config mode.")
         if start is False: continue
 
