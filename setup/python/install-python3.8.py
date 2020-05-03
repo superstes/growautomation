@@ -38,7 +38,7 @@ def process(command):
     return output_str
 
 
-rpi_version = process("cat /proc/device-tree/model")
+rpi_version = process("cat /proc/device-tree/model").replace(" ","")
 linux_version = process("lsb_release -a | grep Release: | sed 's/[^0-9]//g'")
 
 
@@ -68,7 +68,7 @@ def pre_compiled(script):
     print("#" * (int(shellwidth) - 1))
 
 
-if rpi_version == "Raspberry Pi 3 Model B Rev 1.2":
+if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
     if linux_version == "10":
         pre_compiled("pre-compiled_python3.8_pi3brev1.2-buster.tar.gz")
     else: compile()
