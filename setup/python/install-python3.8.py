@@ -31,10 +31,14 @@ except (IndexError, NameError):
     repo_path = "/tmp/controller/setup/python"
 shellhight, shellwidth = os_popen('stty size', 'r').read().split()
 
+if input("Have you already installed a python version >= 3.8? (Type 'yes' or 'no')\n  > ") == "yes":
+    raise SystemExit
+
 
 def process(command):
     output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
     output_str, error_str = output.decode("ascii").strip(), error.decode("ascii").strip()
+    if error_str != "": print(error_str)
     return output_str
 
 
@@ -62,8 +66,8 @@ def compile():
 def pre_compiled(script):
     print("#" * (int(shellwidth) - 1))
     print("Installing pre-compiled package.\n")
-    process("tar -xvzf %s/%s usr-local-bin -C /usr/local/bin --strip-components 1" % (repo_path, script))
-    process("tar -xvzf %s/%s usr-local-lib -C /usr/local/lib --strip-components 1" % (repo_path, script))
+    process("sudo tar -xvzf %s/%s -C /usr/local/bin usr-local-bin --strip-components 1" % (repo_path, script))
+    process("sudo tar -xvzf %s/%s -C /usr/local/lib usr-local-lib --strip-components 1" % (repo_path, script))
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
