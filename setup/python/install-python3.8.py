@@ -62,7 +62,8 @@ def compile():
 def pre_compiled(script):
     print("#" * (int(shellwidth) - 1))
     print("Installing pre-compiled package.\n")
-    process("tar -xvzf %s/%s -C /usr/local/bin --strip-components 1" % (repo_path, script))
+    process("tar -xvzf %s/%s usr-local-bin -C /usr/local/bin --strip-components 1" % (repo_path, script))
+    process("tar -xvzf %s/%s usr-local-lib -C /usr/local/lib --strip-components 1" % (repo_path, script))
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")

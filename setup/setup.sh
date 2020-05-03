@@ -22,7 +22,8 @@
 
 if [[ ! -d controller/setup ]]
 then
-  sudo apt-get install git
+  sudo apt-get update
+  sudo apt-get install git -y
   cd /tmp
   git clone https://github.com/growautomation-at/controller.git
 fi
