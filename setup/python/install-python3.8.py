@@ -43,6 +43,7 @@ linux_version = process("lsb_release -a | grep Release: | sed 's/[^0-9]//g'")
 
 
 def default_python():
+    process("ln -s /usr/local/bin/python3.8 /usr/bin/python3.8")
     process("echo 'alias python=/usr/local/bin/python3.8' >> ~/.bashrc")
     process("source ~/.bashrc")
 
@@ -61,7 +62,7 @@ def compile():
 def pre_compiled(script):
     print("#" * (int(shellwidth) - 1))
     print("Installing pre-compiled package.\n")
-    process("tar -xvzf %s/%s /usr/local/bin/" % (repo_path, script))
+    process("tar -xvzf %s/%s -C /usr/local/bin --strip-components 1" % (repo_path, script))
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
