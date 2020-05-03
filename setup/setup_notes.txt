@@ -22,7 +22,8 @@ May have changed since then
     mkdir /etc/growautomation
     cp -r /tmp/controller/code/agent/* /etc/growautomation
     chown -R growautomation:growautomation /etc/growautomation
-    chmod -R 755 /etc/growautomation
+    find /etc/growautomation -type f -iname '*.py' -exec chmod 754 {} ;
+    find /etc/growautomation -type f -iname '*.sh' -exec chmod 754 {} ;
   - configure database
     - mysql_secure_installation -> set pwd and apply all security options
     - add database 'ga'
