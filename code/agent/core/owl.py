@@ -39,31 +39,29 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False, user=None, pwd=None, local=False):
+    def __init__(self, command, write=False, user=None, pwd=None):
         self.command, self.write, self.user, self.pwd = command, write, user, pwd
         self.fallback = False
 
     def start(self):
-        creds_ok = False
-        if Config("setuptype").get() != "agent":
-            def running():
-                output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
-                                                 shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-                outputstr = output.decode("ascii")
-                return False if outputstr.find("Active:") == -1 else True if outputstr.find("active (running)") != -1 else False
-            whilecount = 0
-            while True:
-                if running() is False:
-                    debugger("owl - start |mysql not running")
-                    if whilecount == 0:
-                        LogWrite("Trying to start mysql service.")
-                        os_system("systemctl start mysql.service %s")
-                    else:
-                        LogWrite("Not able to start mysql service.")
-                        raise SystemExit("Not able to start mysql service.")
-                else: break
-                time_sleep(5)
-                whilecount += 1
+        def running():
+            output, error = subprocess_popen(["systemctl status mysql.service | grep 'Active:'"],
+                                             shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+            outputstr = output.decode("ascii")
+            return False if outputstr.find("Active:") == -1 else True if outputstr.find("active (running)") != -1 else False
+        whilecount, creds_ok = 0, False
+        while True:
+            if running() is False:
+                debugger("owl - start |mysql not running")
+                if whilecount == 0:
+                    LogWrite("Trying to start mysql service.")
+                    os_system("systemctl start mysql.service %s")
+                else:
+                    LogWrite("Not able to start mysql service.")
+                    raise SystemExit("Not able to start mysql service.")
+            else: break
+            time_sleep(5)
+            whilecount += 1
         whilecount = 0
         while creds_ok is False:
             if whilecount == 1 and Config("setuptype").get() == "agent":
@@ -168,9 +166,9 @@ class DoSql:
             data = str(self.execute())
             output = data.find(searchfor)
         elif type(self.command) == list:
-            sqllist = self.execute()
-            output = []
-            for x in sqllist: output.append(x.find(searchfor))
+            output, sqllist = -1, self.execute()
+            for x in sqllist:
+                if x.find(searchfor) != -1: output +=1
         debugger("owl - find |output '%s' '%s'" % (type(output), output))
         return output
 
