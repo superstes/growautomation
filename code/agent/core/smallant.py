@@ -42,10 +42,7 @@ date02, date03 = now("%Y"), now("%m")
 # Logs
 class LogWrite(object):
     def __init__(self, output, scripttype="core", level=1):
-        self.scripttype = scripttype.lower()
-        self.output = output
-        self.log_level = level
-        self.log_path = "../log/"
+        self.scripttype, self.output, self.log_level, self.log_path = scripttype.lower(), output, level, "../log/"
 
     def __repr__(self):
         try:
@@ -77,20 +74,22 @@ def share(name=None, action="get", data="", outtyp=None):
         else: memory_list.append(data)
         ShareableList(memory_list, name="ga_%s" % name)
     elif action == "get":
-        memory_list = ShareableList(name="ga_%s" % name)
-        if outtyp == "dict":
-            return_data, last_key = {}, ""
-            for x in memory_list:
-                if x.find("key_'") != -1:
-                    last_key = x.replace("key_'", "")[:-1]
-                    return_data[last_key] = 0
-                elif x.find("val_'") != -1:
-                    return_data[last_key] = x.replace("val_'", "")[:-1]
-                else: continue
-        elif outtyp == "list": return_data = list(memory_list)
-        elif outtyp == "int": return_data = int(memory_list)
-        else: return_data = str(memory_list)
-        return return_data
+        try:
+            memory_list = ShareableList(name="ga_%s" % name)
+            if outtyp == "dict":
+                return_data, last_key = {}, ""
+                for x in memory_list:
+                    if x.find("key_'") != -1:
+                        last_key = x.replace("key_'", "")[:-1]
+                        return_data[last_key] = 0
+                    elif x.find("val_'") != -1:
+                        return_data[last_key] = x.replace("val_'", "")[:-1]
+                    else: continue
+            elif outtyp == "list": return_data = list(memory_list)
+            elif outtyp == "int": return_data = int(memory_list)
+            else: return_data = str(memory_list)
+            return return_data
+        except FileNotFoundError: return False
     elif action == "cleanup":
         manager.shutdown()
     else: return False
