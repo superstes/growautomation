@@ -22,13 +22,6 @@
 
 ########################################################################################################################
 
-from .owl import DoSql
-from .ant import ShellInput
-from .ant import ShellOutput
-#from ..code.agent.core.owl import DoSql
-#from ..code.agent.core.ant import ShellInput
-#from ..code.agent.core.ant import ShellOutput
-
 from os import path as os_path
 from os import system as os_system
 from os import getuid as os_getuid
@@ -39,6 +32,14 @@ from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
+
+os_system("/usr/bin/python3.8 -m pip install mysql-connector-python colorama")
+
+from colorama import Fore as colorama_fore
+
+from .owl import DoSql
+from .ant import ShellInput
+from .ant import ShellOutput
 
 # basic vars
 ga_config = {}
@@ -54,6 +55,9 @@ try:
         debug = True
 except IndexError:
     debug = False
+
+# prechecks
+ShellOutput(font="head", output="Installing setup dependencies", symbol="#")
 
 ########################################################################################################################
 
@@ -193,14 +197,6 @@ def setup_exit(shell, log):
 
 
 setup_log_write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-
-# prechecks
-ShellOutput(font="head", output="Installing setup dependencies", symbol="#")
-
-os_system("/usr/bin/python3.8 -m pip install mysql-connector-python colorama %s" % ga_config["setup_log_redirect"])
-import mysql.connector
-from colorama import Fore as colorama_fore
-
 
 # check for root privileges
 if os_getuid() != 0:
