@@ -230,7 +230,7 @@ class Line(object):
 
     def replace(self):
         os_system("sed -i%s 's/%s/%s/p' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.replacewith, self.file, self.file, self.backupfile, self.backupdir)) if self.backup == "yes" \
-            else os_system("sed -i 's/%s/%s/p' %s" % (self.searchfor, self.replacewith, self.file))
+            else os_system("sed -i 's/%s/%s/g' %s" % (self.searchfor, self.replacewith, self.file))
 
     def add(self):
         # insert after linenr / search = linenr
