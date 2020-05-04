@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.8
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -22,7 +22,7 @@
 
 from ..core.owl import DoSql
 from ..core.smallant import debugger
-from ..core.smallant import share
+from ..core.smallant import VarHandler
 from ..core.config import Config
 from ..core.smallant import LogWrite
 
@@ -39,12 +39,12 @@ class Startup:
     def __init__(self):
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        share(action="init")
-        self.start()
+#        self.start()
+#        not finished yet
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": share(action="set", name="debug", data=1)
+            if sys_argv[1] == "debug": VarHandler(name="debug", data=1).set()
         except (IndexError, NameError): pass
         systemd_journal("Starting service initialization.")
         # recreate log/backup links
@@ -58,7 +58,7 @@ class Startup:
 
     def finish(self):
         try:
-            if sys_argv[1] == "debug": share(action="set", name="debug", data=0)
+            if sys_argv[1] == "debug": VarHandler(name="debug").clean()
         except (IndexError, NameError): pass
 
     def config(self):

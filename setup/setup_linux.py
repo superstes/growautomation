@@ -32,6 +32,7 @@ from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
+import signal
 
 # basic vars
 ga_config = {}
@@ -51,18 +52,29 @@ try:
     from ..code.agent.core.owl import DoSql
     from ..code.agent.core.ant import ShellInput
     from ..code.agent.core.ant import ShellOutput
-    from ..code.agent.core.smallant import share
+    from ..code.agent.core.smallant import VarHandler
 except ImportError:
     from owl import DoSql
     from ant import ShellInput
     from ant import ShellOutput
-    from smallant import share
+    from smallant import VarHandler
 
 try:
     if sys_argv[1] == "debug":
-        share(action="init")
-        share(action="set", name="debug", data=1)
-except IndexError: pass
+        ShellOutput("Starting setup in debug mode.")
+        VarHandler(name="debug", data=1).set()
+        debug = True
+except IndexError:
+    debug = False
+
+
+def setup_stop(signum=None, stack=None):
+    if debug: VarHandler().stop()
+    raise SystemExit("Received signal %s\nExiting setup!\n\n" % signum)
+
+
+signal.signal(signal.SIGTERM, setup_stop())
+signal.signal(signal.SIGINT, setup_stop())
 
 ########################################################################################################################
 
@@ -621,7 +633,7 @@ def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
 
 
 def ga_replaceline(file, replace, insert):
-    os_system("sed -i 's^%s^%s^p' %s %s" % (replace, insert, file, ga_config["setup_log_redirect"]))
+    os_system("sed -i 's^%s^%s^g' %s %s" % (replace, insert, file, ga_config["setup_log_redirect"]))
 
 
 def ga_openssl_setup():

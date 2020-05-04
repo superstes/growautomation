@@ -25,7 +25,7 @@ from ..core.config import Config
 from ..core.ant import LogWrite
 from ..core.ant import ShellOutput
 from ..core.smallant import debugger
-from ..core.smallant import share
+from ..core.smallant import VarHandler
 from ..core.smallant import process
 
 from systemd import journal as systemd_journal
@@ -46,7 +46,6 @@ class Service:
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        share(action="init")
         self.start()
 
     def get_timer_dict(self):
@@ -78,7 +77,7 @@ class Service:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": share(action="set", name="debug", data=1)
+            if sys_argv[1] == "debug": VarHandler(name="debug", data=1).set()
         except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self.get_timer_dict()
@@ -130,7 +129,7 @@ class Service:
         if signum is not None:
             debugger("service - stop |got signal '%s'" % signum)
             LogWrite("Service received signal '%s'" % signum, level=2)
-        share(action="cleanup")
+        VarHandler().stop()
         Threader.stop()
         time_sleep(10)
         self.init_exit = True
