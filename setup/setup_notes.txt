@@ -10,6 +10,15 @@ May have changed since then
 - install software packages
   - install python 3.8 or higher -> you might need to compile it from source
     you can find a compiler script here: https://git.growautomation.at/blob/master/setup/python/
+    If you run version 3.8.2 you will run into a bug when using the shared_memory module.
+          You can apply this hotfix to work around this bug:
+          - Edit file: /usr/local/lib/python3.8/multiprocessing/shared_memory.py
+            - line 115 -> add '{12x whitespace}if create:'
+            - line 116/117 -> add '{4x leading whitespace}'
+          - This commands will automate this process for you:
+            - sed -i '115 a \            if create:' /usr/local/lib/python3.8/multiprocessing/shared_memory.py
+            - sed -i 's/from .resource_tracker import register/\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py
+            - sed -i 's/register(self._name, \"shared_memory\")/\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py
   - apt-get -y install git mariadb-server mariadb-client
   - /usr/bin/python3.8 -m pip install systemd mysql-connector-python RPi.GPIO --default-timeout=100
   - you may need to install other python3 modules for your needed sensors

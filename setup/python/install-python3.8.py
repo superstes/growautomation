@@ -31,7 +31,16 @@ except (IndexError, NameError):
     repo_path = "/tmp/controller/setup/python"
 shellhight, shellwidth = os_popen('stty size', 'r').read().split()
 
-if input("Have you already installed a python version >= 3.8? (Type 'yes' or 'no')\n  > ") == "yes":
+if input("\nHave you already installed a python version >= 3.8? (Type 'yes' or 'no')\n > ") == "yes":
+    print("\nIMPORTANT:\n\nIf you run version 3.8.2 you will run into a bug when using the shared_memory module.\n"
+          "You can apply this hotfix to work around this bug:\n"
+          "Edit file: /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
+          "line 115 -> add '{12x whitespace}if create:'\n"
+          "line 116/117 -> add '{4x leading whitespace}'\n\n"
+          "This commands will automate this process for you:\n"
+          "sed -i '115 a \\            if create:' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
+          "sed -i 's/from .resource_tracker import register/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
+          "sed -i 's/register(self._name, \\\"shared_memory\\\")/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py")
     raise SystemExit
 
 
