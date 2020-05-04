@@ -83,7 +83,7 @@ class VarHandler:
     def _tracker(self):
         updated_list = []
         try:
-            action_list = self._memory(name="ga_share_action")
+            action_list = self._memory(name="ga_share_action", action="get")
         except FileNotFoundError:
             try:
                 action_list = self._memory(name="ga_share_action", action="set", data=[None] * 100)
