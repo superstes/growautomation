@@ -29,7 +29,7 @@ from functools import lru_cache
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+LogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class Config(object):

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -20,7 +20,9 @@
 
 # ga_version 0.3
 
-
-def init_vars():
-    global tmp_dict
-    tmp_dict = {}
+# gets device settings and portdict if downlink
+# get data from gpio/downlink
+# process the data to list/string/int/float
+# if more than 1 datatype in data
+#   add unitnr to data_dict (migrate from list if needed, or better -> do it when getting the data from gpio/dl)
+# run insert function from owl.py (owl will check for input errors from bad scripts)

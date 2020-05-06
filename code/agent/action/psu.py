@@ -79,7 +79,7 @@ psulist = codebase.namegen("psu")
 actioninfo = {}
 for psu in psulist:
     psuoutlet = psu + "outlets"
-    with open(pathconfig.config + "mainconfig.py", 'r') as mainconfigfile:
+    with open(pathconfig.config + "config.py", 'r') as mainconfigfile:
         outletcount = mainconfigfile.read().count(psuoutlet)
         if outletcount > 0:
             outletinfo = getattr(mainconfig, psuoutlet)

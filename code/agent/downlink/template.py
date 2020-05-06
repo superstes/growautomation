@@ -18,10 +18,10 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
-from ga.core.ant import LogWrite as LogModule
-from ga.core.smallant import debugger
+from ..core.ant import LogWrite as LogModule
+from ..core.smallant import debugger
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
