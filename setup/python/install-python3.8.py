@@ -23,6 +23,7 @@
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from os import popen as os_popen
+from os import system as os_system
 from sys import argv as sys_argv
 
 try:
@@ -56,16 +57,16 @@ linux_version = process("lsb_release -a | grep Release: | sed 's/[^0-9]//g'")
 
 
 def default_python():
-    process("ln -s /usr/local/bin/python3.8 /usr/bin/python3.8")
-    process("echo 'alias python=/usr/local/bin/python3.8' >> ~/.bashrc")
-    process("source ~/.bashrc")
+    os_system("ln -s /usr/local/bin/python3.8 /usr/bin/python3.8")
+    os_system("echo 'alias python=/usr/local/bin/python3.8' >> ~/.bashrc")
+    os_system("source ~/.bashrc")
 
 
 def compile():
     print("#" * (int(shellwidth) - 1))
     print("This process may take over an hour.\nDO NOT INTERUPT THIS PROCESS.\n")
     print("-" * (int(shellwidth) - 1))
-    process("/bin/bash %s/compile_python3.8.sh" % repo_path)
+    os_system("/bin/bash %s/compile_python3.8.sh" % repo_path)
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
@@ -75,19 +76,20 @@ def compile():
 def pre_compiled(link, file):
     print("#" * (int(shellwidth) - 1))
     print("Downloading pre-compiled package.\n")
-    process("apt-get update && apt-get install wget")
-    process("cd /tmp && wget %s%s" % (link, file))
+    os_system("apt-get update && apt-get install wget")
+    os_system("cd /tmp && wget %s%s" % (link, file))
     print("Installing pre-compiled package.\n")
-    process("sudo tar -xvzf %s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
-    process("sudo tar -xvzf %s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
+    os_system("sudo tar -xvzf %s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
+    os_system("sudo tar -xvzf %s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
     print("#" * (int(shellwidth) - 1))
 
 
+official_repo = "https://www.growautomation.at/files/python/precompiled/"
 if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
     if linux_version == "10":
-        pre_compiled("https://www.growautomation.at/files/python/precompiled/", "python3.8_pi3brev1.2-buster.tar.gz")
+        pre_compiled(official_repo, "python3.8_pi3brev1.2-buster.tar.gz")
     else: compile()
 else: compile()
