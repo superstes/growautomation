@@ -23,6 +23,7 @@
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from os import popen as os_popen
+from os import path as os_path
 from os import system as os_system
 from sys import argv as sys_argv
 
@@ -32,7 +33,7 @@ except (IndexError, NameError):
     repo_path = "/tmp/controller/setup/python"
 shellhight, shellwidth = os_popen('stty size', 'r').read().split()
 
-if input("\nHave you already installed a python version >= 3.8? (Type 'yes' or 'no')\n > ") == "yes":
+if input("\nHave you already installed a python version >= 3.8? (Type 'yes' or anykey)\n > ") == "yes":
     print("\nIMPORTANT:\n\nIf you run version 3.8.2 you will run into a bug when using the shared_memory module.\n"
           "You can apply this hotfix to work around this bug:\n"
           "Edit file: /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
@@ -41,7 +42,7 @@ if input("\nHave you already installed a python version >= 3.8? (Type 'yes' or '
           "This commands will automate this process for you:\n"
           "sed -i '115 a \\            if create:' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
           "sed -i 's/from .resource_tracker import register/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
-          "sed -i 's/register(self._name, \\\"shared_memory\\\")/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py")
+          "sed -i 's/register(self._name, \\\"shared_memory\\\")/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n\n")
     raise SystemExit
 
 
@@ -59,10 +60,9 @@ linux_version = process("lsb_release -a | grep Release: | sed 's/[^0-9]//g'")
 def default_python():
     os_system("ln -s /usr/local/bin/python3.8 /usr/bin/python3.8")
     os_system("echo 'alias python=/usr/local/bin/python3.8' >> ~/.bashrc")
-    os_system("source ~/.bashrc")
 
 
-def compile():
+def self_compiled():
     print("#" * (int(shellwidth) - 1))
     print("This process may take over an hour.\nDO NOT INTERUPT THIS PROCESS.\n")
     print("-" * (int(shellwidth) - 1))
@@ -76,11 +76,12 @@ def compile():
 def pre_compiled(link, file):
     print("#" * (int(shellwidth) - 1))
     print("Downloading pre-compiled package.\n")
-    os_system("apt-get update && apt-get install wget")
-    os_system("cd /tmp && wget %s%s" % (link, file))
+    if os_path.exists("/tmp/%s" % file) is False:
+        os_system("apt-get update && apt-get install wget")
+        os_system("cd /tmp && wget %s%s" % (link, file))
     print("Installing pre-compiled package.\n")
-    os_system("sudo tar -xvzf %s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
-    os_system("sudo tar -xvzf %s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
+    os_system("sudo tar -xvzf /tmp/%s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
+    os_system("sudo tar -xvzf /tmp/%s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
@@ -91,5 +92,5 @@ official_repo = "https://www.growautomation.at/files/python/precompiled/"
 if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
     if linux_version == "10":
         pre_compiled(official_repo, "python3.8_pi3brev1.2-buster.tar.gz")
-    else: compile()
-else: compile()
+    else: self_compiled()
+else: self_compiled()

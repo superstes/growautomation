@@ -20,13 +20,14 @@
 
 # ga_version 0.4
 
-if [[ ! -d controller/setup ]]
-then
+
+command -v "git" >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
   sudo apt-get update
   sudo apt-get install git -y
-  cd /tmp
-  git clone https://github.com/growautomation-at/controller.git
 fi
+cd /tmp
+[[ -d controller ]] | git clone https://github.com/growautomation-at/controller.git --depth=1
 cd controller/setup
 /usr/bin/python3 python/install-python3.8.py $PWD
 cp ../code/agent/core/*.py .

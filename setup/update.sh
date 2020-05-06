@@ -42,7 +42,7 @@ fi
 
 mkdir -p $tmp_path
 cd $tmp_path
-git clone https://github.com/growautomation-at/controller.git
+git clone https://github.com/growautomation-at/controller.git --depth=1
 if [[ $1 != '' ]]
 then
   ga_path=$1
