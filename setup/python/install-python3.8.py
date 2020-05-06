@@ -72,11 +72,14 @@ def compile():
     print("#" * (int(shellwidth) - 1))
 
 
-def pre_compiled(script):
+def pre_compiled(link, file):
     print("#" * (int(shellwidth) - 1))
+    print("Downloading pre-compiled package.\n")
+    process("apt-get update && apt-get install wget")
+    process("cd /tmp && wget %s%s" % (link, file))
     print("Installing pre-compiled package.\n")
-    process("sudo tar -xvzf %s/%s -C /usr/local/bin usr-local-bin --strip-components 1" % (repo_path, script))
-    process("sudo tar -xvzf %s/%s -C /usr/local/lib usr-local-lib --strip-components 1" % (repo_path, script))
+    process("sudo tar -xvzf %s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
+    process("sudo tar -xvzf %s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
@@ -85,6 +88,6 @@ def pre_compiled(script):
 
 if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
     if linux_version == "10":
-        pre_compiled("pre-compiled_python3.8_pi3brev1.2-buster.tar.gz")
+        pre_compiled("https://www.growautomation.at/files/python/precompiled/", "python3.8_pi3brev1.2-buster.tar.gz")
     else: compile()
 else: compile()
