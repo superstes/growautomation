@@ -72,9 +72,8 @@ def setup_stop(signum=None, stack=None):
     if debug: VarHandler().stop()
     raise SystemExit("Received signal %s\nExiting setup!\n\n" % signum)
 
-
-signal.signal(signal.SIGTERM, setup_stop())
-signal.signal(signal.SIGINT, setup_stop())
+signal.signal(signal.SIGTERM, setup_stop)
+signal.signal(signal.SIGINT, setup_stop)
 
 ########################################################################################################################
 
