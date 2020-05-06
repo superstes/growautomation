@@ -23,7 +23,6 @@ Version: 0.4
 
 ## On hold projects
 - designing a clean plug&play alternative for connecting sensors
-    - example: <br /> <img src="https://www.growautomation.at/images/git/cable-topology.jpg" float="middle" width="50%" height="50%" border="4" alt="cable topology example">
 - documenting server installation on intel nuc
 
 ## Future projects
