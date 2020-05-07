@@ -62,14 +62,26 @@ class LogWrite(object):
 
 class VarHandler:
     def __init__(self, name=None, data=None):
-        self.name, self.action, self.data, self.outtyp = name, None, data, None
+        self.name, self.action, self.data = name, None, data
 
-    def get(self, outtyp):
-        self.outtyp, self.action = outtyp, "get"
-        return self._tracker()
+    def get(self, outtyp=None):
+        self.action = "get"
+        data = self._tracker()
+        if type(data) == str:
+            if outtyp == "int": return int(data)
+            else: return str(data)
+        elif type(data) == list and len(data) == 1:
+            return str(data[0])
+        return data
 
     def set(self):
-        self.action = "set"
+        self.action, max_count, min_count = "set", 12, 4
+        if len(str(self.name)) < 4:
+            LogWrite("Name too short for memory block (min. %s characters)" % min_count)
+            return False
+        elif len(str(self.name)) > max_count:
+            LogWrite("Name too long for memory block (max. %s characters)" % max_count)
+            return False
         return self._tracker()
 
     def stop(self):
@@ -81,81 +93,113 @@ class VarHandler:
         return self._tracker()
 
     def _tracker(self):
-        updated_list = []
-        try:
-            action_list = self._memory(name="ga_share_action", action="get")
-        except FileNotFoundError:
-            try:
-                action_list = self._memory(name="ga_share_action", action="set", data=[None] * 100)
-            except FileExistsError:
-                LogWrite("Memory block %s could not be created or opened")
-                return False
-        action_count = len(action_list)
-        if self.action == "set":
-            added, count = False, 1
-            for action in action_list:
-                if not None: updated_list.append(action)
-                elif not added:
-                    updated_list.append(self.name)
-                    added = True
-                else:
-                    if count >= (action_count - 1): continue
-                    updated_list.append(None)
-                count += 1
-        elif self.action == "cleanup":
-            count = 1
-            for action in action_list:
-                if action is None:
-                    updated_list.append(None)
-                elif action == self.name:
-                    updated_list.append(None)
-                else:
-                    if count >= (action_count - 1): continue
-                    updated_list.append(action)
-                count += 1
-        elif self.action == "stop":
-            for action in action_list:
-                self._memory(name=action, action="clean")
-        self._memory(name="ga_share_action", action="set", data=updated_list)
-        self._memory()
+        if self.action != "get":
+            action_list, updated_list = self._memory(name="share_action", action="get"), []
+            if action_list is False and self.action == "set":
+                action_list = self._memory(name="share_action", action="set", data=[None] * 100)
+                if action_list is False: return False
+                else: action_list = self._memory(name="share_action", action="get")
+            action_count = len(list(action_list))
+            if self.action == "set":
+                added, count = False, 1
+                for action in action_list:
+                    if action is not None: updated_list.append(action)
+                    elif not added:
+                        updated_list.append(self.name)
+                        added = True
+                    else:
+                        if count >= (action_count - 1): continue
+                        updated_list.append(action)
+                    count += 1
+            elif self.action == "clean":
+                count, custom_count = 1, 0
+                for action in action_list:
+                    if action == self.name:
+                        updated_list.append(None)
+                    elif action is None:
+                        updated_list.append(None)
+                    else:
+                        updated_list.append(action)
+                        custom_count += 1
+                    count += 1
+            elif self.action == "stop":
+                for action in action_list:
+                    if action is not None:
+                        self._memory(name=action, action="clean")
+                self._memory(name="share_action", action="clean")
+                return True
+            if self.action == "clean" and custom_count == 0:
+                self._memory(name="share_action", action="clean")
+            else: self._memory(name="share_action", action="set", data=updated_list)
+        return self._memory()
 
     def _memory(self, action=None, name=None, data=None):
         if action is None: action = self.action
         if name is None: name = self.name
         if data is None: data = self.data
+        if name is None or data == "": return False
+        if action == "set" and (data is None or data == ""): return False
+        debugger("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data))
         if action == "set":
-            memory_list = []
+            data_list = []
             if type(data) == dict:
                 for key, value in data.items():
-                    memory_list.append("key_'%s'" % key)
-                    memory_list.append("val_'%s'" % value)
+                    data_list.append("key_'%s'" % key)
+                    data_list.append("val_'%s'" % value)
             elif type(data) == list:
-                memory_list.append(data)
-            else: memory_list = [data]
-            memory = ShareableList(memory_list, name="ga_%s" % name)
-            memory.shm.close()
+                data_list.extend(data)
+            else: data_list = [data]
+            count = 1
+            for _ in data_list:
+                if type(_) == list:
+                    debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
+                    LogWrite("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count))
+                    return False
+                count += 1
+            try:
+                memory = ShareableList(data_list, name="ga_%s" % name)
+                debugger("smallant - varhandler - memory |set: '%s' successful" % name)
+                memory.shm.close()
+            except (FileExistsError, KeyError):
+                try:
+                    memory = ShareableList(name="ga_%s" % name)
+                    if len(memory) >= len(data_list):
+                        for _ in range(len(memory)):
+                            try:
+                                memory[_] = data_list[_]
+                            except IndexError:
+                                memory[_] = None
+                        debugger("smallant - varhandler - memory |set: '%s' update successful" % name)
+                        memory.shm.close()
+                    else:
+                        debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
+                        LogWrite("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s" % (name, len(memory), len(data_list)))
+                        memory.shm.close()
+                        return False
+                except IndexError as error:
+                    debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
+                    LogWrite("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error))
+                return False
         elif action == "get":
             try:
                 memory = ShareableList(name="ga_%s" % name)
-                if self.outtyp == "dict":
-                    return_data, last_key = {}, ""
-                    for _ in memory:
-                        if _.find("key_'") != -1:
-                            last_key = _.replace("key_'", "")[:-1]
-                            return_data[last_key] = 0
-                        elif _.find("val_'") != -1:
-                            return_data[last_key] = _.replace("val_'", "")[:-1]
-                        else: continue
-                elif self.outtyp == "list": return_data = list(memory)
-                elif self.outtyp == "int": return_data = int(memory)
-                else: return_data = str(memory)
+                data = [_ for _ in memory]
                 memory.shm.close()
-                return return_data
-            except FileNotFoundError: return False
+                debugger("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data))
+                return data
+            except FileNotFoundError:
+                debugger("smallant - varhandler - memory |get: '%s' not found" % name)
+                LogWrite("Memory block '%s' was not found" % name)
+                return False
         elif action == "clean":
-            memory = ShareableList(name="ga_%s" % name)
-            memory.shm.close()
-            memory.shm.unlink()
+            try:
+                memory = ShareableList(name="ga_%s" % name)
+                memory.shm.close()
+                memory.shm.unlink()
+                debugger("smallant - varhandler - memory |clean: '%s' successful" % name)
+            except FileNotFoundError:
+                debugger("smallant - varhandler - memory |clean: '%s' not found" % name)
+                return False
         else: return False
 
 
