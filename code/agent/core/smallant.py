@@ -63,6 +63,10 @@ class LogWrite(object):
 class VarHandler:
     def __init__(self, name=None, data=None):
         self.name, self.action, self.data = name, None, data
+        if name == "debug":
+            self.debug = False
+        else:
+            self.debug = True
 
     def get(self, outtyp=None):
         self.action = "get"
@@ -139,7 +143,8 @@ class VarHandler:
         if data is None: data = self.data
         if name is None or data == "": return False
         if action == "set" and (data is None or data == ""): return False
-        debugger("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data))
+        if self.debug:
+            debugger("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data))
         if action == "set":
             data_list = []
             if type(data) == dict:
@@ -152,13 +157,15 @@ class VarHandler:
             count = 1
             for _ in data_list:
                 if type(_) == list:
-                    debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
+                    if self.debug:
+                        debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
                     LogWrite("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count))
                     return False
                 count += 1
             try:
                 memory = ShareableList(data_list, name="ga_%s" % name)
-                debugger("smallant - varhandler - memory |set: '%s' successful" % name)
+                if self.debug:
+                    debugger("smallant - varhandler - memory |set: '%s' successful" % name)
                 memory.shm.close()
             except (FileExistsError, KeyError):
                 try:
@@ -169,15 +176,18 @@ class VarHandler:
                                 memory[_] = data_list[_]
                             except IndexError:
                                 memory[_] = None
-                        debugger("smallant - varhandler - memory |set: '%s' update successful" % name)
+                        if self.debug:
+                            debugger("smallant - varhandler - memory |set: '%s' update successful" % name)
                         memory.shm.close()
                     else:
-                        debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
+                        if self.debug:
+                            debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
                         LogWrite("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s" % (name, len(memory), len(data_list)))
                         memory.shm.close()
                         return False
                 except IndexError as error:
-                    debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
+                    if self.debug:
+                        debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
                     LogWrite("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error))
                 return False
         elif action == "get":
@@ -185,10 +195,12 @@ class VarHandler:
                 memory = ShareableList(name="ga_%s" % name)
                 data = [_ for _ in memory]
                 memory.shm.close()
-                debugger("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data))
+                if self.debug:
+                    debugger("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data))
                 return data
             except FileNotFoundError:
-                debugger("smallant - varhandler - memory |get: '%s' not found" % name)
+                if self.debug:
+                    debugger("smallant - varhandler - memory |get: '%s' not found" % name)
                 LogWrite("Memory block '%s' was not found" % name)
                 return False
         elif action == "clean":
@@ -196,9 +208,11 @@ class VarHandler:
                 memory = ShareableList(name="ga_%s" % name)
                 memory.shm.close()
                 memory.shm.unlink()
-                debugger("smallant - varhandler - memory |clean: '%s' successful" % name)
+                if self.debug:
+                    debugger("smallant - varhandler - memory |clean: '%s' successful" % name)
             except FileNotFoundError:
-                debugger("smallant - varhandler - memory |clean: '%s' not found" % name)
+                if self.debug:
+                    debugger("smallant - varhandler - memory |clean: '%s' not found" % name)
                 return False
         else: return False
 
