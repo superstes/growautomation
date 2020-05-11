@@ -149,23 +149,24 @@ try:
 
     def setup_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False, write=False):
         if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
+            if dbuser == "": dbuser = "root"
             if check_ga_exists is True:
-                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user="root").start()
+                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user="root", exit=False).start()
             else:
-                sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user="root").start()
+                sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user="root", exit=False).start()
         elif dbpwd == "":
             ShellOutput(font="text", output="SQL connection failed. No password provided and not root.", style="warn")
             setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
             return False
         elif local and check_system:
-            sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user=dbuser, pwd=dbpwd).start()
+            sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
         elif local:
             if write:
-                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','none');", user=dbuser, pwd=dbpwd, write=True).start()
+                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','none');", user=dbuser, pwd=dbpwd, write=True, exit=False).start()
             else:
-                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd).start()
+                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
         else:
-            sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd).start()
+            sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
         if type(sqltest) == list:
             ShellOutput(font="text", output="SQL connection verified", style="succ")
             return True
@@ -173,7 +174,7 @@ try:
             ShellOutput(font="text", output="SQL connection verified", style="succ")
             return sqltest
         else:
-            ShellOutput(font="text", output="SQL connection failed", style="warn")
+            ShellOutput(font="text", output="SQL connection to %s failed for user %s" % (ga_config["sql_server_ip"], dbuser), style="warn")
             setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
             return False
 
