@@ -36,21 +36,29 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False, user=None, pwd=None):
-        self.command, self.write, self.user, self.pwd = command, write, user, pwd
+    def __init__(self, command, write=False, user=None, pwd=None, exit=True):
+        self.command, self.write, self.user, self.pwd, self.exit = command, write, user, pwd, exit
         self.fallback = False
 
     def start(self):
-        def running():
-            outputstr = process("systemctl status mysql.service | grep 'Active:'")
-            return False if outputstr.find("Active:") == -1 else True if outputstr.find("active (running)") != -1 else False
+        def systemd_check(typ):
+            mysql_status = process("systemctl status mysql.service")
+            if typ == "ok":
+                if mysql_status.find("active (running)") != -1: return True
+                else: return False
+            elif typ == "dead":
+                if mysql_status.find("failed") != -1 or mysql_status.find("could not be found") != -1:
+                    return True
+                else: return False
         whilecount, creds_ok = 0, False
         while True:
-            if running() is False:
+            if systemd_check("ok") is False:
+                if whilecount > 0:
+                    if systemd_check("dead") is True: return False
                 debugger("owl - start |mysql not running")
-                if process("systemctl start mysql.service").find("Not able to start") != -1:
-                    return False
+                process("systemctl start mysql.service")
             else: break
+            if whilecount > 1: break
             time_sleep(5)
             whilecount += 1
         whilecount = 0
@@ -61,11 +69,16 @@ class DoSql:
                 self.fallback = True
             if self.fallback is True and self.write is True:
                 LogWrite("Error connecting to database. Write operations are not allowed to local fallback database. Check you sql server connection.")
-                raise SystemExit("Error connecting to database. Write operations are not allowed to local fallback database. "
-                                 "Check you sql server connection.")
+                if self.exit:
+                    raise SystemExit("Error connecting to database. Write operations are not allowed to local fallback database. "
+                                     "Check you sql server connection.")
+                else: return False
+
             if whilecount > 2:
                 LogWrite("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
-                raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
+                if self.exit:
+                    raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
+                else: return False
 
             def conntest():
                 if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
