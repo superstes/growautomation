@@ -42,7 +42,7 @@ if input("\nHave you already installed a python version >= 3.8? (Type 'yes' or a
           "This commands will automate this process for you:\n"
           "sed -i '115 a \\            if create:' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
           "sed -i 's/from .resource_tracker import register/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n"
-          "sed -i 's/register(self._name, \\\"shared_memory\\\")/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n\n")
+          "sed -i 's/ register(self._name, \\\"shared_memory\\\")/\\    &/g' /usr/local/lib/python3.8/multiprocessing/shared_memory.py\n\n")
     raise SystemExit
 
 
@@ -66,7 +66,12 @@ def self_compiled():
     print("#" * (int(shellwidth) - 1))
     print("This process may take over an hour.\nDO NOT INTERUPT THIS PROCESS.\n")
     print("-" * (int(shellwidth) - 1))
-    os_system("/bin/bash %s/compile_python3.8.sh" % repo_path)
+    background = input("Do you want to run the compiler in the background?\nOtherwise it will stop if you logoff. (Type 'yes' or anykey)")
+    if background == "yes":
+        os_system("nohup /bin/bash %s/compile_python3.8.sh &" % repo_path)
+        os_system("disown")
+    else:
+        os_system("/bin/bash %s/compile_python3.8.sh" % repo_path)
     default_python()
     print("#" * (int(shellwidth) - 1))
     print("Process finished.")
@@ -89,8 +94,9 @@ def pre_compiled(link, file):
 
 
 official_repo = "https://www.growautomation.at/files/python/precompiled/"
-if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
-    if linux_version == "10":
-        pre_compiled(official_repo, "python3.8_pi3brev1.2-buster.tar.gz")
-    else: self_compiled()
-else: self_compiled()
+# if rpi_version.find("RaspberryPi3ModelBRev1.2") != -1:
+#     if linux_version == "10":
+#         pre_compiled(official_repo, "python3.8_pi3brev1.2-buster.tar.gz")
+#     else: self_compiled()
+# else:
+self_compiled()
