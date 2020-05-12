@@ -148,6 +148,7 @@ try:
 
 
     def setup_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False, write=False):
+        ShellOutput("Testing sql connection.", style="info")
         if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
             if dbuser == "": dbuser = "root"
             if check_ga_exists is True:
@@ -803,13 +804,13 @@ try:
         os_system("apt-get update" + ga_config["setup_log_redirect"])
         if ga_config["setup_linuxupgrade"] is True:
             os_system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
-            os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
+            # os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
 
         os_system("apt-get -y install mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
 
-        if ga_config["setup_type_as"] is True:
-            os_system("apt-get -y install python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
-        else:
+        # if ga_config["setup_type_as"] is True:
+        #     os_system("apt-get -y install python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
+        if ga_config["setuptype"] == "server":
             os_system("apt-get -y install openssl %s" % ga_config["setup_log_redirect"])
 
         if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
