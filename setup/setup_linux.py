@@ -154,8 +154,8 @@ try:
 
     def setup_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False, write=False):
         ShellOutput("Testing sql connection.", style="info")
-        if (dbuser == "" or dbuser == "root") and ga_config["sql_server_ip"] == "127.0.0.1":
-            if dbuser == "": dbuser = "root"
+        if dbuser == "": dbuser = "root"
+        if dbuser == "root" and ga_config["sql_server_ip"] == "127.0.0.1":
             if check_ga_exists is True:
                 sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user="root", exit=False).start()
             else:
@@ -804,7 +804,7 @@ try:
         os_system("apt-get update" + ga_config["setup_log_redirect"])
         if ga_config["setup_linuxupgrade"] is True:
             os_system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
-            os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
+            os_system("%s -m pip install --upgrade pip setuptools" % ga_config["python_path"])
 
         os_system("apt-get -y install mariadb-server mariadb-client git libsystemd-dev python%s-dev %s" % (ga_config["python_version"], ga_config["setup_log_redirect"]))
 
@@ -902,6 +902,7 @@ try:
     def setup_infra():
         ShellOutput(font="head", output="Setting up growautomation code", symbol="#")
         setup_infra_dir()
+        ShellOutput(font="head", output="Setting up code", symbol="-")
         if process("systemctl status growautomation.service").find("not found") == -1:
             os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
         # if os_path.exists("/tmp/controller") is True:
