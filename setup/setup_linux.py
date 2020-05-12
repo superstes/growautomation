@@ -34,17 +34,20 @@ from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 import signal
 
-# basic vars
+# setup vars
 ga_config = {}
 ga_config_server = {}
 ga_config["version"] = "0.4"
 ga_config["python_min_version"] = "3.8"
+ga_config["python_version"] = "%s.%s" % (sys_version_info.major, sys_version_info.minor)
 ga_config["setup_version_file"] = "/etc/growautomation.version"
-ga_config["setup_log_path"] = "/var/log/growautomation/"
-ga_config["setup_log"] = "%ssetup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
+ga_config["setup_log_path"] = "/var/log/growautomation"
+ga_config["setup_log"] = "%s/setup_%s.log" % (ga_config["setup_log_path"], datetime.now().strftime("%Y-%m-%d_%H-%M"))
 ga_config["setup_log_redirect"] = " 2>&1 | tee -a %s" % ga_config["setup_log"]
 
-os_system("/usr/bin/python%s -m pip install wheel mysql-connector-python colorama" % ga_config["python_min_version"])
+if float(ga_config["python_version"]) < float(ga_config["python_min_version"]):
+    raise SystemExit("Your current python version isn't supported!\nYou have '%s' and need '%s'" % (ga_config["python_version"], ga_config["python_min_version"]))
+os_system("/usr/bin/python%s -m pip install wheel mysql-connector-python colorama" % ga_config["python_version"])
 
 from colorama import Fore as colorama_fore
 
@@ -53,11 +56,13 @@ try:
     from ..code.agent.core.ant import ShellInput
     from ..code.agent.core.ant import ShellOutput
     from ..code.agent.core.smallant import VarHandler
+    from ..code.agent.core.smallant import process
 except ImportError:
     from owl import DoSql
     from ant import ShellInput
     from ant import ShellOutput
     from smallant import VarHandler
+    from smallant import process
 
 try:
     if sys_argv[1] == "debug":
@@ -120,7 +125,7 @@ try:
         with open("/etc/fstab", 'r') as readfile:
             stringcount = readfile.read().count("Growautomation")
             if stringcount > 0:
-                ShellOutput(font="text", output="WARNING!\nYou already have one or more remote shares configured.\nIf you want"
+                ShellOutput(output="WARNING!\nYou already have one or more remote shares configured.\nIf you want"
                             " to install new ones you should disable the old ones by editing the "
                             "'/etc/fstab' file.\nJust add a '#' in front of the old shares or delete "
                             "those lines to disable them", style="warn")
@@ -156,7 +161,7 @@ try:
             else:
                 sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user="root", exit=False).start()
         elif dbpwd == "":
-            ShellOutput(font="text", output="SQL connection failed. No password provided and not root.", style="warn")
+            ShellOutput(output="SQL connection failed. No password provided and not root.", style="warn")
             setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
             return False
         elif local and check_system:
@@ -169,13 +174,13 @@ try:
         else:
             sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
         if type(sqltest) == list:
-            ShellOutput(font="text", output="SQL connection verified", style="succ")
+            ShellOutput(output="SQL connection verified", style="succ")
             return True
         elif type(sqltest) == bool and sqltest:
-            ShellOutput(font="text", output="SQL connection verified", style="succ")
+            ShellOutput(output="SQL connection verified", style="succ")
             return sqltest
         else:
-            ShellOutput(font="text", output="SQL connection to %s failed for user %s" % (ga_config["sql_server_ip"], dbuser), style="warn")
+            ShellOutput(output="SQL connection to %s failed for user %s" % (ga_config["sql_server_ip"], dbuser), style="warn")
             setup_log_write("Sql connection test failed:\nServer: %s, user: %s\nSql output: %s" % (ga_config["sql_server_ip"], dbuser, sqltest))
             return False
 
@@ -214,10 +219,7 @@ try:
 
     ########################################################################################################################
 
-
     setup_log_write(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-
-    # check for root privileges
     if os_getuid() != 0:
         setup_exit(shell="This script needs to be run with root privileges", log="Script not started as root")
 
@@ -234,12 +236,15 @@ try:
                        "manual.\nIt can be found at: https://git.growautomation.at/tree/master/manual",
                        "Setupwarning not accepted by user")
 
-    if os_path.exists("/usr/bin/python%s" % ga_config["python_min_version"]):
-        ga_config["python_path"] = "/usr/bin/python%s" % ga_config["python_min_version"]
+    if os_path.exists("/usr/bin/python%s" % ga_config["python_version"]):
+        ga_config["python_path"] = "/usr/bin/python%s" % ga_config["python_version"]
+    elif os_path.exists("/usr/local/bin/python%s" % ga_config["python_version"]):
+        os_system("ln -s /usr/local/bin/python%s /usr/bin/ %s" % (ga_config["python_version"], ga_config["setup_log_redirect"]))
+        ga_config["python_path"] = "/usr/bin/python%s" % ga_config["python_version"]
     else:
         ga_config["python_path"] = setup_input(prompt="Please provide the path to your python%s binary!\n"
-                                                      "Info: could not be found under the default path '/usr/bin/'" % ga_config["python_min_version"],
-                                               default="/usr/local/bin/python%s" % ga_config["python_min_version"], intype="free")
+                                                      "Info: wasn't found in '/usr/bin/' or '/usr/local/bin'" % ga_config["python_version"],
+                                               default="/usr/sbin/python%s" % ga_config["python_version"], intype="free")
 
     ShellOutput(font="head", output="Checking if growautomation is already installed on the system", symbol="#")
 
@@ -247,21 +252,21 @@ try:
 
     ga_config["setup_old_version_file"] = os_path.exists(ga_config["setup_version_file"])
     if ga_config["setup_old_version_file"] is True:
-        ShellOutput(font="text", output="Growautomation version file exists", style="info")
+        ShellOutput(output="Growautomation version file exists", style="info")
         ga_config["setup_old_version"] = setup_config_file(ga_config["setup_version_file"], "version=")
     else:
-        ShellOutput(font="text", output="No growautomation version file found", style="info")
+        ShellOutput(output="No growautomation version file found", style="info")
     ga_config["setup_old_root"] = os_path.exists("/etc/growautomation")
     if ga_config["setup_old_root"] is True:
-        ShellOutput(font="text", output="Growautomation default root path exists", style="info")
+        ShellOutput(output="Growautomation default root path exists", style="info")
     else:
-        ShellOutput(font="text", output="No growautomation default root path exists", style="info")
+        ShellOutput(output="No growautomation default root path exists", style="info")
     if DoSql(command="SHOW DATABASES;", user="root").find("ga") != -1:
         ga_config["setup_old_db"] = True
-        ShellOutput(font="text", output="Growautomation database exists", style="info")
+        ShellOutput(output="Growautomation database exists", style="info")
     else:
         ga_config["setup_old_db"] = False
-        ShellOutput(font="text", output="No growautomation database found", style="info")
+        ShellOutput(output="No growautomation database found", style="info")
 
     if ga_config["setup_old_version_file"] is True or ga_config["setup_old_root"] is True or ga_config["setup_old_db"] is True:
         def ga_config_vars_oldversion_replace():
@@ -282,40 +287,38 @@ try:
         if ga_config["setup_old_version_file"] is True:
             if ga_config["setup_old_version"] is None:
                 if ga_config["setup_old_root"] is True:
-                    ShellOutput(font="text", output="Growautomation is currently installed. But its version number could not be found", style="warn")
+                    ShellOutput(output="Growautomation is currently installed. But its version number could not be found", style="warn")
                     ga_config_vars_oldversion_replace()
                 elif ga_config["setup_old_db"] is True:
                     ga_config_vars_oldversion_replace()
                 else:
-                    ShellOutput(font="text", output="Error verifying existing growautomation installation. Installing as new", style="warn")
+                    ShellOutput(output="Error verifying existing growautomation installation. Installing as new", style="warn")
                     ga_config["setup_old"] = False
             else:
-                ShellOutput(font="text", output="A version of growautomation is/was already installed on this system!\n\n"
+                ShellOutput(output="A version of growautomation is/was already installed on this system!\n\n"
                             "Installed version: %s\nReplace version: %s" % (ga_config["setup_old_version"], ga_config["version"]))
                 ga_config_vars_oldversion_replace()
         elif ga_config["setup_old_root"] is True:
-            ShellOutput(font="text", output="Growautomation is currently installed. But its version number could not be found", style="warn")
+            ShellOutput(output="Growautomation is currently installed. But its version number could not be found", style="warn")
             ga_config_vars_oldversion_replace()
     else:
-        ShellOutput(font="text", output="No previous growautomation installation found", style="info")
+        ShellOutput(output="No previous growautomation installation found", style="info")
         ga_config["setup_old"] = False
 
     if ga_config["setup_old"] is False:
         ga_config["setup_fresh"] = True
         ga_config["setup_old_backup"] = False
-        ShellOutput(font="text", output="Growautomation will be installed completely new", style="succ")
+        ShellOutput(output="Growautomation will be installed completely new", style="succ")
     else:
-        ShellOutput(font="text", output="Growautomation will be migrated to the new version", style="succ")
+        ShellOutput(output="Growautomation will be migrated to the new version", style="succ")
         if ga_config["setup_fresh"] is True:
-            ShellOutput(font="text", output="The configuration and data will be overwritten", style="warn")
+            ShellOutput(output="The configuration and data will be overwritten", style="warn")
         else:
-            ShellOutput(font="text", output="The configuration and data will be migrated", style="succ")
+            ShellOutput(output="The configuration and data will be migrated", style="succ")
 
     ########################################################################################################################
 
-    # setup vars
     ShellOutput(font="head", output="Retrieving setup configuration through user input", symbol="#")
-
     setup_advanced = setup_input(prompt="Do you want to have advanced options in this setup?", default=False)
 
 
@@ -338,7 +341,7 @@ try:
             ga_config["setuptype"] = setup_config_file(ga_config["setup_version_file"], "setuptype=")
             ga_config["log_level"] = setup_config_file(ga_config["setup_version_file"], "log_level=")
             if ga_config["path_root"] is False:
-                ShellOutput(font="text", output="Growautomation rootpath not found in old versionfile", style="warn")
+                ShellOutput(output="Growautomation rootpath not found in old versionfile", style="warn")
                 ga_config["path_root"] = setup_input(prompt="Want to choose a custom install path?", default="/etc/growautomation")
                 if ga_config["setup_old_backup"] is True:
                     ga_config["path_old_root"] = setup_input(prompt="Please provide the install path of your current installation. (for backup)", default="/etc/growautomation")
@@ -346,17 +349,17 @@ try:
                     ga_config["path_old_root"] = False
 
             if ga_config["hostname"] is False:
-                ShellOutput(font="text", output="Growautomation hostname not found in old versionfile", style="warn")
+                ShellOutput(output="Growautomation hostname not found in old versionfile", style="warn")
                 ga_config_var_base_name()
 
             if ga_config["setuptype"] is False:
-                ShellOutput(font="text", output="Growautomation setuptype not found in old versionfile.\n\n"
+                ShellOutput(output="Growautomation setuptype not found in old versionfile.\n\n"
                             "WARNING!\nTo keep your old configuration the setuptype must be the same as before", style="warn")
                 ga_config["setuptype"] = setup_input(prompt="Setup as growautomation standalone, agent or server?\n"
                                                             "Agent and Server setup is disabled for now. It will become available after further testing!",
                                                      poss="standalone", default="standalone", petty=True)  # ["agent", "standalone", "server"]
                 if ga_config["setup_old_backup"] is False:
-                    ShellOutput(font="text", output="Turning on migration backup option - just in case", style="info")
+                    ShellOutput(output="Turning on migration backup option - just in case", style="info")
                     ga_config["setup_old_backup"] = True
 
         if ga_config["setup_fresh"] is True:
@@ -417,7 +420,7 @@ try:
                     whilecount += 1
                     ga_config["sql_server_ip"] = setup_input(prompt="Provide the ip address of the growautomation server.", default="192.168.0.201")
                     ga_config["sql_server_port"] = setup_input(prompt="Provide the mysql port of the growautomation server.", default="3306")
-                    ShellOutput(font="text", output="The following credentials can be found in the serverfile '$garoot/core/core.conf'")
+                    ShellOutput(output="The following credentials can be found in the serverfile '$garoot/core/core.conf'")
                     ga_config["sql_agent_user"] = setup_input(prompt="Please provide the user used to connect to the database.", default=ga_config["hostname"])
                     ga_config["sql_agent_pwd"] = setup_input(prompt="Please provide the password used to connect to the database.", default=ga_config["sql_agent_pwd"], intype="pass")
                     if setup_mysql_conntest(ga_config["sql_agent_user"], ga_config["sql_agent_pwd"]) is True:
@@ -436,7 +439,7 @@ try:
 
                 while True:
                     if whilecount > 0:
-                        ShellOutput(font="text", output="You can reset/configure the agent database credentials on the growautomation server. "
+                        ShellOutput(output="You can reset/configure the agent database credentials on the growautomation server. "
                                                         "Details can be found in the manual: https://git.growautomation.at/tree/master/manual", style="info")
                     ga_config["sql_agent_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")
                     ga_config["sql_agent_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")
@@ -452,25 +455,25 @@ try:
                 ga_config["sql_admin_user"] = setup_input(prompt="How should the growautomation database admin user be named?", default="gadmin", petty=True)
                 ga_config["sql_admin_pwd"] = setup_pwd_gen(ga_config["setup_pwd_length"])
                 if setup_mysql_conntest() is False:
-                    ShellOutput(font="text", output="Unable to connect to local mysql server with root privileges", style="err")
+                    ShellOutput(output="Unable to connect to local mysql server with root privileges", style="err")
             else:
                 ga_config["sql_admin_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")
                 ga_config["sql_admin_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_pwd=")
                 while True:
                     if whilecount > 0:
-                        ShellOutput(font="text", output="Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/core/core.conf'", style="warn")
+                        ShellOutput(output="Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/core/core.conf'", style="warn")
                     if whilecount > 1:
                         ga_config["setup_sql_admin_reset"] = setup_input(prompt="Do you want to reset the database admin via the setup?", default=False)
                         if ga_config["setup_sql_admin_reset"] is True:
                             if setup_mysql_conntest() is False:
-                                ShellOutput(font="text", output="Database admin can't be reset since the database check as root failed.\nThis could happen "
+                                ShellOutput(output="Database admin can't be reset since the database check as root failed.\nThis could happen "
                                             "if the growautomation database doesn't exist", style="warn")
                                 ga_config["setup_sql_noaccess_proceed"] = setup_input(prompt="Do you want to continue the setup anyway? The problem might maybe get fixed by the setup process.", default=False)
                                 if ga_config["setup_sql_noaccess_proceed"] is False:
                                     setup_exit("All database connections failed", "User chose to exit since all database connections failed")
                                 ga_config["setup_sql_admin_reset"] = False
                                 if ga_config["setup_old_backup"] is False:
-                                    ShellOutput(font="text", output="Turning on migration backup option - just in case", style="info")
+                                    ShellOutput(output="Turning on migration backup option - just in case", style="info")
                                     ga_config["setup_old_backup"] = True
                                 return "none"
                             else:
@@ -489,7 +492,7 @@ try:
         global ga_config
         ShellOutput(font="head", output="Checking certificate information", symbol="-")
         if ga_config["setuptype"] == "agent":
-            ShellOutput(font="text", output="The following certificates can be found in the serverpath '$garoot/ca/certs/'\n", style="info")
+            ShellOutput(output="The following certificates can be found in the serverpath '$garoot/ca/certs/'\n", style="info")
             ga_config["sql_ca"] = setup_input(prompt="Provide the path to the ca-certificate from your ga-server.", default="%s/ssl/ca.cer.pem" % ga_config["path_root"])
             ga_config["sql_cert"] = setup_input(prompt="Provide the path to the agent server certificate.", default="%s/ssl/%s.cer.pem" % (ga_config["path_root"], ga_config["hostname"]))
             ga_config["sql_key"] = setup_input(prompt="Provide the path to the agent server key.", default="%s/ssl/%s.key.pem" % (ga_config["path_root"], ga_config["hostname"]))
@@ -501,10 +504,8 @@ try:
     ga_config_var_setup()
     ga_config_var_db()
 
-
     ########################################################################################################################
     # Config migration from old installation
-
 
     if ga_config["setup_fresh"] is False:
         ShellOutput(font="head", output="Retrieving existing configuration from database", symbol="-")
@@ -544,7 +545,7 @@ try:
                     ga_config["mnt_backup_pwd"] = setup_mnt_creds("pwd", ga_mnt_backup_tmppwd)
                     ga_config["mnt_backup_dom"] = setup_mnt_creds("dom")
                 # else:
-                #     ShellOutput(font="text", output="Not mounting remote share for backup!\nCause: No sharetype, "
+                #     ShellOutput(output="Not mounting remote share for backup!\nCause: No sharetype, "
                 #                               "serverip or sharename provided.\n")
         else:
             ga_config["mnt_backup"] = False
@@ -587,7 +588,7 @@ try:
             ga_config["mnt_log_type"] = "False"  # for nfs/cifs apt installation
 
     ########################################################################################################################
-    # always vars
+
     if ga_config["setuptype"] == "agent":
         ga_config_var_certs()
 
@@ -597,12 +598,11 @@ try:
 
     setup_log_write_vars()
 
-    ShellOutput(font="text", output="Thank you for providing the setup information.\nThe installation will start now")
+    ShellOutput(output="Thank you for providing the setup information.\nThe installation will start now")
 
     ########################################################################################################################
 
 
-    # functions
     def ga_foldercreate(path):
         if os_path.exists(path) is False:
             os_system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (path, path, ga_config["setup_log_redirect"]))
@@ -663,14 +663,15 @@ try:
     def ga_sql_all():
         ShellOutput(font="head", output="Starting sql setup", symbol="#")
         ga_sql_backup_pwd = setup_pwd_gen(ga_config["setup_pwd_length"])
-        ShellOutput(font="text", output="Creating mysql backup user")
+        ShellOutput(output="Creating mysql backup user")
         DoSql(command=["DROP USER 'gabackup'@'localhost';", "CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd,
-                       "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"], user="root").start()
+                       "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"],
+              user="root", write=True).start()
         setup_mysql_conntest("gabackup", ga_sql_backup_pwd, local=True, check_system=True)
         ShellOutput(font="head", output="Setting up mysql db", symbol="-")
-        ShellOutput(font="text", output="Set a secure password and answer all other questions with Y/yes", style="info")
-        ShellOutput(font="text", output="Example random password: %s" % setup_pwd_gen(ga_config["setup_pwd_length"]), style="info", point=False)
-        ShellOutput(font="text", output="\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
+        ShellOutput(output="Set a secure password and answer all other questions with Y/yes", style="info")
+        ShellOutput(output="Example random password: %s" % setup_pwd_gen(ga_config["setup_pwd_length"]), style="info", point=False)
+        ShellOutput(output="\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
         os_system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
         setup_config_file("w", "[mysqldump]\nuser=gabackup\npassword=%s\n" % ga_sql_backup_pwd, "/etc/mysql/conf.d/ga.mysqldump.cnf")
@@ -687,14 +688,14 @@ try:
         elif ga_config["setuptype"] == "standalone":
             os_system("cp /tmp/controller/setup/standalone/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
 
-        ShellOutput(font="text", output="Creating mysql admin user")
+        ShellOutput(output="Creating mysql admin user")
         DoSql(command=["DROP USER '%s'@'%s';" % (ga_config["sql_admin_user"], "%"), "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]),
-                       "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"], user="root").start()
+                       "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True).start()
         setup_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], local=True, write=True)
         setup_config_file("a", "[db_server]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]))
 
         if ga_config["setuptype"] == "server":
-            ShellOutput(font="text", output="Creating mysql server certificate")
+            ShellOutput(output="Creating mysql server certificate")
             ga_openssl_server_cert("mysql")
             os_system("ln -s %s/ca/certs/ca.cer.pem /etc/mysql/ssl/cacert.pem && ln -s %s/ca/certs/mysql.cer.pem /etc/mysql/ssl/server-cert.pem && "
                       "ln -s %s/ca/private/mysql.key.pem /etc/mysql/ssl/server-key.pem %s"
@@ -704,8 +705,8 @@ try:
     def ga_sql_agent():
         ShellOutput(font="head", output="Configuring sql as growautomation agent", symbol="#")
         os_system("cp /tmp/controller/setup/agent/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
-        ShellOutput(font="text", output="Configuring mysql master-slave setup")
-        ShellOutput(font="text", output="Replicating server db to agent for the first time", style="info")
+        ShellOutput(output="Configuring mysql master-slave setup")
+        ShellOutput(output="Replicating server db to agent for the first time", style="info")
         os_system("mysqldump -h %s --port %s -u %s -p %s ga > /tmp/ga.dbdump.sql && mysql -u root ga < /tmp/ga.dbdump.sql "
                   "%s" % (ga_config["sql_server_ip"], ga_config["sql_server_port"], ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], ga_config["setup_log_redirect"]))
         tmpsearchdepth = 500
@@ -724,18 +725,18 @@ try:
 
         ShellOutput(font="head", output="Creating local mysql controller user (read only)", symbol="-")
         DoSql(command=["DROP USER '%s'@'localhost';" % ga_config["sql_local_user"], "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]),
-                       "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], user="root").start()
+                       "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True).start()
         setup_mysql_conntest(ga_config["sql_local_user"], ga_config["sql_local_pwd"], local=True)
         setup_config_file("a", "[db_local]\nsql_local_user=%s\nsql_local_pwd=%s\n[db_server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
                           % (ga_config["sql_local_user"], ga_config["sql_agent_pwd"], ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
 
         if setup_keycheck(ga_config["sql_server_repl_file"]) is False or setup_keycheck(ga_config["sql_server_repl_pos"]) is False:
-            ShellOutput(font="text", output="SQL master slave configuration not possible due to missing information.\nShould be found in mysql dump from server "
+            ShellOutput(output="SQL master slave configuration not possible due to missing information.\nShould be found in mysql dump from server "
                         "(searching in first %s lines).\nNot found: 'Master_Log_File:'/'Master_Log_Pos:'" % tmpsearchdepth, style="warn")
         else:
             DoSql(command=["CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s;"
                            % (ga_config["sql_server_ip"], ga_config["sql_server_repl_user"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"],
-                              ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root").start()
+                              ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root", write=True).start()
 
         ShellOutput(font="head", output="Linking mysql certificate", symbol="-")
         os_system("ln -s %s /etc/mysql/ssl/cacert.pem && ln -s %s /etc/mysql/ssl/server-cert.pem && ln -s %s /etc/mysql/ssl/server-key.pem %s"
@@ -748,24 +749,24 @@ try:
         if create_agent is True:
             server_agent_list = DoSql(command="SELECT name FROM ga.Object WHERE type = 'agent';", user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"]).start()
             if len(server_agent_list) > 0:
-                ShellOutput(font="text", output="List of registered agents:\n%s\n" % server_agent_list, style="info")
+                ShellOutput(output="List of registered agents:\n%s\n" % server_agent_list, style="info")
             else:
-                ShellOutput(font="text", output="No agents are registered.\n", style="info")
+                ShellOutput(output="No agents are registered.\n", style="info")
 
             create_agent_namelen = 0
             while create_agent_namelen > 10:
                 if create_agent_namelen > 10:
-                    ShellOutput(font="text", output="Agent could not be created due to a too long name.\nMax 10 characters supported.\nProvided: %s" % create_agent_namelen, style="warn")
+                    ShellOutput(output="Agent could not be created due to a too long name.\nMax 10 characters supported.\nProvided: %s" % create_agent_namelen, style="warn")
                 create_agent_name = setup_input(prompt="Provide agent name.", default="gacon01", poss="max. 10 characters long")
                 if create_agent_name in server_agent_list:
-                    ShellOutput(font="text", output="Controllername already registered to server. Choose a diffent name", style="warn")
+                    ShellOutput(output="Controllername already registered to server. Choose a diffent name", style="warn")
                     create_agent_name = "-----------"
                 create_agent_namelen = len(create_agent_name)
 
             create_agent_pwdlen = 0
             while create_agent_pwdlen > 99 or create_agent_pwdlen < 8:
                 if create_agent_pwdlen > 99 or create_agent_pwdlen < 8:
-                    ShellOutput(font="text", output="Input error. Value should be between 8 and 99", style="warn")
+                    ShellOutput(output="Input error. Value should be between 8 and 99", style="warn")
                 create_agent_pwd = setup_input(prompt="Provide agent password.", default=setup_pwd_gen(ga_config["setup_pwd_length"]), poss="between 8 and 99 characters")
                 create_agent_pwdlen = len(create_agent_pwd)
 
@@ -773,7 +774,7 @@ try:
             create_agent_desclen = 0
             while create_agent_desclen > 50:
                 if create_agent_desclen > 50:
-                    ShellOutput(font="text", output="Description longer than 50 characters. Try again.", style="warn")
+                    ShellOutput(output="Description longer than 50 characters. Try again.", style="warn")
                 create_agent_desc = setup_input(prompt="Do you want to add a description to the agent?", poss="String up to 50 characters")
                 create_agent_desclen = len(create_agent_desc)
 
@@ -798,19 +799,16 @@ try:
     ########################################################################################################################
 
 
-    # install packages
     def setup_apt():
         ShellOutput(font="head", output="Installing software packages", symbol="#")
         os_system("apt-get update" + ga_config["setup_log_redirect"])
         if ga_config["setup_linuxupgrade"] is True:
             os_system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
-            # os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
+            os_system("%s -m pip install --upgrade pip" % ga_config["python_path"])
 
-        os_system("apt-get -y install mariadb-server mariadb-client git %s" % ga_config["setup_log_redirect"])
+        os_system("apt-get -y install mariadb-server mariadb-client git libsystemd-dev python%s-dev %s" % (ga_config["python_version"], ga_config["setup_log_redirect"]))
 
-        # if ga_config["setup_type_as"] is True:
-        #     os_system("apt-get -y install python3-dev python-smbus git %s" % ga_config["setup_log_redirect"])
-        if ga_config["setuptype"] == "server":
+        if ga_config["setup_type_as"] is not True:
             os_system("apt-get -y install openssl %s" % ga_config["setup_log_redirect"])
 
         if (ga_config["mnt_backup"] or ga_config["mnt_log"]) is True:
@@ -825,7 +823,7 @@ try:
             os_system("%s -m pip config set global.cert %s %s" % (ga_config["python_path"], ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
             os_system("git config --global http.sslVerify true && git config --global http.sslCAInfo %s %s" % (ga_config["setup_ca_path"], ga_config["setup_log_redirect"]))
         ShellOutput(font="head", output="Installing python packages", symbol="-")
-        os_system("%s -m pip install systemd mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay --default-timeout=100 %s"
+        os_system("%s -m pip install systemd mysql-connector-python RPi.GPIO Adafruit_DHT adafruit-ads1x15 selenium pyvirtualdisplay smbus2 --default-timeout=100 %s"
                   % (ga_config["python_path"], ga_config["setup_log_redirect"]))
 
 
@@ -834,76 +832,78 @@ try:
         setup_pip()
 
 
-    # folders
-    # Create folders
-    def ga_infra_oldversion_rootcheck():
+    def infra_oldversion_rootcheck():
         if ga_config["path_old_root"] is False:
             return ga_config["path_root"]
         else:
             return ga_config["path_old_root"]
 
 
-    def ga_infra_oldversion_cleanconfig():
+    def infra_oldversion_cleanconfig():
         movedir = "/tmp/setup_%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"))
         os_system("mkdir -p %s" % movedir)
-        os_system("mv %s %s %s" % (ga_infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
+        os_system("mv %s %s %s" % (infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
         os_system("mysqldump -u root ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
         DoSql(command="DROP DATABASE ga;", write=True, user="root").start()
-        ShellOutput(font="text", output="Removed old ga database")
+        ShellOutput(output="Removed old ga database")
 
 
-    def ga_infra_oldversion_backup():
+    def infra_oldversion_backup():
         global ga_config
         ShellOutput(font="head", output="Backing up old growautomation root directory and database", symbol="-")
         oldbackup = ga_config["path_backup"] + "install_%s" % datetime.now().strftime("%Y-%m-%d_%H-%M")
-        os_system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, ga_infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
+        os_system("mkdir -p %s && cp -r %s %s %s" % (oldbackup, infra_oldversion_rootcheck(), oldbackup, ga_config["setup_log_redirect"]))
         os_system("mv %s %s %s" % (ga_config["setup_version_file"], oldbackup, ga_config["setup_log_redirect"]))
         os_system("mysqldump -u root ga > %s/ga.dbdump.sql %s" % (oldbackup, ga_config["setup_log_redirect"]))
-        ShellOutput(font="text", output="Backupfolder: %s\n%s\nRoot backupfolder:\n%s" % (oldbackup, os_listdir(oldbackup), os_listdir(oldbackup + "/growautomation")), style="info")
+        ShellOutput(output="Backupfolder: %s\n%s\nRoot backupfolder:\n%s" % (oldbackup, os_listdir(oldbackup), os_listdir(oldbackup + "/growautomation")), style="info")
         if os_path.exists(oldbackup + "/ga.dbdump.sql") is False or \
                 os_path.exists(oldbackup + "/growautomation/") is False:
-            ShellOutput(font="text", output="Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
+            ShellOutput(output="Success of backup couldn't be verified. Please check it yourself to be sure that it was successfully created. (Strg+Z "
                         "to get to Shell -> 'fg' to get back)\nBackuppath: %s" % oldbackup, style="warn")
             ga_config["setup_old_backup_failed_yousure"] = setup_input(prompt="Please verify that you want to continue the setup", default=False)
         else:
             ga_config["setup_old_backup_failed_yousure"] = True
-        ga_infra_oldversion_cleanconfig()
+        infra_oldversion_cleanconfig()
 
 
-    def setup_infra_mounts():
+    def setup_infra_mount():
         if ga_config["mnt_backup"] is True or ga_config["mnt_log"] is True:
-            ShellOutput(font="head", output="Mounting shares", symbol="#")
+            ShellOutput(font="head", output="Mounting shares", symbol="-")
             if ga_config["mnt_backup"] is True:
                 ga_mounts("backup", ga_config["mnt_backup_user"], ga_config["mnt_backup_pwd"], ga_config["mnt_backup_dom"], ga_config["mnt_backup_srv"],
                           ga_config["mnt_backup_share"], ga_config["path_backup"], ga_config["mnt_backup_type"])
+                ShellOutput(output="Added backup mount", style="succ")
             if ga_config["mnt_log"] is True:
                 ga_mounts("log", ga_config["mnt_log_user"], ga_config["ga_mnt_log_pwd"], ga_config["ga_mnt_log_dom"], ga_config["mnt_log_server"], ga_config["mnt_log_share"],
                           ga_config["path_log"], ga_config["mnt_log_type"])
+                ShellOutput(output="Added log mount", style="succ")
 
 
-    def setup_infra():
-        ShellOutput(font="head", output="Setting up directories", symbol="#")
+    def setup_infra_dir():
+        ShellOutput(font="head", output="Setting up directories", symbol="-")
         os_system("useradd growautomation %s" % ga_config["setup_log_redirect"])
 
         ga_foldercreate(ga_config["path_backup"])
 
         if ga_config["setup_old"] is True and ga_config["setup_old_backup"] is True:
-            ga_infra_oldversion_backup()
+            infra_oldversion_backup()
         elif ga_config["setup_old"] is True:
-            ga_infra_oldversion_cleanconfig()
+            infra_oldversion_cleanconfig()
 
         setup_config_file("w", "version=%s\npath_root=%s\nhostname=%s\nsetuptype=%s\n"
                           % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setuptype"]), ga_config["setup_version_file"])
         os_system("chmod 664 %s && chown growautomation:growautomation %s %s" % (ga_config["setup_version_file"], ga_config["setup_version_file"], ga_config["setup_log_redirect"]))
         ga_foldercreate(ga_config["path_root"])
         ga_foldercreate(ga_config["path_log"])
-        setup_infra_mounts()
+        ShellOutput(output="Created directories", style="succ")
+        setup_infra_mount()
 
 
-    # code setup
-    def setup_infra_code():
+    def setup_infra():
         ShellOutput(font="head", output="Setting up growautomation code", symbol="#")
-        os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
+        setup_infra_dir()
+        if process("systemctl status growautomation.service").find("not found") == -1:
+            os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
         # if os_path.exists("/tmp/controller") is True:
         #     os_system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
         # os_system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
@@ -919,32 +919,26 @@ try:
         os_system("find %s -type f -iname '*.py' -exec chmod 754 {} \\; %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
         os_system("chown -R growautomation:growautomation %s %s" % (ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-        ga_pyvers = "%s.%s" % (sys_version_info.major, sys_version_info.minor)
-        ga_pyvers_modpath = "/usr/local/lib/python%s/dist-packages/ga" % ga_pyvers
-        if os_path.exists(ga_pyvers_modpath) is False:
-            os_system("ln -s %s %s %s" % (ga_config["path_root"], ga_pyvers_modpath, ga_config["setup_log_redirect"]))
-
         os_system("ln -s %s %s/backup && ln -s %s %s/log %s" % (ga_config["path_backup"], ga_config["path_root"], ga_config["path_log"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
         setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
         service_system_path, service_py_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"], "%s/service/" % ga_config["path_root"]
-        os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
+        if os_path.exists("/etc/systemd/system/growautomation.service"):
+            os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
         ga_replaceline(service_system_path, "ExecStart=%s /etc/growautomation/service/service.py", "ExecStart=%s %s/service.py" % (ga_config["python_path"], service_py_path))
         ga_replaceline(service_system_path, "ExecStartPre=%s /etc/growautomation/service/earlybird.py", "ExecStartPre=%s %s/earlybird.py" % (ga_config["python_path"], service_py_path))
         os_system("systemctl link %s %s" % (service_system_path, ga_config["setup_log_redirect"]))
         os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
         os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
-        ShellOutput(font="text", output="Linked and enabled growautomation service", style="info")
+        ShellOutput(output="Linked and enabled growautomation service", style="succ")
 
     setup_infra()
-    setup_infra_code()
 
     # creating openssl ca
     if ga_config["setuptype"] == "server":
         ga_openssl_setup()
 
-    # db setup
     ga_sql_all()
 
     if ga_config["setup_type_ss"] is True:
@@ -957,7 +951,6 @@ try:
         ga_sql_agent()
 
     ########################################################################################################################
-    # create devicetypes and devices
 
 
     class GetObject:
@@ -967,7 +960,7 @@ try:
 
         def add_core(self):
             ShellOutput(font="head", output="Basic device setup", symbol="#")
-            ShellOutput(font="text", output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
+            ShellOutput(output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
             core_object_dict = {}
             core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
             self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
@@ -979,7 +972,7 @@ try:
             dt_object_dict = {}
             ShellOutput(font="head", output="Devicetypes", symbol="-")
             while_devicetype = setup_input(prompt="Do you want to add devicetypes?\n"
-                                              "Info: must be created for every sensor/action/downlink hardware model; they provide per model configuration", default=True)
+                                           "Info: must be created for every sensor/action/downlink hardware model; they provide per model configuration", default=True)
             while_count = 0
             while while_devicetype:
                 ShellOutput(font="line", output="", symbol="-")
@@ -990,10 +983,10 @@ try:
                     name = setup_input(prompt="Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
                 dt_object_dict[name] = setup_input(prompt="Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
                 setting_dict["function"] = setup_input(prompt="Which function should be started for the devicetype?\n"
-                                                          "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
-                                                          default="%s.py" % name, intype="free", max_value=50)
+                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
+                                                       default="%s.py" % name, intype="free", max_value=50)
                 setting_dict["function_arg"] = setup_input(prompt="Provide system arguments to pass to you function -> if you need it.\n"
-                                                              "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
+                                                           "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
                 if dt_object_dict[name] == "action":
                     setting_dict["boomerang"] = setup_input(prompt="Will this type need to reverse itself?\nInfo: pe. opener that needs to open/close", default=False)
                     if setting_dict["boomerang"]:
@@ -1008,9 +1001,9 @@ try:
                     setting_dict["timer"] = setup_input(prompt="Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
                     setting_dict["unit"] = setup_input(prompt="Provide the unit for the sensor input.", default="°C", intype="free")
                     setting_dict["threshold_max"] = setup_input(prompt="Provide a maximum threshold value for the sensor.\n"
-                                                                   "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
+                                                                "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
                     setting_dict["threshold_optimal"] = setup_input(prompt="Provide a optimal threshold value for the sensor.\n"
-                                                                       "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
+                                                                    "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
 
                     setting_dict["timer_check"] = setup_input(prompt="How often should the threshold be checked? Interval in seconds.", default=3600, max_value=1209600, min_value=60)
                 elif dt_object_dict[name] == "downlink":
@@ -1044,13 +1037,13 @@ try:
                         dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
                         if len(dl_list) > 0:
                             setting_dict["connection"] = setup_input(prompt="How is the device connected to the growautomation agent?\n"
-                                                                        "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
+                                                                     "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
                         else:
                             setting_dict["connection"] = setup_input(prompt="How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
-                                                                        "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", petty=True)
+                                                                     "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", petty=True)
                         if setting_dict["connection"] == "downlink":
                             setting_dict["downlink"] = setup_input(prompt="Provide the name of the downlink to which the device is connected to.\n"
-                                                                      "Info: the downlink must also be added as device", poss=dl_list, intype="free")
+                                                                   "Info: the downlink must also be added as device", poss=dl_list, intype="free")
                     setting_dict["port"] = setup_input(prompt="Provide the portnumber to which the device is/will be connected.", intype="free")
                     self.setting_dict[name] = setting_dict
                     create = setup_input(prompt="Want to add another %s?" % to_ask, default=True, style="info")
@@ -1123,7 +1116,7 @@ try:
                     else:
                         return DoSql(command=command, write=True, user="root").start()
 
-            ShellOutput(font="text", output="Writing object configuration")
+            ShellOutput(output="Writing object configuration")
             sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
             [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key) for key in self.object_dict.keys()]
             object_count = 0
@@ -1144,9 +1137,9 @@ try:
                         object_count += unpack_values(packed_subvalues, ga_config["hostname"])
                 else:
                     object_count += unpack_values(packed_values)
-            ShellOutput(font="text", output="%s objects were added" % object_count, style="info")
+            ShellOutput(output="%s objects were added" % object_count, style="info")
 
-            ShellOutput(font="text", output="Writing object settings")
+            ShellOutput(output="Writing object settings")
             setting_count = 0
             for object_name, packed_values in self.setting_dict.items():
                 packed_values["enabled"] = 1
@@ -1160,9 +1153,9 @@ try:
                             data = 0
                     sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
                     setting_count += 1
-            ShellOutput(font="text", output="%s object settings were added" % setting_count, style="info")
+            ShellOutput(output="%s object settings were added" % setting_count, style="info")
 
-            ShellOutput(font="text", output="Writing group configuration")
+            ShellOutput(output="Writing group configuration")
             group_count, member_count = 0, 0
             for group_type, packed_values in self.group_dict.items():
                 for group_id, group_member_list in packed_values.items():
@@ -1173,7 +1166,7 @@ try:
                         sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
                         member_count += 1
                     group_count += 1
-            ShellOutput(font="text", output="%s groups with a total of %s members were added" % (group_count, member_count), style="info")
+            ShellOutput(output="%s groups with a total of %s members were added" % (group_count, member_count), style="info")
 
 
     GetObject()
@@ -1181,8 +1174,7 @@ try:
     ########################################################################################################################
     # post setup tasks
 
-    # defining default values
-    ga_config["backup_time"] = "2000"
+    # default settings
     ga_config["backup_log"] = False
     ga_config["install_timestamp"] = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
@@ -1207,7 +1199,7 @@ try:
             else:
                 DoSql(command="INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');"
                               % ("gasetup", ga_config["hostname"], key, value), user="root", write=True).start()
-        ShellOutput(font="text", output="Wrote %s setup settings to database" % len(insertdict), style="succ")
+        ShellOutput(output="Wrote %s setup settings to database" % len(insertdict), style="succ")
 
 
     ShellOutput(font="head", output="Writing configuration to database", symbol="#")
