@@ -40,8 +40,7 @@ class Config:
     def error(self, parser_type):
         from smallant import LogWrite
         LogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
-        LogWrite("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request))
-        print("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request))
+        LogWrite("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request), level=1)
         return False
 
     def parse_file_find(self):
