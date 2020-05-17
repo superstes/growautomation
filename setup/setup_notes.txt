@@ -60,6 +60,4 @@ May have changed since then
   - systemctl daemon-reload
 - add basic configuration to db
   - core config
-    run the /etc/growautomation/maintenance/config_interface.py with the 'setup' argument
-  - sensors/actions
-    run the /etc/growautomation/maintenance/config_interface.py with the 'add' argument
+    run the config module with the start argument: "/etc/growautomation/maintenance/config_interface.py start"
