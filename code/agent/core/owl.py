@@ -36,8 +36,14 @@ LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2
 
 
 class DoSql:
-    def __init__(self, command, write=False, user=None, pwd=None, exit=True):
+    def __init__(self, command, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None):
         self.command, self.write, self.user, self.pwd, self.exit = command, write, user, pwd, exit
+        if hostname is None:
+            self.hostname = Config("hostname").get()
+        else: self.hostname = hostname
+        if setuptype is None:
+            self.setuptype = Config("setuptype").get()
+        else: self.setuptype = setuptype
         self.fallback = False
 
     def start(self):
@@ -63,7 +69,7 @@ class DoSql:
             whilecount += 1
         whilecount = 0
         while creds_ok is False:
-            if whilecount == 1 and Config("setuptype").get() == "agent":
+            if whilecount == 1 and self.setuptype == "agent":
                 debugger("owl - start |failing over to local db")
                 LogWrite("Failing over to local read-only database")
                 self.fallback = True
@@ -83,8 +89,8 @@ class DoSql:
             def conntest():
                 if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
                 else:
-                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % Config("hostname").get(), connect_debug=False)
-                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get(), connect_debug=False)
+                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % self.hostname, connect_debug=False)
+                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % self.hostname, connect_debug=False)
                     data = True
                 result = True if type(data) == list else data if type(data) == bool else False
                 debugger("owl - start |conntest '%s' '%s'" % (type(result), result))
@@ -114,12 +120,12 @@ class DoSql:
                 if self.user == "root":
                     connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
                 else:
-                    if Config("setuptype").get() == "agent":
+                    if self.setuptype == "agent":
                         connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
                                                              user=self.user, passwd=self.pwd)
                     else:
                         connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
-            elif Config("setuptype").get() == "agent":
+            elif self.setuptype == "agent":
                 if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
                 else: connection = mysql.connector.connect(unix_socket=self.unixsock(), host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
                                                            user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
