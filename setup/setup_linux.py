@@ -32,6 +32,7 @@ from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
+from sys import exc_info as sys_exc_info
 import signal
 
 # setup vars
@@ -73,9 +74,13 @@ except IndexError:
     debug = False
 
 
-def setup_stop(signum=None, stack=None):
+def setup_stop(signum=None, stack=None, error_msg=None):
     if debug: VarHandler().stop()
-    raise SystemExit("Received signal %s\nExiting setup!\n\n" % signum)
+    if signum is not None:
+        ShellOutput("\nReceived signal %s\n" % signum)
+    if error_msg is not None:
+        ShellOutput("\nAn error occurred:\n'%s'\n" % error_msg)
+    raise SystemExit("Exiting setup!\n\n")
 
 
 signal.signal(signal.SIGTERM, setup_stop)
@@ -157,22 +162,25 @@ try:
         if dbuser == "": dbuser = "root"
         if dbuser == "root" and ga_config["sql_server_ip"] == "127.0.0.1":
             if check_ga_exists is True:
-                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user="root", exit=False).start()
+                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user="root", exit=False, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             else:
-                sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user="root", exit=False).start()
+                sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user="root", exit=False, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         elif dbpwd == "":
             ShellOutput(output="SQL connection failed. No password provided and not root.", style="warn")
             setup_log_write("Sql connection test failed!\nNo password provided and not root.\nServer: %s, user: %s" % (ga_config["sql_server_ip"], dbuser))
             return False
         elif local and check_system:
-            sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
+            sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         elif local:
             if write:
-                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','none');", user=dbuser, pwd=dbpwd, write=True, exit=False).start()
+                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','none');", user=dbuser, pwd=dbpwd, write=True, exit=False,
+                                hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             else:
-                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
+                sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False, hostname=ga_config["hostname"],
+                                setuptype=ga_config["setuptype"]).start()
         else:
-            sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False).start()
+            sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False, hostname=ga_config["hostname"],
+                            setuptype=ga_config["setuptype"]).start()
         if type(sqltest) == list:
             ShellOutput(output="SQL connection verified", style="succ")
             return True
@@ -192,10 +200,10 @@ try:
         if type(search) == list:
             itemdatadict = {}
             for item in search:
-                itemdatadict[item] = DoSql(command=command(item), user=user, pwd=pwd).start()
+                itemdatadict[item] = DoSql(command=command(item), user=user, pwd=pwd, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             return itemdatadict
         elif type(search) == str:
-            data = DoSql(command=command(search), user=user, pwd=pwd).start()
+            data = DoSql(command=command(search), user=user, pwd=pwd, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             return data
 
 
@@ -261,7 +269,7 @@ try:
         ShellOutput(output="Growautomation default root path exists", style="info")
     else:
         ShellOutput(output="No growautomation default root path exists", style="info")
-    if DoSql(command="SHOW DATABASES;", user="root").find("ga") != -1:
+    if DoSql(command="SHOW DATABASES;", user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).find("ga") != -1:
         ga_config["setup_old_db"] = True
         ShellOutput(output="Growautomation database exists", style="info")
     else:
@@ -666,11 +674,11 @@ try:
         ShellOutput(output="Creating mysql backup user")
         DoSql(command=["DROP USER 'gabackup'@'localhost';", "CREATE USER 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd,
                        "GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON *.* TO 'gabackup'@'localhost' IDENTIFIED BY '%s';" % ga_sql_backup_pwd, "FLUSH PRIVILEGES;"],
-              user="root", write=True).start()
+              user="root", write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         setup_mysql_conntest("gabackup", ga_sql_backup_pwd, local=True, check_system=True)
         ShellOutput(font="head", output="Setting up mysql db", symbol="-")
         ShellOutput(output="Set a secure password and answer all other questions with Y/yes", style="info")
-        ShellOutput(output="Example random password: %s" % setup_pwd_gen(ga_config["setup_pwd_length"]), style="info", point=False)
+        ShellOutput(output="Example random password: %s" % setup_pwd_gen(ga_config["setup_pwd_length"]), style="info")
         ShellOutput(output="\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
         os_system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
@@ -690,7 +698,8 @@ try:
 
         ShellOutput(output="Creating mysql admin user")
         DoSql(command=["DROP USER '%s'@'%s';" % (ga_config["sql_admin_user"], "%"), "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]),
-                       "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True).start()
+                       "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True,
+              hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         setup_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], local=True, write=True)
         setup_config_file("a", "[db_server]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]))
 
@@ -719,13 +728,14 @@ try:
                 ga_config["sql_server_repl_pos"] = line.split("Master_Log_Pos: ")[1].split("\n", 1)[0]
 
         ga_sql_server_agent_id = DoSql(command="SELECT data FROM ga.Setting WHERE belonging = '%s' AND setting = 'id';" % ga_config["hostname"],
-                                       user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"]).start()
+                                       user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         ga_replaceline("/etc/mysql/mariadb.conf.d/50-server.cnf", "server-id              = 1", "server-id = %s" % (int(ga_sql_server_agent_id) + 100))
-        os_system("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
+        process("systemctl restart mysql %s" % ga_config["setup_log_redirect"])
 
         ShellOutput(font="head", output="Creating local mysql controller user (read only)", symbol="-")
         DoSql(command=["DROP USER '%s'@'localhost';" % ga_config["sql_local_user"], "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]),
-                       "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True).start()
+                       "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], user="root",
+              write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         setup_mysql_conntest(ga_config["sql_local_user"], ga_config["sql_local_pwd"], local=True)
         setup_config_file("a", "[db_local]\nsql_local_user=%s\nsql_local_pwd=%s\n[db_server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
                           % (ga_config["sql_local_user"], ga_config["sql_agent_pwd"], ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
@@ -736,7 +746,8 @@ try:
         else:
             DoSql(command=["CHANGE MASTER TO MASTER_HOST='%s', MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%s;"
                            % (ga_config["sql_server_ip"], ga_config["sql_server_repl_user"], ga_config["sql_server_repl_pwd"], ga_config["sql_server_repl_file"],
-                              ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root", write=True).start()
+                              ga_config["sql_server_repl_pos"]), " START SLAVE;", " SHOW SLAVE STATUS;"], user="root", write=True,
+                  hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
 
         ShellOutput(font="head", output="Linking mysql certificate", symbol="-")
         os_system("ln -s %s /etc/mysql/ssl/cacert.pem && ln -s %s /etc/mysql/ssl/server-cert.pem && ln -s %s /etc/mysql/ssl/server-key.pem %s"
@@ -747,7 +758,8 @@ try:
         ShellOutput(font="head", output="Registering a new growautomation agent to the server", symbol="#")
         create_agent = setup_input(prompt="Do you want to register an agent to the ga-server?", default=True)
         if create_agent is True:
-            server_agent_list = DoSql(command="SELECT name FROM ga.Object WHERE type = 'agent';", user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"]).start()
+            server_agent_list = DoSql(command="SELECT name FROM ga.Object WHERE type = 'agent';", user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"],
+                                      hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             if len(server_agent_list) > 0:
                 ShellOutput(output="List of registered agents:\n%s\n" % server_agent_list, style="info")
             else:
@@ -781,13 +793,15 @@ try:
             DoSql(command=["DROP USER '%s'@'%s';" % (create_agent_name, "%"), "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
                            "GRANT CREATE, DELETE, INSERT, SELECT, UPDATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_agent_name, "%", create_agent_pwd),
                            "FLUSH PRIVILEGES;", "INSERT INTO ga.Agent (author, controller, description) VALUES (%s, %s, %s);"
-                           % ("gasetup", create_agent_name, create_agent_desc)], user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"], write=True).start()
+                           % ("gasetup", create_agent_name, create_agent_desc)], user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"], write=True,
+                  hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
 
             create_replica_usr = create_agent_name + "replica"
             create_replica_pwd = setup_pwd_gen(ga_config["setup_pwd_length"])
             DoSql(command=["DROP USER '%s'@'%s';" % (create_replica_usr, "%"), "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
                            "GRANT REPLICATE ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (create_replica_usr, "%", create_replica_pwd),
-                           "FLUSH PRIVILEGES;"], user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"], write=True).start()
+                           "FLUSH PRIVILEGES;"], user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"], write=True,
+                  hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
 
             setup_config_file("a", "[db_agent_%s]\nsql_server_ip=%s\nsql_server_port=%s\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_replica_user=%s\nsql_replica_pwd=%s"
                               % (create_agent_name, ga_config["sql_server_ip"], ga_config["sql_server_port"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
@@ -806,7 +820,7 @@ try:
             os_system("apt-get -y dist-upgrade && apt-get -y upgrade %s && apt -y autoremove" % ga_config["setup_log_redirect"])
             os_system("%s -m pip install --upgrade pip setuptools" % ga_config["python_path"])
 
-        os_system("apt-get -y install mariadb-server mariadb-client git libsystemd-dev python%s-dev %s" % (ga_config["python_version"], ga_config["setup_log_redirect"]))
+        os_system("apt-get -y install mariadb-server mariadb-client git libsystemd-dev %s" % ga_config["setup_log_redirect"])
 
         if ga_config["setup_type_as"] is not True:
             os_system("apt-get -y install openssl %s" % ga_config["setup_log_redirect"])
@@ -844,7 +858,7 @@ try:
         os_system("mkdir -p %s" % movedir)
         os_system("mv %s %s %s" % (infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
         os_system("mysqldump -u root ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
-        DoSql(command="DROP DATABASE ga;", write=True, user="root").start()
+        DoSql(command="DROP DATABASE ga;", write=True, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         ShellOutput(output="Removed old ga database")
 
 
@@ -904,7 +918,7 @@ try:
         setup_infra_dir()
         ShellOutput(font="head", output="Setting up code", symbol="-")
         if process("systemctl status growautomation.service").find("not found") == -1:
-            os_system("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
+            process("systemctl stop growautomation.service %s" % ga_config["setup_log_redirect"])
         # if os_path.exists("/tmp/controller") is True:
         #     os_system("mv /tmp/controller /tmp/controller_%s %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
         # os_system("cd /tmp && git clone https://github.com/growautomation-at/controller.git %s" % ga_config["setup_log_redirect"])
@@ -929,9 +943,9 @@ try:
             os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config["setup_log_redirect"])
         ga_replaceline(service_system_path, "ExecStart=%s /etc/growautomation/service/service.py", "ExecStart=%s %s/service.py" % (ga_config["python_path"], service_py_path))
         ga_replaceline(service_system_path, "ExecStartPre=%s /etc/growautomation/service/earlybird.py", "ExecStartPre=%s %s/earlybird.py" % (ga_config["python_path"], service_py_path))
-        os_system("systemctl link %s %s" % (service_system_path, ga_config["setup_log_redirect"]))
-        os_system("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
-        os_system("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
+        process("systemctl link %s %s" % (service_system_path, ga_config["setup_log_redirect"]))
+        process("systemctl enable growautomation.service %s" % ga_config["setup_log_redirect"])
+        process("systemctl daemon-reload %s" % ga_config["setup_log_redirect"])
         ShellOutput(output="Linked and enabled growautomation service", style="succ")
 
     setup_infra()
@@ -1108,14 +1122,14 @@ try:
             def sql(command, query=False):
                 if ga_config["setuptype"] == "agent":
                     if query:
-                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"]).start()
+                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
                     else:
-                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], write=True).start()
+                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
                 else:
                     if query:
-                        return DoSql(command=command, user="root").start()
+                        return DoSql(command=command, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
                     else:
-                        return DoSql(command=command, write=True, user="root").start()
+                        return DoSql(command=command, write=True, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
 
             ShellOutput(output="Writing object configuration")
             sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
@@ -1196,10 +1210,10 @@ try:
                     value = 0
             if ga_config["setuptype"] == "agent":
                 command = "INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');" % ("gasetup", ga_config["hostname"], key, value)
-                DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], write=True).start()
+                DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             else:
                 DoSql(command="INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');"
-                              % ("gasetup", ga_config["hostname"], key, value), user="root", write=True).start()
+                              % ("gasetup", ga_config["hostname"], key, value), user="root", write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         ShellOutput(output="Wrote %s setup settings to database" % len(insertdict), style="succ")
 
 
@@ -1209,13 +1223,13 @@ try:
     setup_mysql_write_config(writedict)
 
     ShellOutput(font="head", output="Starting growautomation service", symbol="#")
-    os_system("systemctl start growautomation.service %s" % ga_config["setup_log_redirect"])
+    process("systemctl start growautomation.service %s" % ga_config["setup_log_redirect"])
 
     ShellOutput(font="head", output="Setup finished! Please reboot the system", symbol="#")
     setup_log_write("Setup finished.")
 
 except:
-    setup_stop()
+    setup_stop(error_msg="%s: %s" % (sys_exc_info()[0].__name__, sys_exc_info()[1]))
 
 # check path inputs for ending / and remove it
 # delete old fstab entries and replace them (ask user)
