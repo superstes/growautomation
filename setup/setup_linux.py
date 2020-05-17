@@ -77,7 +77,10 @@ except IndexError:
 
 
 def setup_signal(signum=None, stack=None):
-    raise RuntimeError("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+    if sys_exc_info()[0] is not None:
+        raise RuntimeError("Received signal %s |last error: \"%s - %s\"" % (signum, sys_exc_info()[0].__name__, sys_exc_info()[1]))
+    else:
+        raise RuntimeError("Received signal %s")
 
 
 def setup_stop(error_msg=None):
@@ -275,7 +278,7 @@ try:
     if ga_config["setup_old_root"] is True:
         ShellOutput(output="Growautomation default root path exists", style="info")
     else:
-        ShellOutput(output="No growautomation default root path exists", style="info")
+        ShellOutput(output="Growautomation default root path doesn't exist", style="info")
     if DoSql(command="SHOW DATABASES;", user="root").find("ga") != -1:
         ga_config["setup_old_db"] = True
         ShellOutput(output="Growautomation database exists", style="info")
@@ -302,7 +305,6 @@ try:
         if ga_config["setup_old_version_file"] is True:
             if ga_config["setup_old_version"] is None:
                 if ga_config["setup_old_root"] is True:
-                    ShellOutput(output="Growautomation is currently installed. But its version number could not be found", style="warn")
                     ga_config_vars_oldversion_replace()
                 elif ga_config["setup_old_db"] is True:
                     ga_config_vars_oldversion_replace()
@@ -313,9 +315,7 @@ try:
                 ShellOutput(output="A version of growautomation is/was already installed on this system!\n\n"
                             "Installed version: %s\nReplace version: %s" % (ga_config["setup_old_version"], ga_config["version"]))
                 ga_config_vars_oldversion_replace()
-        elif ga_config["setup_old_root"] is True:
-            ShellOutput(output="Growautomation is currently installed. But its version number could not be found", style="warn")
-            ga_config_vars_oldversion_replace()
+        else: ga_config_vars_oldversion_replace()
     else:
         ShellOutput(output="No previous growautomation installation found", style="info")
         ga_config["setup_old"] = False
@@ -545,8 +545,11 @@ try:
     if ga_config["setup_fresh"] is True:
         ShellOutput(font="head", output="Checking directory information", symbol="-")
 
-        ga_config["path_backup"] = setup_input(prompt="Want to choose a custom backup path?", default="/mnt/growautomation/backup/")
-        ga_config["backup"] = setup_input(prompt="Want to enable backup?", default=True)
+        ga_config["backup"] = setup_input(prompt="Want to enable backup?", default=True, petty=True)
+        if ga_config["backup"] is True:
+            ga_config["path_backup"] = setup_input(prompt="Want to choose a custom backup path?", default="/var/backups/growautomation/")
+        else:
+            ga_config["path_backup"] = "/var/backups/growautomation/"
         if ga_config["backup"] is True:
             ga_config["mnt_backup"] = setup_input(prompt="Want to mount remote share as backup destination? Smb and nfs available.", default=False, petty=True)
             if ga_config["mnt_backup"] is True:
@@ -863,7 +866,8 @@ try:
     def infra_oldversion_cleanconfig():
         movedir = "/tmp/setup_%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"))
         os_system("mkdir -p %s" % movedir)
-        os_system("mv %s %s %s" % (infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
+        if os_path.exists(infra_oldversion_rootcheck()):
+            os_system("mv %s %s %s" % (infra_oldversion_rootcheck(), movedir, ga_config["setup_log_redirect"]))
         os_system("mysqldump -u root ga > /tmp/ga.dbdump_%s.sql %s" % (datetime.now().strftime("%Y-%m-%d_%H-%M"), ga_config["setup_log_redirect"]))
         DoSql(command="DROP DATABASE ga;", write=True, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         ShellOutput(output="Removed old ga database")
@@ -902,7 +906,7 @@ try:
 
     def setup_infra_dir():
         ShellOutput(font="head", output="Setting up directories", symbol="-")
-        os_system("useradd growautomation %s" % ga_config["setup_log_redirect"])
+        os_system("id -u growautomation &>/dev/null || useradd growautomation %s" % ga_config["setup_log_redirect"])
 
         ga_foldercreate(ga_config["path_backup"])
 
