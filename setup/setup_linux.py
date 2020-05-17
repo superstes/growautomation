@@ -58,12 +58,14 @@ try:
     from ..code.agent.core.ant import ShellOutput
     from ..code.agent.core.smallant import VarHandler
     from ..code.agent.core.smallant import process
+    from ..code.agent.maintenance.config_interface import setup as object_setup
 except ImportError:
     from owl import DoSql
     from ant import ShellInput
     from ant import ShellOutput
     from smallant import VarHandler
     from smallant import process
+    from config_interface import setup as object_setup
 
 try:
     if sys_argv[1] == "debug":
@@ -74,17 +76,19 @@ except IndexError:
     debug = False
 
 
-def setup_stop(signum=None, stack=None, error_msg=None):
+def setup_signal(signum=None, stack=None):
+    raise RuntimeError("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+
+
+def setup_stop(error_msg=None):
     if debug: VarHandler().stop()
-    if signum is not None:
-        ShellOutput("\nReceived signal %s\n" % signum)
     if error_msg is not None:
         ShellOutput("\nAn error occurred:\n\"%s\"\n" % error_msg)
     raise SystemExit("Exiting setup!\n\n")
 
 
-signal.signal(signal.SIGTERM, setup_stop)
-signal.signal(signal.SIGINT, setup_stop)
+signal.signal(signal.SIGTERM, setup_signal)
+signal.signal(signal.SIGINT, setup_signal)
 
 ########################################################################################################################
 
@@ -159,6 +163,9 @@ try:
 
     def setup_mysql_conntest(dbuser="", dbpwd="", check_ga_exists=False, local=False, check_system=False, write=False):
         ShellOutput("Testing sql connection.", style="info")
+        if process("apt-cache policy mariadb-server | grep Installed").find("none") != -1:
+            ShellOutput("MariaDB not installed.", style="warn")
+            return False
         if dbuser == "": dbuser = "root"
         if dbuser == "root" and ga_config["sql_server_ip"] == "127.0.0.1":
             if check_ga_exists is True:
@@ -967,224 +974,9 @@ try:
 
     ########################################################################################################################
 
-
-    class GetObject:
-        def __init__(self):
-            self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
-            self.add_core()
-
-        def add_core(self):
-            ShellOutput(font="head", output="Basic device setup", symbol="#")
-            ShellOutput(output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
-            core_object_dict = {}
-            core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
-            self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
-            self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
-            self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {ga_config["hostname"]: "NULL"}
-            self.get_devicetype()
-
-        def get_devicetype(self):
-            dt_object_dict = {}
-            ShellOutput(font="head", output="Devicetypes", symbol="-")
-            while_devicetype = setup_input(prompt="Do you want to add devicetypes?\n"
-                                           "Info: must be created for every sensor/action/downlink hardware model; they provide per model configuration", default=True)
-            while_count = 0
-            while while_devicetype:
-                ShellOutput(font="line", output="", symbol="-")
-                setting_dict = {}
-                if while_count > 0:
-                    name = setup_input(prompt="Provide a unique name - at max 20 characters long.\nAlready existing:\n%s" % list(dt_object_dict.keys()), default="AirHumidity", intype="free")
-                else:
-                    name = setup_input(prompt="Provide a unique name - at max 20 characters long.", default="AirHumidity", intype="free")
-                dt_object_dict[name] = setup_input(prompt="Provide a type.", default="sensor", poss=["sensor", "action", "downlink"], intype="free")
-                setting_dict["function"] = setup_input(prompt="Which function should be started for the devicetype?\n"
-                                                       "Info: just provide the name of the file; they must be placed in the ga %s folder" % dt_object_dict[name],
-                                                       default="%s.py" % name, intype="free", max_value=50)
-                setting_dict["function_arg"] = setup_input(prompt="Provide system arguments to pass to you function -> if you need it.\n"
-                                                           "Info: pe. if one function can provide data to multiple devicetypes", intype="free", min_value=0, max_value=75)
-                if dt_object_dict[name] == "action":
-                    setting_dict["boomerang"] = setup_input(prompt="Will this type need to reverse itself?\nInfo: pe. opener that needs to open/close", default=False)
-                    if setting_dict["boomerang"]:
-                        setting_dict["boomerang_type"] = setup_input(prompt="How will the reverse be initiated?", default="threshold", poss=["threshold", "time"], intype="free")
-                        if setting_dict["boomerang_type"] == "time":
-                            setting_dict["boomerang_time"] = setup_input(prompt="Provide the time after the action will be reversed.", default=1200, max_value=1209600, min_value=10)
-                        reverse_function = setup_input(prompt="Does reversing need an other function?", default=False)
-                        if reverse_function:
-                            setting_dict["boomerang_function"] = setup_input(prompt="Provide the name of the function.", intype="free", max_value=50)
-                            setting_dict["function_arg"] = setup_input(prompt="Provide system arguments to pass to the reverse function -> if you need it.", intype="free", min_value=0, max_value=75)
-                elif dt_object_dict[name] == "sensor":
-                    setting_dict["timer"] = setup_input(prompt="Provide the interval to run the function in seconds.", default=600, max_value=1209600, min_value=10)
-                    setting_dict["unit"] = setup_input(prompt="Provide the unit for the sensor input.", default="°C", intype="free")
-                    setting_dict["threshold_max"] = setup_input(prompt="Provide a maximum threshold value for the sensor.\n"
-                                                                "Info: if this value is exceeded the linked action(s) will be started", default=26, max_value=1000000, min_value=1)
-                    setting_dict["threshold_optimal"] = setup_input(prompt="Provide a optimal threshold value for the sensor.\n"
-                                                                    "Info: if this value is reached the linked action(s) will be reversed", default=20, max_value=1000000, min_value=1)
-
-                    setting_dict["timer_check"] = setup_input(prompt="How often should the threshold be checked? Interval in seconds.", default=3600, max_value=1209600, min_value=60)
-                elif dt_object_dict[name] == "downlink":
-                    setting_dict["portcount"] = setup_input(prompt="How many ports does this downlink provide?", default=4)
-                    setting_dict["output_per_port"] = setup_input(prompt="Can the downlink output data per port basis?\n(Or can it only output the data for all of its ports at once?)", default=False)
-    #                setting_dict["output_format"] = setup_input(prompt="Provide the format in which the downlink outputs data.", "dict", poss=["dict", "list", "str"], intype="free")
-    #                if setting_dict["output_per_port"] is False and setting_dict["output_format"] is "str":
-    #                    setting_dict["output_format_delimeter"] = setup_input(prompt="Provide a delimeter to split the output string.", "-", intype="free", max_value=3)
-                self.setting_dict[name] = setting_dict
-                while_count += 1
-                while_devicetype = setup_input(prompt="Want to add another devicetype?", default=True, style="info")
-            if while_count > 0:
-                self.object_dict["devicetype"] = dt_object_dict
-                self.create_device()
-            else:
-                return
-
-        def create_device(self):
-            d_object_dict = {}
-
-            def to_create(to_ask, info):
-                create = setup_input(prompt="Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True)
-                create_dict = {}
-                while create:
-                    ShellOutput(font="line", output="", symbol="-")
-                    setting_dict = {}
-                    dt_list = [name for nested in self.object_dict.values() for name, typ in dict(nested).items() if typ == to_ask]
-                    name = setup_input(prompt="Provide a unique name - at max 20 characters long.", default="%s01" % dt_list[0], intype="free")
-                    create_dict[name] = setup_input(prompt="Provide its devicetype.", default=dt_list[0], poss=dt_list, intype="free")
-                    if to_ask != "downlink":
-                        dl_list = [name for key, value in d_object_dict.items() if key == "downlink" for name in dict(value).keys()]
-                        if len(dl_list) > 0:
-                            setting_dict["connection"] = setup_input(prompt="How is the device connected to the growautomation agent?\n"
-                                                                     "'downlink' => pe. analog to serial converter, 'direct' => gpio pin", default="direct", poss=["downlink", "direct"], intype="free")
-                        else:
-                            setting_dict["connection"] = setup_input(prompt="How is the device connected to the growautomation agent?\nInfo: 'downlink' => pe. analog to serial converter, 'direct' => "
-                                                                     "gpio pin", default="direct", poss=["downlink", "direct"], intype="free", petty=True)
-                        if setting_dict["connection"] == "downlink":
-                            setting_dict["downlink"] = setup_input(prompt="Provide the name of the downlink to which the device is connected to.\n"
-                                                                   "Info: the downlink must also be added as device", poss=dl_list, intype="free")
-                    setting_dict["port"] = setup_input(prompt="Provide the portnumber to which the device is/will be connected.", intype="free")
-                    self.setting_dict[name] = setting_dict
-                    create = setup_input(prompt="Want to add another %s?" % to_ask, default=True, style="info")
-                d_object_dict[to_ask] = create_dict
-
-            def check_type(name):
-                if len([x for key, value in self.object_dict.items() if key == "devicetype" for x in dict(value).values() if x == name]) > 0:
-                    return True
-                else:
-                    return False
-
-            if check_type("downlink"):
-                ShellOutput(font="head", output="Downlinks", symbol="-")
-                to_create("downlink", "if devices are not connected directly to the gpio pins you will probably need this one\n"
-                                      "Check the documentation for more informations: https://docs.growautomation.at")
-            if check_type("sensor"):
-                ShellOutput(font="head", output="Sensors", symbol="-")
-                to_create("sensor", "any kind of device that provides data to growautomation")
-            if check_type("action"):
-                ShellOutput(font="head", output="Actions", symbol="-")
-                to_create("action", "any kind of device that should react if the linked thresholds are exceeded")
-            self.object_dict["device"] = d_object_dict
-            self.create_group()
-
-        def create_group(self):
-            def to_create(to_ask, info, info_member):
-                create_count, create_dict = 0, {}
-                create = setup_input(prompt="Do you want to add a %s?\nInfo: %s" % (to_ask, info), default=True)
-                while create:
-                    ShellOutput(font="line", output="", symbol="-")
-                    member_list = []
-                    member_count, add_member = 0, True
-                    while add_member:
-                        if member_count == 0:
-                            info = "\nInfo: %s" % info_member
-                        else:
-                            info = ""
-                        if to_ask == "sector":
-                            posslist = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
-                        elif to_ask == "link":
-                            posslist = [name for key, value in self.object_dict.items() if key == "devicetype" for name in dict(value).keys()]
-                        current_posslist = list(set(posslist) - set(member_list))
-                        member_list.append(setup_input(prompt="Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=current_posslist[0], intype="free"))
-                        member_count += 1
-                        if member_count > 1:
-                            add_member = setup_input(prompt="Want to add another member?", default=True, style="info")
-                    create_dict[create_count] = member_list
-                    create_count += 1
-                    create = setup_input(prompt="Want to add another %s?" % to_ask, default=True, style="info")
-                return create_dict
-
-            ShellOutput(font="head", output="Sectors", symbol="-")
-            self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
-            ShellOutput(font="head", output="Devicetype links", symbol="-")
-            self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
-            self.write_config()
-
-        def write_config(self):
-            ShellOutput(font="head", output="Writing configuration to database", symbol="-")
-
-            def sql(command, query=False):
-                if ga_config["setuptype"] == "agent":
-                    if query:
-                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
-                    else:
-                        return DoSql(command=command, user=ga_config["sql_agent_user"], pwd=ga_config["sql_agent_pwd"], write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
-                else:
-                    if query:
-                        return DoSql(command=command, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
-                    else:
-                        return DoSql(command=command, write=True, user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
-
-            ShellOutput(output="Writing object configuration")
-            sql("INSERT INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % ga_config["hostname"])
-            [sql("INSERT INTO ga.Category (author,name) VALUES ('setup','%s');" % key) for key in self.object_dict.keys()]
-            object_count = 0
-            for object_type, packed_values in self.object_dict.items():
-                def unpack_values(values, parent="NULL"):
-                    count = 0
-                    for object_name, object_class in sorted(values.items()):
-                        if object_class != "NULL":
-                            sql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class)
-                            object_class = "'%s'" % object_class
-                        if parent != "NULL" and parent.find("'") == -1:
-                            parent = "'%s'" % parent
-                        sql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" % (object_name, parent, object_class, object_type))
-                        count += 1
-                    return count
-                if object_type == "device":
-                    for subtype, packed_subvalues in packed_values.items():
-                        object_count += unpack_values(packed_subvalues, ga_config["hostname"])
-                else:
-                    object_count += unpack_values(packed_values)
-            ShellOutput(output="%s objects were added" % object_count, style="info")
-
-            ShellOutput(output="Writing object settings")
-            setting_count = 0
-            for object_name, packed_values in self.setting_dict.items():
-                packed_values["enabled"] = 1
-                for setting, data in sorted(packed_values.items()):
-                    if data == "":
-                        pass
-                    elif type(data) == bool:
-                        if data is True:
-                            data = 1
-                        else:
-                            data = 0
-                    sql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data))
-                    setting_count += 1
-            ShellOutput(output="%s object settings were added" % setting_count, style="info")
-
-            ShellOutput(output="Writing group configuration")
-            group_count, member_count = 0, 0
-            for group_type, packed_values in self.group_dict.items():
-                for group_id, group_member_list in packed_values.items():
-                    sql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type)
-                    sql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type)
-                    sql_gid = sql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type)
-                    for member in sorted(group_member_list):
-                        sql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member))
-                        member_count += 1
-                    group_count += 1
-            ShellOutput(output="%s groups with a total of %s members were added" % (group_count, member_count), style="info")
-
-
-    GetObject()
+    ShellOutput(font="head", output="Basic device setup", symbol="#")
+    ShellOutput(output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
+    object_setup(setup_dict=ga_config)
 
     ########################################################################################################################
     # post setup tasks
