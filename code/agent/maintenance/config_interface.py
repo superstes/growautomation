@@ -27,33 +27,56 @@ from ..core.ant import ShellInput
 from ..core.ant import LogWrite
 from ..core.ant import plural
 from ..core.smallant import debugger
-from ..core.smallant import share
+from ..core.smallant import VarHandler
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
 from os import system as os_system
 from sys import argv as sys_argv
 from random import choice as random_choice
+import signal
+from sys import exc_info as sys_exc_info
 
 LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
+def signal_handler(signum=None, stack=None):
+    if debug: VarHandler().stop()
+    raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+
 class Create:
-    def __init__(self):
+    def __init__(self, setup_config_dict=None):
         self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
         self.current_dev_list, self.current_dt_dict, self.current_setting_dict = [], {}, {}
         self.new_dt_dict, self.new_dev_list = {}, []
         self.object_downlink_list = []
+        if setup_config_dict is not None:
+            self.setup = True
+            self.hostname = setup_config_dict["hostname"]
+            self.setuptype = setup_config_dict["setuptype"]
+        else:
+            self.setup = False
+            self.hostname = Config("hostname").get()
+            self.setuptype = Config("setuptype").get()
         self.start()
 
     def start(self):
         # check if tmp_config_dump is currently in folder -> ask to load old config and try to import it into the db
+        if self.setup:
+            self.create_core()
+            self.create_agent()
         if self.create_devicetype() is not False:
             for nested in self.object_dict.values():
                 for name, typ in dict(nested).items():
                     self.current_dt_dict[name] = typ
                     self.new_dt_dict = self.current_dt_dict
-        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get(): self.current_dt_dict[name] = typ
+        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get():
+            self.current_dt_dict[name] = typ
 
         if self.create_device() is not False:
             self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
@@ -69,14 +92,15 @@ class Create:
         self.create_group()
         self.write_config()
 
-    def create_core(self, setup_setting_dict):
-        core_object_dict = {}
-        self.setting_dict[setup_setting_dict["hostname"]] = setup_setting_dict
-        core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
-        self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
-        self.setting_dict["backup"], self.setting_dict["sensor_master"] = {"timer": 86400, "function": "backup.py"}, {"function": "snake.py"}
-        self.object_dict["core"], self.object_dict["agent"] = core_object_dict, {setup_setting_dict["hostname"]: "NULL"}
-        self.write_config()
+    def create_core(self):
+        self.setting_dict = {"check": {"range": 10, "function": "parrot.py"}, "backup": {"timer": 86400, "function": "backup.py"},
+                             "sensor_master": {"function": "snake.py"}}
+        self.object_dict = {"core": {"check": "NULL", "backup": "NULL", "sensor_master": "NULL", "service": "NULL"}, "agent": {self.hostname: "NULL"}}
+
+    def create_agent(self):
+        agent_object_dict = {}
+        # will manage the creation of all default settings of the controller
+        # flag to overwrite/keep old config
 
     def create_devicetype(self):
         while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; "
@@ -256,7 +280,8 @@ class Create:
                     if member_count == 0: info = "\nInfo: %s" % info_member
                     else: info = ""
                     current_posslist = list(set(posslist) - set(member_list))
-                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info), poss=current_posslist, default=str(random_choice(current_posslist)), intype="free").get())
+                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
+                                                  poss=current_posslist, default=str(random_choice(current_posslist)), intype="free").get())
                     member_count += 1
                     if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                 create_dict[create_count] = member_list
@@ -271,7 +296,6 @@ class Create:
         dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
         dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
         dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
-        # if only one -> splits string -.-
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
@@ -279,30 +303,34 @@ class Create:
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="-", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
-        tmp_config_dump = "%s/maintenance/add_config.tmp" % Config("path_root").get()
-        with open(tmp_config_dump, 'w') as tmp:
-            tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
+        if self.setup is not True:
+            tmp_config_dump = "%s/maintenance/add_config.tmp" % Config("path_root").get()
+            with open(tmp_config_dump, 'w') as tmp:
+                tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         ShellOutput("Writing object configuration", font="text")
-        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % Config("hostname").get(), write=True).start()
-        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start() for key in self.object_dict.keys()]
+        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True,
+              hostname=self.hostname, setuptype=self.setuptype).start()
+        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True,
+               hostname=self.hostname, setuptype=self.setuptype).start() for key in self.object_dict.keys()]
         object_count = 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
                 count = 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
-                        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class, write=True).start()
+                        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class,
+                              write=True, hostname=self.hostname, setuptype=self.setuptype).start()
                         object_class = "'%s'" % object_class
                     if parent != "NULL" and parent.find("'") == -1:
                         parent = "'%s'" % parent
                     DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
-                          (object_name, parent, object_class, object_type), write=True).start()
+                          (object_name, parent, object_class, object_type), write=True, hostname=self.hostname, setuptype=self.setuptype).start()
                     count += 1
                 return count
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values.items():
-                    object_count += unpack_values(packed_subvalues, Config("hostname").get())
+                    object_count += unpack_values(packed_subvalues, self.hostname)
             else: object_count += unpack_values(packed_values)
         ShellOutput("added %s object%s" % (object_count, plural(object_count)), style="info", font="text")
 
@@ -315,7 +343,8 @@ class Create:
                 elif type(data) == bool:
                     if data is True: data = 1
                     else: data = 0
-                DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data), write=True).start()
+                DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data),
+                      write=True, hostname=self.hostname, setuptype=self.setuptype).start()
                 setting_count += 1
         ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
 
@@ -323,16 +352,18 @@ class Create:
         group_count, member_count = 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
-                DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
-                DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True).start()
+                DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type,
+                      write=True, hostname=self.hostname, setuptype=self.setuptype).start()
+                DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True, hostname=self.hostname, setuptype=self.setuptype).start()
                 sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type).start()
                 for member in sorted(group_member_list):
-                    DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member), write=True)
+                    DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
+                          write=True, hostname=self.hostname, setuptype=self.setuptype)
                     member_count += 1
                 group_count += 1
         ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style="info", font="text")
 
-        os_system("rm %s" % tmp_config_dump)
+        if self.setup is not True: os_system("rm %s" % tmp_config_dump)
 
 
 class Edit:
@@ -388,11 +419,8 @@ class Delete:
         return False
 
 
-class Setup:
-    def __init__(self):
-        self.start()
-
-    def start(self):
+def setup(setup_dict=None):
+    if setup_dict is None:
         setup_dict = {}
         setup_dict["hostname"] = ShellInput(prompt="Provide the name of this growautomation host.", default="gacon01")
         setup_dict["setuptype"] = ShellInput(prompt="Setup as growautomation standalone, agent or server?\n"
@@ -402,11 +430,8 @@ class Setup:
         setup_dict["log_level"] = ShellInput(prompt="Want to change the log level?", default="1", poss=["0", "1", "2", "3", "4", "5"])
         setup_dict["backup"] = ShellInput("Want to enable backup?", default=True)
         setup_dict["path_backup"] = ShellInput(prompt="Want to choose a custom backup path?", default="/mnt/growautomation/backup/")
-        setup_dict["backup"] = ShellInput(prompt="Want to enable backup?", default=True)
         setup_dict["path_log"] = ShellInput(prompt="Want to choose a custom log path?", default="/var/log/growautomation")
-        Create().create_core(setup_dict)
-        ShellOutput("This setup is currently not complete. 2020-05-02")
-        return False
+    return Create(setup_config_dict=setup_dict)
 
 
 def choose():
@@ -419,7 +444,7 @@ def choose():
         if mode == "add": start = Create()
         elif mode == "edit": start = Edit()
         elif mode == "delete": start = Delete()
-        elif mode == "setup": start = Setup()
+        elif mode == "setup": start = setup()
         elif mode == "exit": exit()
         else: raise SystemExit("Encountered unknown error while choosing config mode.")
         if start is False: continue
@@ -432,7 +457,8 @@ def exit():
 
 try:
     if sys_argv[1] == "debug":
-        share(action="init")
-        share(action="set", name="debug", data=1)
-except (IndexError, NameError): pass
+        debug = True
+        VarHandler(name="debug", data=1).set()
+    else: debug = False
+except (IndexError, NameError): debug = False
 choose()
