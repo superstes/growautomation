@@ -79,7 +79,7 @@ def setup_stop(signum=None, stack=None, error_msg=None):
     if signum is not None:
         ShellOutput("\nReceived signal %s\n" % signum)
     if error_msg is not None:
-        ShellOutput("\nAn error occurred:\n'%s'\n" % error_msg)
+        ShellOutput("\nAn error occurred:\n\"%s\"\n" % error_msg)
     raise SystemExit("Exiting setup!\n\n")
 
 
@@ -173,7 +173,7 @@ try:
             sqltest = DoSql(command="SELECT * FROM mysql.help_category LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         elif local:
             if write:
-                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','none');", user=dbuser, pwd=dbpwd, write=True, exit=False,
+                sqltest = DoSql(command="INSERT INTO ga.Data (agent,data,device) VALUES ('setup','conntest','%s');" % ga_config["hostname"], user=dbuser, pwd=dbpwd, write=True, exit=False,
                                 hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
             else:
                 sqltest = DoSql(command="SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", user=dbuser, pwd=dbpwd, exit=False, hostname=ga_config["hostname"],
@@ -269,7 +269,7 @@ try:
         ShellOutput(output="Growautomation default root path exists", style="info")
     else:
         ShellOutput(output="No growautomation default root path exists", style="info")
-    if DoSql(command="SHOW DATABASES;", user="root", hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).find("ga") != -1:
+    if DoSql(command="SHOW DATABASES;", user="root").find("ga") != -1:
         ga_config["setup_old_db"] = True
         ShellOutput(output="Growautomation database exists", style="info")
     else:
@@ -448,7 +448,7 @@ try:
                 while True:
                     if whilecount > 0:
                         ShellOutput(output="You can reset/configure the agent database credentials on the growautomation server. "
-                                                        "Details can be found in the manual: https://git.growautomation.at/tree/master/manual", style="info")
+                                           "Details can be found in the manual: https://git.growautomation.at/tree/master/manual", style="info")
                     ga_config["sql_agent_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")
                     ga_config["sql_agent_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")
                     ga_config["sql_server_ip"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_server_ip=")
@@ -975,7 +975,7 @@ try:
 
         def add_core(self):
             ShellOutput(font="head", output="Basic device setup", symbol="#")
-            ShellOutput(output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at", point=False)
+            ShellOutput(output="Please refer to the documentation if you are new to growautomation.\nLink: https://docs.growautomation.at")
             core_object_dict = {}
             core_object_dict["check"], core_object_dict["backup"], core_object_dict["sensor_master"], core_object_dict["service"] = "NULL", "NULL", "NULL", "NULL"
             self.setting_dict["check"], self.setting_dict["check"] = {"range": 10, "function": "parrot.py"}, {"range": 10, "function": "parrot.py"}
