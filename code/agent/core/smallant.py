@@ -228,8 +228,9 @@ def debugger(command, hard_debug=False):
     else: return False
 
 
-@lru_cache()
-def process(command, out_error=False):
+def process(command, out_error=False, debug=False):
+    if debug: debugger(command="smallant - process |input: '%s'" % command, hard_debug=True)
     output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-    if out_error is False: return output.decode("ascii")
-    else: return output.decode("ascii"), error.decode("ascii")
+    if debug: debugger(command="smallant - process |output: '%s' |error: '%s'" % (output.decode("utf-8"), error.decode("utf-8")), hard_debug=True)
+    if out_error is False: return output.decode("utf-8")
+    else: return output.decode("utf-8"), error.decode("utf-8")
