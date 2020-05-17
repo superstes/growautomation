@@ -55,13 +55,15 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 
 
 class ShellInput:
-    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=20, min_value=2, neg=False, lower=True):
+    def __init__(self, prompt, default="", poss="", intype="", style="", posstype="", max_value=None, min_value=None, neg=False, lower=True):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
         self.posstype, self.max_value, self.min_value, self.neg, self.lower = posstype, max_value, min_value, neg, lower
         self.style_type, self.output = ShellOutput(style=style).colors(), ""
         self.lower, self.default_str, self.poss_str = "", "", ""
 
     def string_check(self, to_check: str):
+        if self.max_value is None: self.max_value = 20
+        if self.min_value is None: self.min_value = 2
         to_check = str(to_check)
         char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,"
         if len(to_check) > self.max_value or len(to_check) < self.min_value:
@@ -124,13 +126,15 @@ class ShellInput:
             elif self.intype == "pass":
                 getpass(prompt="\n%s\n > " % self.prompt)
             elif self.intype == "passgen":
-                user_input, maxnr, minnr = 0, int(self.max_value), int(self.min_value)
-                while user_input < minnr or user_input > maxnr:
-                    if (user_input < minnr or user_input > maxnr) and whilecount > 0:
-                        ShellOutput("Input error. Value should be between %s and %s.\n" % (minnr, maxnr), style="warn", font="text")
-                    whilecount += 1
+                if self.max_value is None: self.max_value = 20
+                if self.min_value is None: self.min_value = 8
+                while True:
                     user_input = int(input("\n%s%s%s%s%s\n > " % (self.prompt, self.poss_str, self.poss, self.default_str,
                                                                   self.default)) or "%s" % self.default)
+                    if user_input < int(self.min_value) or user_input > int(self.max_value):
+                        ShellOutput("Input error. Value should be between %s and %s.\n" %
+                                    (self.min_value, self.max_value), style="warn", font="text")
+                    else: break
                 self.output = user_input
             elif self.intype == "free" and self.poss == "":
                 while True:
@@ -143,14 +147,19 @@ class ShellInput:
             else: self.output = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
                                       colorama_fore.RESET) or "%s" % self.default
         elif type(self.default) == int:
-            user_input, min_value, max_value = 0, 1, 2592000
-            while user_input < int(min_value) or user_input > int(max_value):
-                if (user_input < int(min_value) or user_input > int(max_value)) and whilecount > 0:
-                    ShellOutput("Input error. Value should be between %s and %s." % (min_value, max_value), style="warn", font="text")
-                else: break
-                whilecount += 1
+            if self.min_value is None and self.max_value is None:
+                self.max_value, self.min_value = 2592000, 1
+            else:
+                if self.max_value is None:
+                    self.max_value = 2592000
+                elif self.min_value is None:
+                    self.min_value = 1
+            while True:
                 try: user_input = int(input("\n%s%s%s\n > " % (self.prompt, self.default_str, self.default)) or "%s" % self.default)
                 except ValueError: user_input = 0
+                if user_input < int(self.min_value) or user_input > int(self.max_value):
+                    ShellOutput("Input error. Value should be between %s and %s." % (self.min_value, self.max_value), style="warn", font="text")
+                else: break
             self.output, self.lower = user_input, False
         else: raise KeyError("Default value was neither str/int/bool | Value: '%s', '%s'" % (type(self.default), self.default))
 
@@ -264,11 +273,11 @@ def plural(data):
     def base_check(nr):
         if nr > 1: return "s"
         else: return ""
-    if type(data) == int: base_check(data)
-    elif type(data) == list: base_check(len(data))
+    if type(data) == int: return base_check(data)
+    elif type(data) == list: return base_check(len(data))
     elif type(data) == str:
         try:
-            base_check(int(data))
+            return base_check(int(data))
         except ValueError:
             return ""
     else: return ""
