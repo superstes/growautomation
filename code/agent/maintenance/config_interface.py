@@ -20,14 +20,25 @@
 
 # ga_version 0.4
 
-from ..core.config import Config
-from ..core.owl import DoSql
-from ..core.ant import ShellOutput
-from ..core.ant import ShellInput
-from ..core.ant import LogWrite
-from ..core.ant import plural
-from ..core.smallant import debugger
-from ..core.smallant import VarHandler
+# if manually called -> need to pass argument 'start'
+# possible second argument: 'debug'
+
+try:
+    from ..core.owl import DoSql
+    from ..core.ant import ShellOutput
+    from ..core.ant import ShellInput
+    from ..core.ant import LogWrite
+    from ..core.ant import plural
+    from ..core.smallant import debugger
+    from ..core.smallant import VarHandler
+except ImportError:
+    from owl import DoSql
+    from ant import ShellOutput
+    from ant import ShellInput
+    from ant import LogWrite
+    from ant import plural
+    from smallant import debugger
+    from smallant import VarHandler
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
@@ -61,6 +72,8 @@ class Create:
             self.setuptype = setup_config_dict["setuptype"]
         else:
             self.setup = False
+            from ..core.config import Config
+            self.Config = Config
             self.hostname = Config("hostname").get()
             self.setuptype = Config("setuptype").get()
         self.start()
@@ -71,12 +84,14 @@ class Create:
             self.create_core()
             self.create_agent()
         if self.create_devicetype() is not False:
-            for nested in self.object_dict.values():
+            for grouping, nested in self.object_dict.items():
                 for name, typ in dict(nested).items():
+                    self.new_dt_dict[name] = typ
+                    if grouping == "core": continue
                     self.current_dt_dict[name] = typ
-                    self.new_dt_dict = self.current_dt_dict
-        for name, typ in Config(output="name, class", filter="type = 'devicetype'", table="object").get():
-            self.current_dt_dict[name] = typ
+        if self.setup is False:
+            for name, typ in self.Config(output="name, class", filter="type = 'devicetype'", table="object").get():
+                self.current_dt_dict[name] = typ
 
         if self.create_device() is not False:
             self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
@@ -84,9 +99,10 @@ class Create:
             for obj, nested in self.setting_dict.items():
                 for setting, data in dict(nested).items():
                     self.current_setting_dict[obj] = setting
-        self.current_dev_list.extend(Config(output="name", filter="type = 'device'", table="object").get("list"))
-        for setting, belonging in Config(output="setting,belonging").get():
-            self.current_setting_dict[belonging] = setting
+        if self.setup is False:
+            self.current_dev_list.extend(self.Config(output="name", filter="type = 'device'", table="object").get("list"))
+            for setting, belonging in self.Config(output="setting,belonging").get():
+                self.current_setting_dict[belonging] = setting
 
         self.create_custom_setting()
         self.create_group()
@@ -103,11 +119,13 @@ class Create:
         # flag to overwrite/keep old config
 
     def create_devicetype(self):
+        ShellOutput("Device Types", symbol="#", font="head")
         while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; "
                                       "they provide per model configuration", True).get()
         if while_devicetype is False: return False
         dt_object_dict, dt_exist_list = {}, []
-        for name in Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
+        if self.setup is False:
+            for name in self.Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
         debugger("confint - create_devicetype - dt_exist_list '%s'" % dt_exist_list)
         ShellOutput("Devicetypes", symbol="-", font="head")
         while while_devicetype:
@@ -141,7 +159,7 @@ class Create:
                                                                     default=1200, max_value=1209600, min_value=10).get()
                     reverse_function = ShellInput("Does reversing need an other function?", default=False).get()
                     if reverse_function:
-                        setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", intype="free", max_value=50).get()
+                        setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", default="%s.py" % name, intype="free", max_value=50).get()
                         setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.",
                                                                   intype="free", min_value=0, max_value=75).get()
             elif dt_object_dict[name] == "sensor":
@@ -168,11 +186,13 @@ class Create:
         self.object_dict["devicetype"] = dt_object_dict
 
     def create_device(self):
+        ShellOutput("Devices", symbol="#", font="head")
         if ShellInput("Do you want to create devices?", default=True).get() is False: return False
         d_object_dict, d_exist_list, d_dl_list = {}, [], []
-        for name in Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
-        for name, dt in Config(output="name,class", filter="type = 'device'", table="object").get():
-            if Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
+        if self.setup is False:
+            for name in self.Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
+            for name, dt in self.Config(output="name,class", filter="type = 'device'", table="object").get():
+                if self.Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
         d_dl_list.append("notinlist")
 
         def to_create(to_ask, info):
@@ -188,8 +208,9 @@ class Create:
                                                poss=list(self.current_dt_dict.keys())).get()
                 if to_ask != "downlink":
                     if create_dict[name] in self.new_dt_dict.keys():
-                        dt_conntype = [conntype for dt, nested in self.setting_dict.items() if dt == create_dict[name] for setting, conntype in dict(nested).items() if setting == "connection"][0]
-                    else: dt_conntype = Config(setting="connection", belonging=create_dict[name]).get()
+                        dt_conntype = [data for obj, nested in self.setting_dict.items() if obj == create_dict[name] for setting, data in dict(nested).items() if setting == "connection"][0]
+                    elif self.setup is False: dt_conntype = self.Config(setting="connection", belonging=create_dict[name]).get()
+                    else: dt_conntype = "specific"
                     debugger("confint - create_device - dt_conntype '%s'" % dt_conntype)
                     if dt_conntype != "specific": setting_dict["connection"] = dt_conntype
                     else: setting_dict["connection"] = ShellInput("How is the device connected to the growautomation agent?\n"
@@ -233,10 +254,13 @@ class Create:
         self.object_dict["device"] = d_object_dict
 
     def create_custom_setting(self):
+        ShellOutput("Custom Settings", symbol="#", font="head")
         def add_setting(object_name):
             def another():
                 return ShellInput("Do you want to add another setting to the object %s" % object_name, default=True).get()
-            setting_exist_list = Config(output="setting", filter="belonging = '%s'" % object_name).get("list")
+            setting_exist_list = [setting for obj, nested in self.setting_dict.items() if obj == object_name for setting in dict(nested).keys()]
+            if self.setup is False:
+                setting_exist_list.extend(self.Config(output="setting", filter="belonging = '%s'" % object_name).get("list"))
             change_dict, setting_count, setting_dict = {}, 0, {}
             while True:
                 setting = ShellInput("Provide the setting name.\nInfo: max 30 chars & cannot already exist.", poss=setting_exist_list,
@@ -260,6 +284,7 @@ class Create:
             if ShellInput("Do you want to add settings to another object?", default=True).get() is False: break
 
     def create_group(self):
+        ShellOutput("Groups", symbol="#", font="head")
         if ShellInput("Do you want to create groups?", default=True).get() is False: return False
 
         def to_create(to_ask, info, info_member):
@@ -293,18 +318,21 @@ class Create:
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
         dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "action"]
-        dt_action_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
+        if self.setup is False:
+            dt_action_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
         dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
-        dt_sensor_list.extend(Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
+        if self.setup is False:
+            dt_sensor_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
+        # grouping of sectors to be added (patches in area)
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
 
     def write_config(self):
-        ShellOutput("Writing configuration to database", symbol="-", font="head")
+        ShellOutput("Writing configuration to database", symbol="#", font="head")
         LogWrite("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
         if self.setup is not True:
-            tmp_config_dump = "%s/maintenance/add_config.tmp" % Config("path_root").get()
+            tmp_config_dump = "%s/maintenance/add_config.tmp" % self.Config("path_root").get()
             with open(tmp_config_dump, 'w') as tmp:
                 tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
@@ -313,10 +341,10 @@ class Create:
               hostname=self.hostname, setuptype=self.setuptype).start()
         [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True,
                hostname=self.hostname, setuptype=self.setuptype).start() for key in self.object_dict.keys()]
-        object_count = 0
+        object_count, object_error_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
-                count = 0
+                count, error_count = 0, 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
                         DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class,
@@ -324,18 +352,21 @@ class Create:
                         object_class = "'%s'" % object_class
                     if parent != "NULL" and parent.find("'") == -1:
                         parent = "'%s'" % parent
-                    DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
-                          (object_name, parent, object_class, object_type), write=True, hostname=self.hostname, setuptype=self.setuptype).start()
-                    count += 1
-                return count
+                    if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
+                             (object_name, parent, object_class, object_type), write=True, hostname=self.hostname,
+                             setuptype=self.setuptype).start() is False:
+                        error_count += 1
+                    else: count += 1
+                return count, error_count
             if object_type == "device":
                 for subtype, packed_subvalues in packed_values.items():
-                    object_count += unpack_values(packed_subvalues, self.hostname)
-            else: object_count += unpack_values(packed_values)
+                    object_count, error_count = unpack_values(packed_subvalues, self.hostname)
+            else: object_count, object_error_count = unpack_values(packed_values)
         ShellOutput("added %s object%s" % (object_count, plural(object_count)), style="info", font="text")
+        if object_error_count > 0: ShellOutput("%s error%s while inserting" % (object_error_count, plural(object_error_count)), style="err")
 
         ShellOutput("Writing object settings", font="text")
-        setting_count = 0
+        setting_count, setting_error_count = 0, 0
         for object_name, packed_values in self.setting_dict.items():
             if object_name in self.new_dev_list: packed_values["enabled"] = 1
             for setting, data in sorted(packed_values.items()):
@@ -343,38 +374,47 @@ class Create:
                 elif type(data) == bool:
                     if data is True: data = 1
                     else: data = 0
-                DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data),
-                      write=True, hostname=self.hostname, setuptype=self.setuptype).start()
-                setting_count += 1
+                if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data),
+                         write=True, hostname=self.hostname, setuptype=self.setuptype).start() is False:
+                    setting_error_count += 1
+                else: setting_count += 1
         ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
+        if setting_error_count > 0: ShellOutput("%s error%s while inserting" % (setting_error_count, plural(setting_error_count)), style="err")
 
         ShellOutput("Writing group configuration", font="text")
-        group_count, member_count = 0, 0
+        group_count, member_count, group_error_count = 0, 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, group_member_list in packed_values.items():
                 DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type,
                       write=True, hostname=self.hostname, setuptype=self.setuptype).start()
-                DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True, hostname=self.hostname, setuptype=self.setuptype).start()
-                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" % group_type).start()
+                if DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True,
+                         hostname=self.hostname, setuptype=self.setuptype).start() is False:
+                    group_error_count += 1
+                else: group_count += 1
+                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
+                                group_type, hostname=self.hostname, setuptype=self.setuptype).start()
                 for member in sorted(group_member_list):
-                    DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                          write=True, hostname=self.hostname, setuptype=self.setuptype)
-                    member_count += 1
-                group_count += 1
+                    if DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
+                             write=True, hostname=self.hostname, setuptype=self.setuptype).start() is False:
+                        group_error_count += 1
+                    else: member_count += 1
         ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style="info", font="text")
+        if group_error_count > 0: ShellOutput("%s error%s while inserting" % (group_error_count, plural(group_error_count)), style="err")
 
         if self.setup is not True: os_system("rm %s" % tmp_config_dump)
 
 
 class Edit:
     def __init__(self):
+        from ..core.config import Config
+        self.Config = Config
         self.start()
 
     def start(self):
         object_list = []
-        object_agent_list = Config(output="name", table="object", filter="type = 'agent'").get("list")
-        object_dev_list = Config(output="name", table="object", filter="type = 'device'").get("list")
-        object_dt_list = Config(output="name", table="object", filter="type = 'devicetype'").get("list")
+        object_agent_list = self.Config(output="name", table="object", filter="type = 'agent'").get("list")
+        object_dev_list = self.Config(output="name", table="object", filter="type = 'device'").get("list")
+        object_dt_list = self.Config(output="name", table="object", filter="type = 'devicetype'").get("list")
         object_list.extend(object_dev_list)
         object_list.extend(object_agent_list)
         object_list.extend(object_dt_list)
@@ -388,8 +428,8 @@ class Edit:
             if ShellInput("Do you want to edit another object?", default=True).get() is False: break
 
     def edit_setting(self, object_name):
-        setting_dict = {setting: data for setting, data in Config(output="setting,data", filter="belonging = '%s'" % object_name).get("list")}
-        change_dict, setting_count = {}, 0
+        setting_dict = {setting: data for setting, data in self.Config(output="setting,data", filter="belonging = '%s'" % object_name).get("list")}
+        change_dict, setting_count, setting_error_count = {}, 0, 0
         while True:
             setting = ShellInput("Choose the setting you want to edit.",
                                  poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype="free").get()
@@ -400,9 +440,12 @@ class Edit:
             change_dict[setting] = data
             if ShellInput("Do you want to edit another setting of the object %s" % object_name, default=True).get() is False: break
         for setting, data in change_dict.items():
-            DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting), write=True).start()
-            setting_count += 1
+            if DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting),
+                     write=True).start() is False:
+                setting_error_count += 1
+            else: setting_count += 1
         ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
+        if setting_error_count > 0: ShellOutput("%s error%s while inserting" % (setting_error_count, plural(setting_error_count)), style="err")
 
     def edit_object(self, object_name):
         ShellOutput("This option isn't supported yet.")
@@ -456,9 +499,12 @@ def exit():
 
 
 try:
-    if sys_argv[1] == "debug":
-        debug = True
-        VarHandler(name="debug", data=1).set()
-    else: debug = False
-except (IndexError, NameError): debug = False
-choose()
+    try:
+        if sys_argv[2] == "debug":
+            debug = True
+            VarHandler(name="debug", data=1).set()
+        else: debug = False
+    except (IndexError, NameError): debug = False
+    if sys_argv[1] == "start":
+        choose()
+except (IndexError, NameError): pass
