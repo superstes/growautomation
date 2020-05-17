@@ -56,7 +56,7 @@ class DoSql:
                 if mysql_status.find("failed") != -1 or mysql_status.find("could not be found") != -1:
                     return True
                 else: return False
-        whilecount, creds_ok = 0, False
+        whilecount, conntest_result = 0, False
         while True:
             if systemd_check("ok") is False:
                 if whilecount > 0:
@@ -64,11 +64,11 @@ class DoSql:
                 debugger("owl - start |mysql not running")
                 process("systemctl start mysql.service")
             else: break
-            if whilecount > 1: break
-            time_sleep(5)
+            if whilecount > 2: break
+            time_sleep(.5)
             whilecount += 1
         whilecount = 0
-        while creds_ok is False:
+        while conntest_result is False:
             if whilecount == 1 and self.setuptype == "agent":
                 debugger("owl - start |failing over to local db")
                 LogWrite("Failing over to local read-only database")
@@ -86,17 +86,13 @@ class DoSql:
                     raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
                 else: return False
 
-            def conntest():
-                if self.write is False: data = self.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;", connect_debug=False)
-                else:
-                    self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % self.hostname, connect_debug=False)
-                    self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % self.hostname, connect_debug=False)
-                    data = True
-                result = True if type(data) == list else data if type(data) == bool else False
-                debugger("owl - start |conntest '%s' '%s'" % (type(result), result))
-                return result
-
-            creds_ok = conntest()
+            if self.write is False: data = self.connect("SELECT * FROM mysql.help_category LIMIT 10;", connect_debug=False)
+            else:
+                self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % self.hostname, connect_debug=False)
+                self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % self.hostname, connect_debug=False)
+                data = True
+            conntest_result = True if type(data) == list else data if type(data) == bool else False
+            debugger("owl - start |conntest '%s' '%s'" % (type(conntest_result), conntest_result))
             whilecount += 1
         return self.execute()
 
