@@ -21,23 +21,17 @@
 # ga_version 0.4
 
 from smallconfig import Config
-from smallant import LogWrite as SmallLogWrite
 
 from datetime import datetime
 from datetime import timedelta
 from os import popen as os_popen
 from os import system as os_system
-from os import path as os_path
 from string import ascii_letters as string_ascii_letters
 from string import digits as string_digits
 from random import choice as random_choice
 from colorama import Fore as colorama_fore
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from getpass import getpass
 # from functools import lru_cache
-
-SmallLogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 # Just vars
@@ -107,8 +101,6 @@ class ShellInput:
             if self.neg: self.poss_str = "\nNo Poss: "
             else: self.poss_str = "\nPoss: "
         if self.default != "": self.default_str = "\nDefault: "
-
-        whilecount = 0
         if type(self.default) == bool:
             while True:
                 try:
@@ -197,32 +189,10 @@ class ShellOutput(object):
         print(self.symbol * (int(shellwidth) - 1))
 
 
-# Logs
-class LogWrite(object):
-    def __init__(self, output, typ="core", level=1):
-        self.typ = typ.lower()
-        self.output, self.log_level = output, level
-
-    def __repr__(self):
-        return False if self.log_level > Config("log_level").get() else self.write()
-
-    def file(self):
-        logdir = "%s/%s/%s" % (Config("path_log").get(), self.typ, date02)
-        if os_path.exists(logdir) is False: os_system("mkdir -p " + logdir)
-        logfile = "%s/%s_%s.log" % (logdir, date03, self.typ)
-        if os_path.exists(logfile) is False: os_system("touch %s" % logfile)
-        return logfile
-
-    def write(self):
-        with open(self.file(), 'a') as logfile:
-            logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
-            logfile.write("\n%s\n" % self.output)
-
-
 # File operations
 class Line(object):
     def __init__(self, action, search, replace="", backup=False, file="./core.conf"):
-        self.file, self.backup, self.searchfor, self.action, self.replacewith = file, backup, search, action, relace
+        self.file, self.backup, self.searchfor, self.action, self.replacewith = file, backup, search, action, replace
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
         self.backupdir = "%s/%s" % (Config("path_backup").get(), date02)
 
