@@ -217,16 +217,23 @@ try:
             return data
 
 
-    def setup_config_file(file, text):
-        tmpfile = open(file, 'r')
-        for line in tmpfile.readlines():
-            if line.find(text) != -1:
-                try:
-                    split = line.split("=")[1].strip()
-                    return split
-                except (IndexError, ValueError):
-                    return False
-        return False
+    def setup_config_file(file=None, text=None, typ='r'):
+        if file is None:
+            file = "%s/core/core.conf" % ga_config["path_root"]
+        with open(file, typ) as config_file:
+            if typ != 'r':
+                config_file.write(text)
+                os_system("chown growautomation:growautomation %s && chmod 440 %s %s" % (file, file, ga_config["setup_log_redirect"]))
+                return True
+            else:
+                for line in config_file.readlines():
+                    if line.find(text) != -1:
+                        try:
+                            value = line.split("=")[1].strip()
+                            return value
+                        except (IndexError, ValueError):
+                            return False
+                return False
 
 
     def setup_exit(shell, log):
@@ -271,7 +278,7 @@ try:
     ga_config["setup_old_version_file"] = os_path.exists(ga_config["setup_version_file"])
     if ga_config["setup_old_version_file"] is True:
         ShellOutput(output="Growautomation version file exists", style="info")
-        ga_config["setup_old_version"] = setup_config_file(ga_config["setup_version_file"], "version=")
+        ga_config["setup_old_version"] = setup_config_file(file=ga_config["setup_version_file"], text="version=")
     else:
         ShellOutput(output="No growautomation version file found", style="info")
     ga_config["setup_old_root"] = os_path.exists("/etc/growautomation")
@@ -351,10 +358,10 @@ try:
                 ga_config["hostname"] = "gacon01"
 
         if ga_config["setup_fresh"] is False:
-            ga_config["path_root"] = setup_config_file(ga_config["setup_version_file"], "path_root=")
-            ga_config["hostname"] = setup_config_file(ga_config["setup_version_file"], "hostname=")
-            ga_config["setuptype"] = setup_config_file(ga_config["setup_version_file"], "setuptype=")
-            ga_config["log_level"] = setup_config_file(ga_config["setup_version_file"], "log_level=")
+            ga_config["path_root"] = setup_config_file(file=ga_config["setup_version_file"], text="path_root=")
+            ga_config["hostname"] = setup_config_file(file=ga_config["setup_version_file"], text="hostname=")
+            ga_config["setuptype"] = setup_config_file(file=ga_config["setup_version_file"], text="setuptype=")
+            ga_config["log_level"] = setup_config_file(file=ga_config["setup_version_file"], text="log_level=")
             if ga_config["path_root"] is False:
                 ShellOutput(output="Growautomation rootpath not found in old versionfile", style="warn")
                 ga_config["path_root"] = setup_input(prompt="Want to choose a custom install path?", default="/etc/growautomation")
@@ -443,22 +450,22 @@ try:
                         ga_config["sql_server_repl_pwd"] = setup_input(prompt="Please provide sql replication password.", default=ga_config["sql_agent_pwd"])
                         break
             else:
-                ga_config["sql_local_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_user=")
+                ga_config["sql_local_user"] = setup_config_file(text="sql_local_user=")
                 if ga_config["sql_local_user"] is False:
                     ga_config["sql_local_user"] = "agent"
-                ga_config["sql_local_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_local_pwd=")
+                ga_config["sql_local_pwd"] = setup_config_file(text="sql_local_pwd=")
                 if ga_config["sql_local_pwd"] is False:
                     ga_config["sql_local_pwd"] = setup_pwd_gen(ga_config["setup_pwd_length"])
-                ga_config["sql_agent_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")
-                ga_config["sql_agent_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")
+                ga_config["sql_agent_user"] = setup_config_file(text="sql_agent_user=")
+                ga_config["sql_agent_pwd"] = setup_config_file(text="sql_agent_pwd=")
 
                 while True:
                     if whilecount > 0:
                         ShellOutput(output="You can reset/configure the agent database credentials on the growautomation server. "
                                            "Details can be found in the manual: https://git.growautomation.at/tree/master/manual", style="info")
-                    ga_config["sql_agent_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_user=")
-                    ga_config["sql_agent_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_agent_pwd=")
-                    ga_config["sql_server_ip"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_server_ip=")
+                    ga_config["sql_agent_user"] = setup_config_file(text="sql_agent_user=")
+                    ga_config["sql_agent_pwd"] = setup_config_file(text="sql_agent_pwd=")
+                    ga_config["sql_server_ip"] = setup_config_file(text="sql_server_ip=")
                     if setup_mysql_conntest(ga_config["sql_agent_user"], ga_config["sql_agent_pwd"]) is True:
                         break
                 return True
@@ -472,8 +479,8 @@ try:
                 if setup_mysql_conntest() is False:
                     ShellOutput(output="Unable to connect to local mysql server with root privileges", style="err")
             else:
-                ga_config["sql_admin_user"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_user=")
-                ga_config["sql_admin_pwd"] = setup_config_file("%s/core/core.conf" % ga_config["path_root"], "sql_admin_pwd=")
+                ga_config["sql_admin_user"] = setup_config_file(text="sql_admin_user=")
+                ga_config["sql_admin_pwd"] = setup_config_file(text="sql_admin_pwd=")
                 while True:
                     if whilecount > 0:
                         ShellOutput(output="Please try again.\nThe following credentials can normally be found in the serverfile '$garoot/core/core.conf'", style="warn")
@@ -626,20 +633,6 @@ try:
             os_system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (path, path, ga_config["setup_log_redirect"]))
 
 
-    def setup_config_file(opentype, openinput, openfile=""):
-        if openfile == "":
-            file = "%s/core/core.conf" % ga_config["path_root"]
-        else:
-            file = openfile
-        file_open = open(file, opentype)
-        if opentype == "a" or opentype == "w":
-            file_open.write(openinput)
-            os_system("chown growautomation:growautomation %s && chmod 440 %s %s" % (file, file, ga_config["setup_log_redirect"]))
-        elif opentype == "r":
-            return file_open.readlines()
-        file_open.close()
-
-
     def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
         ShellOutput(font="head", output="Mounting %s share" % mname, symbol="-")
         if mtype == "cifs":
@@ -692,7 +685,7 @@ try:
         ShellOutput(output="\nMySql will not ask for the password if you start it locally (mysql -u root) with sudo/root privileges (set & forget)", style="info")
         os_system("mysql_secure_installation %s" % ga_config["setup_log_redirect"])
 
-        setup_config_file("w", "[mysqldump]\nuser=gabackup\npassword=%s\n" % ga_sql_backup_pwd, "/etc/mysql/conf.d/ga.mysqldump.cnf")
+        setup_config_file(typ="w", text="[mysqldump]\nuser=gabackup\npassword=%s\n" % ga_sql_backup_pwd, file="/etc/mysql/conf.d/ga.mysqldump.cnf")
 
         os_system("usermod -a -G growautomation mysql %s" % ga_config["setup_log_redirect"])
         ga_foldercreate("/etc/mysql/ssl")
@@ -701,6 +694,7 @@ try:
     def ga_sql_server():
         ShellOutput(font="head", output="Configuring sql as growautomation server", symbol="#")
         os_system("mysql -u root < /tmp/controller/setup/server/ga_db_setup.sql %s" % ga_config["setup_log_redirect"])
+        ShellOutput("Imported sql database", style="info")
         if ga_config["setuptype"] == "server":
             os_system("cp /tmp/controller/setup/server/50-server.cnf /etc/mysql/mariadb.conf.d/ %s" % ga_config["setup_log_redirect"])
         elif ga_config["setuptype"] == "standalone":
@@ -711,7 +705,8 @@ try:
                        "GRANT ALL ON ga.* TO '%s'@'%s' IDENTIFIED BY '%s';" % (ga_config["sql_admin_user"], "%", ga_config["sql_admin_pwd"]), "FLUSH PRIVILEGES;"], user="root", write=True,
               hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         setup_mysql_conntest(ga_config["sql_admin_user"], ga_config["sql_admin_pwd"], local=True, write=True)
-        setup_config_file("a", "[db_server]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]))
+        setup_config_file(typ="a", text="[db_server]\nsql_admin_user=%s\nsql_admin_pwd=%s\n" % (ga_config["sql_admin_user"], ga_config["sql_admin_pwd"]))
+        ShellOutput("Wrote admin credentials to config", style="info")
 
         if ga_config["setuptype"] == "server":
             ShellOutput(output="Creating mysql server certificate")
@@ -747,7 +742,7 @@ try:
                        "GRANT SELECT ON ga.* TO '%s'@'localhost' IDENTIFIED BY '%s';" % (ga_config["sql_local_user"], ga_config["sql_local_pwd"]), "FLUSH PRIVILEGES;"], user="root",
               write=True, hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
         setup_mysql_conntest(ga_config["sql_local_user"], ga_config["sql_local_pwd"], local=True)
-        setup_config_file("a", "[db_local]\nsql_local_user=%s\nsql_local_pwd=%s\n[db_server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
+        setup_config_file(typ="a", text="[db_local]\nsql_local_user=%s\nsql_local_pwd=%s\n[db_server]\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_server_ip=%s\nsql_server_port=%s"
                           % (ga_config["sql_local_user"], ga_config["sql_agent_pwd"], ga_config["sql_agent_user"], ga_config["sql_agent_pwd"], ga_config["sql_server_ip"], ga_config["sql_server_port"]))
 
         if setup_keycheck(ga_config["sql_server_repl_file"]) is False or setup_keycheck(ga_config["sql_server_repl_pos"]) is False:
@@ -813,7 +808,7 @@ try:
                            "FLUSH PRIVILEGES;"], user=ga_config["sql_admin_user"], pwd=ga_config["sql_admin_pwd"], write=True,
                   hostname=ga_config["hostname"], setuptype=ga_config["setuptype"]).start()
 
-            setup_config_file("a", "[db_agent_%s]\nsql_server_ip=%s\nsql_server_port=%s\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_replica_user=%s\nsql_replica_pwd=%s"
+            setup_config_file(typ="a", text="[db_agent_%s]\nsql_server_ip=%s\nsql_server_port=%s\nsql_agent_user=%s\nsql_agent_pwd=%s\nsql_replica_user=%s\nsql_replica_pwd=%s"
                               % (create_agent_name, ga_config["sql_server_ip"], ga_config["sql_server_port"], create_agent_name, create_agent_pwd, create_replica_usr, create_replica_pwd))
 
             ShellOutput(font="head", output="Creating mysql agent certificate\n", symbol="-")
@@ -915,8 +910,8 @@ try:
         elif ga_config["setup_old"] is True:
             infra_oldversion_cleanconfig()
 
-        setup_config_file("w", "version=%s\npath_root=%s\nhostname=%s\nsetuptype=%s\n"
-                          % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setuptype"]), ga_config["setup_version_file"])
+        setup_config_file(typ="w", text="version=%s\npath_root=%s\nhostname=%s\nsetuptype=%s\n"
+                          % (ga_config["version"], ga_config["path_root"], ga_config["hostname"], ga_config["setuptype"]), file=ga_config["setup_version_file"])
         os_system("chmod 664 %s && chown growautomation:growautomation %s %s" % (ga_config["setup_version_file"], ga_config["setup_version_file"], ga_config["setup_log_redirect"]))
         ga_foldercreate(ga_config["path_root"])
         ga_foldercreate(ga_config["path_log"])
@@ -947,7 +942,7 @@ try:
 
         os_system("ln -s %s %s/backup && ln -s %s %s/log %s" % (ga_config["path_backup"], ga_config["path_root"], ga_config["path_log"], ga_config["path_root"], ga_config["setup_log_redirect"]))
 
-        setup_config_file("w", "[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
+        setup_config_file(typ="w", text="[core]\nhostname=%s\nsetuptype=%s\npath_root=%s\nlog_level=%s" % (ga_config["hostname"], ga_config["setuptype"], ga_config["path_root"], ga_config["log_level"]))
 
         service_system_path, service_py_path = "%s/service/systemd/growautomation.service" % ga_config["path_root"], "%s/service/" % ga_config["path_root"]
         if os_path.exists("/etc/systemd/system/growautomation.service"):
