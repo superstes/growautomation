@@ -21,15 +21,11 @@
 # ga_version 0.4
 
 from owl import DoSql
-from smallant import LogWrite
+from smallant import Log
 from smallant import debugger
 from smallconfig import Config as FileConfig
 
 from functools import lru_cache
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
-
-LogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class Config(object):
@@ -56,7 +52,7 @@ class Config(object):
 
     def error(self, parser_type):
         if self.empty: return False
-        LogWrite("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
+        Log("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting)).write()
         raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
     def parse_sql(self, command=None):

@@ -20,14 +20,11 @@
 
 # ga_version 0.4
 
-# if manually called -> need to pass argument 'start'
-# possible second argument: 'debug'
-
 try:
     from ..core.owl import DoSql
     from ..core.ant import ShellOutput
     from ..core.ant import ShellInput
-    from ..core.ant import LogWrite
+    from ..core.smallant import Log
     from ..core.ant import plural
     from ..core.smallant import debugger
     from ..core.smallant import VarHandler
@@ -35,20 +32,16 @@ except ImportError:
     from owl import DoSql
     from ant import ShellOutput
     from ant import ShellInput
-    from ant import LogWrite
+    from smallant import Log
     from ant import plural
     from smallant import debugger
     from smallant import VarHandler
 
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from os import system as os_system
 from sys import argv as sys_argv
 from random import choice as random_choice
-import signal
 from sys import exc_info as sys_exc_info
-
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+import signal
 
 
 def signal_handler(signum=None, stack=None):
@@ -94,7 +87,8 @@ class Create:
                 self.current_dt_dict[name] = typ
 
         if self.create_device() is not False:
-            self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device" for nested in dict(value).values() for name in dict(nested).keys()]
+            self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device"
+                                     for nested in dict(value).values() for name in dict(nested).keys()]
             self.new_dev_list.extend(self.current_dev_list)
             for obj, nested in self.setting_dict.items():
                 for setting, data in dict(nested).items():
@@ -111,7 +105,8 @@ class Create:
     def create_core(self):
         self.setting_dict = {"check": {"range": 10, "function": "parrot.py"}, "backup": {"timer": 86400, "function": "backup.py"},
                              "sensor_master": {"function": "snake.py"}}
-        self.object_dict = {"core": {"check": "NULL", "backup": "NULL", "sensor_master": "NULL", "service": "NULL"}, "agent": {self.hostname: "NULL"}}
+        self.object_dict = {"core": {"check": "NULL", "backup": "NULL", "sensor_master": "NULL", "service": "NULL"},
+                            "agent": {self.hostname: "NULL"}}
 
     def create_agent(self):
         agent_object_dict = {}
@@ -120,7 +115,8 @@ class Create:
 
     def create_devicetype(self):
         ShellOutput("Device Types", symbol="#", font="head")
-        while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink hardware model; "
+        while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink "
+                                      "hardware model; "
                                       "they provide per model configuration", True).get()
         if while_devicetype is False: return False
         dt_object_dict, dt_exist_list = {}, []
@@ -134,7 +130,8 @@ class Create:
                                             default="AirHumidity", poss=dt_exist_list, neg=True).get(), {}
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"]).get()
             if dt_object_dict[name] != "downlink":
-                if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected via gpio or downlink",
+                if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected "
+                              "via gpio or downlink",
                               default=True).get() is True:
                     setting_dict["connection"] = ShellInput("Are they connected via downlink or directly?\n"
                                                             "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
@@ -159,9 +156,10 @@ class Create:
                                                                     default=1200, max_value=1209600, min_value=10).get()
                     reverse_function = ShellInput("Does reversing need an other function?", default=False).get()
                     if reverse_function:
-                        setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.", default="%s.py" % name, intype="free", max_value=50).get()
-                        setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> if you need it.",
-                                                                  intype="free", min_value=0, max_value=75).get()
+                        setting_dict["boomerang_function"] = ShellInput("Provide the name of the function.",
+                                                                        default="%s.py" % name, intype="free", max_value=50).get()
+                        setting_dict["function_arg"] = ShellInput("Provide system arguments to pass to the reverse function -> "
+                                                                  "if you need it.", intype="free", min_value=0, max_value=75).get()
             elif dt_object_dict[name] == "sensor":
                 setting_dict["timer"] = ShellInput("Provide the interval to run the function in seconds.",
                                                    default=600, max_value=1209600, min_value=10).get()
@@ -178,7 +176,8 @@ class Create:
             elif dt_object_dict[name] == "downlink":
                 setting_dict["portcount"] = ShellInput("How many client-ports does this downlink provide?", default=4).get()
                 setting_dict["output_per_port"] = ShellInput("Can the downlink output data per port basis?\n"
-                                                             "(Or can it only output the data for all of its ports at once?)", default=False).get()
+                                                             "(Or can it only output the data for all of its ports at once?)",
+                                                             default=False).get()
             self.setting_dict[name] = setting_dict
             dt_exist_list.append(name)
             debugger("confint - create_devicetype - settings '%s'" % setting_dict)
@@ -204,7 +203,8 @@ class Create:
                 except IndexError: default_name = random_choice([dt for dt, typ in self.current_dt_dict.items() if typ == to_ask])
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % default_name,
                                                 intype="free", poss=d_exist_list, neg=True).get(), {}
-                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(self.current_dt_dict.keys()) if name.find(dt) != -1][0],
+                create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(self.current_dt_dict.keys())
+                                                                                   if name.find(dt) != -1][0],
                                                poss=list(self.current_dt_dict.keys())).get()
                 if to_ask != "downlink":
                     if create_dict[name] in self.new_dt_dict.keys():
@@ -255,10 +255,12 @@ class Create:
 
     def create_custom_setting(self):
         ShellOutput("Custom Settings", symbol="#", font="head")
+
         def add_setting(object_name):
             def another():
                 return ShellInput("Do you want to add another setting to the object %s" % object_name, default=True).get()
-            setting_exist_list = [setting for obj, nested in self.setting_dict.items() if obj == object_name for setting in dict(nested).keys()]
+            setting_exist_list = [setting for obj, nested in self.setting_dict.items() if obj == object_name
+                                  for setting in dict(nested).keys()]
             if self.setup is False:
                 setting_exist_list.extend(self.Config(output="setting", filter="belonging = '%s'" % object_name).get("list"))
             change_dict, setting_count, setting_dict = {}, 0, {}
@@ -317,20 +319,26 @@ class Create:
 
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
-        dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "action"]
+        dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype"
+                          for name, typ in dict(value).items() if typ == "action"]
         if self.setup is False:
-            dt_action_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'action'", table="object").get("list"))
-        dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype" for name, typ in dict(value).items() if typ == "sensor"]
+            dt_action_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'action'",
+                                              table="object").get("list"))
+        dt_sensor_list = [name for key, value in self.object_dict.items() if key == "devicetype"
+                          for name, typ in dict(value).items() if typ == "sensor"]
         if self.setup is False:
-            dt_sensor_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'sensor'", table="object").get("list"))
+            dt_sensor_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'sensor'",
+                                              table="object").get("list"))
         # grouping of sectors to be added (patches in area)
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
             ShellOutput("Devicetype links", symbol="-", font="head")
-            self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump", "must match one devicetype")
+            self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump",
+                                                "must match one devicetype")
 
     def write_config(self):
         ShellOutput("Writing configuration to database", symbol="#", font="head")
-        LogWrite("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'" % (self.object_dict, self.setting_dict, self.group_dict), level=3)
+        Log("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'"
+            % (self.object_dict, self.setting_dict, self.group_dict), level=3).write()
         if self.setup is not True:
             tmp_config_dump = "%s/maintenance/add_config.tmp" % self.Config("path_root").get()
             with open(tmp_config_dump, 'w') as tmp:
@@ -363,7 +371,9 @@ class Create:
                     object_count, error_count = unpack_values(packed_subvalues, self.hostname)
             else: object_count, object_error_count = unpack_values(packed_values)
         ShellOutput("added %s object%s" % (object_count, plural(object_count)), style="info", font="text")
-        if object_error_count > 0: ShellOutput("%s error%s while inserting" % (object_error_count, plural(object_error_count)), style="err")
+        if object_error_count > 0:
+            ShellOutput("%s error%s while inserting" % (object_error_count, plural(object_error_count)), style="err")
+            Log("%s error%s while inserting" % (object_error_count, plural(object_error_count))).write()
 
         ShellOutput("Writing object settings", font="text")
         setting_count, setting_error_count = 0, 0
@@ -374,12 +384,15 @@ class Create:
                 elif type(data) == bool:
                     if data is True: data = 1
                     else: data = 0
-                if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');" % (object_name, setting, data),
+                if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
+                         % (object_name, setting, data),
                          write=True, hostname=self.hostname, setuptype=self.setuptype).start() is False:
                     setting_error_count += 1
                 else: setting_count += 1
         ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
-        if setting_error_count > 0: ShellOutput("%s error%s while inserting" % (setting_error_count, plural(setting_error_count)), style="err")
+        if setting_error_count > 0:
+            ShellOutput("%s error%s while inserting" % (setting_error_count, plural(setting_error_count)), style="err")
+            Log("%s error%s while inserting" % (setting_error_count, plural(setting_error_count))).write()
 
         ShellOutput("Writing group configuration", font="text")
         group_count, member_count, group_error_count = 0, 0, 0
@@ -399,7 +412,9 @@ class Create:
                         group_error_count += 1
                     else: member_count += 1
         ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style="info", font="text")
-        if group_error_count > 0: ShellOutput("%s error%s while inserting" % (group_error_count, plural(group_error_count)), style="err")
+        if group_error_count > 0:
+            ShellOutput("%s error%s while inserting" % (group_error_count, plural(group_error_count)), style="err")
+            Log("%s error%s while inserting" % (group_error_count, plural(group_error_count))).write()
 
         if self.setup is not True: os_system("rm %s" % tmp_config_dump)
 
@@ -498,13 +513,13 @@ def exit():
     raise SystemExit
 
 
-try:
+if __name__ == '__main__':
     try:
         if sys_argv[2] == "debug":
             debug = True
             VarHandler(name="debug", data=1).set()
-        else: debug = False
-    except (IndexError, NameError): debug = False
-    if sys_argv[1] == "start":
-        choose()
-except (IndexError, NameError): pass
+        else:
+            debug = False
+    except (IndexError, NameError):
+        debug = False
+    choose()

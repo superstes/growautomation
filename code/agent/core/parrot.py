@@ -21,20 +21,27 @@
 # ga_version 0.4
 # check module
 
-from .config import Config
-from .ant import LogWrite
-from .ant import time_subtract
-from .smallant import debugger
-from .smallant import process
+from config import Config
+from smallant import Log
+from ant import time_subtract
+from smallant import debugger
+from smallant import VarHandler
+from smallant import process
 
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from time import sleep
 from sys import argv as sys_argv
+from sys import exc_info as sys_exc_info
 import signal
 
 
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+def signal_handler(signum=None, stack=None):
+    # get list of memory-vars added -> Varhandler("peritem").clean()
+    # clean other stuff ..
+    raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 
 class ActionLoader:
@@ -61,12 +68,12 @@ class ActionLoader:
             output1, error1 = process(command + " start", out_error=True)
             sleep(time_wait)
             output2, error2 = process(command + " stop", out_error=True)
-            LogWrite("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2)
-            LogWrite("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3)
+            Log("Function %s called as boomerang.\nStart error:\n%s\nStop error:\n%s" % (function, error1, error2), level=2).write()
+            Log("Start output:\n%s\nStop output:\n%s" % (output1, output2), level=3).write()
         else:
             output, error = process(command, out_error=True)
-            LogWrite("Function %s called.\nError:\n%s" % (function, error), level=2)
-            LogWrite("Output:\n%s" % output, level=3)
+            Log("Function %s called.\nError:\n%s" % (function, error), level=2).write()
+            Log("Output:\n%s" % output, level=3).write()
 
 
 class SectorCheck:
@@ -88,21 +95,21 @@ class SectorCheck:
         for device_type in device_type_list:
             if Config(setting="enabled", belonging=device_type).get() != "1":
                 device_type_list.remove(device_type)
-                LogWrite("Action %s is disabled." % device_type, level=2)
+                Log("Action %s is disabled." % device_type, level=2).write()
                 continue
-            device_list = Config(filter="class = '%s'" % device_type, table="object").get()
+            device_list, device_sector_dict = Config(filter="class = '%s'" % device_type, table="object").get(), {}
             [device_list.remove(device) for device in reversed(device_list) if Config(setting="enabled", belonging=device).get() != "1"]
-            for device in device_list: device_sector_dict = {device: Config(setting="sector", belonging=device, table="group").get()}
+            for device in device_list: device_sector_dict[device] = Config(setting="sector", belonging=device, table="group").get()
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
-                    LogWrite("Device %s is in none of the following sectors: %s" % (device, self.sector_list), level=3)
+                    Log("Device %s is in none of the following sectors: %s" % (device, self.sector_list), level=3).write()
                     del device_sector_dict[device]
                     continue
                 device_sector_dict[device] = sector_list
             ActionLoader(device_type, device_sector_dict)
 
-    def check_device_sector(self, value):
+    def check_device_sector(self, value: str):
         value_sector_list, output_list = [], []
         value_sector_list.append(value.split(",")) if value.find(",") != -1 else value_sector_list.append(value)
         [output_list.append(sector) for sector in self.sector_list if sector in value_sector_list]
@@ -126,16 +133,18 @@ class ThresholdCheck:
                         if self.check_device_sector(device_sector, sector) is True:
                             average_data = self.get_average_data(device)
                             average_data_list.append(average_data)
-                            LogWrite("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3)
+                            Log("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3).write()
                         else:
-                            LogWrite("Device %s not in sector %s." % (device, sector), level=3)
+                            Log("Device %s not in sector %s." % (device, sector), level=3).write()
                             continue
                     sector_average = sum(average_data_list) / len(average_data_list)
                     if sector_average >= threshold:
-                        LogWrite("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck." % (self.sensor, sector, sector_average, threshold), level=2)
+                        Log("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck."
+                            % (self.sensor, sector, sector_average, threshold), level=2).write()
                         sector_dict = {sector: self.sensor}
                     else:
-                        LogWrite("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)" % (self.sensor, sector, sector_average, threshold), level=2)
+                        Log("DeviceType %s did not exceed it's threshold in sector %s. (%s/%s)"
+                            % (self.sensor, sector, sector_average, threshold), level=2).write()
                         continue
                 SectorCheck(sector_dict)
 
@@ -151,7 +160,7 @@ class ThresholdCheck:
             if Config(setting="enabled", belonging=device).get() == "1": 
                 device_dict = {device: Config(setting="sector", belonging=device, table="group").get()}
             else:
-                LogWrite("Device %s is disabled." % device, level=3)
+                Log("Device %s is disabled." % device, level=3).write()
                 continue
         return device_dict
 
@@ -184,10 +193,6 @@ class ThresholdCheck:
 
 try: ThresholdCheck(sys_argv[1])
 except IndexError:
-    LogWrite("No sensor provided. Exiting.")
+    Log("No sensor provided. Exiting.").write()
     raise SystemExit
 
-# to do
-# check how to implement signal handling regarding multiple classes
-# signal.signal(signal.SIGTERM, self.stop)
-# signal.signal(signal.SIGINT, self.stop)

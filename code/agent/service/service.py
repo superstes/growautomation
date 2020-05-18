@@ -22,21 +22,19 @@
 
 from threader import Loop
 from ..core.config import Config
-from ..core.ant import LogWrite
+from ..core.smallant import Log
 from ..core.ant import ShellOutput
 from ..core.smallant import debugger
 from ..core.smallant import VarHandler
 from ..core.smallant import process
 
 from systemd import journal as systemd_journal
-import signal
 from time import sleep as time_sleep
 from sys import argv as sys_argv
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from os import getpid as os_getpid
+from sys import exc_info as sys_exc_info
+import signal
 
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 Threader = Loop()
 
 
@@ -87,13 +85,13 @@ class Service:
 
             @Threader.thread(int(interval), thread_name)
             def thread_function():
-                LogWrite("Starting function '%s' for object %s." % (function, thread_name), level=4)
+                Log("Starting function '%s' for object %s." % (function, thread_name), level=4).write()
                 output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
                 if error != "":
                     systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
-                    LogWrite("Error by executing %s:\n'%s'" % (thread_name, error), level=2)
+                    Log("Error by executing %s:\n'%s'" % (thread_name, error), level=2).write()
                     debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
-                LogWrite("Output by processing %s:\n'%s'" % (thread_name, output), level=3)
+                Log("Output by processing %s:\n'%s'" % (thread_name, output), level=3).write()
                 debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
         Threader.start()
         systemd_journal.write("Finished starting service.")
@@ -124,11 +122,11 @@ class Service:
 
     def stop(self, signum=None, stack=None):
         debugger("service - stop |stopping")
-        LogWrite("Stopping service", level=1)
+        Log("Stopping service", level=1).write()
         systemd_journal.write("Stopping service.")
         if signum is not None:
-            debugger("service - stop |got signal '%s'" % signum)
-            LogWrite("Service received signal '%s'" % signum, level=2)
+            debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+            Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
         VarHandler().stop()
         Threader.stop()
         time_sleep(10)
@@ -165,7 +163,7 @@ class Service:
         except:
             if self.init_exit is False:
                 debugger("service - run |runtime error")
-                LogWrite("Stopping service because of runtime error", level=2)
+                Log("Stopping service because of runtime error", level=2).write()
                 self.stop()
             else: self.exit()
 

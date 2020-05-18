@@ -24,15 +24,12 @@ from ..core.owl import DoSql
 from ..core.smallant import debugger
 from ..core.smallant import VarHandler
 from ..core.config import Config
-from ..core.smallant import LogWrite
+from ..core.smallant import Log
 
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
-import signal
 from systemd import journal as systemd_journal
 from sys import argv as sys_argv
-
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+from sys import exc_info as sys_exc_info
+import signal
 
 
 class Startup:
@@ -52,8 +49,8 @@ class Startup:
 
     def stop(self, signum=None, stack=None):
         if signum is not None:
-            debugger("service - stop |got signal '%s'" % signum)
-            LogWrite("Service received signal '%s'" % signum, level=2)
+            debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+            Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
         systemd_journal("Service initialization stopped. Exiting.")
 
     def finish(self):

@@ -23,16 +23,12 @@
 # base code source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-from ..core.ant import LogWrite
+from ..core.smallant import Log
 from ..core.smallant import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep
 from datetime import timedelta
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
-
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
 
 
 class Job(Thread):
@@ -48,10 +44,10 @@ class Job(Thread):
         debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
         self.state_stop.set()
         self.join()
-        LogWrite("Stopped thread '%s'" % self.name, level=3)
+        Log("Stopped thread '%s'" % self.name, level=3).write()
 
     def run(self):
-        LogWrite("Starting thread '%s'" % self.name, level=4)
+        Log("Starting thread '%s'" % self.name, level=4).write()
         debugger("threader - Thread(run) |thread starting '%s'" % self.name)
         if self.run_once:
             self.execute()
@@ -61,7 +57,7 @@ class Job(Thread):
                 self.execute()
                 if self.state_stop.isSet():
                     debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
-                    LogWrite("Exiting thread '%s'" % self.name, level=4)
+                    Log("Exiting thread '%s'" % self.name, level=4).write()
                     break
 
 
@@ -70,7 +66,7 @@ class Loop:
         self.jobs = []
 
     def start(self, daemon=True, single_thread=None):
-        LogWrite("Starting threads in background", level=3)
+        Log("Starting threads in background", level=3).write()
         for job in self.jobs:
             if single_thread is not None:
                 debugger("threader - start |starting thread '%s' '%s'" % (type(single_thread), single_thread))
@@ -96,7 +92,7 @@ class Loop:
 
     def block_root_process(self):
         debugger("threader - block |running threads in foreground")
-        LogWrite("Starting threads in foreground", level=3)
+        Log("Starting threads in foreground", level=3).write()
         while True:
             try:
                 time_sleep(1)
@@ -107,7 +103,7 @@ class Loop:
     def stop(self):
         debugger("threader - stop |stopping jobs")
         for job in self.jobs: job.stop()
-        LogWrite("All threads stopped. Exiting loop", level=2)
+        Log("All threads stopped. Exiting loop", level=2).write()
 
     def stop_thread(self, thread_name):
         debugger("threader - stop_thread |'%s' '%s'" % (type(thread_name), thread_name))
@@ -116,7 +112,7 @@ class Loop:
             if job.name == thread_name:
                 job.stop()
                 self.jobs.remove(job)
-                LogWrite("Thread %s stopped." % job.name, level=2)
+                Log("Thread %s stopped." % job.name, level=2).write()
 
     def start_thread(self, sleep_time: int, thread_name):
         debugger("threader - start_thread |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))

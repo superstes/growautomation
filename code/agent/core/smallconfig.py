@@ -31,16 +31,23 @@ class Config:
         global tmp_dict
         self.file, self.request, tmp_dict = file, request, {}
 
-    def get(self):
+    def get(self, outtype="str"):
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
-        return self.parse_file()
+        if outtype == "int":
+            return int(self.parse_file())
+        elif outtype == "dict":
+            return dict(self.parse_file())
+        elif outtype == "list":
+            return list(self.parse_file())
+        else:
+            return str(self.parse_file())
 
     def error(self, parser_type):
-        from smallant import LogWrite
-        LogWrite("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2)
-        LogWrite("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request), level=1)
+        from smallant import Log
+        Log("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2).write()
+        Log("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request), level=1).write()
         return False
 
     def parse_file_find(self):
@@ -56,7 +63,10 @@ class Config:
     def parse_file(self):
         response = self.parse_file_find()
         if response is False or response is None or response == "":
+            hardcode_dict = {"path_root": "/etc/growautomation", "path_log": "/var/log/growautomation", "log_level": "1"}
+            if self.request in hardcode_dict.keys(): return hardcode_dict[self.request]
             self.error("file")
+            return False
         else:
             try:
                 split = response.split("=")[1].strip()

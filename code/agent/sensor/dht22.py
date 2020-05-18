@@ -18,10 +18,10 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 # sensor function for adafruit dht22
 
-from ..core.ant import LogWrite as LogModule
+from ..core.smallant import Log
 from ..core.smallant import debugger
 
 from inspect import getfile as inspect_getfile
@@ -31,12 +31,11 @@ from sys import argv as sys_argv
 import Adafruit_DHT
 
 
-def LogWrite(log: str, level=3):
-    LogModule(log, typ="downlink", level=level)
+def LogWrite(output: str, level=3):
+    Log(output, typ="sensor", level=level).write()
 
 
 function = inspect_getfile(inspect_currentframe())
-LogWrite("Current module: %s" % function, level=2)
 
 try:
     port = sys_argv[1]
@@ -80,7 +79,7 @@ class Device:
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, port)
         if argument == "humi": return humidity
         elif argument == "temp": return temperature
-        else: LogWrite("Input Error: Either define humidity or temperature")
+        else: Log("Input Error: Either define humidity or temperature").write()
 
 
 Device().start()

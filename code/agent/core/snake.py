@@ -21,20 +21,17 @@
 # ga_version 0.4
 # sensor master module
 
-from .config import Config
-from .owl import DoSql
-from .ant import LogWrite
-from .smallant import debugger
-from .smallant import VarHandler
-from .smallant import process
+from config import Config
+from owl import DoSql
+from smallant import Log
+from smallant import debugger
+from smallant import VarHandler
+from smallant import process
 
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from sys import argv as sys_argv
-import signal
 from time import sleep as time_sleep
-
-LogWrite("Current module: %s" % inspect_getfile(inspect_currentframe()), level=2)
+from sys import exc_info as sys_exc_info
+import signal
 
 
 class Balrog:
@@ -68,7 +65,7 @@ class Balrog:
         elif connection == "downlink": self.downlink(device, Config(setting="downlink", belonging=device).get())
         else:
             debugger("snake - device |%s has no connection configured" % device)
-            LogWrite("Device %s has no acceptable connection configured" % device, level=1)
+            Log("Device %s has no acceptable connection configured" % device, level=1).write()
             return False
 
     def downlink(self, device, downlink):
@@ -130,16 +127,16 @@ class Balrog:
         devicetype_class = Config(output="class", table="object", setting=self.own_dt).get()
 
         function_path = "%s/%s/%s" % (Config(setting="path_root").get(), devicetype_class, function)
-        LogWrite("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'" %
-                 (function_path, device, device_mapping_dict, setting_dict), level=4)
+        Log("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'"
+            % (function_path, device, device_mapping_dict, setting_dict), level=4).write()
         debugger("snake - start |/usr/bin/python3 %s %s %s %s %s" %
                  (function_path, port, device_mapping_dict, setting_dict, custom_arg))
         output, error = process("/usr/bin/python3 %s %s %s %s %s" %
                                 (function_path, port, device_mapping_dict, setting_dict, custom_arg), out_error=True)
-        LogWrite("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output), level=3)
+        Log("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output), level=3).write()
         debugger("snake - start |output by processing %s '%s'" % (device, output))
         if error != "":
-            LogWrite("Error by executing %s:\n'%s'" % (device, error), level=2)
+            Log("Error by executing %s:\n'%s'" % (device, error), level=2).write()
             debugger("snake - start |error by executing %s '%s'" % (device, error))
         if device_mapping_dict is None: return output
         else: return dict(output)
@@ -152,7 +149,7 @@ class Balrog:
             else: break
             if try_count > max_try_count:
                 debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
-                LogWrite("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2)
+                Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2).write()
                 return False
             debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
@@ -160,25 +157,25 @@ class Balrog:
         VarHandler(name="lock_%s" % device, data=1).set()
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
-        LogWrite("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2)
+        Log("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2).write()
         return True
 
     def unlock(self, device):
         VarHandler(name="lock_%s" % device, data=0).clean()
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
-        LogWrite("Unlocked device '%s'." % device, level=2)
+        Log("Unlocked device '%s'." % device, level=2).write()
         return True
 
     def write_data(self, device, data):
         sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" % (Config("hostname").get(), data, device), write=True).start()
-        LogWrite("Wrote data for device '%s' to database. Output: %s" % (device, sql), level=4)
+        Log("Wrote data for device '%s' to database. Output: %s" % (device, sql), level=4).write()
         return sql
 
     def stop(self, signum=None, stack=None):
         if signum is not None:
-            debugger("snake - stop |got signal %s" % signum)
-            LogWrite("Sensor master received signal %s" % signum, level=2)
+            debugger("snake - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+            Log("Sensor master received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
         if len(self.lock_list) > 0:
             unlock_list = self.lock_list
             for device in unlock_list: self.unlock(device)
@@ -189,5 +186,5 @@ class Balrog:
 
 try: Balrog(sys_argv[1])
 except IndexError:
-    LogWrite("No sensor provided. Exiting.")
+    Log("No sensor provided. Exiting.").write()
     raise SystemExit
