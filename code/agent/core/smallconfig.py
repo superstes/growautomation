@@ -18,7 +18,7 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
 
 from functools import lru_cache
 from os import path as os_path
@@ -28,29 +28,28 @@ from inspect import currentframe as inspect_currentframe
 
 class Config:
     def __init__(self, request, file="core.conf"):
-        global tmp_dict
-        self.file, self.request, tmp_dict = file, request, {}
+        self.file, self.request = file, request
 
-    def get(self, outtype="str"):
+    def get(self, out_type="str"):
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
-        if outtype == "int":
-            return int(self.parse_file())
-        elif outtype == "dict":
-            return dict(self.parse_file())
-        elif outtype == "list":
-            return list(self.parse_file())
+        if out_type == "int":
+            return int(self._parse_file())
+        elif out_type == "dict":
+            return dict(self._parse_file())
+        elif out_type == "list":
+            return list(self._parse_file())
         else:
-            return str(self.parse_file())
+            return str(self._parse_file())
 
-    def error(self, parser_type):
+    def _error(self, parser_type):
         from smallant import Log
         Log("Current module: '%s'" % inspect_getfile(inspect_currentframe()), level=2).write()
         Log("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.request), level=1).write()
         return False
 
-    def parse_file_find(self):
+    def _parse_file_find(self):
         try:
             tmpfile = open(self.file, 'r')
             for xline in tmpfile.readlines():
@@ -60,16 +59,16 @@ class Config:
         except FileNotFoundError: return False
 
     @lru_cache()
-    def parse_file(self):
-        response = self.parse_file_find()
+    def _parse_file(self):
+        response = self._parse_file_find()
         if response is False or response is None or response == "":
             hardcode_dict = {"path_root": "/etc/growautomation", "path_log": "/var/log/growautomation", "log_level": "1"}
             if self.request in hardcode_dict.keys(): return hardcode_dict[self.request]
-            self.error("file")
+            self._error("file")
             return False
         else:
             try:
                 split = response.split("=")[1].strip()
                 return split
             except (IndexError, ValueError):
-                self.error("file")
+                self._error("file")
