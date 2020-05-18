@@ -83,46 +83,60 @@ class DoSql:
                     raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
                 else: return False
 
-            if self.write is False: data = self.connect("SELECT * FROM mysql.help_category LIMIT 10;", connect_debug=False)
+            if self.write is False: data = self._connect("SELECT * FROM mysql.help_category LIMIT 10;", connect_debug=False)
             else:
-                self.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % self.hostname, connect_debug=False)
-                self.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % self.hostname, connect_debug=False)
+                self._connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % self.hostname, connect_debug=False)
+                self._connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % self.hostname, connect_debug=False)
                 data = True
             conntest_result = True if type(data) == list else data if type(data) == bool else False
             debugger("owl - start |conntest '%s' '%s'" % (type(conntest_result), conntest_result))
             whilecount += 1
-        return self.execute()
+        return self._execute()
 
-    def execute(self):
+    def _execute(self):
         debugger("owl - execute |command '%s' '%s'" % (type(self.command), self.command))
         if type(self.command) == str:
-            return self.connect()
+            return self._connect()
         elif type(self.command) == list:
             outputdict, anyfalse, forcount = {}, True, 1
             for command in self.command:
-                output = self.connect(command)
+                output = self._connect(command)
                 outputdict[forcount] = output
                 if output is False: anyfalse = False
                 forcount += 1
             return False if not anyfalse else outputdict
 
-    def connect(self, command=None, connect_debug=True):
+    def _check_config(self, setting):
+        output = Config(setting).get()
+        if output is False:
+            debugger("owl - config_check |unable to get value for setting '%s'" % setting)
+            Log("Unable to obtain value for setting '%s' - exiting sql connection").write()
+            raise ValueError
+        else:
+            return output
+
+    def _connect(self, command=None, connect_debug=True):
         import mysql.connector
         try:
             if self.user is not None:
                 if self.user == "root":
-                    connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user)
+                    connection = mysql.connector.connect(unix_socket=self._unixsock(), user=self.user)
                 else:
                     if self.setuptype == "agent":
-                        connection = mysql.connector.connect(host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
+                        connection = mysql.connector.connect(host="%s" % self._check_config("sql_server_ip"),
+                                                             port="%s" % self._check_config("sql_server_port"),
                                                              user=self.user, passwd=self.pwd)
                     else:
-                        connection = mysql.connector.connect(unix_socket=self.unixsock(), user=self.user, passwd=self.pwd)
+                        connection = mysql.connector.connect(unix_socket=self._unixsock(), user=self.user, passwd=self.pwd)
             elif self.setuptype == "agent":
-                if self.fallback is True: connection = mysql.connector.connect(user="%s" % Config("sql_local_user").get(), passwd="%s" % Config("sql_local_pwd").get())
-                else: connection = mysql.connector.connect(unix_socket=self.unixsock(), host="%s" % Config("sql_server_ip").get(), port="%s" % Config("sql_server_port").get(),
-                                                           user="%s" % Config("sql_agent_user").get(), passwd="%s" % Config("sql_agent_pwd").get())
-            else: connection = mysql.connector.connect(unix_socket=self.unixsock(), user="%s" % Config("sql_admin_user").get(), passwd="%s" % Config("sql_admin_pwd").get())
+                if self.fallback is True: connection = mysql.connector.connect(user="%s" % self._check_config("sql_local_user"),
+                                                                               passwd="%s" % self._check_config("sql_local_pwd"))
+                else: connection = mysql.connector.connect(unix_socket=self._unixsock(), host="%s" % self._check_config("sql_server_ip"),
+                                                           port="%s" % self._check_config("sql_server_port"),
+                                                           user="%s" % self._check_config("sql_agent_user"),
+                                                           passwd="%s" % self._check_config("sql_agent_pwd"))
+            else: connection = mysql.connector.connect(unix_socket=self._unixsock(), user="%s" % self._check_config("sql_admin_user"),
+                                                       passwd="%s" % self._check_config("sql_admin_pwd"))
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
             if connect_debug: debugger("owl - connect |command '%s' '%s'" % (type(command), command))
@@ -147,7 +161,7 @@ class DoSql:
             connection.close()
             if connect_debug: debugger("owl - connect |output '%s' '%s'" % (type(data), data))
             return data
-        except (mysql.connector.Error, mysql.connector.errors.InterfaceError) as error:
+        except (mysql.connector.Error, mysql.connector.errors.InterfaceError, ValueError) as error:
             if connect_debug: debugger("owl - connect |error '%s'" % error)
             try:
                 connection.rollback()
@@ -155,7 +169,7 @@ class DoSql:
             Log("Mysql connection failed.\nUser: %s\nCommand: %s\nError: %s" % (self.user, command, error)).write()
             return False
 
-    def unixsock(self):
+    def _unixsock(self):
         try:
             sql_sock = process(command="cat /etc/mysql/mariadb.conf.d/50-server.cnf | grep 'socket                  ='").split("=")[1].strip()
             if os_path.exists(sql_sock) is False:
@@ -169,10 +183,10 @@ class DoSql:
     def find(self, searchfor):
         debugger("owl - find |input '%s' '%s'" % (type(searchfor), searchfor))
         if type(self.command) == str:
-            data = str(self.execute())
+            data = str(self._execute())
             output = data.find(searchfor)
         elif type(self.command) == list:
-            output, sqllist = -1, self.execute()
+            output, sqllist = -1, self._execute()
             for x in sqllist:
                 if x.find(searchfor) != -1: output +=1
         debugger("owl - find |output '%s' '%s'" % (type(output), output))

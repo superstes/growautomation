@@ -35,10 +35,7 @@ class Job(Thread):
     def __init__(self, interval, execute, name, run_once=False):
         Thread.__init__(self)
         self.state_stop = Event()
-        self.interval = interval
-        self.execute = execute
-        self.name = name
-        self.run_once = run_once
+        self.interval, self.execute, self.name, self.run_once = interval, execute, name, run_once
 
     def stop(self):
         debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
@@ -77,7 +74,7 @@ class Loop:
                 debugger("threader - start |starting threads")
                 job.daemon = daemon
                 job.start()
-        if not daemon: self.block_root_process()
+        if not daemon: self._block_root_process()
 
     def thread(self, sleep_time: int, thread_name):
         debugger("threader - thread |adding job |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
@@ -90,7 +87,7 @@ class Loop:
             return function
         return decorator
 
-    def block_root_process(self):
+    def _block_root_process(self):
         debugger("threader - block |running threads in foreground")
         Log("Starting threads in foreground", level=3).write()
         while True:

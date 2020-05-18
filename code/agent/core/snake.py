@@ -38,8 +38,8 @@ class Balrog:
     def __init__(self, sensor):
         self.sensor, self.own_dt = sensor, None
         self.processed_list, self.lock_list = [], []
-        signal.signal(signal.SIGTERM, self.stop)
-        signal.signal(signal.SIGINT, self.stop)
+        signal.signal(signal.SIGTERM, self._stop)
+        signal.signal(signal.SIGINT, self._stop)
         self.sensor_type = True if self.sensor in Config(output="name", table="object", filter="class = 'sensor'").get("list") else False
         self.devicetype() if self.sensor_type is True else self.device(self.sensor)
 
@@ -59,22 +59,22 @@ class Balrog:
         # if device => self.sensor doesn't need to check if enabled since it was already checked when accepting the timer
         connection = Config(setting="connection", belonging=device).get()
         if connection == "direct":
-            output = self.start(device)
+            output = self._start(device)
             debugger("snake - device |direct |output '%s'" % output)
-            self.write_data(device, output)
-        elif connection == "downlink": self.downlink(device, Config(setting="downlink", belonging=device).get())
+            self._write_data(device, output)
+        elif connection == "downlink": self._downlink(device, Config(setting="downlink", belonging=device).get())
         else:
             debugger("snake - device |%s has no connection configured" % device)
             Log("Device %s has no acceptable connection configured" % device, level=1).write()
             return False
 
-    def downlink(self, device, downlink):
+    def _downlink(self, device, downlink):
         if Config(setting="enabled", belonging=downlink).get() != "1": return False
         devicetype = Config(output="class", table="object", setting=downlink).get()
         if Config(setting="enabled", belonging=devicetype).get() != "1": return False
         type_opp = Config(setting="output_per_port", belonging=devicetype).get()
 
-        def get_setting_dict():
+        def _get_setting_dict():
             type_setting, setting = Config(output="setting,data", belonging=devicetype).get(), Config(output="setting,data", belonging=downlink).get()
             setting_dict, type_setting_dict = {}, {}
             for setting, data in setting: setting_dict[setting] = data
@@ -86,9 +86,9 @@ class Balrog:
         if type_opp == "1":
             sensor_dict = {device: Config(setting="port", belonging=device).get()}
             debugger("snake - downlink |opp 1 |input '%s'" % sensor_dict)
-            output = self.start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
+            output = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
             debugger("snake - downlink |opp 1 |output '%s'" % output)
-            self.write_data(device, output)
+            self._write_data(device, output)
         elif type_opp == "0":
             portcount = Config(setting="portcount", belonging=downlink).get()
             if self.sensor_type:
@@ -106,20 +106,20 @@ class Balrog:
                         # portlist in dict will start at 0 => throw it into the docs
                 sensor_dict = {key: value for key, value in sorted(sensor_dict.items(), key=lambda item: item[1])}
             debugger("snake - downlink |opp 0 |input '%s'" % sensor_dict)
-            output_dict = self.start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
+            output_dict = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
             debugger("snake - downlink |opp 0 |output '%s'" % output_dict)
             for sensor, data in output_dict.items():
-                if sensor in self.processed_list: self.write_data(sensor, data)
+                if sensor in self.processed_list: self._write_data(sensor, data)
             # if opp -> output must be string
             # if not opp -> output must be dict with sensor as key and data as value
         else: return False
 
-    def start(self, device, device_mapping_dict=None, setting_dict=None):
+    def _start(self, device, device_mapping_dict=None, setting_dict=None):
         if device_mapping_dict is None: self.processed_list.extend(device)
         else:
             for device in device_mapping_dict.keys():
                 if device.find("dummy") == -1: self.processed_list.append(device)
-        self.lock(device)
+        self._lock(device)
         function = Config(setting="function", belonging=self.own_dt).get()
         custom_arg = Config(setting="function_arg", belonging=self.own_dt, empty=True).get()
         if not custom_arg: custom_arg = None
@@ -141,7 +141,7 @@ class Balrog:
         if device_mapping_dict is None: return output
         else: return dict(output)
 
-    def lock(self, device):
+    def _lock(self, device):
         try_count, wait_time, max_try_count = 1, 10, 31
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
@@ -160,25 +160,25 @@ class Balrog:
         Log("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2).write()
         return True
 
-    def unlock(self, device):
+    def _unlock(self, device):
         VarHandler(name="lock_%s" % device, data=0).clean()
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
         Log("Unlocked device '%s'." % device, level=2).write()
         return True
 
-    def write_data(self, device, data):
+    def _write_data(self, device, data):
         sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" % (Config("hostname").get(), data, device), write=True).start()
         Log("Wrote data for device '%s' to database. Output: %s" % (device, sql), level=4).write()
         return sql
 
-    def stop(self, signum=None, stack=None):
+    def _stop(self, signum=None, stack=None):
         if signum is not None:
             debugger("snake - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
             Log("Sensor master received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
         if len(self.lock_list) > 0:
             unlock_list = self.lock_list
-            for device in unlock_list: self.unlock(device)
+            for device in unlock_list: self._unlock(device)
             debugger("snake - stop |unlocked following devices '%s'" % unlock_list)
         debugger("snake - stop |exiting")
         raise SystemExit

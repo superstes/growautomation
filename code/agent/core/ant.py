@@ -55,7 +55,7 @@ class ShellInput:
         self.style_type, self.output = ShellOutput(style=style).colors(), ""
         self.lower, self.default_str, self.poss_str = "", "", ""
 
-    def string_check(self, to_check: str):
+    def _string_check(self, to_check: str):
         if self.max_value is None: self.max_value = 20
         if self.min_value is None: self.min_value = 2
         to_check = str(to_check)
@@ -69,15 +69,15 @@ class ShellInput:
         else:
             return True
 
-    def poss_check(self):
+    def _poss_check(self):
         while_count = 0
 
-        def poss_error():
+        def _poss_error():
             if self.neg: ShellOutput("Input error. The following cannot be chosen: %s\n" % self.poss, style="warn", font="text")
             else: ShellOutput("Input error. Choose one of the following: %s\n" % self.poss, style="warn", font="text")
         while True:
             try:
-                if while_count > 0: poss_error()
+                if while_count > 0: _poss_error()
                 user_input = str(input(self.style_type + "\n%s%s%s%s%s\n > " %
                                        (self.prompt, self.poss_str, self.poss, self.default_str, self.default) +
                                        colorama_fore.RESET) or self.default)
@@ -92,7 +92,7 @@ class ShellInput:
                     else: input_ok = False
                 if self.neg: input_ok = not input_ok
                 if input_ok: break
-            except (KeyError, ValueError): poss_error()
+            except (KeyError, ValueError): _poss_error()
             while_count += 1
         return user_input
 
@@ -132,10 +132,10 @@ class ShellInput:
                 while True:
                     user_input = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
                                        colorama_fore.RESET) or self.default
-                    if self.string_check(user_input):
+                    if self._string_check(user_input):
                         self.output = user_input
                         break
-            elif self.poss != "": self.output = self.poss_check()
+            elif self.poss != "": self.output = self._poss_check()
             else: self.output = input(self.style_type + "\n%s%s%s\n > " % (self.prompt, self.default_str, self.default) +
                                       colorama_fore.RESET) or "%s" % self.default
         elif type(self.default) == int:
@@ -166,25 +166,25 @@ class ShellOutput(object):
         self.start()
 
     def start(self):
-        self.header() if self.font == "head" else self.line if self.font == "line" \
-            else self.text() if self.output is not None else None
+        self._header() if self.font == "head" else self._line if self.font == "line" \
+            else self._text() if self.output is not None else None
 
-    def header(self):
+    def _header(self):
         print("\n")
-        self.line()
+        self._line()
         print("%s" % self.output)
-        self.line()
+        self._line()
         print("\n")
 
-    def colors(self):
+    def _colors(self):
         return colorama_fore.YELLOW if self.style == "warn" else colorama_fore.CYAN if self.style == "info" \
             else colorama_fore.RED if self.style == "err" \
             else colorama_fore.GREEN if self.style == "succ" else ""
 
-    def text(self):
-        print(self.colors() + "%s\n" % self.output + colorama_fore.RESET)
+    def _text(self):
+        print(self._colors() + "%s\n" % self.output + colorama_fore.RESET)
 
-    def line(self):
+    def _line(self):
         shellhight, shellwidth = os_popen('stty size', 'r').read().split()
         print(self.symbol * (int(shellwidth) - 1))
 
@@ -240,14 +240,14 @@ def time_subtract(subtract, timeformat=timestamp, both=False):
 
 
 def plural(data):
-    def base_check(nr):
+    def _base_check(nr):
         if nr > 1: return "s"
         else: return ""
-    if type(data) == int: return base_check(data)
-    elif type(data) == list: return base_check(len(data))
+    if type(data) == int: return _base_check(data)
+    elif type(data) == list: return _base_check(len(data))
     elif type(data) == str:
         try:
-            return base_check(int(data))
+            return _base_check(int(data))
         except ValueError:
             return ""
     else: return ""

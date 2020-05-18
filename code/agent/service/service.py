@@ -46,7 +46,7 @@ class Service:
         signal.signal(signal.SIGINT, self.stop)
         self.start()
 
-    def get_timer_dict(self):
+    def _get_timer_dict(self):
         name_dict = {}
         core_list = Config(output="name", table="object", filter="type = 'core'").get()[0]
         sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
@@ -78,7 +78,7 @@ class Service:
             if sys_argv[1] == "debug": VarHandler(name="debug", data=1).set()
         except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
-        self.name_dict = self.get_timer_dict()
+        self.name_dict = self._get_timer_dict()
         for thread_name, settings in self.name_dict.items():
             interval, function = settings[0], settings[1]
             debugger("service - start |function '%s' '%s' |interval '%s' '%s'" % (type(function), function, type(interval), interval))
@@ -96,12 +96,12 @@ class Service:
         Threader.start()
         systemd_journal.write("Finished starting service.")
         self.status()
-        self.run()
+        self._run()
 
     def reload(self, signum=None, stack=None):
         debugger("service - reload |reloading config")
         name_dict_overwrite, dict_reloaded = {}, {}
-        for thread_name_reload, settings_reload in self.get_timer_dict().items():
+        for thread_name_reload, settings_reload in self._get_timer_dict().items():
             interval_reload, function_reload = settings_reload[0], settings_reload[1]
             if thread_name_reload in self.name_dict.keys():
                 for thread_name, settings in self.name_dict.items():
@@ -132,9 +132,9 @@ class Service:
         time_sleep(10)
         self.init_exit = True
         systemd_journal.write("Service stopped.")
-        self.exit()
+        self._exit()
 
-    def exit(self):
+    def _exit(self):
         if self.exit_count == 0:
             self.exit_count += 1
             ShellOutput(font="line", symbol="#")
@@ -148,7 +148,7 @@ class Service:
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n" % Threader.list())
         [systemd_journal.write("'%s': '%s'\n" % (key, value)) for key, value in self.name_dict.items()]
 
-    def run(self):
+    def _run(self):
         debugger("service - run |entering runtime")
         try:
             while_count, tired_time = 0, 300
@@ -165,7 +165,7 @@ class Service:
                 debugger("service - run |runtime error")
                 Log("Stopping service because of runtime error", level=2).write()
                 self.stop()
-            else: self.exit()
+            else: self._exit()
 
 
 Service()
