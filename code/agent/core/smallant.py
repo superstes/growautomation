@@ -28,7 +28,8 @@ from datetime import datetime
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from multiprocessing.shared_memory import ShareableList
-from functools import lru_cache
+from inspect import stack as inspect_stack
+from inspect import getfile as inspect_getfile
 
 
 def now(time_format):
@@ -39,25 +40,29 @@ date02, date03 = now("%Y"), now("%m")
 
 
 # Logs
-class LogWrite(object):
-    def __init__(self, output, scripttype="core", level=1):
-        self.scripttype, self.output, self.log_level, self.log_path = scripttype.lower(), output, level, "../log/"
-
-    def __repr__(self):
-        try:
-            return False if self.log_level > Config("log_level").get() else self.write()
-        except AttributeError: self.write()
-
-    def open(self):
-        logdir = "%s/%s/%s" % (self.log_path, self.scripttype, date02)
-        if os_path.exists(logdir) is False: os_system("mkdir -p " + logdir)
-        return open("%s/%s_%s.log" % (logdir, date03, self.scripttype), 'a')
+class Log:
+    def __init__(self, output, typ="core", level=1):
+        self.typ, self.output, self.log_level = typ.lower(), output, level
+        self.name = inspect_getfile((inspect_stack()[1])[0])
+        self.log_dir = "%s/%s/%s" % (Config("path_log").get(), self.typ, date02)
+        self.log_file = "%s/%s_%s.log" % (self.log_dir, date03, self.typ)
 
     def write(self):
-        logfile = self.open()
-        logfile.write(datetime.now().strftime("%H:%M:%S:%f") + " ")
-        logfile.write("\n%s\n" % self.output)
-        logfile.close()
+        if self.typ == "core":
+            try:
+                if self.log_level > Config("log_level").get("int"): return False
+            except AttributeError: pass
+        else:
+            if self.log_level > Config("log_level").get("int"): return False
+        if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
+        with open("%s/%s_%s.log" % (self.log_dir, date03, self.typ), 'a') as logfile:
+            logfile.write("%s - %s - %s\n" % (datetime.now().strftime("%H:%M:%S:%f"), self.name, self.output))
+        return True
+
+    def file(self):
+        if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
+        if os_path.exists(self.log_file) is False: os_system("touch %s" % self.log_file)
+        return self.log_file
 
 
 class VarHandler:
@@ -81,10 +86,10 @@ class VarHandler:
     def set(self):
         self.action, max_count, min_count = "set", 12, 4
         if len(str(self.name)) < 4:
-            LogWrite("Name too short for memory block (min. %s characters)" % min_count)
+            Log("Name too short for memory block (min. %s characters)" % min_count).write()
             return False
         elif len(str(self.name)) > max_count:
-            LogWrite("Name too long for memory block (max. %s characters)" % max_count)
+            Log("Name too long for memory block (max. %s characters)" % max_count).write()
             return False
         return self._tracker()
 
@@ -159,7 +164,7 @@ class VarHandler:
                 if type(_) == list:
                     if self.debug:
                         debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
-                    LogWrite("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count))
+                    Log("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count)).write()
                     return False
                 count += 1
             try:
@@ -182,13 +187,14 @@ class VarHandler:
                     else:
                         if self.debug:
                             debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
-                        LogWrite("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s" % (name, len(memory), len(data_list)))
+                        Log("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
+                            % (name, len(memory), len(data_list))).write()
                         memory.shm.close()
                         return False
                 except IndexError as error:
                     if self.debug:
                         debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
-                    LogWrite("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error))
+                    Log("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error)).write()
                 return False
         elif action == "get":
             try:
@@ -201,7 +207,7 @@ class VarHandler:
             except FileNotFoundError:
                 if self.debug:
                     debugger("smallant - varhandler - memory |get: '%s' not found" % name)
-                LogWrite("Memory block '%s' was not found" % name)
+                Log("Memory block '%s' was not found" % name).write()
                 return False
         elif action == "clean":
             try:
