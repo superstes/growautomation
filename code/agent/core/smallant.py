@@ -41,19 +41,23 @@ date02, date03 = now("%Y"), now("%m")
 
 # Logs
 class Log:
-    def __init__(self, output, typ="core", level=1):
+    def __init__(self, output, typ='core', level=1):
         self.typ, self.output, self.log_level = typ.lower(), output, level
         self.name = inspect_getfile((inspect_stack()[1])[0])
-        self.log_dir = "%s/%s/%s" % (Config("path_log").get(), self.typ, date02)
+        self.log_dir = "%s/%s/%s" % (Config('path_log').get(), self.typ, date02)
         self.log_file = "%s/%s_%s.log" % (self.log_dir, date03, self.typ)
 
+    def _censor(self):
+        return False
+        # censor passwords -> check for strings in output ('IDENTIFIED by', 'pwd', 'password')
+
     def write(self):
-        if self.typ == "core":
+        if self.typ == 'core':
             try:
-                if self.log_level > Config("log_level").get("int"): return False
+                if self.log_level > Config('log_level').get('int'): return False
             except AttributeError: pass
         else:
-            if self.log_level > Config("log_level").get("int"): return False
+            if self.log_level > Config('log_level').get('int'): return False
         if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
         with open("%s/%s_%s.log" % (self.log_dir, date03, self.typ), 'a') as logfile:
             logfile.write("%s - %s - %s\n" % (datetime.now().strftime("%H:%M:%S:%f"), self.name, self.output))
@@ -68,23 +72,23 @@ class Log:
 class VarHandler:
     def __init__(self, name=None, data=None):
         self.name, self.action, self.data = name, None, data
-        if name == "debug":
-            self.debug = False
+        if name == 'debug':
+            self.hard_debug = True
         else:
-            self.debug = True
+            self.hard_debug = False
 
     def get(self, outtyp=None):
-        self.action = "get"
+        self.action = 'get'
         data = self._tracker()
         if type(data) == str:
-            if outtyp == "int": return int(data)
+            if outtyp == 'int': return int(data)
             else: return str(data)
         elif type(data) == list and len(data) == 1:
             return str(data[0])
         return data
 
     def set(self):
-        self.action, max_count, min_count = "set", 12, 4
+        self.action, max_count, min_count = 'set', 12, 4
         if len(str(self.name)) < 4:
             Log("Name too short for memory block (min. %s characters)" % min_count).write()
             return False
@@ -94,22 +98,25 @@ class VarHandler:
         return self._tracker()
 
     def stop(self):
-        self.action = "stop"
+        self.action = 'stop'
         return self._tracker()
 
     def clean(self):
-        self.action = "clean"
+        self.action = 'clean'
         return self._tracker()
 
     def _tracker(self):
-        if self.action != "get":
-            action_list, updated_list = self._memory(name="share_action", action="get"), []
-            if action_list is False and self.action == "set":
-                action_list = self._memory(name="share_action", action="set", data=[None] * 100)
+        if self.action != 'get':
+            action_list, updated_list = self._memory(name='share_action', action='get'), []
+            if action_list is False and self.action == 'set':
+                action_list = self._memory(name='share_action', action='set', data=[None] * 100)
                 if action_list is False: return False
-                else: action_list = self._memory(name="share_action", action="get")
-            action_count = len(list(action_list))
-            if self.action == "set":
+                else: action_list = self._memory(name='share_action', action='get')
+            try:
+                action_count = len(list(action_list))
+            except TypeError:
+                return False
+            if self.action == 'set':
                 added, count = False, 1
                 for action in action_list:
                     if action is not None: updated_list.append(action)
@@ -120,7 +127,7 @@ class VarHandler:
                         if count >= (action_count - 1): continue
                         updated_list.append(action)
                     count += 1
-            elif self.action == "clean":
+            elif self.action == 'clean':
                 count, custom_count = 1, 0
                 for action in action_list:
                     if action == self.name:
@@ -131,26 +138,27 @@ class VarHandler:
                         updated_list.append(action)
                         custom_count += 1
                     count += 1
-            elif self.action == "stop":
+            elif self.action == 'stop':
                 for action in action_list:
                     if action is not None:
-                        self._memory(name=action, action="clean")
-                self._memory(name="share_action", action="clean")
+                        self._memory(name=action, action='clean')
+                self._memory(name='share_action', action='clean')
                 return True
-            if self.action == "clean" and custom_count == 0:
-                self._memory(name="share_action", action="clean")
-            else: self._memory(name="share_action", action="set", data=updated_list)
+            if self.action == 'clean' and custom_count == 0:
+                self._memory(name='share_action', action='clean')
+                return True
+            else: self._memory(name='share_action', action='set', data=updated_list)
         return self._memory()
 
     def _memory(self, action=None, name=None, data=None):
         if action is None: action = self.action
         if name is None: name = self.name
         if data is None: data = self.data
-        if name is None or data == "": return False
-        if action == "set" and (data is None or data == ""): return False
-        if self.debug:
+        if name is None or data == '': return False
+        if action == 'set' and (data is None or data == ''): return False
+        if name != 'debug':
             debugger("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data))
-        if action == "set":
+        if action == 'set':
             data_list = []
             if type(data) == dict:
                 for key, value in data.items():
@@ -162,15 +170,13 @@ class VarHandler:
             count = 1
             for _ in data_list:
                 if type(_) == list:
-                    if self.debug:
-                        debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
+                    debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count), hard_debug=self.hard_debug)
                     Log("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count)).write()
                     return False
                 count += 1
             try:
                 memory = ShareableList(data_list, name="ga_%s" % name)
-                if self.debug:
-                    debugger("smallant - varhandler - memory |set: '%s' successful" % name)
+                debugger("smallant - varhandler - memory |set: '%s' successful" % name, hard_debug=self.hard_debug)
                 memory.shm.close()
             except (FileExistsError, KeyError):
                 try:
@@ -181,62 +187,56 @@ class VarHandler:
                                 memory[_] = data_list[_]
                             except IndexError:
                                 memory[_] = None
-                        if self.debug:
-                            debugger("smallant - varhandler - memory |set: '%s' update successful" % name)
+                        debugger("smallant - varhandler - memory |set: '%s' update successful" % name, hard_debug=self.hard_debug)
                         memory.shm.close()
                     else:
-                        if self.debug:
-                            debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
+                        debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name, hard_debug=self.hard_debug)
                         Log("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
                             % (name, len(memory), len(data_list))).write()
                         memory.shm.close()
                         return False
                 except IndexError as error:
-                    if self.debug:
-                        debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
+                    debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name, hard_debug=self.hard_debug)
                     Log("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error)).write()
                 return False
-        elif action == "get":
+        elif action == 'get':
             try:
                 memory = ShareableList(name="ga_%s" % name)
                 data = [_ for _ in memory]
                 memory.shm.close()
-                if self.debug:
+                if name != 'debug':
                     debugger("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data))
                 return data
             except FileNotFoundError:
-                if self.debug:
-                    debugger("smallant - varhandler - memory |get: '%s' not found" % name)
+                debugger("smallant - varhandler - memory |get: '%s' not found" % name, hard_debug=self.hard_debug)
                 Log("Memory block '%s' was not found" % name).write()
                 return False
-        elif action == "clean":
+        elif action == 'clean':
             try:
                 memory = ShareableList(name="ga_%s" % name)
                 memory.shm.close()
                 memory.shm.unlink()
-                if self.debug:
-                    debugger("smallant - varhandler - memory |clean: '%s' successful" % name)
+                debugger("smallant - varhandler - memory |clean: '%s' successful" % name, hard_debug=self.hard_debug)
             except FileNotFoundError:
-                if self.debug:
-                    debugger("smallant - varhandler - memory |clean: '%s' not found" % name)
+                debugger("smallant - varhandler - memory |clean: '%s' not found" % name, hard_debug=self.hard_debug)
                 return False
         else: return False
 
 
 def debugger(command, hard_debug=False):
     if hard_debug: debug = True
-    else: debug = True if VarHandler(name="debug").get() == "1" else False
+    else: debug = True if VarHandler(name='debug').get() == '1' else False
     if debug is True:
         if type(command) == str:
-            print("debug:", command)
+            print('debug:', command)
         elif type(command) == list:
-            [print("debug:", call) for call in command]
+            [print('debug:', call) for call in command]
     else: return False
 
 
 def process(command, out_error=False, debug=False):
     if debug: debugger(command="smallant - process |input: '%s'" % command, hard_debug=True)
     output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-    if debug: debugger(command="smallant - process |output: '%s' |error: '%s'" % (output.decode("utf-8"), error.decode("utf-8")), hard_debug=True)
-    if out_error is False: return output.decode("utf-8")
-    else: return output.decode("utf-8"), error.decode("utf-8")
+    if debug: debugger(command="smallant - process |output: '%s' |error: '%s'" % (output.decode('utf-8'), error.decode('utf-8')), hard_debug=True)
+    if out_error is False: return output.decode('utf-8')
+    else: return output.decode('utf-8'), error.decode('utf-8')
