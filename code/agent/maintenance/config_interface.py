@@ -300,10 +300,7 @@ class Create:
                 posslist = self.current_dev_list
                 [posslist.remove(dev) for dev in self.object_downlink_list]
             elif to_ask == "sectorgroup":
-                posslist = [desc for typ, nested in self.group_dict.items() if typ == 'sector' for desc in dict(nested).keys()]
-                if self.setup is False:
-                    sector_exist_list = self.Config(output="description", filter="type = 'sector'", table="grp").get()
-                    posslist.extend(sector_exist_list)
+                posslist = grp_sector_exist_list
             elif to_ask == "link":
                 posslist = dt_action_list
                 posslist.extend(dt_sensor_list)
@@ -323,17 +320,31 @@ class Create:
                         if len(current_posslist) > 0:
                             add_member = ShellInput("Want to add another member?", default=True, style="info").get()
                         else: add_member = False
-                desc = ShellInput("Add a unique description to the %s" % to_ask, max_value=50, min_value=2, intype="free").get()
+                desc = ShellInput("Add a unique description to the %s" % to_ask, max_value=50, min_value=2, neg=True, poss=grp_desc_exist_list).get()
+                grp_desc_exist_list.append(desc)
                 create_dict[create_count] = {desc: member_list}
                 create_count += 1
                 debugger("confint - create_group - members '%s'" % member_list)
                 create = ShellInput("Want to add another %s?" % to_ask, default=True, style="info").get()
             return create_dict
 
+        if self.setup:
+            grp_desc_exist_list = self.Config(output="description", table="grp").get()
+        else:
+            grp_desc_exist_list = []
+
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
-        ShellOutput("Sector groups", symbol="-", font="head")
-        self.group_dict["sectorgroup"] = to_create("sectorgroup", "links sectors to areas (beds in field)", "must match one sector")
+
+        grp_sector_exist_list = [desc for typ, nested in self.group_dict.items() if typ == 'sector'
+                                 for nested_too in dict(nested).values() for desc in dict(nested_too).keys()]
+        if self.setup is False:
+            sector_exist_list = self.Config(output="description", filter="type = 'sector'", table="grp").get()
+            grp_sector_exist_list.extend(sector_exist_list)
+        if len(grp_sector_exist_list) > 1:
+            ShellOutput("Sector groups", symbol="-", font="head")
+            self.group_dict["sectorgroup"] = to_create("sectorgroup", "links sectors to areas (beds in field)", "must match one sector")
+
         ShellOutput("Devicetype links", symbol="-", font="head")
         dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype"
                           for name, typ in dict(value).items() if typ == "action"]
