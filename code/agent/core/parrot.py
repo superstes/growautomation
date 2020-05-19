@@ -34,14 +34,14 @@ from sys import exc_info as sys_exc_info
 import signal
 
 
-def signal_handler(signum=None, stack=None):
+def _signal_handler(signum=None, stack=None):
     # get list of memory-vars added -> Varhandler("peritem").clean()
     # clean other stuff ..
     raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
 
 
-signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, _signal_handler)
+signal.signal(signal.SIGINT, _signal_handler)
 
 
 class ActionLoader:
@@ -85,12 +85,12 @@ class SectorCheck:
         self.check_type_links()
 
     def check_type_links(self):
-        link_exist_list = Config(setting="link", table="group").get()
-        link_inuse_list = Config(setting="link", belonging=self.type, table="group").get()
+        link_exist_list = Config(setting="link", table="member").get()
+        link_inuse_list = Config(setting="link", belonging=self.type, table="member").get()
         [self.check_action_sector(link) for link in link_inuse_list if link in link_exist_list]
 
     def check_action_sector(self, link):
-        device_type_list = Config(setting="link", filter="gid = '%s'" % link, table="group").get()
+        device_type_list = Config(setting="link", filter="gid = '%s'" % link, table="member").get()
         [device_type_list.remove(device) for device in reversed(device_type_list) if Config(setting=device, table="object").get() != "action"]
         for device_type in device_type_list:
             if Config(setting="enabled", belonging=device_type).get() != "1":
@@ -99,7 +99,7 @@ class SectorCheck:
                 continue
             device_list, device_sector_dict = Config(filter="class = '%s'" % device_type, table="object").get(), {}
             [device_list.remove(device) for device in reversed(device_list) if Config(setting="enabled", belonging=device).get() != "1"]
-            for device in device_list: device_sector_dict[device] = Config(setting="sector", belonging=device, table="group").get()
+            for device in device_list: device_sector_dict[device] = Config(setting="sector", belonging=device, table="member").get()
             for device, sector in device_sector_dict.items():
                 sector_list = self.check_device_sector(sector)
                 if sector_list is False:
@@ -158,14 +158,14 @@ class ThresholdCheck:
         device_list = Config(filter="class = '%s'" % self.sensor, table="object").get()
         for device in device_list:
             if Config(setting="enabled", belonging=device).get() == "1": 
-                device_dict = {device: Config(setting="sector", belonging=device, table="group").get()}
+                device_dict = {device: Config(setting="sector", belonging=device, table="member").get()}
             else:
                 Log("Device %s is disabled." % device, level=3).write()
                 continue
         return device_dict
 
     def get_sector_list(self):
-        sector_inuse_list, sector_list, sector_exist_list = [], [], Config(setting="sector", table="group").get()
+        sector_inuse_list, sector_list, sector_exist_list = [], [], Config(setting="sector", table="member").get()
         for sector in self.get_device_dict().values():
             sector_inuse_list.append(sector.split(",")) if sector.find(",") != -1 else sector_inuse_list.append(sector)
         [sector_list.append(sector) for sector in sector_inuse_list if sector in sector_exist_list]

@@ -71,14 +71,15 @@ create table IF NOT EXISTS Grp (
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
 	type varchar(30) not null,
-	description varchar(50) null,
+	description varchar(50) not null,
     primary key (id),
-    foreign key (type) references Category (name) on update cascade on delete cascade
+    foreign key (type) references Category (name) on update cascade on delete cascade,
+    unique key (description)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS Grouping (
+create table IF NOT EXISTS Member (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,

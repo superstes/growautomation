@@ -197,7 +197,7 @@ def sql_replace(data_dict, table="setting", debug=False):
     # first entry in data_dict = value that should be changed
     debugger("owl - replace |input dict '%s'" % data_dict, hard_debug=debug)
     if table == "setting": table = "ga.Setting"
-    elif table == "group": table = "ga.Grouping"
+    elif table == "group": table = "ga.Member"
     elif table == "object": table = "ga.Object"
     elif table == "data": table = "ga.Data"
     elif table == "tmp": table = "ga.Temp"

@@ -28,7 +28,7 @@ from smallconfig import Config as FileConfig
 from functools import lru_cache
 
 
-class Config(object):
+class Config:
     def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, empty=False):
         self.setting,  self.filter, self.belonging, self.output, self.table = setting, filter, belonging, output, table
         self.empty, self.nosql = empty, nosql
@@ -64,14 +64,16 @@ class Config(object):
     def _parse_sql_custom(self):
         command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
         if self.table is not None:
-            if self.table == "group": command = ["SELECT", "gid", "FROM ga.Grouping WHERE"]
+            if self.table == "grp": command = ["SELECT", "description", "FROM ga.Grp WHERE"]
+            elif self.table == "member": command = ["SELECT", "member", "FROM ga.Member WHERE"]
             elif self.table == "object": command = ["SELECT", "type", "FROM ga.Object WHERE"]
             elif self.table == "data": command = ["SELECT", "data", "FROM ga.Data WHERE"]
         if self.output is not None:
             command[1], custom = self.output, True
         if self.setting is not None:
             if self.table is not None:
-                if self.table == "group": command.append("type = '%s'" % self.setting)
+                if self.table == "member": command.append("gid = '%s'" % self.setting)
+                elif self.table == "grp": command.append("id = '%s'" % self.setting)
                 elif self.table == "object": command.append("name = '%s'" % self.setting)
                 elif self.table == "data": command.append("agent = '%s'" % self.setting)
             else: command.append("setting = '%s'" % self.setting)
@@ -79,7 +81,8 @@ class Config(object):
         if self.belonging is not None:
             prefix = "AND" if self.setting is not None else ""
             if self.table is not None:
-                if self.table == "group": insert = "member"
+                if self.table == "member": insert = "member"
+                elif self.table == "grp": insert = "id"
                 elif self.table == "data": insert = "agent"
             else: insert = "belonging"
             command.append("%s %s = '%s'" % (prefix, insert, self.belonging))

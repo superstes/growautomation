@@ -81,7 +81,7 @@ replicate-do-table     = ga.ObjectReference
 replicate-do-table     = ga.Object
 replicate-do-table     = ga.Setting
 replicate-do-table     = ga.Grp
-replicate-do-table     = ga.Grouping
+replicate-do-table     = ga.Member
 
 #
 # * Security Features
