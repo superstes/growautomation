@@ -27,20 +27,20 @@ from inspect import currentframe as inspect_currentframe
 
 
 class Config:
-    def __init__(self, request, file="core.conf"):
+    def __init__(self, request, file='core.conf'):
         self.file, self.request = file, request
 
-    def get(self, out_type="str"):
-        if self.file == "core.conf":
+    def get(self, out_type='str'):
+        if self.file == 'core.conf':
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
         output = self._parse_file()
         try:
-            if out_type == "int":
+            if out_type == 'int':
                 return int(output)
-            elif out_type == "dict":
+            elif out_type == 'dict':
                 return dict(output)
-            elif out_type == "list":
+            elif out_type == 'list':
                 return list(output)
             else:
                 return str(output)
@@ -65,14 +65,14 @@ class Config:
     @lru_cache()
     def _parse_file(self):
         response = self._parse_file_find()
-        if response is False or response is None or response == "":
-            hardcode_dict = {"path_root": "/etc/growautomation", "path_log": "/var/log/growautomation", "log_level": "1"}
+        if response is False or response is None or response == '':
+            hardcode_dict = {'path_root': '/etc/growautomation', 'path_log': '/var/log/growautomation', 'log_level': '1'}
             if self.request in hardcode_dict.keys(): return hardcode_dict[self.request]
-            self._error("file")
+            self._error('file')
             return False
         else:
             try:
-                split = response.split("=")[1].strip()
+                split = response.split('=')[1].strip()
                 return split
             except (IndexError, ValueError):
-                self._error("file")
+                self._error('file')

@@ -37,18 +37,18 @@ class Config:
         debugger("config - get | input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
                  % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
                  type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
-        parse_file_list = ["setuptype", "sql_pwd", "sql_local_user", "sql_local_pwd", "sql_agent_pwd", "sql_admin_pwd"]
-        parse_failover_list = ["path_root", "hostname", "sql_server_port", "sql_server_ip", "sql_agent_user", "sql_admin_user",
-                               "sql_server_port", "sql_sock"]
+        parse_file_list = ['setuptype', 'sql_pwd', 'sql_local_user', 'sql_local_pwd', 'sql_agent_pwd', 'sql_admin_pwd']
+        parse_failover_list = ['path_root', 'hostname', 'sql_server_port', 'sql_server_ip', 'sql_agent_user', 'sql_admin_user',
+                               'sql_server_port', 'sql_sock']
         output = FileConfig(self.setting).get() if self.setting in parse_file_list else self._parse_failover() if self.setting in parse_failover_list else \
-            self._parse_sql_custom() if self.nosql is False else self._error("all")
+            self._parse_sql_custom() if self.nosql is False else self._error('all')
         if outtype is not None:
-            if outtype == "list" and type(output) != list:
+            if outtype == 'list' and type(output) != list:
                 output = [output]
-            elif outtype == "str" and type(output) != str:
+            elif outtype == 'str' and type(output) != str:
                 output = str(output)
         debugger("config - get |output '%s' '%s'" % (type(output), output))
-        return self._error("sql") if output is False else output
+        return self._error('sql') if output is False else output
 
     def _error(self, parser_type):
         if self.empty: return False
@@ -57,50 +57,50 @@ class Config:
 
     def _parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
-                                                                            % (self.setting, FileConfig("hostname").get())).start()
+                                                                            % (self.setting, FileConfig('hostname').get())).start()
         debugger("config - parse_sql |output '%s' '%s'" % (type(response), response))
-        return self._error("sql") if response is False or response is None or response == "" else response
+        return self._error('sql') if response is False or response is None or response == '' else response
 
     def _parse_sql_custom(self):
-        command, custom = ["SELECT", "data", "FROM ga.Setting WHERE"], False
+        command, custom = ['SELECT', 'data', 'FROM ga.Setting WHERE'], False
         if self.table is not None:
-            if self.table == "grp": command = ["SELECT", "description", "FROM ga.Grp WHERE"]
-            elif self.table == "member": command = ["SELECT", "member", "FROM ga.Member WHERE"]
-            elif self.table == "object": command = ["SELECT", "type", "FROM ga.Object WHERE"]
-            elif self.table == "data": command = ["SELECT", "data", "FROM ga.Data WHERE"]
+            if self.table == 'grp': command = ['SELECT', 'description', 'FROM ga.Grp WHERE']
+            elif self.table == 'member': command = ['SELECT', 'member', 'FROM ga.Member WHERE']
+            elif self.table == 'object': command = ['SELECT', 'type', 'FROM ga.Object WHERE']
+            elif self.table == 'data': command = ['SELECT', 'data', 'FROM ga.Data WHERE']
         if self.output is not None:
             command[1], custom = self.output, True
         if self.setting is not None:
             if self.table is not None:
-                if self.table == "member": command.append("gid = '%s'" % self.setting)
-                elif self.table == "grp": command.append("id = '%s'" % self.setting)
-                elif self.table == "object": command.append("name = '%s'" % self.setting)
-                elif self.table == "data": command.append("agent = '%s'" % self.setting)
+                if self.table == 'member': command.append("gid = '%s'" % self.setting)
+                elif self.table == 'grp': command.append("id = '%s'" % self.setting)
+                elif self.table == 'object': command.append("name = '%s'" % self.setting)
+                elif self.table == 'data': command.append("agent = '%s'" % self.setting)
             else: command.append("setting = '%s'" % self.setting)
             custom = True
         if self.belonging is not None:
-            prefix = "AND" if self.setting is not None else ""
+            prefix = 'AND' if self.setting is not None else ''
             if self.table is not None:
-                if self.table == "member": insert = "member"
-                elif self.table == "grp": insert = "id"
-                elif self.table == "data": insert = "agent"
-            else: insert = "belonging"
+                if self.table == 'member': insert = 'member'
+                elif self.table == 'grp': insert = 'id'
+                elif self.table == 'data': insert = 'agent'
+            else: insert = 'belonging'
             command.append("%s %s = '%s'" % (prefix, insert, self.belonging))
             custom = True
         if self.filter is not None:
-            prefix = "AND " if self.setting is not None or self.belonging is not None else ""
+            prefix = 'AND ' if self.setting is not None or self.belonging is not None else ''
             command.append("%s%s" % (prefix, self.filter))
             custom = True
         if self.filter is None and self.setting is None:
-            command.append("id IS NOT NULL")
+            command.append('id IS NOT NULL')
         debugger("config - sql_custom |custom '%s' '%s' |command '%s' '%s'" % (type(custom), custom, type(command), command))
-        return self._parse_sql(' '.join(command) + ";") if custom is True else self._parse_sql()
+        return self._parse_sql(' '.join(command) + ';') if custom is True else self._parse_sql()
 
     @lru_cache()
     def _parse_hardcoded(self):
-        config_dict = {"path_log": "%s/log" % FileConfig("path_root").get(), "path_backup": "%s/backup" % FileConfig("path_root").get(), "sql_server_port": "3306"}
-        if FileConfig("setuptype").get() != "agent":
-            config_server_dict = {"sql_server_ip": "127.0.0.1"}
+        config_dict = {'path_log': "%s/log" % FileConfig('path_root').get(), 'path_backup': "%s/backup" % FileConfig('path_root').get(), 'sql_server_port': '3306'}
+        if FileConfig('setuptype').get() != 'agent':
+            config_server_dict = {'sql_server_ip': '127.0.0.1'}
             config_dict = {**config_dict, **config_server_dict}
         if self.setting in config_dict.keys():
             for key, value in config_dict.items():
@@ -109,16 +109,16 @@ class Config:
                     return value
             return False
         else:
-            debugger("config - hardcoded |not found")
+            debugger('config - hardcoded |not found')
             return False
 
     def _parse_failover(self):
         parse_sql_output = self._parse_sql()
         if parse_sql_output is False or self.nosql is True:
             parse_file_output = FileConfig(self.setting).get()
-            if parse_file_output is False or parse_file_output is None or parse_file_output == "":
+            if parse_file_output is False or parse_file_output is None or parse_file_output == '':
                 if self._parse_hardcoded() is False:
-                    self._error("all")
+                    self._error('all')
                 else:
                     output = self._parse_hardcoded()
                     debugger("config - failover |output '%s' '%s'" % (type(output), output))

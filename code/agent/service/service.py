@@ -48,25 +48,25 @@ class Service:
 
     def _get_timer_dict(self):
         name_dict = {}
-        core_list = Config(output="name", table="object", filter="type = 'core'").get()[0]
-        sensor_type_list = Config(output="name", table="object", filter="class = 'sensor'").get()
-        function_sensor_master = Config(setting="function", belonging="sensor_master").get()
-        function_check = Config(setting="function", belonging="check").get()
-        function_path = Config(setting="path_root").get() + "/core/%s"
+        core_list = Config(output='name', table='object', filter="type = 'core'").get()[0]
+        sensor_type_list = Config(output='name', table='object', filter="class = 'sensor'").get()
+        function_sensor_master = Config(setting='function', belonging='sensor_master').get()
+        function_check = Config(setting='function', belonging='check').get()
+        function_path = Config(setting='path_root').get() + "/core/%s"
         debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'" % (function_path, core_list, sensor_type_list))
-        for timer_setting in Config(setting="timer", output="belonging,data").get():
+        for timer_setting in Config(setting='timer', output="belonging,data").get():
             name, timer = timer_setting[0], timer_setting[1]
-            if name in core_list or Config(setting="enabled", belonging=name).get() == "1":
+            if name in core_list or Config(setting='enabled', belonging=name).get() == '1':
                 if name not in core_list:
                     if name in sensor_type_list: devicetype = name
-                    else: devicetype = Config(output="class", table="object", setting=name).get()
+                    else: devicetype = Config(output='class', table='object', setting=name).get()
                     if devicetype in sensor_type_list:
-                        if Config(setting="enabled", belonging=devicetype).get() == "1":
+                        if Config(setting='enabled', belonging=devicetype).get() == '1':
                             function = function_sensor_master
-                            name_dict["check_%s" % name] = [Config(setting="timer_check", belonging=name).get(), function_path % function_check]
+                            name_dict["check_%s" % name] = [Config(setting='timer_check', belonging=name).get(), function_path % function_check]
                         else: continue
                     else: continue
-                elif name in core_list: function = Config(setting="function", belonging=name).get()
+                elif name in core_list: function = Config(setting='function', belonging=name).get()
                 else: continue
                 name_dict[name] = [timer, function_path % function]
             else: continue
@@ -75,7 +75,7 @@ class Service:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": VarHandler(name="debug", data=1).set()
+            if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()
         except (IndexError, NameError): pass
         debugger("service - start |starting |pid %s" % os_getpid())
         self.name_dict = self._get_timer_dict()
@@ -87,19 +87,19 @@ class Service:
             def thread_function():
                 Log("Starting function '%s' for object %s." % (function, thread_name), level=4).write()
                 output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
-                if error != "":
+                if error != '':
                     systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
                     Log("Error by executing %s:\n'%s'" % (thread_name, error), level=2).write()
                     debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
                 Log("Output by processing %s:\n'%s'" % (thread_name, output), level=3).write()
                 debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
         Threader.start()
-        systemd_journal.write("Finished starting service.")
+        systemd_journal.write('Finished starting service.')
         self.status()
         self._run()
 
     def reload(self, signum=None, stack=None):
-        debugger("service - reload |reloading config")
+        debugger('service - reload |reloading config')
         name_dict_overwrite, dict_reloaded = {}, {}
         for thread_name_reload, settings_reload in self._get_timer_dict().items():
             interval_reload, function_reload = settings_reload[0], settings_reload[1]
@@ -117,13 +117,13 @@ class Service:
         debugger("service - reload |overwrite_dict '%s' '%s'" % (type(name_dict_overwrite), name_dict_overwrite))
         if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
         self.name_dict = name_dict_overwrite
-        systemd_journal.write("Finished configuration reload.")
+        systemd_journal.write('Finished configuration reload.')
         self.status()
 
     def stop(self, signum=None, stack=None):
-        debugger("service - stop |stopping")
-        Log("Stopping service", level=1).write()
-        systemd_journal.write("Stopping service.")
+        debugger('service - stop |stopping')
+        Log('Stopping service', level=1).write()
+        systemd_journal.write('Stopping service.')
         if signum is not None:
             debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
             Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
@@ -131,25 +131,25 @@ class Service:
         Threader.stop()
         time_sleep(10)
         self.init_exit = True
-        systemd_journal.write("Service stopped.")
+        systemd_journal.write('Service stopped.')
         self._exit()
 
     def _exit(self):
         if self.exit_count == 0:
             self.exit_count += 1
-            ShellOutput(font="line", symbol="#")
+            ShellOutput(font='line', symbol='#')
             print("\n\nGrowautomation Service: Farewell! It has been my honor to serve you.\n")
-            systemd_journal.write("Growautomation Service: Farewell! It has been my honor to serve you.")
-            ShellOutput(font="line", symbol="#")
+            systemd_journal.write('Growautomation Service: Farewell! It has been my honor to serve you.')
+            ShellOutput(font='line', symbol='#')
         raise SystemExit
 
     def status(self):
-        debugger(["service - status |updating status", "service - status |threads '%s' |config '%s'" % (Threader.list(), self.name_dict)])
+        debugger(['service - status |updating status', "service - status |threads '%s' |config '%s'" % (Threader.list(), self.name_dict)])
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n" % Threader.list())
         [systemd_journal.write("'%s': '%s'\n" % (key, value)) for key, value in self.name_dict.items()]
 
     def _run(self):
-        debugger("service - run |entering runtime")
+        debugger('service - run |entering runtime')
         try:
             while_count, tired_time = 0, 300
             while True:
@@ -162,8 +162,8 @@ class Service:
                 time_sleep(tired_time)
         except:
             if self.init_exit is False:
-                debugger("service - run |runtime error")
-                Log("Stopping service because of runtime error", level=2).write()
+                debugger('service - run |runtime error')
+                Log('Stopping service because of runtime error', level=2).write()
                 self.stop()
             else: self._exit()
 

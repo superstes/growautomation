@@ -41,9 +41,9 @@ class Startup:
 
     def start(self):
         try:
-            if sys_argv[1] == "debug": VarHandler(name="debug", data=1).set()
+            if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()
         except (IndexError, NameError): pass
-        systemd_journal("Starting service initialization.")
+        systemd_journal('Starting service initialization.')
         # recreate log/backup links
         # check for python version -> module link should be updated
 
@@ -51,11 +51,11 @@ class Startup:
         if signum is not None:
             debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
             Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
-        systemd_journal("Service initialization stopped. Exiting.")
+        systemd_journal('Service initialization stopped. Exiting.')
 
     def finish(self):
         try:
-            if sys_argv[1] == "debug": VarHandler(name="debug").clean()
+            if sys_argv[1] == 'debug': VarHandler(name='debug').clean()
         except (IndexError, NameError): pass
 
     def config(self):
@@ -67,16 +67,16 @@ class Startup:
         sql = DoSql()
 
         def db_read_test():
-            data = sql.connect("SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;")
+            data = sql.connect('SELECT * FROM ga.Setting ORDER BY changed DESC LIMIT 10;')
             result = True if type(data) == list else data if type(data) == bool else False
             return result
 
         def db_write_test():
-            sql.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % Config("hostname").get())
-            sql.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config("hostname").get())
+            sql.connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');" % Config('hostname').get())
+            sql.connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';" % Config('hostname').get())
             return True
         if db_read_test() is True and db_write_test() is True:
-            DoSql("DELETE FROM ga.Temp;", write=True).start()
+            DoSql('DELETE FROM ga.Temp;', write=True).start()
             # check that no locks are set -> set all to 0 or simply remove them (or remove all entries from temp table ?!)
 
 

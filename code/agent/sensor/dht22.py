@@ -32,7 +32,7 @@ import Adafruit_DHT
 
 
 def LogWrite(output: str, level=3):
-    Log(output, typ="sensor", level=level).write()
+    Log(output, typ='sensor', level=level).write()
 
 
 function = inspect_getfile(inspect_currentframe())
@@ -66,7 +66,7 @@ class Device:
                  (function, type(argument), argument, type(port), port))
         if self.output_dict: self.data_mapping()
         print(self.data)
-        LogWrite("Data was delivered.", level=4)
+        LogWrite('Data was delivered.', level=4)
         debugger("%s - start |finished")
         raise SystemExit
 
@@ -75,11 +75,11 @@ class Device:
         debugger("%s - data_mapping |%s" % (function, self.data))
 
     def get_data(self):
-        if argument != "humi" and argument != "temp": raise ValueError("Argument (sys-arg#4) must be either 'humi' or 'temp'!")
+        if argument != 'humi' and argument != 'temp': raise ValueError("Argument (sys-arg#4) must be either 'humi' or 'temp'!")
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, port)
-        if argument == "humi": return humidity
-        elif argument == "temp": return temperature
-        else: Log("Input Error: Either define humidity or temperature").write()
+        if argument == 'humi': return humidity
+        elif argument == 'temp': return temperature
+        else: Log('Input Error: Either define humidity or temperature').write()
 
 
 Device().start()

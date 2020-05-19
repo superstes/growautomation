@@ -63,7 +63,7 @@ class Loop:
         self.jobs = []
 
     def start(self, daemon=True, single_thread=None):
-        Log("Starting threads in background", level=3).write()
+        Log('Starting threads in background', level=3).write()
         for job in self.jobs:
             if single_thread is not None:
                 debugger("threader - start |starting thread '%s' '%s'" % (type(single_thread), single_thread))
@@ -71,7 +71,7 @@ class Loop:
                     job.daemon = daemon
                     job.start()
             else:
-                debugger("threader - start |starting threads")
+                debugger('threader - start |starting threads')
                 job.daemon = daemon
                 job.start()
         if not daemon: self._block_root_process()
@@ -88,8 +88,8 @@ class Loop:
         return decorator
 
     def _block_root_process(self):
-        debugger("threader - block |running threads in foreground")
-        Log("Starting threads in foreground", level=3).write()
+        debugger('threader - block |running threads in foreground')
+        Log('Starting threads in foreground', level=3).write()
         while True:
             try:
                 time_sleep(1)
@@ -98,9 +98,9 @@ class Loop:
                 raise SystemExit
 
     def stop(self):
-        debugger("threader - stop |stopping jobs")
+        debugger('threader - stop |stopping jobs')
         for job in self.jobs: job.stop()
-        Log("All threads stopped. Exiting loop", level=2).write()
+        Log('All threads stopped. Exiting loop', level=2).write()
 
     def stop_thread(self, thread_name):
         debugger("threader - stop_thread |'%s' '%s'" % (type(thread_name), thread_name))
@@ -122,7 +122,7 @@ class Loop:
         self.start_thread(sleep_time, thread_name)
 
     def list(self):
-        debugger("threader - list |returning thread list")
+        debugger('threader - list |returning thread list')
         job_name_list = []
         for job in self.jobs: job_name_list.append(job.name)
         return job_name_list
