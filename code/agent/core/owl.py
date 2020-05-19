@@ -35,8 +35,6 @@ from functools import lru_cache
 class DoSql:
     def __init__(self, command, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None):
         self.command, self.write, self.user, self.pwd, self.exit = command, write, user, pwd, exit
-        if hostname is not None and setuptype is not None: self.setup = True
-        else: self.setup = False
         if hostname is None:
             self.hostname = Config('hostname').get()
         else: self.hostname = hostname
@@ -86,9 +84,13 @@ class DoSql:
                     raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
                 else: return False
 
-            if self.write is False: data = self._connect('SELECT * FROM mysql.help_category LIMIT 10;', connect_debug=False)
+            if self.write is False:
+                if self.user == 'root':
+                    data = self._connect('SELECT * FROM mysql.help_category LIMIT 10;', connect_debug=False)
+                else:
+                    data = self._connect('SELECT * FROM ga.Setting LIMIT 10;', connect_debug=False)
             else:
-                if self.setup and self.user == 'root':
+                if self.user == 'root':
                     rand_db_nr = ''.join(random_choice('0123456789') for _ in range(20))
                     self._connect("CREATE DATABASE test_%s;" % rand_db_nr, connect_debug=False)
                     data = self._connect("DROP DATABASE test_%s;" % rand_db_nr, connect_debug=False)
