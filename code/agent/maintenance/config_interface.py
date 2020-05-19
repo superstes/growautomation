@@ -56,7 +56,7 @@ signal.signal(signal.SIGINT, signal_handler)
 class Create:
     def __init__(self, setup_config_dict=None):
         self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
-        self.current_dev_list, self.current_dt_dict, self.current_setting_dict = [], {}, {}
+        self.current_dev_list, self.current_dt_dict, self.current_setting_dict, self.current_obj_list = [], {}, {}, []
         self.new_dt_dict, self.new_dev_list = {}, []
         self.object_downlink_list = []
         if setup_config_dict is not None:
@@ -76,11 +76,14 @@ class Create:
         if self.setup:
             self.create_core()
             self.create_agent()
+        else:
+            self.current_obj_list = [name for name in self.Config(output="name", table="object").get()]
         if self.create_devicetype() is not False:
             for grouping, nested in self.object_dict.items():
                 for name, typ in dict(nested).items():
                     self.new_dt_dict[name] = typ
-                    if grouping == "core": continue
+                    self.current_obj_list.append(name)
+                    if grouping == "core" or grouping == "agent": continue
                     self.current_dt_dict[name] = typ
         if self.setup is False:
             for name, typ in self.Config(output="name, class", filter="type = 'devicetype'", table="object").get():
@@ -90,6 +93,7 @@ class Create:
             self.current_dev_list = [name for key, value in self.object_dict.items() if key == "device"
                                      for nested in dict(value).values() for name in dict(nested).keys()]
             self.new_dev_list.extend(self.current_dev_list)
+            self.current_obj_list.extend(self.current_dev_list)
             for obj, nested in self.setting_dict.items():
                 for setting, data in dict(nested).items():
                     self.current_setting_dict[obj] = setting
@@ -119,15 +123,15 @@ class Create:
                                       "hardware model; "
                                       "they provide per model configuration", True).get()
         if while_devicetype is False: return False
-        dt_object_dict, dt_exist_list = {}, []
-        if self.setup is False:
-            for name in self.Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
-        debugger("confint - create_devicetype - dt_exist_list '%s'" % dt_exist_list)
+        dt_object_dict = {}
+        # if self.setup is False:
+        #     for name in self.Config(output="name", filter="type = 'devicetype'", table="object").get(): dt_exist_list.append(name)
+        debugger("confint - create_devicetype - obj_exist_list '%s'" % self.current_obj_list)
         ShellOutput("Devicetypes", symbol="-", font="head")
         while while_devicetype:
             ShellOutput(symbol="-", font="line")
             name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
-                                            default="AirHumidity", poss=dt_exist_list, neg=True).get(), {}
+                                            default="AirHumidity", poss=self.current_obj_list, neg=True).get(), {}
             dt_object_dict[name] = ShellInput("Provide a type.", default="sensor", poss=["sensor", "action", "downlink"]).get()
             if dt_object_dict[name] != "downlink":
                 if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected "
@@ -179,7 +183,7 @@ class Create:
                                                              "(Or can it only output the data for all of its ports at once?)",
                                                              default=False).get()
             self.setting_dict[name] = setting_dict
-            dt_exist_list.append(name)
+            self.current_obj_list.append(name)
             debugger("confint - create_devicetype - settings '%s'" % setting_dict)
             while_devicetype = ShellInput("Want to add another devicetype?", default=True, style="info").get()
         self.object_dict["devicetype"] = dt_object_dict
@@ -187,9 +191,9 @@ class Create:
     def create_device(self):
         ShellOutput("Devices", symbol="#", font="head")
         if ShellInput("Do you want to create devices?", default=True).get() is False: return False
-        d_object_dict, d_exist_list, d_dl_list = {}, [], []
+        d_object_dict, d_dl_list = {}, []
         if self.setup is False:
-            for name in self.Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
+            # for name in self.Config(output="name", filter="type = 'device'", table="object").get(): d_exist_list.append(name)
             for name, dt in self.Config(output="name,class", filter="type = 'device'", table="object").get():
                 if self.Config(output="class", setting=dt, table="object").get() == "downlink": d_dl_list.append(name)
         d_dl_list.append("notinlist")
@@ -202,7 +206,7 @@ class Create:
                 try: default_name = random_choice(current_new_dt_list)
                 except IndexError: default_name = random_choice([dt for dt, typ in self.current_dt_dict.items() if typ == to_ask])
                 name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.", default="%s01" % default_name,
-                                                intype="free", poss=d_exist_list, neg=True).get(), {}
+                                                intype="free", poss=self.current_obj_list, neg=True).get(), {}
                 create_dict[name] = ShellInput("Provide its devicetype.", default=[dt for dt in list(self.current_dt_dict.keys())
                                                                                    if name.find(dt) != -1][0],
                                                poss=list(self.current_dt_dict.keys())).get()
@@ -228,7 +232,7 @@ class Create:
                                                                   default="ads1115", intype="free").get()
                 setting_dict["port"] = ShellInput("Provide the portnumber to which the device is/will be connected.", intype="free", min_value=1).get()
                 self.setting_dict[name] = setting_dict
-                d_exist_list.append(name)
+                self.current_obj_list.append(name)
                 debugger("confint - create_device - settings '%s'" % setting_dict)
                 if to_ask == "downlink": d_dl_list.append(name)
                 create = ShellInput("Want to add another %s?" % to_ask, True, style="info").get()
@@ -295,23 +299,32 @@ class Create:
             if to_ask == "sector":
                 posslist = self.current_dev_list
                 [posslist.remove(dev) for dev in self.object_downlink_list]
+            elif to_ask == "sectorgroup":
+                posslist = [desc for typ, nested in self.group_dict.items() if typ == 'sector' for desc in dict(nested).keys()]
+                if self.setup is False:
+                    sector_exist_list = self.Config(output="description", filter="type = 'sector'", table="grp").get()
+                    posslist.extend(sector_exist_list)
             elif to_ask == "link":
                 posslist = dt_action_list
                 posslist.extend(dt_sensor_list)
             debugger("confint - create_group - posslist '%s'" % posslist)
             while create:
                 ShellOutput(symbol="-", font="line")
-                member_list = []
+                member_list, current_posslist = [], posslist
                 member_count, add_member = 0, True
                 while add_member:
                     if member_count == 0: info = "\nInfo: %s" % info_member
                     else: info = ""
-                    current_posslist = list(set(posslist) - set(member_list))
                     member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
                                                   poss=current_posslist, default=str(random_choice(current_posslist)), intype="free").get())
                     member_count += 1
-                    if member_count > 1: add_member = ShellInput("Want to add another member?", default=True, style="info").get()
-                create_dict[create_count] = member_list
+                    current_posslist = list(set(posslist) - set(member_list))
+                    if member_count > 1:
+                        if len(current_posslist) > 0:
+                            add_member = ShellInput("Want to add another member?", default=True, style="info").get()
+                        else: add_member = False
+                desc = ShellInput("Add a unique description to the %s" % to_ask, max_value=50, min_value=2, intype="free").get()
+                create_dict[create_count] = {desc: member_list}
                 create_count += 1
                 debugger("confint - create_group - members '%s'" % member_list)
                 create = ShellInput("Want to add another %s?" % to_ask, default=True, style="info").get()
@@ -319,6 +332,9 @@ class Create:
 
         ShellOutput("Sectors", symbol="-", font="head")
         self.group_dict["sector"] = to_create("sector", "links objects which are in the same area", "must match one device")
+        ShellOutput("Sector groups", symbol="-", font="head")
+        self.group_dict["sectorgroup"] = to_create("sectorgroup", "links sectors to areas (beds in field)", "must match one sector")
+        ShellOutput("Devicetype links", symbol="-", font="head")
         dt_action_list = [name for key, value in self.object_dict.items() if key == "devicetype"
                           for name, typ in dict(value).items() if typ == "action"]
         if self.setup is False:
@@ -329,9 +345,7 @@ class Create:
         if self.setup is False:
             dt_sensor_list.extend(self.Config(output="name", filter="type = 'devicetype' AND class = 'sensor'",
                                               table="object").get("list"))
-        # grouping of sectors to be added (patches in area)
         if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
-            ShellOutput("Devicetype links", symbol="-", font="head")
             self.group_dict["link"] = to_create("link", "links action- and sensortypes\npe. earth humidity sensor with water pump",
                                                 "must match one devicetype")
 
@@ -345,10 +359,9 @@ class Create:
                 tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         ShellOutput("Writing object configuration", font="text")
-        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True,
-              hostname=self.hostname, setuptype=self.setuptype).start()
-        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True,
-               hostname=self.hostname, setuptype=self.setuptype).start() for key in self.object_dict.keys()]
+        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
+        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start()
+         for key in self.object_dict.keys()]
         object_count, object_error_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent="NULL"):
@@ -356,13 +369,12 @@ class Create:
                 for object_name, object_class in sorted(values.items()):
                     if object_class != "NULL":
                         DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class,
-                              write=True, hostname=self.hostname, setuptype=self.setuptype).start()
+                              write=True).start()
                         object_class = "'%s'" % object_class
                     if parent != "NULL" and parent.find("'") == -1:
                         parent = "'%s'" % parent
                     if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
-                             (object_name, parent, object_class, object_type), write=True, hostname=self.hostname,
-                             setuptype=self.setuptype).start() is False:
+                             (object_name, parent, object_class, object_type), write=True).start() is False:
                         error_count += 1
                     else: count += 1
                 return count, error_count
@@ -385,8 +397,7 @@ class Create:
                     if data is True: data = 1
                     else: data = 0
                 if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
-                         % (object_name, setting, data),
-                         write=True, hostname=self.hostname, setuptype=self.setuptype).start() is False:
+                         % (object_name, setting, data), write=True).start() is False:
                     setting_error_count += 1
                 else: setting_count += 1
         ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style="info", font="text")
@@ -397,20 +408,28 @@ class Create:
         ShellOutput("Writing group configuration", font="text")
         group_count, member_count, group_error_count = 0, 0, 0
         for group_type, packed_values in self.group_dict.items():
-            for group_id, group_member_list in packed_values.items():
-                DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type,
-                      write=True, hostname=self.hostname, setuptype=self.setuptype).start()
-                if DoSql("INSERT INTO ga.Grp (author,type) VALUES ('setup','%s');" % group_type, write=True,
-                         hostname=self.hostname, setuptype=self.setuptype).start() is False:
-                    group_error_count += 1
-                else: group_count += 1
-                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
-                                group_type, hostname=self.hostname, setuptype=self.setuptype).start()
-                for member in sorted(group_member_list):
-                    if DoSql("INSERT INTO ga.Grouping (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                             write=True, hostname=self.hostname, setuptype=self.setuptype).start() is False:
+            for group_id, also_packed_values in dict(packed_values).items():
+                for group_desc, group_member_list in dict(also_packed_values).items():
+                    DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
+                    if DoSql("INSERT INTO ga.Grp (author,type,description) VALUES ('setup','%s','%s');"
+                             % (group_type, group_desc), write=True).start() is False:
                         group_error_count += 1
-                    else: member_count += 1
+                    else: group_count += 1
+                    sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
+                                    group_type).start()
+                    for member in sorted(group_member_list):
+                        if group_type == 'sectorgroup':
+                            sector_gid = DoSql("SELECT id FROM ga.Grp WHERE description = '%s';" % member).start()
+                            DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','group');", write=True).start()
+                            if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
+                                     % (sector_gid, member), write=True).start() is False: group_error_count +=1
+                            if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');" % (sql_gid, sector_gid, member),
+                                     write=True).start() is False: group_error_count += 1
+                            else: member_count += 1
+                        else:
+                            if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
+                                     write=True).start() is False: group_error_count += 1
+                            else: member_count += 1
         ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style="info", font="text")
         if group_error_count > 0:
             ShellOutput("%s error%s while inserting" % (group_error_count, plural(group_error_count)), style="err")
