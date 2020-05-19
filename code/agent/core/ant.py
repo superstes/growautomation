@@ -176,13 +176,13 @@ class ShellOutput(object):
         self._line()
         print("\n")
 
-    def _colors(self):
+    def colors(self):
         return colorama_fore.YELLOW if self.style == "warn" else colorama_fore.CYAN if self.style == "info" \
             else colorama_fore.RED if self.style == "err" \
             else colorama_fore.GREEN if self.style == "succ" else ""
 
     def _text(self):
-        print(self._colors() + "%s\n" % self.output + colorama_fore.RESET)
+        print(self.colors() + "%s\n" % self.output + colorama_fore.RESET)
 
     def _line(self):
         shellhight, shellwidth = os_popen('stty size', 'r').read().split()
