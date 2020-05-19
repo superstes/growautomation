@@ -34,14 +34,18 @@ class Config:
         if self.file == "core.conf":
             file = "%s/%s" % (os_path.dirname(os_path.realpath(__file__)), self.file)
             self.file = file
-        if out_type == "int":
-            return int(self._parse_file())
-        elif out_type == "dict":
-            return dict(self._parse_file())
-        elif out_type == "list":
-            return list(self._parse_file())
-        else:
-            return str(self._parse_file())
+        output = self._parse_file()
+        try:
+            if out_type == "int":
+                return int(output)
+            elif out_type == "dict":
+                return dict(output)
+            elif out_type == "list":
+                return list(output)
+            else:
+                return str(output)
+        except ValueError:
+            return str(output)
 
     def _error(self, parser_type):
         from smallant import Log
@@ -51,11 +55,11 @@ class Config:
 
     def _parse_file_find(self):
         try:
-            tmpfile = open(self.file, 'r')
-            for xline in tmpfile.readlines():
-                if xline.find(self.request) != -1:
-                    return xline
-            return False
+            with open(self.file, 'r') as config_file:
+                for line in config_file.readlines():
+                    if line.find(self.request) != -1:
+                        return line
+                return False
         except FileNotFoundError: return False
 
     @lru_cache()
