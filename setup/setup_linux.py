@@ -220,6 +220,9 @@ try:
     def setup_config_file(file=None, text=None, typ='r'):
         if file is None:
             file = "%s/core/core.conf" % ga_config["path_root"]
+        current_path = os_path.dirname(os_path.realpath(__file__))
+        if os_path.exists("%s/%s" % (current_path, "core.conf")) is False:
+            os_system("ln -s %s %s" % (file, current_path))
         with open(file, typ) as config_file:
             if typ != 'r':
                 config_file.write(text)
