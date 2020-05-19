@@ -1045,10 +1045,13 @@ try:
 
     ShellOutput(font='head', output='Starting growautomation service', symbol='#')
     process("systemctl start growautomation.service %s" % ga_config['setup_log_redirect'])
-
+    if process('systemctl status growautomation.service | grep Active:').find('running') != -1:
+        ShellOutput('Service started', style='succ')
+    else:
+        ShellOutput('Service not running', style='warn')
+    VarHandler().stop()
     ShellOutput(font='head', output='Setup finished! Please reboot the system', symbol='#')
     setup_log_write('Setup finished.')
-
 except:
     setup_stop(error_msg="%s: %s" % (sys_exc_info()[0].__name__, sys_exc_info()[1]))
 
