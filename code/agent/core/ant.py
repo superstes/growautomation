@@ -20,7 +20,7 @@
 
 # ga_version 0.4
 
-from smallconfig import Config
+from core.smallconfig import Config
 
 from datetime import datetime
 from datetime import timedelta

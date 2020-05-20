@@ -21,12 +21,12 @@
 # ga_version 0.4
 # check module
 
-from config import Config
-from smallant import Log
-from ant import time_subtract
-from smallant import debugger
-from smallant import VarHandler
-from smallant import process
+from core.config import Config
+from core.smallant import Log
+from core.ant import time_subtract
+from core.smallant import debugger
+from core.smallant import VarHandler
+from core.smallant import process
 
 from time import sleep
 from sys import argv as sys_argv

@@ -21,12 +21,12 @@
 # ga_version 0.4
 # sensor master module
 
-from config import Config
-from owl import DoSql
-from smallant import Log
-from smallant import debugger
-from smallant import VarHandler
-from smallant import process
+from core.config import Config
+from core.owl import DoSql
+from core.smallant import Log
+from core.smallant import debugger
+from core.smallant import VarHandler
+from core.smallant import process
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep

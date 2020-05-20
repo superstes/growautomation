@@ -21,8 +21,8 @@
 # ga_version 0.4
 # sensor function for adafruit dht22
 
-from ..core.smallant import Log
-from ..core.smallant import debugger
+from core.smallant import Log
+from core.smallant import debugger
 
 from inspect import getfile as inspect_getfile
 from inspect import currentframe as inspect_currentframe
