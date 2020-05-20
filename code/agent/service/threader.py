@@ -23,8 +23,8 @@
 # base code source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-from ..core.smallant import Log
-from ..core.smallant import debugger
+from core.smallant import Log
+from core.smallant import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep
@@ -44,18 +44,20 @@ class Job(Thread):
         Log("Stopped thread '%s'" % self.name, level=3).write()
 
     def run(self):
-        Log("Starting thread '%s'" % self.name, level=4).write()
-        debugger("threader - Thread(run) |thread starting '%s'" % self.name)
-        if self.run_once:
-            self.execute()
-            Loop.stop_thread(self.name)
-        else:
-            while not self.state_stop.wait(self.interval.total_seconds()):
+        try:
+            Log("Starting thread '%s'" % self.name, level=4).write()
+            debugger("threader - Thread(run) |thread starting '%s'" % self.name)
+            if self.run_once:
                 self.execute()
-                if self.state_stop.isSet():
-                    debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
-                    Log("Exiting thread '%s'" % self.name, level=4).write()
-                    break
+                Loop.stop_thread(self.name)
+            else:
+                while not self.state_stop.wait(self.interval.total_seconds()):
+                    self.execute()
+                    if self.state_stop.isSet():
+                        debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
+                        Log("Exiting thread '%s'" % self.name, level=4).write()
+                        break
+        except: self.stop()
 
 
 class Loop:
@@ -74,7 +76,7 @@ class Loop:
                 debugger('threader - start |starting threads')
                 job.daemon = daemon
                 job.start()
-        if not daemon: self._block_root_process()
+        if daemon is False: self._block_root_process()
 
     def thread(self, sleep_time: int, thread_name):
         debugger("threader - thread |adding job |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
