@@ -20,17 +20,17 @@
 
 # ga_version 0.4
 
-from owl import DoSql
-from smallant import Log
-from smallant import debugger
-from smallconfig import Config as FileConfig
+from core.owl import DoSql
+from core.smallant import Log
+from core.smallant import debugger
+from core.smallconfig import Config as FileConfig
 
 from functools import lru_cache
 
 
 class Config:
-    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, empty=False):
-        self.setting,  self.filter, self.belonging, self.output, self.table = setting, filter, belonging, output, table
+    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, empty=False, exit=True):
+        self.setting,  self.filter, self.belonging, self.output, self.table, self.exit = setting, filter, belonging, output, table, exit
         self.empty, self.nosql = empty, nosql
 
     def get(self, outtype=None):
@@ -53,7 +53,8 @@ class Config:
     def _error(self, parser_type):
         if self.empty: return False
         Log("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting)).write()
-        raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
+        if self.exit:
+            raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
     def _parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
