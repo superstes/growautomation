@@ -21,13 +21,13 @@
 # ga_version 0.4
 
 try:
-    from ..core.owl import DoSql
-    from ..core.ant import ShellOutput
-    from ..core.ant import ShellInput
-    from ..core.smallant import Log
-    from ..core.ant import plural
-    from ..core.smallant import debugger
-    from ..core.smallant import VarHandler
+    from core.owl import DoSql
+    from core.ant import ShellOutput
+    from core.ant import ShellInput
+    from core.smallant import Log
+    from core.ant import plural
+    from core.smallant import debugger
+    from core.smallant import VarHandler
 except ImportError:
     from owl import DoSql
     from ant import ShellOutput
@@ -264,6 +264,7 @@ class Create:
         def add_setting(object_name):
             def another():
                 return ShellInput("Do you want to add another setting to the object %s" % object_name, default=False).get()
+                # ValueError: too many values to unpack (expected 2)
             setting_exist_list = [setting for obj, nested in self.setting_dict.items() if obj == object_name
                                   for setting in dict(nested).keys()]
             if self.setup is False:
@@ -374,7 +375,7 @@ class Create:
         DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
         [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start()
          for key in self.object_dict.keys()]
-        object_count, object_error_count = 0, 0
+        object_all_count, object_error_all_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent='NULL'):
                 count, error_count = 0, 0
@@ -393,9 +394,10 @@ class Create:
                 for subtype, packed_subvalues in packed_values.items():
                     object_count, object_error_count = unpack_values(packed_subvalues, self.hostname)
             else: object_count, object_error_count = unpack_values(packed_values)
-        ShellOutput("added %s object%s" % (object_count, plural(object_count)), style='info', font='text')
-        if object_error_count > 0:
-            ShellOutput("%s error%s while inserting" % (object_error_count, plural(object_error_count)), style='err')
+            object_error_all_count, object_all_count = object_error_count + object_error_all_count, object_count + object_all_count
+        ShellOutput("added %s object%s" % (object_all_count, plural(object_all_count)), style='info', font='text')
+        if object_error_all_count > 0:
+            ShellOutput("%s error%s while inserting" % (object_error_all_count, plural(object_error_count)), style='err')
             Log("%s error%s while inserting" % (object_error_count, plural(object_error_count))).write()
 
         ShellOutput('Writing object settings', font='text')

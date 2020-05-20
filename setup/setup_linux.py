@@ -972,10 +972,14 @@ try:
                                                "%s/service/" % ga_config['path_root']
         if os_path.exists('/etc/systemd/system/growautomation.service'):
             os_system("mv /etc/systemd/system/growautomation.service /tmp %s" % ga_config['setup_log_redirect'])
-        ga_replaceline(service_system_path, "ExecStart=%s /etc/growautomation/service/service.py", "ExecStart=%s %s/service.py"
-                       % (ga_config['python_path'], service_py_path))
-        ga_replaceline(service_system_path, "ExecStartPre=%s /etc/growautomation/service/earlybird.py",
-                       "ExecStartPre=%s %s/earlybird.py" % (ga_config['python_path'], service_py_path))
+        if ga_config['path_root'] != '/etc/growautomation':
+            ga_replaceline(service_system_path, "Environment=\"PYTHONPATH=/etc/growautomation\"",
+                           "Environment=\"PYTHONPATH=%s\"" % ga_config['path_root'] % (ga_config['python_path'], service_py_path))
+            if ga_config['python_path'] != '/usr/bin/python3.8':
+                ga_replaceline(service_system_path, "ExecStart=%s /etc/growautomation/service/service.py",
+                               "ExecStart=%s %s/service.py" % (ga_config['python_path'], service_py_path))
+                ga_replaceline(service_system_path, "ExecStartPre=%s /etc/growautomation/service/earlybird.py",
+                               "ExecStartPre=%s %s/earlybird.py" % (ga_config['python_path'], service_py_path))
         process("systemctl link %s %s" % (service_system_path, ga_config['setup_log_redirect']))
         process("systemctl enable growautomation.service %s" % ga_config['setup_log_redirect'])
         process("systemctl daemon-reload %s" % ga_config['setup_log_redirect'])
