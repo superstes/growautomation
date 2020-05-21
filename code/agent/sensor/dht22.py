@@ -57,28 +57,29 @@ except (IndexError, ValueError):
 
 class Device:
     def __init__(self):
-        self.data = self.get_data()
+        self.data = self._get_data()
         if not device_mapping: self.output_dict = False
         else: self.output_dict = True
 
     def start(self):
         debugger("%s - start |starting get_data |argument '%s' '%s'|port '%s' '%s'" %
                  (function, type(argument), argument, type(port), port))
-        if self.output_dict: self.data_mapping()
+        if self.output_dict: self._data_mapping()
         print(self.data)
         LogWrite('Data was delivered.', level=4)
         debugger("%s - start |finished")
         raise SystemExit
 
-    def data_mapping(self):
+    def _data_mapping(self):
         self.data = zip(device_mapping_dict.keys(), list(self.data))
         debugger("%s - data_mapping |%s" % (function, self.data))
 
-    def get_data(self):
-        if argument != 'humi' and argument != 'temp': raise ValueError("Argument (sys-arg#4) must be either 'humi' or 'temp'!")
+    def _get_data(self):
+        if argument != 'humidity' and argument != 'temperature':
+            raise ValueError("Argument (sys-arg#4) must be either 'humidity' or 'temperature'!")
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, port)
-        if argument == 'humi': return humidity
-        elif argument == 'temp': return temperature
+        if argument == 'humidity': return humidity
+        elif argument == 'temperature': return temperature
         else: Log('Input Error: Either define humidity or temperature').write()
 
 
