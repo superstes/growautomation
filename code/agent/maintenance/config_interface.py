@@ -375,7 +375,7 @@ class Create:
         DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
         [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start()
          for key in self.object_dict.keys()]
-        object_all_count, object_error_all_count = 0, 0
+        insert_count, error_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent='NULL'):
                 count, error_count = 0, 0
@@ -392,16 +392,18 @@ class Create:
                 return count, error_count
             if object_type == 'device':
                 for subtype, packed_subvalues in packed_values.items():
-                    object_count, object_error_count = unpack_values(packed_subvalues, self.hostname)
-            else: object_count, object_error_count = unpack_values(packed_values)
-            object_error_all_count, object_all_count = object_error_count + object_error_all_count, object_count + object_all_count
-        ShellOutput("added %s object%s" % (object_all_count, plural(object_all_count)), style='info', font='text')
-        if object_error_all_count > 0:
-            ShellOutput("%s error%s while inserting" % (object_error_all_count, plural(object_error_count)), style='err')
-            Log("%s error%s while inserting" % (object_error_count, plural(object_error_count))).write()
+                    _, _2 = unpack_values(packed_subvalues, self.hostname)
+                    error_count, insert_count = _2 + error_count, _ + insert_count
+            else:
+                _, _2 = unpack_values(packed_values)
+                error_count, insert_count = _2 + error_count, _ + insert_count
+        ShellOutput("added %s object%s" % (insert_count, plural(insert_count)), style='info', font='text')
+        if error_count > 0:
+            ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
+            Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         ShellOutput('Writing object settings', font='text')
-        setting_count, setting_error_count = 0, 0
+        insert_count, error_count = 0, 0
         for object_name, packed_values in self.setting_dict.items():
             if object_name in self.new_dev_list or object_name in self.new_dt_dict: packed_values['enabled'] = 1
             for setting, data in sorted(packed_values.items()):
@@ -411,23 +413,23 @@ class Create:
                     else: data = 0
                 if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
                          % (object_name, setting, data), write=True).start() is False:
-                    setting_error_count += 1
-                else: setting_count += 1
-        ShellOutput("added %s object setting%s" % (setting_count, plural(setting_count)), style='info', font='text')
-        if setting_error_count > 0:
-            ShellOutput("%s error%s while inserting" % (setting_error_count, plural(setting_error_count)), style='err')
-            Log("%s error%s while inserting" % (setting_error_count, plural(setting_error_count))).write()
+                    error_count += 1
+                else: insert_count += 1
+        ShellOutput("added %s object setting%s" % (insert_count, plural(insert_count)), style='info', font='text')
+        if error_count > 0:
+            ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
+            Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         ShellOutput('Writing group configuration', font='text')
-        group_count, member_count, group_error_count = 0, 0, 0
+        insert_count, member_count, error_count = 0, 0, 0
         for group_type, packed_values in self.group_dict.items():
             for group_id, also_packed_values in dict(packed_values).items():
                 for group_desc, group_member_list in dict(also_packed_values).items():
                     DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
                     if DoSql("INSERT INTO ga.Grp (author,type,description) VALUES ('setup','%s','%s');"
                              % (group_type, group_desc), write=True).start() is False:
-                        group_error_count += 1
-                    else: group_count += 1
+                        error_count += 1
+                    else: insert_count += 1
                     sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
                                     group_type).start()
                     for member in sorted(group_member_list):
@@ -435,18 +437,18 @@ class Create:
                             sector_gid = DoSql("SELECT id FROM ga.Grp WHERE description = '%s';" % member).start()
                             DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','group');", write=True).start()
                             if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
-                                     % (sector_gid, member), write=True).start() is False: group_error_count +=1
+                                     % (sector_gid, member), write=True).start() is False: error_count +=1
                             if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');"
-                                     % (sql_gid, sector_gid, member), write=True).start() is False: group_error_count += 1
+                                     % (sql_gid, sector_gid, member), write=True).start() is False: error_count += 1
                             else: member_count += 1
                         else:
                             if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                                     write=True).start() is False: group_error_count += 1
+                                     write=True).start() is False: error_count += 1
                             else: member_count += 1
-        ShellOutput("added %s group%s with a total of %s member%s" % (group_count, plural(group_count), member_count, plural(member_count)), style='info', font='text')
-        if group_error_count > 0:
-            ShellOutput("%s error%s while inserting" % (group_error_count, plural(group_error_count)), style='err')
-            Log("%s error%s while inserting" % (group_error_count, plural(group_error_count))).write()
+        ShellOutput("added %s group%s with a total of %s member%s" % (insert_count, plural(insert_count), member_count, plural(member_count)), style='info', font='text')
+        if error_count > 0:
+            ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
+            Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         if self.setup is not True: os_system("rm %s" % tmp_config_dump)
 
@@ -507,6 +509,28 @@ class Edit:
         # need to check dependencies -> add with new name and update settings+dependencies -> after that delete the old named obj
 
 
+def show():
+    from core.config import Config
+    object_list = ['exit']
+    object_agent_list = Config(output='name', table='object', filter="type = 'agent'").get('list')
+    object_dev_list = Config(output='name', table='object', filter="type = 'device'").get('list')
+    object_dt_list = Config(output='name', table='object', filter="type = 'devicetype'").get('list')
+    object_list.extend(object_dev_list)
+    object_list.extend(object_agent_list)
+    object_list.extend(object_dt_list)
+    while True:
+        object_name = ShellInput("The following objects exist:\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices:\n%s\n\n"
+                                 "Choose the one to show the settings of or type 'exit'."
+                                 % (object_agent_list, object_dt_list, object_dev_list),
+                                 poss=object_list, default=random_choice(object_list), intype='free').get()
+        if object_name == 'exit': break
+        setting_list = ["'%s' = '%s'" % (setting, data) for setting, data in Config(output="setting,data", #
+                                                                                    filter="belonging = '%s'" % object_name).get()]
+        ShellOutput("\n\nThe following settings exist for the object '%s':\n\n%s" % (object_name, ' | '.join(setting_list)))
+        ShellOutput(font='line', symbol='-')
+    return True
+
+
 class Delete:
     def __init__(self):
         self.start()
@@ -537,8 +561,11 @@ def choose():
     while True:
         count += 1
         if count > 1: ShellOutput(font='line', symbol='#')
-        mode = ShellInput("Choose how you want to modify growautomation objects.\nType exit if you want to exit.", poss=['add', 'edit', 'enable', 'disable', 'delete', 'exit', 'setup'], default='add', intype='free').get()
-        if mode == 'add': start = Create()
+        mode = ShellInput("Choose how you want to modify growautomation objects.\nType exit if you want to exit.",
+                          poss=['show', 'add', 'edit', 'enable', 'disable', 'delete', 'exit', 'setup'],
+                          default='show', intype='free').get()
+        if mode == 'show': start = show()
+        elif mode == 'add': start = Create()
         elif mode == 'edit': start = Edit()
         elif mode == 'enable': start = Edit(enabled_state='enable')
         elif mode == 'disable': start = Edit(enabled_state='disable')
