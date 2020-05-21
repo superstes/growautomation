@@ -154,13 +154,14 @@ class VarHandler:
         if name is None or data == '': return False
         if action == 'set' and (data is None or data == ''): return False
 
-        def own_debug(output, skip_hard=False):
+        def own_debug(output, skip_hard=False, log=False):
             if (name == 'debug' and skip_hard) or os_getenv('USER') == 'growautomation':
                 return False
-            elif name == 'debug' and skip_hard is False:
+            elif name == 'debug':
                 debugger(output, hard_debug=True)
             else:
-                debugger(output)
+                if log: Log(output).write()
+                else: debugger(output)
         own_debug("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data), skip_hard=True)
         if action == 'set':
             data_list = []
@@ -175,7 +176,7 @@ class VarHandler:
             for _ in data_list:
                 if type(_) == list:
                     own_debug("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
-                    Log("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count)).write()
+                    own_debug("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count), log=True)
                     return False
                 count += 1
             try:
@@ -195,13 +196,13 @@ class VarHandler:
                         memory.shm.close()
                     else:
                         own_debug("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
-                        Log("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
-                            % (name, len(memory), len(data_list))).write()
+                        own_debug("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
+                                  % (name, len(memory), len(data_list)), log=True)
                         memory.shm.close()
                         return False
                 except IndexError as error:
                     own_debug("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
-                    Log("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error)).write()
+                    own_debug("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error), log=True)
                 return False
         elif action == 'get':
             try:
@@ -212,7 +213,8 @@ class VarHandler:
                 return data
             except FileNotFoundError:
                 own_debug("smallant - varhandler - memory |get: '%s' not found" % name, skip_hard=True)
-                Log("Memory block '%s' was not found" % name).write()
+
+                own_debug("Memory block '%s' was not found" % name, log=True)
                 return False
         elif action == 'clean':
             try:
