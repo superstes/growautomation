@@ -34,9 +34,10 @@ class Config:
         self.empty, self.nosql = empty, nosql
 
     def get(self, outtype=None):
-        debugger("config - get | input |setting '%s' '%s' |nosql '%s' '%s' |output '%s' '%s' |belonging '%s' '%s' |filter '%s' '%s' |table '%s' '%s'"
+        debugger("config - get - input |setting '%s' '%s', nosql '%s' '%s', output '%s' '%s', belonging '%s' '%s', "
+                 "filter '%s' '%s', table '%s' '%s'"
                  % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
-                 type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
+                    type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
         parse_file_list = ['setuptype', 'sql_pwd', 'sql_local_user', 'sql_local_pwd', 'sql_agent_pwd', 'sql_admin_pwd']
         parse_failover_list = ['path_root', 'hostname', 'sql_server_port', 'sql_server_ip', 'sql_agent_user', 'sql_admin_user',
                                'sql_server_port', 'sql_sock']
@@ -47,7 +48,7 @@ class Config:
                 output = [output]
             elif outtype == 'str' and type(output) != str:
                 output = str(output)
-        debugger("config - get |output '%s' '%s'" % (type(output), output))
+        debugger("config - get - output |'%s' '%s'" % (type(output), output))
         return self._error('sql') if output is False else output
 
     def _error(self, parser_type):
@@ -59,7 +60,7 @@ class Config:
     def _parse_sql(self, command=None):
         response = DoSql(command).start() if command is not None else DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                                                                             % (self.setting, FileConfig('hostname').get())).start()
-        debugger("config - parse_sql |output '%s' '%s'" % (type(response), response))
+        debugger("config - parse_sql - output |'%s' '%s'" % (type(response), response))
         return self._error('sql') if response is False or response is None or response == '' else response
 
     def _parse_sql_custom(self):
@@ -94,7 +95,7 @@ class Config:
             custom = True
         if self.filter is None and self.setting is None:
             command.append('id IS NOT NULL')
-        debugger("config - sql_custom |custom '%s' '%s' |command '%s' '%s'" % (type(custom), custom, type(command), command))
+        debugger("config - sql_custom |custom '%s' '%s', command '%s' '%s'" % (type(custom), custom, type(command), command))
         return self._parse_sql(' '.join(command) + ';') if custom is True else self._parse_sql()
 
     @lru_cache()
@@ -106,11 +107,11 @@ class Config:
         if self.setting in config_dict.keys():
             for key, value in config_dict.items():
                 if key.find(self.setting) != -1:
-                    debugger("config - hardcoded |found '%s' '%s' '%s' '%s'" % (type(key), key, type(value), value))
+                    debugger("config - hardcoded - found |'%s' '%s' '%s' '%s'" % (type(key), key, type(value), value))
                     return value
             return False
         else:
-            debugger('config - hardcoded |not found')
+            debugger('config - hardcoded - not found')
             return False
 
     def _parse_failover(self):
@@ -122,11 +123,11 @@ class Config:
                     self._error('all')
                 else:
                     output = self._parse_hardcoded()
-                    debugger("config - failover |output '%s' '%s'" % (type(output), output))
+                    debugger("config - failover - output |'%s' '%s'" % (type(output), output))
                     return output
             else:
-                debugger("config - failover |output '%s' '%s'" % (type(parse_file_output), parse_file_output))
+                debugger("config - failover - output |'%s' '%s'" % (type(parse_file_output), parse_file_output))
                 return parse_file_output
         else:
-            debugger("config - failover |output '%s' '%s'" % (type(parse_sql_output), parse_sql_output))
+            debugger("config - failover - output |'%s' '%s'" % (type(parse_sql_output), parse_sql_output))
             return parse_sql_output
