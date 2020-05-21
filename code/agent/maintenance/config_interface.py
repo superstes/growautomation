@@ -65,7 +65,7 @@ class Create:
             self.setuptype = setup_config_dict['setuptype']
         else:
             self.setup = False
-            from ..core.config import Config
+            from core.config import Config
             self.Config = Config
             self.hostname = Config('hostname').get()
             self.setuptype = Config('setuptype').get()
@@ -403,7 +403,7 @@ class Create:
         ShellOutput('Writing object settings', font='text')
         setting_count, setting_error_count = 0, 0
         for object_name, packed_values in self.setting_dict.items():
-            if object_name in self.new_dev_list: packed_values['enabled'] = 1
+            if object_name in self.new_dev_list or object_name in self.new_dt_dict: packed_values['enabled'] = 1
             for setting, data in sorted(packed_values.items()):
                 if data == '': pass
                 elif type(data) == bool:
@@ -452,9 +452,9 @@ class Create:
 
 
 class Edit:
-    def __init__(self):
-        from ..core.config import Config
-        self.Config = Config
+    def __init__(self, enabled_state=None):
+        from core.config import Config
+        self.Config, self.enabled_state = Config, enabled_state
         self.start()
 
     def start(self):
@@ -465,27 +465,34 @@ class Edit:
         object_list.extend(object_dev_list)
         object_list.extend(object_agent_list)
         object_list.extend(object_dt_list)
+        todo = 'edit' if self.enabled_state is None else self.enabled_state
         while True:
             object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices:\n%s\n"
                                         % (object_agent_list, object_dt_list, object_dev_list),
                                         poss=object_list, default=random_choice(object_list), intype='free').get()
-            what_to_edit = ShellInput('Do you want to edit a object itself or its settings?', poss=['object', 'setting'], default='setting', intype='free').get()
-            if what_to_edit == 'setting': self.edit_setting(object_to_edit)
-            elif what_to_edit == 'object': self.edit_object(object_to_edit)
-            if ShellInput('Do you want to edit another object?', default=True).get() is False: break
+            if self.enabled_state is not None:
+                self.edit_setting(object_to_edit, setting_name='enabled', setting_data=1 if self.enabled_state == 'enable' else 0)
+            else:
+                what_to_edit = ShellInput('Do you want to edit a object itself or its settings?', poss=['object', 'setting'], default='setting', intype='free').get()
+                if what_to_edit == 'setting': self.edit_setting(object_to_edit)
+                elif what_to_edit == 'object': self.edit_object(object_to_edit)
+            if ShellInput('Do you want to %s another object?' % todo, default=True).get() is False: break
 
-    def edit_setting(self, object_name):
-        setting_dict = {setting: data for setting, data in self.Config(output="setting,data", filter="belonging = '%s'" % object_name).get('list')}
+    def edit_setting(self, object_name, setting_name=None, setting_data=None):
         change_dict, setting_count, setting_error_count = {}, 0, 0
-        while True:
-            setting = ShellInput('Choose the setting you want to edit.',
-                                 poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype='free').get()
-            ShellOutput("\nIts current configuration: %s = %s" % (setting, [val for key, val in setting_dict.items() if key == setting][0]), style='info')
-            data = ShellInput("Provide the new setting data.\n"
-                              "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
-                              intype='free', max_value=100, min_value=1).get()
-            change_dict[setting] = data
-            if ShellInput("Do you want to edit another setting of the object %s" % object_name, default=True).get() is False: break
+        if setting_name is not None and setting_data is not None:
+            change_dict[setting_name] = setting_data
+        else:
+            setting_dict = {setting: data for setting, data in self.Config(output="setting,data", filter="belonging = '%s'" % object_name).get('list')}
+            while True:
+                setting = ShellInput('Choose the setting you want to edit.',
+                                     poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype='free').get()
+                ShellOutput("\nIts current configuration: %s = %s" % (setting, [val for key, val in setting_dict.items() if key == setting][0]), style='info')
+                data = ShellInput("Provide the new setting data.\n"
+                                  "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
+                                  intype='free', max_value=100, min_value=1).get()
+                change_dict[setting] = data
+                if ShellInput("Do you want to edit another setting of the object %s" % object_name, default=True).get() is False: break
         for setting, data in change_dict.items():
             if DoSql("UPDATE ga.Setting SET data = '%s' WHERE belonging = '%s' AND setting = '%s';" % (data, object_name, setting),
                      write=True).start() is False:
@@ -530,9 +537,11 @@ def choose():
     while True:
         count += 1
         if count > 1: ShellOutput(font='line', symbol='#')
-        mode = ShellInput("Choose either to add, edit or delete objects.\nType exit if you want to exit.", poss=['add', 'edit', 'delete', 'exit', 'setup'], default='add', intype='free').get()
+        mode = ShellInput("Choose how you want to modify growautomation objects.\nType exit if you want to exit.", poss=['add', 'edit', 'enable', 'disable', 'delete', 'exit', 'setup'], default='add', intype='free').get()
         if mode == 'add': start = Create()
         elif mode == 'edit': start = Edit()
+        elif mode == 'enable': start = Edit(enabled_state='enable')
+        elif mode == 'disable': start = Edit(enabled_state='disable')
         elif mode == 'delete': start = Delete()
         elif mode == 'setup': start = setup()
         elif mode == 'exit': exit()
@@ -541,7 +550,7 @@ def choose():
 
 
 def exit():
-    ShellOutput('It was a pleasure to serve you!')
+    ShellOutput('\n\nBye!\nIt was a pleasure to serve you!')
     raise SystemExit
 
 
