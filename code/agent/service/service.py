@@ -62,11 +62,12 @@ class Service:
                     else: devicetype = Config(output='class', table='object', setting=name, exit=False).get()
                     if devicetype in sensor_type_list:
                         if Config(setting='enabled', belonging=devicetype, exit=False).get() == '1':
-                            function, timer = function_sensor_master, [Config(setting='timer_check', belonging=name, exit=False).get(), function_path % function_check]
+                            timer = Config(belonging=name, setting='timer', output="data", exit=False).get()
                             if name is False or timer is False:
                                 debugger("service - timer |removed thread because of bad sql output")
                                 continue
-                            name_dict["check_%s" % name] = timer
+                            name_dict["check_%s" % name] = [timer, function_path % function_check]
+                            function = function_sensor_master
                         else: continue
                     else: continue
                 elif name in core_list: function = Config(setting='function', belonging=name, exit=False).get()
@@ -80,25 +81,30 @@ class Service:
         try:
             if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()
         except (IndexError, NameError): pass
-        debugger("service - start |starting |pid %s" % os_getpid())
-        self.name_dict = self._get_timer_dict()
-        for thread_name, settings in self.name_dict.items():
-            interval, function = settings[0], settings[1]
-            debugger("service - start |function '%s' '%s' |interval '%s' '%s'" % (type(function), function, type(interval), interval))
+        try:
+            debugger("service - start |starting |pid %s" % os_getpid())
+            self.name_dict = self._get_timer_dict()
+            for thread_name, settings in self.name_dict.items():
+                interval, function = settings[0], settings[1]
+                debugger("service - start |function '%s' '%s' |interval '%s' '%s'" % (type(function), function, type(interval), interval))
 
-            @Threader.thread(int(interval), thread_name)
-            def thread_function():
-                Log("Starting function '%s' for object %s." % (function, thread_name), level=4).write()
-                output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
-                if error != '':
-                    systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
-                    Log("Error by executing %s:\n'%s'" % (thread_name, error), level=2).write()
-                    debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
-                Log("Output by processing %s:\n'%s'" % (thread_name, output), level=3).write()
-                debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
-        Threader.start()
-        systemd_journal.write('Finished starting service.')
-        self.status()
+                @Threader.thread(int(interval), thread_name)
+                def thread_function():
+                    Log("Starting function '%s' for object %s." % (function, thread_name), level=4).write()
+                    output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
+                    if error != '':
+                        systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
+                        Log("Error by executing %s:\n'%s'" % (thread_name, error), level=2).write()
+                        debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
+                    Log("Output by processing %s:\n'%s'" % (thread_name, output), level=3).write()
+                    debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
+            Threader.start()
+            systemd_journal.write('Finished starting service.')
+            self.status()
+        except TypeError as error:
+            debugger("service - start |encountered error '%s'" % error)
+            Log("Service encountered an error while starting:\n'%s'" % error).write()
+            self.stop()
         self._run()
 
     def reload(self, signum=None, stack=None):
