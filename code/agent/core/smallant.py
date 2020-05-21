@@ -24,6 +24,7 @@ from core.smallconfig import Config
 
 from os import system as os_system
 from os import path as os_path
+from os import getenv as os_getenv
 from datetime import datetime
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
@@ -72,10 +73,6 @@ class Log:
 class VarHandler:
     def __init__(self, name=None, data=None):
         self.name, self.action, self.data = name, None, data
-        if name == 'debug':
-            self.hard_debug = True
-        else:
-            self.hard_debug = False
 
     def get(self, outtyp=None):
         self.action = 'get'
@@ -156,8 +153,15 @@ class VarHandler:
         if data is None: data = self.data
         if name is None or data == '': return False
         if action == 'set' and (data is None or data == ''): return False
-        if name != 'debug':
-            debugger("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data))
+
+        def own_debug(output, skip_hard=False):
+            if (name == 'debug' and skip_hard) or os_getenv('USER') == 'growautomation':
+                return False
+            elif name == 'debug' and skip_hard is False:
+                debugger(output, hard_debug=True)
+            else:
+                debugger(output)
+        own_debug("smallant - varhandler - memory |input: '%s' '%s' '%s' '%s'" % (action, name, type(data), data), skip_hard=True)
         if action == 'set':
             data_list = []
             if type(data) == dict:
@@ -170,13 +174,13 @@ class VarHandler:
             count = 1
             for _ in data_list:
                 if type(_) == list:
-                    debugger("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count), hard_debug=self.hard_debug)
+                    own_debug("smallant - varhandler - memory |set: '%s' has bad input type - nr %s." % (type(_), count))
                     Log("Invalid data-type '%s' as memory input for item nr %s." % (type(_), count)).write()
                     return False
                 count += 1
             try:
                 memory = ShareableList(data_list, name="ga_%s" % name)
-                debugger("smallant - varhandler - memory |set: '%s' successful" % name, hard_debug=self.hard_debug)
+                own_debug("smallant - varhandler - memory |set: '%s' successful" % name)
                 memory.shm.close()
             except (FileExistsError, KeyError):
                 try:
@@ -187,16 +191,16 @@ class VarHandler:
                                 memory[_] = data_list[_]
                             except IndexError:
                                 memory[_] = None
-                        debugger("smallant - varhandler - memory |set: '%s' update successful" % name, hard_debug=self.hard_debug)
+                        own_debug("smallant - varhandler - memory |set: '%s' update successful" % name)
                         memory.shm.close()
                     else:
-                        debugger("smallant - varhandler - memory |set: cant update '%s' - too long" % name, hard_debug=self.hard_debug)
+                        own_debug("smallant - varhandler - memory |set: cant update '%s' - too long" % name)
                         Log("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
                             % (name, len(memory), len(data_list))).write()
                         memory.shm.close()
                         return False
                 except IndexError as error:
-                    debugger("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name, hard_debug=self.hard_debug)
+                    own_debug("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name)
                     Log("Memory block '%s' already exists and cannot be updated.\nError: %s" % (name, error)).write()
                 return False
         elif action == 'get':
@@ -204,11 +208,10 @@ class VarHandler:
                 memory = ShareableList(name="ga_%s" % name)
                 data = [_ for _ in memory]
                 memory.shm.close()
-                if name != 'debug':
-                    debugger("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data))
+                own_debug("smallant - varhandler - memory |get: '%s' output '%s' '%s'" % (name, type(data), data), skip_hard=True)
                 return data
             except FileNotFoundError:
-                debugger("smallant - varhandler - memory |get: '%s' not found" % name, hard_debug=self.hard_debug)
+                own_debug("smallant - varhandler - memory |get: '%s' not found" % name, skip_hard=True)
                 Log("Memory block '%s' was not found" % name).write()
                 return False
         elif action == 'clean':
@@ -216,9 +219,9 @@ class VarHandler:
                 memory = ShareableList(name="ga_%s" % name)
                 memory.shm.close()
                 memory.shm.unlink()
-                debugger("smallant - varhandler - memory |clean: '%s' successful" % name, hard_debug=self.hard_debug)
+                own_debug("smallant - varhandler - memory |clean: '%s' successful" % name)
             except FileNotFoundError:
-                debugger("smallant - varhandler - memory |clean: '%s' not found" % name, hard_debug=self.hard_debug)
+                own_debug("smallant - varhandler - memory |clean: '%s' not found" % name)
                 return False
         else: return False
 
