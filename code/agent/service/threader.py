@@ -40,7 +40,9 @@ class Job(Thread):
     def stop(self):
         debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
         self.state_stop.set()
-        self.join()
+        try:
+            self.join()
+        except RuntimeError: pass
         Log("Stopped thread '%s'" % self.name, level=3).write()
 
     def run(self):
