@@ -160,7 +160,7 @@ class ShellInput:
 
 
 # Shell output
-class ShellOutput(object):
+class ShellOutput:
     def __init__(self, output=None, font='text', style='', symbol='#'):
         self.output, self.font,  self.style, self.symbol = output, font, style, symbol
         self.start()
@@ -190,8 +190,8 @@ class ShellOutput(object):
 
 
 # File operations
-class Line(object):
-    def __init__(self, action, search, replace=f'', backup=False, file='./core.conf'):
+class Line:
+    def __init__(self, action, search, replace='', backup=False, file='./core.conf'):
         self.file, self.backup, self.searchfor, self.action, self.replacewith = file, backup, search, action, replace
         self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
         self.backupdir = "%s/%s" % (Config('path_backup').get(), date02)
@@ -200,8 +200,9 @@ class Line(object):
         self.find() if self.action == 'find' else self.delete() if self.action == 'delete' else self.replace() if self.action == 'replace' else self.add() if self.action == 'add' else None
 
     def find(self):
-        tmpfile = open(self.file, 'r')
-        for xline in tmpfile.readlines(): return xline if xline.find(self.searchfor) != -1 else False
+        with open(self.file, 'r') as _:
+            for line in _.readlines():
+                return line if line.find(self.searchfor) != -1 else False
 
     def delete(self):
         os_system("sed -i%s '/%s/d' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.file, self.file, self.backupfile, self.backupdir)) if self.backup == 'yes' \
