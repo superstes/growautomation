@@ -21,6 +21,6 @@
 # ga_version 0.4
 
 apt-get install wget
-wget https://git.growautomation.at/blob/master/setup/update.sh
+wget https://raw.githubusercontent.com/growautomation-at/controller/master/setup/update.sh
 /bin/bash update.sh
 rm update.sh
