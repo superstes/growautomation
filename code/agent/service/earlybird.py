@@ -49,8 +49,12 @@ class Startup:
 
     def stop(self, signum=None, stack=None):
         if signum is not None:
-            debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-            Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
+            try:
+                debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+                Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
+            except AttributeError:
+                debugger("service - stop |got signal %s" % signum)
+                Log("Service received signal %s" % signum, level=2).write()
         systemd_journal('Service initialization stopped. Exiting.')
 
     def finish(self):
