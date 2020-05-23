@@ -33,6 +33,7 @@ from time import sleep as time_sleep
 from sys import argv as sys_argv
 from os import getpid as os_getpid
 from sys import exc_info as sys_exc_info
+from multiprocessing import Process as MP_Process
 import signal
 
 Threader = Loop()
@@ -50,7 +51,7 @@ class Service:
         name_dict = {}
         core_list = Config(output='name', table='object', filter="type = 'core'", exit=False).get()[0]
         sensor_type_list = Config(output='name', table='object', filter="class = 'sensor'", exit=False).get()
-        function_sensor_master = Config(setting='function', belonging='sensor_master', exit=False).get()
+        function_sensor = Config(setting='function', belonging='sensor_master', exit=False).get()
         function_check = Config(setting='function', belonging='check', exit=False).get()
         function_path = Config(setting='path_root').get() + "/core/%s"
         debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'" % (function_path, core_list, sensor_type_list))
@@ -62,42 +63,54 @@ class Service:
                     else: devicetype = Config(output='class', table='object', setting=name, exit=False).get()
                     if devicetype in sensor_type_list:
                         if Config(setting='enabled', belonging=devicetype, exit=False).get() == '1':
-                            timer = Config(belonging=name, setting='timer', output="data", exit=False).get()
-                            if name is False or timer is False:
+                            check_timer = Config(belonging=name, setting='timer_check', output="data", exit=False).get()
+                            if name is False or timer is False or check_timer is False:
                                 debugger("service - timer |removed thread because of bad sql output")
                                 continue
-                            name_dict["check_%s" % name] = [timer, function_path % function_check]
-                            function = function_sensor_master
+                            name_dict["check_%s" % name] = [check_timer, function_path % function_check]
+                            name_dict["sensor_%s" % name] = [timer, function_path % function_sensor]
                         else: continue
                     else: continue
-                elif name in core_list: function = Config(setting='function', belonging=name, exit=False).get()
+                elif name in core_list:
+                    name_dict["core_%s" % name] = [timer, function_path % Config(setting='function', belonging=name, exit=False).get()]
                 else: continue
-                name_dict[name] = [timer, function_path % function]
             else: continue
             debugger("service - timer |dict '%s' '%s'" % (type(name_dict), name_dict))
         return name_dict
 
     def start(self):
+        VarHandler(name='init', data=1).set()
         try:
             if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()
         except (IndexError, NameError): pass
         try:
-            debugger("service - start |starting |pid %s" % os_getpid())
+            debugger("service - start |starting pid %s" % os_getpid())
             self.name_dict = self._get_timer_dict()
-            for thread_name, settings in self.name_dict.items():
-                interval, function = settings[0], settings[1]
-                debugger("service - start |function '%s' '%s' |interval '%s' '%s'" % (type(function), function, type(interval), interval))
+            for thread_name, nested_settings in self.name_dict.items():
+                interval, function = nested_settings[0], nested_settings[1]
+                debugger("service - start |function '%s' '%s', interval '%s' '%s'" % (type(function), function, type(interval), interval))
 
                 @Threader.thread(int(interval), thread_name)
-                def thread_function():
-                    Log("Starting function '%s' for object %s." % (function, thread_name), level=4).write()
-                    output, error = process("/usr/bin/python3.8 %s %s" % (function, thread_name), out_error=True)
-                    if error != '':
-                        systemd_journal.write("Error by executing %s:\n'%s'" % (thread_name, error))
-                        Log("Error by executing %s:\n'%s'" % (thread_name, error), level=2).write()
-                        debugger("service - start | thread_function |error for thread '%s' '%s'" % (thread_name, error))
-                    Log("Output by processing %s:\n'%s'" % (thread_name, output), level=3).write()
-                    debugger("service - start | thread_function |output by processing '%s' '%s'" % (thread_name, output))
+                def thread_function(initiator=None, start=False):
+                    debugger("service - start - thread |'%s'" % initiator)
+                    Log("Starting function '%s' for object %s." % (function, initiator), level=4).write()
+                    if initiator.find('sensor') != -1:
+                        debugger("service - start - thread |'%s' using sensor module" % initiator)
+                        from core.snake import Balrog
+                        work = MP_Process(target=Balrog(initiator).start())
+                        if start:
+                            work.start()
+                            work.join()
+                        return True
+                    elif initiator.find('check') != -1:
+                        debugger("service - start - thread |'%s' using check module" % initiator)
+                        return False
+                        # from core.parrot import ThresholdCheck
+                        # work = MP_Process(target=ThresholdCheck(initiator).start())
+                        # if start:
+                        #     work.start()
+                        #     work.join()
+                        # return True
             Threader.start()
             systemd_journal.write('Finished starting service.')
             self.status()
@@ -134,8 +147,12 @@ class Service:
         Log('Stopping service', level=1).write()
         systemd_journal.write('Stopping service.')
         if signum is not None:
-            debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-            Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
+            try:
+                debugger("service - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+                Log("Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+            except AttributeError:
+                debugger("service - stop |got signal %s" % signum)
+                Log("Service received signal %s" % signum)
         VarHandler().stop()
         Threader.stop()
         time_sleep(10)
@@ -153,7 +170,8 @@ class Service:
         raise SystemExit
 
     def status(self):
-        debugger(['service - status |updating status', "service - status |threads '%s' |config '%s'" % (Threader.list(), self.name_dict)])
+        debugger(['service - status |updating status', "service - status |threads '%s'" % Threader.list(),
+                  "service - status |config '%s'" % self.name_dict])
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n" % Threader.list())
         [systemd_journal.write("'%s': '%s'\n" % (key, value)) for key, value in self.name_dict.items()]
 
@@ -163,7 +181,7 @@ class Service:
             while_count, tired_time = 0, 300
             while True:
                 while_count += 1
-                debugger("service - run |loop count %s |loop runtime %s |pid %s" % (while_count, tired_time * (while_count - 1), os_getpid()))
+                debugger("service - run |loop count %s, loop runtime %s, pid %s" % (while_count, tired_time * (while_count - 1), os_getpid()))
                 if while_count == 288:
                     self.reload()
                     while_count = 0
