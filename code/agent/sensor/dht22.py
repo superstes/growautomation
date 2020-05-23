@@ -22,10 +22,7 @@
 # sensor function for adafruit dht22
 
 from core.smallant import Log
-from core.smallant import debugger
 
-from inspect import getfile as inspect_getfile
-from inspect import currentframe as inspect_currentframe
 from sys import argv as sys_argv
 
 import Adafruit_DHT
@@ -35,24 +32,17 @@ def LogWrite(output: str, level=3):
     Log(output, typ='sensor', level=level).write()
 
 
-function = inspect_getfile(inspect_currentframe())
-
 try:
-    port = sys_argv[1]
-    argument = sys_argv[4]
+    port, argument = sys_argv[1], sys_argv[4]
 except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
-    debugger("%s - sys_argv error: %s" % (function, error))
     raise SystemExit
 try:
     device_mapping_dict = dict(sys_argv[2])
-except (IndexError, ValueError):
-    device_mapping = False
-    debugger("%s - sys_argv no device_mapping_dict" % function)
+except (IndexError, ValueError): device_mapping = False
 try:
     setting_dict = dict(sys_argv[3])
-except (IndexError, ValueError):
-    debugger("%s - sys_argv no setting_dict" % function)
+except (IndexError, ValueError): pass
 
 
 class Device:
@@ -62,17 +52,13 @@ class Device:
         else: self.output_dict = True
 
     def start(self):
-        debugger("%s - start |starting get_data |argument '%s' '%s'|port '%s' '%s'" %
-                 (function, type(argument), argument, type(port), port))
         if self.output_dict: self._data_mapping()
-        print(self.data)
+        print("%.2f" % self.data)
         LogWrite('Data was delivered.', level=4)
-        debugger("%s - start |finished")
         raise SystemExit
 
     def _data_mapping(self):
         self.data = zip(device_mapping_dict.keys(), list(self.data))
-        debugger("%s - data_mapping |%s" % (function, self.data))
 
     def _get_data(self):
         if argument != 'humidity' and argument != 'temperature':
