@@ -163,9 +163,6 @@ class ShellInput:
 class ShellOutput:
     def __init__(self, output=None, font='text', style='', symbol='#'):
         self.output, self.font,  self.style, self.symbol = output, font, style, symbol
-        self.start()
-
-    def start(self):
         self._header() if self.font == 'head' else self._line if self.font == 'line' \
             else self._text() if self.output is not None else None
 
