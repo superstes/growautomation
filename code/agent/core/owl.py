@@ -95,11 +95,10 @@ class DoSql:
                     self._connect("CREATE DATABASE test_%s;" % rand_db_nr, connect_debug=False)
                     data = self._connect("DROP DATABASE test_%s;" % rand_db_nr, connect_debug=False)
                 else:
-                    self._connect("INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');"
+                    self._connect("INSERT IGNORE INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');"
                                   % self.hostname, connect_debug=False)
-                    data = self._connect("DELETE FROM ga.Setting WHERE author = 'owl' and belonging = '%s';"
-                                         % self.hostname, connect_debug=False)
-            debugger("owl - start |conntest output '%s' '%s'" % (type(data), data))
+                    data = self._connect("DELETE FROM ga.Setting WHERE author = 'owl' and setting = 'conntest';", connect_debug=False)
+            debugger("owl - start |conntest output '%s' '%s'" % (type(data), data), level=2)
             if type(data) == list or type(data) == str: conntest_result = True
             elif type(data) == bool: conntest_result = data
             else: conntest_result = False
