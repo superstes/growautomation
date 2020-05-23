@@ -95,9 +95,9 @@ if os_getuid() != 0:
 
 
 def setup_signal(signum=None, stack=None):
-    if sys_exc_info()[0] is not None:
-        raise RuntimeError("Received signal %s |last error: \"%s - %s\"" % (signum, sys_exc_info()[0].__name__, sys_exc_info()[1]))
-    else:
+    try:
+        raise RuntimeError("Received signal %s |last error: \"%s - %s\"" % (signum,  sys_exc_info()[0].__name__, sys_exc_info()[1]))
+    except AttributeError:
         raise RuntimeError("Received signal %s" % signum)
 
 
@@ -917,8 +917,7 @@ try:
 
     def setup_infra_dir():
         ShellOutput(font='head', output='Setting up directories', symbol='-')
-        process("id -u growautomation || useradd growautomation %s" % ga_config['setup_log_redirect'])
-
+        process("id -u growautomation || useradd growautomation & usermod -a -G gpio growautomation %s" % ga_config['setup_log_redirect'])
         ga_foldercreate(ga_config['path_backup'])
 
         if ga_config['setup_old'] is True and ga_config['setup_old_backup'] is True:
@@ -1032,12 +1031,12 @@ try:
                     value = 0
             if ga_config['setuptype'] == 'agent':
                 command = "INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');" \
-                          % ('gasetup', ga_config['hostname'], key, value)
+                          % ('setup', ga_config['hostname'], key, value)
                 DoSql(command=command, user=ga_config['sql_agent_user'], pwd=ga_config['sql_agent_pwd'], write=True,
                       hostname=ga_config['hostname'], setuptype=ga_config['setuptype']).start()
             else:
                 DoSql(command="INSERT INTO ga.Setting (author, belonging, setting, data) VALUES ('%s', '%s', '%s', '%s');"
-                              % ('gasetup', ga_config['hostname'], key, value), user='root', write=True, hostname=ga_config['hostname'],
+                              % ('setup', ga_config['hostname'], key, value), user='root', write=True, hostname=ga_config['hostname'],
                       setuptype=ga_config['setuptype']).start()
         ShellOutput(output="Wrote %s setup settings to database" % len(insertdict), style='succ')
 
@@ -1048,6 +1047,8 @@ try:
     setup_mysql_write_config(writedict)
 
     ShellOutput(font='head', output='Starting growautomation service', symbol='#')
+    process("chown -R growautomation:growautomation %s & chown -R growautomation:growautomation %s"
+            % (ga_config['path_log'], ga_config['path_backup']))
     process("systemctl start growautomation.service %s" % ga_config['setup_log_redirect'])
     if process('systemctl status growautomation.service | grep Active:').find('running') != -1:
         ShellOutput('Service started', style='succ')
@@ -1057,7 +1058,10 @@ try:
     ShellOutput(font='head', output='Setup finished! Please reboot the system', symbol='#')
     setup_log_write('Setup finished.')
 except:
-    setup_stop(error_msg="%s: %s" % (sys_exc_info()[0].__name__, sys_exc_info()[1]))
+    try:
+        setup_stop(error_msg="%s: %s" % (sys_exc_info()[0].__name__, sys_exc_info()[1]))
+    except AttributeError:
+        setup_stop()
 
 # check path inputs for ending / and remove it
 # delete old fstab entries and replace them (ask user)

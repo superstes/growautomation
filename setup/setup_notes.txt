@@ -27,6 +27,7 @@ May have changed since then
   - install core
     cd /tmp
     useradd growautomation
+    usermod -a -G gpio growautomation
     git clone https://github.com/growautomation-at/controller.git --depth=1
     mkdir /etc/growautomation
     cp -r /tmp/controller/code/agent/* /etc/growautomation
