@@ -31,11 +31,11 @@ from time import sleep as time_sleep
 from datetime import timedelta
 
 
-class Job(Thread):
-    def __init__(self, interval, execute, name, run_once=False):
+class Workload(Thread):
+    def __init__(self, sleep, execute, name, once=False):
         Thread.__init__(self)
+        self.sleep, self.execute, self.name, self.once = sleep, execute, name, once
         self.state_stop = Event()
-        self.interval, self.execute, self.name, self.run_once = interval, execute, name, run_once
 
     def stop(self):
         debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
@@ -48,18 +48,22 @@ class Job(Thread):
     def run(self):
         try:
             Log("Starting thread '%s'" % self.name, level=4).write()
-            debugger("threader - Thread(run) |thread starting '%s'" % self.name)
-            if self.run_once:
+            debugger("threader - Thread(run) |thread runtime '%s'" % self.name)
+            if self.once:
                 self.execute()
                 Loop.stop_thread(self.name)
             else:
-                while not self.state_stop.wait(self.interval.total_seconds()):
-                    self.execute()
+                while not self.state_stop.wait(self.sleep.total_seconds()):
+                    debugger("threader - Thread(run) |thread starting '%s'" % self.name)
+                    self.execute(initiator=self.name, start=True)
                     if self.state_stop.isSet():
                         debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
                         Log("Exiting thread '%s'" % self.name, level=4).write()
                         break
-        except: self.stop()
+        except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error:
+            debugger("threader - Thread(run) |thread '%s' error occurred: '%s'" % (self.name, error))
+            Log("Stopping thread '%s' because the following error occurred: '%s'" % (self.name, error))
+            self.stop()
 
 
 class Loop:
@@ -69,14 +73,13 @@ class Loop:
     def start(self, daemon=True, single_thread=None):
         Log('Starting threads in background', level=3).write()
         for job in self.jobs:
+            job.daemon = daemon
             if single_thread is not None:
-                debugger("threader - start |starting thread '%s' '%s'" % (type(single_thread), single_thread))
+                debugger('threader - start |starting single_thread')
                 if job.name == single_thread:
-                    job.daemon = daemon
                     job.start()
             else:
                 debugger('threader - start |starting threads')
-                job.daemon = daemon
                 job.start()
         if daemon is False: self._block_root_process()
 
@@ -86,8 +89,8 @@ class Loop:
         def decorator(function):
             if sleep_time == 0:
                 sleep_time_new = 600
-                self.jobs.append(Job(timedelta(seconds=sleep_time_new), function, thread_name, run_once=True))
-            else: self.jobs.append(Job(timedelta(seconds=sleep_time), function, thread_name))
+                self.jobs.append(Workload(sleep=timedelta(seconds=sleep_time_new), execute=function, name=thread_name, once=True))
+            else: self.jobs.append(Workload(sleep=timedelta(seconds=sleep_time), execute=function, name=thread_name))
             return function
         return decorator
 
@@ -97,9 +100,7 @@ class Loop:
         while True:
             try:
                 time_sleep(1)
-            except:
-                self.stop()
-                raise SystemExit
+            except KeyboardInterrupt: self.stop()
 
     def stop(self):
         debugger('threader - stop |stopping jobs')
