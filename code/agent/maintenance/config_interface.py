@@ -46,7 +46,10 @@ import signal
 
 def signal_handler(signum=None, stack=None):
     if debug: VarHandler().stop()
-    raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+    try:
+        raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+    except AttributeError:
+        raise SystemExit("Received signal %s" % signum)
 
 
 signal.signal(signal.SIGTERM, signal_handler)
@@ -460,7 +463,7 @@ class Edit:
         self.start()
 
     def start(self):
-        object_list = []
+        object_list = ['exit']
         object_agent_list = self.Config(output='name', table='object', filter="type = 'agent'").get('list')
         object_dev_list = self.Config(output='name', table='object', filter="type = 'device'").get('list')
         object_dt_list = self.Config(output='name', table='object', filter="type = 'devicetype'").get('list')
@@ -469,9 +472,10 @@ class Edit:
         object_list.extend(object_dt_list)
         todo = 'edit' if self.enabled_state is None else self.enabled_state
         while True:
-            object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices:\n%s\n"
+            object_to_edit = ShellInput("Choose one of the listed objects to edit or type 'exit'.\n\nAgents:\n%s\nDeviceTypes:\n%s\nDevices:\n%s\n"
                                         % (object_agent_list, object_dt_list, object_dev_list),
                                         poss=object_list, default=random_choice(object_list), intype='free').get()
+            if object_to_edit == 'exit': return False
             if self.enabled_state is not None:
                 self.edit_setting(object_to_edit, setting_name='enabled', setting_data=1 if self.enabled_state == 'enable' else 0)
             else:
@@ -561,7 +565,7 @@ def choose():
     while True:
         count += 1
         if count > 1: ShellOutput(font='line', symbol='#')
-        mode = ShellInput("Choose how you want to modify growautomation objects.\nType exit if you want to exit.",
+        mode = ShellInput("Choose how you want to modify growautomation objects or type 'exit'.",
                           poss=['show', 'add', 'edit', 'enable', 'disable', 'delete', 'exit', 'setup'],
                           default='show', intype='free').get()
         if mode == 'show': start = show()
