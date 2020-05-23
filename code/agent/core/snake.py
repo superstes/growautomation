@@ -28,22 +28,26 @@ from core.smallant import debugger
 from core.smallant import VarHandler
 from core.smallant import process
 
-from sys import argv as sys_argv
 from time import sleep as time_sleep
-from sys import exc_info as sys_exc_info
-import signal
 
 
 class Balrog:
     def __init__(self, sensor):
         self.sensor, self.own_dt = sensor, None
         self.processed_list, self.lock_list = [], []
-        signal.signal(signal.SIGTERM, self._stop)
-        signal.signal(signal.SIGINT, self._stop)
-        self.sensor_type = True if self.sensor in Config(output='name', table='object', filter="class = 'sensor'").get('list') else False
-        self.devicetype() if self.sensor_type is True else self.device(self.sensor)
+        self.sensor_type = ''
 
-    def devicetype(self):
+    def start(self):
+        debugger("snake - init - input |sensor '%s'" % self.sensor)
+        self.sensor = self.sensor.replace('sensor_', '')
+        if self.sensor in Config(output='name', table='object', filter="class = 'sensor'").get('list'):
+            self.sensor_type = True
+        else: self.sensor_type = False
+        if self.sensor_type is True:
+            self._devicetype()
+        else: self._device(self.sensor)
+
+    def _devicetype(self):
         device_list, self.own_dt = [], self.sensor
         # check all for loops if they will break if only one element is in list -> find clean solution
         for device in Config(output='name', table='object', filter="class = '%s'" % self.sensor).get('list'):
@@ -51,10 +55,10 @@ class Balrog:
                 device_list.append(device)
         for device in device_list:
             if device in self.processed_list: continue
-            else: self.device(device)
+            else: self._device(device)
         # ask for threading support when sensor-functions are added
 
-    def device(self, device):
+    def _device(self, device):
         self.own_dt = Config(output='class', table='object', setting=device).get()
         # if device => self.sensor doesn't need to check if enabled since it was already checked when accepting the timer
         connection = Config(setting='connection', belonging=device).get()
@@ -86,7 +90,7 @@ class Balrog:
         if type_opp == '1':
             sensor_dict = {device: Config(setting='port', belonging=device).get()}
             debugger("snake - downlink |opp 1 |input '%s'" % sensor_dict)
-            output = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
+            output = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
             debugger("snake - downlink |opp 1 |output '%s'" % output)
             self._write_data(device, output)
         elif type_opp == '0':
@@ -106,7 +110,7 @@ class Balrog:
                         # portlist in dict will start at 0 => throw it into the docs
                 sensor_dict = {key: value for key, value in sorted(sensor_dict.items(), key=lambda item: item[1])}
             debugger("snake - downlink |opp 0 |input '%s'" % sensor_dict)
-            output_dict = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=get_setting_dict())
+            output_dict = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
             debugger("snake - downlink |opp 0 |output '%s'" % output_dict)
             for sensor, data in output_dict.items():
                 if sensor in self.processed_list: self._write_data(sensor, data)
@@ -129,29 +133,37 @@ class Balrog:
         function_path = "%s/%s/%s" % (Config(setting='path_root').get(), devicetype_class, function)
         Log("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'"
             % (function_path, device, device_mapping_dict, setting_dict), level=4).write()
-        debugger("snake - start |/usr/bin/python3 %s %s %s %s %s" %
+        # need to lookup python bin path dynamically
+        debugger("snake - start |/usr/bin/python3.8 %s %s %s %s %s" %
                  (function_path, port, device_mapping_dict, setting_dict, custom_arg))
-        output, error = process("/usr/bin/python3 %s %s %s %s %s" %
+        output, error = process("/usr/bin/python3.8 %s %s %s %s %s" %
                                 (function_path, port, device_mapping_dict, setting_dict, custom_arg), out_error=True)
         Log("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output), level=3).write()
         debugger("snake - start |output by processing %s '%s'" % (device, output))
         if error != '':
-            Log("Error by executing %s:\n'%s'" % (device, error), level=2).write()
+            Log("Error by executing %s:\n'%s'" % (device, error), level=1).write()
             debugger("snake - start |error by executing %s '%s'" % (device, error))
+        if output == '' or output is None or output.find('debug') != -1:
+            Log("Error - output for device %s is empty or error.\nOutput: '%s'" % (device, output), level=1)
+            return None
+        self._unlock(device)
         if device_mapping_dict is None: return output
         else: return dict(output)
 
     def _lock(self, device):
-        try_count, wait_time, max_try_count = 1, 10, 31
+        try_count, wait_time, max_try_count = 1, 10, 30
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
-            if VarHandler(name="lock_%s" % device).get('int') == 1: time_sleep(wait_time)
+            lock = VarHandler(name="lock_%s" % device).get()
+            if bool(lock) is False: break
+            elif int(lock) == 1:
+                if try_count > max_try_count + 1:
+                    debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
+                    Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2).write()
+                    return False
+                time_sleep(wait_time)
+                debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             else: break
-            if try_count > max_try_count:
-                debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
-                Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2).write()
-                return False
-            debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
             try_count += 1
         try_count -= 1
         VarHandler(name="lock_%s" % device, data=1).set()
@@ -168,23 +180,10 @@ class Balrog:
         return True
 
     def _write_data(self, device, data):
-        sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" % (Config('hostname').get(), data, device), write=True).start()
-        Log("Wrote data for device '%s' to database. Output: %s" % (device, sql), level=4).write()
-        return sql
-
-    def _stop(self, signum=None, stack=None):
-        if signum is not None:
-            debugger("snake - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-            Log("Sensor master received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
-        if len(self.lock_list) > 0:
-            unlock_list = self.lock_list
-            for device in unlock_list: self._unlock(device)
-            debugger("snake - stop |unlocked following devices '%s'" % unlock_list)
-        debugger('snake - stop |exiting')
-        raise SystemExit
-
-
-try: Balrog(sys_argv[1])
-except IndexError:
-    Log('No sensor provided. Exiting.').write()
-    raise SystemExit
+        if data == '' or data is None:
+            Log("Output data is empty")
+            return False
+        else:
+            sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" % (Config('hostname').get(), data, device), write=True).start()
+            Log("Wrote data for device '%s' to database. Output: '%s'" % (device, sql), level=4).write()
+            return sql
