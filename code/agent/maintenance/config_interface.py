@@ -28,7 +28,7 @@ try:
     from core.ant import plural
     from core.smallant import debugger
     from core.smallant import VarHandler
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from owl import DoSql
     from ant import ShellOutput
     from ant import ShellInput

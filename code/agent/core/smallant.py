@@ -19,8 +19,10 @@
 #     Web: https://git.growautomation.at
 
 # ga_version 0.4
-
-from core.smallconfig import Config
+try:
+    from core.smallconfig import Config
+except (ImportError, ModuleNotFoundError):
+    from smallconfig import Config
 
 from os import system as os_system
 from os import path as os_path

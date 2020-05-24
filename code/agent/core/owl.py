@@ -21,10 +21,16 @@
 # ga_version 0.4
 # sql module
 
-from core.smallant import Log
-from core.smallconfig import Config
-from core.smallant import debugger
-from core.smallant import process
+try:
+    from core.smallant import Log
+    from core.smallconfig import Config
+    from core.smallant import debugger
+    from core.smallant import process
+except (ImportError, ModuleNotFoundError):
+    from smallant import Log
+    from smallconfig import Config
+    from smallant import debugger
+    from smallant import process
 
 from random import choice as random_choice
 from os import path as os_path
