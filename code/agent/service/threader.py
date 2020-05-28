@@ -84,7 +84,7 @@ class Loop:
         if daemon is False: self._block_root_process()
 
     def thread(self, sleep_time: int, thread_name):
-        debugger("threader - thread |adding job |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - thread |adding job '%s' '%s', interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
 
         def decorator(function):
             if sleep_time == 0:
@@ -117,12 +117,12 @@ class Loop:
                 Log("Thread %s stopped." % job.name, level=2).write()
 
     def start_thread(self, sleep_time: int, thread_name):
-        debugger("threader - start_thread |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - start_thread |'%s' '%s', interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
         self.thread(sleep_time, thread_name)
         self.start(single_thread=thread_name)
 
     def reload_thread(self, sleep_time: int, thread_name):
-        debugger("threader - reload_thread |'%s' '%s' |interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
+        debugger("threader - reload_thread |'%s' '%s', interval '%s' '%s'" % (type(thread_name), thread_name, type(sleep_time), sleep_time))
         self.stop_thread(thread_name)
         self.start_thread(sleep_time, thread_name)
 
