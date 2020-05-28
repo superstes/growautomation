@@ -39,8 +39,8 @@ from functools import lru_cache
 
 
 class DoSql:
-    def __init__(self, command, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None):
-        self.command, self.write, self.user, self.pwd, self.exit = command, write, user, pwd, exit
+    def __init__(self, command=None, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None, test=False):
+        self.command, self.write, self.user, self.pwd, self.exit, self.test = command, write, user, pwd, exit, test
         if hostname is None:
             self.hostname = Config('hostname').get()
         else: self.hostname = hostname
@@ -59,7 +59,7 @@ class DoSql:
                 if mysql_status.find('failed') != -1 or mysql_status.find('could not be found') != -1:
                     return True
                 else: return False
-        whilecount, conntest_result = 0, False
+        whilecount, connection_test_result = 0, False
         while True:
             if systemd_check('ok') is False:
                 if whilecount > 0:
@@ -71,7 +71,7 @@ class DoSql:
             time_sleep(.5)
             whilecount += 1
         whilecount = 0
-        while conntest_result is False:
+        while connection_test_result is False:
             if whilecount == 1 and self.setuptype == 'agent':
                 debugger('owl - start |failing over to local db')
                 Log('Failing over to local read-only database').write()
@@ -90,27 +90,32 @@ class DoSql:
                     raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
                 else: return False
 
+            @lru_cache()
+            def connection_test(command):
+                return self._connect(command, connect_debug=False)
+
             if self.write is False:
                 if self.user == 'root':
-                    data = self._connect('SELECT * FROM mysql.help_category LIMIT 10;', connect_debug=False)
+                    data = connection_test('SELECT * FROM mysql.help_category LIMIT 10;')
                 else:
-                    data = self._connect('SELECT * FROM ga.Setting LIMIT 10;', connect_debug=False)
+                    data = connection_test('SELECT * FROM ga.Setting LIMIT 10;')
             else:
                 if self.user == 'root':
                     rand_db_nr = ''.join(random_choice('0123456789') for _ in range(20))
-                    self._connect("CREATE DATABASE test_%s;" % rand_db_nr, connect_debug=False)
-                    data = self._connect("DROP DATABASE test_%s;" % rand_db_nr, connect_debug=False)
+                    connection_test("CREATE DATABASE test_%s;" % rand_db_nr)
+                    data = connection_test("DROP DATABASE test_%s;" % rand_db_nr)
                 else:
-                    self._connect("INSERT IGNORE INTO ga.Setting (author, belonging, setting, data) VALUES ('owl', '%s', 'conntest', 'ok');"
-                                  % self.hostname, connect_debug=False)
-                    data = self._connect("DELETE FROM ga.Setting WHERE author = 'owl' and setting = 'conntest';", connect_debug=False)
+                    connection_test("INSERT IGNORE INTO ga.Setting (author, belonging, setting, data) VALUES "
+                                    "('owl', '%s', 'conntest', 'ok');" % self.hostname)
+                    data = connection_test("DELETE FROM ga.Setting WHERE author = 'owl' and setting = 'conntest';")
             debugger("owl - start |conntest output '%s' '%s'" % (type(data), data), level=2)
-            if type(data) == list or type(data) == str: conntest_result = True
-            elif type(data) == bool: conntest_result = data
-            else: conntest_result = False
-            debugger("owl - start |conntest result '%s' " % conntest_result)
+            if type(data) == list or type(data) == str: connection_test_result = True
+            elif type(data) == bool: connection_test_result = data
+            else: connection_test_result = False
+            debugger("owl - start |conntest result '%s' " % connection_test_result)
             whilecount += 1
-        return self._execute()
+        if not self.test: return self._execute()
+        else: return connection_test_result
 
     def _execute(self):
         debugger("owl - execute |command '%s' '%s'" % (type(self.command), self.command))
