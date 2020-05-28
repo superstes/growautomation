@@ -29,6 +29,7 @@ from core.smallant import VarHandler
 from core.smallant import process
 
 from time import sleep as time_sleep
+from time import perf_counter as time_counter
 
 
 class Balrog:
@@ -151,7 +152,7 @@ class Balrog:
         else: return dict(output)
 
     def _lock(self, device):
-        try_count, wait_time, max_try_count = 1, 10, 30
+        try_count, wait_time, max_try_count, start_time = 1, 10, 30, time_counter()
         # note: set config for wait time and timeout in db belonging to sensor_master
         while True:
             lock = VarHandler(name="lock_%s" % device).get()
@@ -162,14 +163,15 @@ class Balrog:
                     Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2).write()
                     return False
                 time_sleep(wait_time)
-                debugger("snake - lock |device %s waiting for lock for % seconds" % (device, wait_time * try_count))
+                if try_count % 3 == 0 or try_count % (max_try_count / 2) == 0:
+                    debugger("snake - lock |device %s waiting for lock for %.2f seconds" % (device, (time_counter() - start_time)))
             else: break
             try_count += 1
         try_count -= 1
         VarHandler(name="lock_%s" % device, data=1).set()
         self.lock_list.append(device)
         debugger("snake - lock |device %s locked" % device)
-        Log("Locked device '%s' (waited for ~%s sec)." % (device, wait_time * try_count), level=2).write()
+        Log("Locked device '%s' (waited for %.2f sec)." % (device, (time_counter() - start_time)), level=2).write()
         return True
 
     def _unlock(self, device):
