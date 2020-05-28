@@ -14,6 +14,13 @@ Version: 0.4
 - updating the installation script
 
 ## New features
+- version 0.4
+    - sensor data collection working
+    - designed and tested easy and clean way to wire sensors to controller
+      - connect vcc, gnd and data lines to a network patchpanel
+      - splitting connection via network hub (not switch!!)
+      - maximum 6 sensors per patchpanel port
+      <br> <img src="https://github.com/growautomation-at/controller/blob/master/manual/hardware/cable-management.png" float="middle" width="15%" height="15%" border="4" alt="cable management topology">
 - version 0.3
     - service to dynamically start sensor data-collection and action-checks in threads
     - rewriting the whole core modules to support dynamic configuration
