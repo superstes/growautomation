@@ -85,7 +85,7 @@ class VarHandler:
             else: data = str(data)
         elif type(data) == list and len(data) == 1:
             data = str(data[0])
-        self._debug("smallant - varhandler - tracker |output '%s' '%s'" % (type(data), data), skip_hard=True)
+        self._debug("smallant - varhandler - tracker |request '%s', output '%s' '%s'" % (self.name, type(data), data), skip_hard=True)
         return data
 
     def set(self):
@@ -128,7 +128,7 @@ class VarHandler:
             if type(action_list) == bool: return False
 
             def add_new_dummy(_count, _updated_list):
-                if _count > action_count:
+                if action_count > _count:
                     intern_count = 0
                     while True:
                         rand_nr, find = ''.join([random_choice('0123456789') for _ in range(4)]), False
@@ -143,6 +143,7 @@ class VarHandler:
                             _count += 1
                             return _count, _updated_list
                         intern_count += 1
+                else: return _count, _updated_list
 
             if self.action == 'set':
                 added, count = False, 1
@@ -211,18 +212,18 @@ class VarHandler:
             except (FileExistsError, KeyError):
                 try:
                     memory = ShareableList(name="ga_%s" % name)
-                    if len(memory) >= len(data_list):
+                    if len(data_list) > len(list(memory)):
+                        self._debug("smallant - varhandler - memory |set: cant update '%s' - too long" % name, name=name)
+                        self._debug("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
+                                    % (name, len(memory), len(data_list)), log=True, name=name)
+                        memory.shm.close()
+                    else:
                         for _ in range(len(memory)):
                             try:
                                 memory[_] = data_list[_]
                             except IndexError:
                                 memory[_] = None
                         self._debug("smallant - varhandler - memory |set: '%s' update successful" % name, name=name)
-                        memory.shm.close()
-                    else:
-                        self._debug("smallant - varhandler - memory |set: cant update '%s' - too long" % name, name=name)
-                        self._debug("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
-                                    % (name, len(memory), len(data_list)), log=True, name=name)
                         memory.shm.close()
                 except (IndexError, KeyError) as error:
                     self._debug("smallant - varhandler - memory |set: cant update '%s' - list handling error" % name, name=name)
