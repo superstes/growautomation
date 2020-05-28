@@ -14,6 +14,7 @@ User=growautomation
 Group=growautomation
 Restart=on-failure
 RestartSec=5s
+TimeoutStopSec=120s
 
 [Install]
 WantedBy=multi-user.target
