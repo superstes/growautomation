@@ -20,7 +20,7 @@ Version: 0.4
       - connect vcc, gnd and data lines to a network patchpanel
       - splitting connection via network hub (not switch!!)
       - maximum 6 sensors per patchpanel port
-      <br> <img src="https://github.com/growautomation-at/controller/blob/master/manual/hardware/cable-management.png" float="middle" width="50%" height="35%" border="4" alt="cable management topology">
+      <br> <img src="https://github.com/growautomation-at/controller/blob/master/manual/hardware/cable-management.png" float="middle" border="4" alt="cable management topology">
 - version 0.3
     - service to dynamically start sensor data-collection and action-checks in threads
     - rewriting the whole core modules to support dynamic configuration
