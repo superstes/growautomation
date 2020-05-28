@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# set python base path variable so the growautomation modules can be correctly imported:
+export PYTHONPATH=%PATH-TO-GA-ROOT%
+# p.e. export PYTHONPATH=/etc/growautomation
+
+# kill all running python processes
+pkill -f python
