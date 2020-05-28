@@ -38,7 +38,7 @@ class Workload(Thread):
         self.state_stop = Event()
 
     def stop(self):
-        debugger("threader - Thread(stop) |thread stopping '%s'" % self.name)
+        debugger("threader - Thread - stop |thread stopping '%s'" % self.name)
         self.state_stop.set()
         try:
             self.join()
@@ -48,20 +48,21 @@ class Workload(Thread):
     def run(self):
         try:
             Log("Starting thread '%s'" % self.name, level=4).write()
-            debugger("threader - Thread(run) |thread runtime '%s'" % self.name)
+            debugger("threader - Thread - run |thread runtime '%s'" % self.name)
             if self.once:
                 self.execute()
                 Loop.stop_thread(self.name)
             else:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
-                    debugger("threader - Thread(run) |thread starting '%s'" % self.name)
-                    self.execute(initiator=self.name, start=True)
                     if self.state_stop.isSet():
-                        debugger("threader - Thread(run) |thread exiting '%s'" % self.name)
+                        debugger("threader - Thread - run |thread exiting '%s'" % self.name)
                         Log("Exiting thread '%s'" % self.name, level=4).write()
                         break
+                    else:
+                        debugger("threader - Thread - run |thread starting '%s'" % self.name)
+                        self.execute(initiator=self.name, start=True)
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error:
-            debugger("threader - Thread(run) |thread '%s' error occurred: '%s'" % (self.name, error))
+            debugger("threader - Thread - run |thread '%s' error occurred: '%s'" % (self.name, error))
             Log("Stopping thread '%s' because the following error occurred: '%s'" % (self.name, error))
             self.stop()
 
@@ -79,7 +80,6 @@ class Loop:
                 if job.name == single_thread:
                     job.start()
             else:
-                debugger('threader - start |starting threads')
                 job.start()
         if daemon is False: self._block_root_process()
 
