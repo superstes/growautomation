@@ -40,7 +40,7 @@ def now(time_format):
     return datetime.now().strftime(time_format)
 
 
-date02, date03 = now("%Y"), now("%m")
+date_year, date_month = now("%Y"), now("%m")
 
 
 # Logs
@@ -48,8 +48,8 @@ class Log:
     def __init__(self, output, typ='core', level=1):
         self.typ, self.output, self.log_level = typ.lower(), output, level
         self.name = inspect_getfile((inspect_stack()[1])[0])
-        self.log_dir = "%s/%s/%s" % (Config('path_log').get(), self.typ, date02)
-        self.log_file = "%s/%s_%s.log" % (self.log_dir, date03, self.typ)
+        self.log_dir = "%s/%s/%s" % (Config('path_log').get(), self.typ, date_year)
+        self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.typ)
 
     def _censor(self):
         return False
@@ -63,7 +63,7 @@ class Log:
         else:
             if self.log_level > Config('log_level').get('int'): return False
         if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
-        with open("%s/%s_%s.log" % (self.log_dir, date03, self.typ), 'a') as logfile:
+        with open("%s/%s_%s.log" % (self.log_dir, date_month, self.typ), 'a') as logfile:
             logfile.write("%s - %s - %s\n" % (datetime.now().strftime("%H:%M:%S:%f"), self.name, self.output))
         return True
 
@@ -122,14 +122,15 @@ class VarHandler:
             action_list, updated_list, action_count = self._memory(name='share_action', action='get'), [], 25
             if action_list is False and self.action == 'set':
                 self._memory(name='share_action', action='set', data=['dummy_entry_%s' % nr for nr in range(action_count)])
+                action_list = self._memory(name='share_action', action='get')
                 if action_list is False: return False
                 else: action_list = self._memory(name='share_action', action='get')
             self._debug("smallant - varhandler - tracker |action_list '%s' '%s'" % (type(action_list), action_list))
             if type(action_list) == bool: return False
 
             def add_new_dummy(_count, _updated_list):
-                if action_count > _count:
-                    intern_count = 0
+                while action_count > _count:
+                    loop_count = 0
                     while True:
                         rand_nr, find = ''.join([random_choice('0123456789') for _ in range(4)]), False
                         for action in _updated_list:
@@ -137,24 +138,28 @@ class VarHandler:
                         if find is False:
                             _updated_list.append('dummy_new_%s' % rand_nr)
                             _count += 1
-                            return _count, _updated_list
-                        if intern_count > 5:
+                            break
+                        if loop_count > 5:
                             _updated_list.append('dummy_new_0')
                             _count += 1
-                            return _count, _updated_list
-                        intern_count += 1
-                else: return _count, _updated_list
+                            break
+                        loop_count += 1
+                return _count, _updated_list
 
             if self.action == 'set':
                 added, count = False, 1
-                for action in action_list:
-                    if action.find('dummy') == -1:
-                        updated_list.append(action)
-                    elif not added:
-                        updated_list.append(self.name)
-                        added = True
-                    else: updated_list.append(action)
-                    count += 1
+                if self.name not in action_list:
+                    for action in action_list:
+                        if action.find('dummy') == -1:
+                            updated_list.append(action)
+                        elif not added:
+                            updated_list.append(self.name)
+                            added = True
+                        else: updated_list.append(action)
+                        count += 1
+                else:
+                    count = len(action_list)
+                    updated_list = action_list
                 count, updated_list = add_new_dummy(count, updated_list)
             elif self.action == 'clean':
                 count, custom_count = 1, 0
