@@ -66,10 +66,12 @@ def self_compiled():
     print('#' * (int(shellwidth) - 1))
     print("This process may take over an hour.\nDO NOT INTERUPT THIS PROCESS.\n")
     print('-' * (int(shellwidth) - 1))
-    background = input("Do you want to run the compiler in the background?\nOtherwise it will stop if you logoff. (Type 'yes' or anykey)")
+    background = input("Do you want to run the compiler in the background?\n"
+                       "Otherwise it will stop if you logoff or the ssh connection is lost. (Type 'yes' or anykey)")
     if background == 'yes':
         os_system("nohup /bin/bash %s/compile_python3.8.sh &" % repo_path)
-        os_system('disown')
+        os_system("/bin/bash disown")
+        os_system("/bin/bash tail -f nohup.out")
     else:
         os_system("/bin/bash %s/compile_python3.8.sh" % repo_path)
     default_python()
