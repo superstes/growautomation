@@ -26,14 +26,14 @@ from core.smallant import Log
 from core.ant import ShellOutput
 from core.smallant import debugger
 from core.smallant import VarHandler
-from core.smallant import process
 
 from systemd import journal as systemd_journal
 from time import sleep as time_sleep
+from time import perf_counter as time_counter
 from sys import argv as sys_argv
 from os import getpid as os_getpid
 from sys import exc_info as sys_exc_info
-from multiprocessing import Process as MP_Process
+from multiprocessing import Process
 import signal
 
 Threader = Loop()
@@ -80,6 +80,7 @@ class Service:
 
     def start(self):
         VarHandler(name='init', data=1).set()
+        VarHandler(name='service_stop', data=0).set()
         try:
             if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()
         except (IndexError, NameError): pass
@@ -92,25 +93,53 @@ class Service:
 
                 @Threader.thread(int(interval), thread_name)
                 def thread_function(initiator=None, start=False):
-                    debugger("service - start - thread |'%s'" % initiator)
-                    Log("Starting function '%s' for object %s." % (function, initiator), level=4).write()
+                    debugger("service - thread_function |'%s'" % initiator)
                     if initiator.find('sensor') != -1:
-                        debugger("service - start - thread |'%s' using sensor module" % initiator)
+                        debugger("service - thread_function |'%s' using sensor module" % initiator)
                         from core.snake import Balrog
-                        work = MP_Process(target=Balrog(initiator).start())
-                        if start:
-                            work.start()
-                            work.join()
-                        return True
+                        function = Balrog(initiator).start
                     elif initiator.find('check') != -1:
-                        debugger("service - start - thread |'%s' using check module" % initiator)
+                        debugger("service - thread_function |'%s' using check module" % initiator)
                         return False
-                        # from core.parrot import ThresholdCheck
-                        # work = MP_Process(target=ThresholdCheck(initiator).start())
-                        # if start:
-                        #     work.start()
-                        #     work.join()
-                        # return True
+                        # from core.parrot import ThresholdCheck.start
+                        # function = ThresholdCheck(initiator)
+                    elif initiator.find('backup') != -1:
+                        debugger("service - thread_function |'%s' using backup module" % initiator)
+                        return False
+                        # from core.backup import Backup
+                        # function = Backup(initiator)
+                    try:
+                        work = Process(target=function)
+                        if start:
+                            debugger("service - thread_function |'%s' starting process" % initiator)
+                            Log("Starting process for object '%s'" % initiator, level=4).write()
+                            work.start()
+                            count = 0
+                            while True:
+                                if not work.is_alive():
+                                    work.join()
+                                    debugger("service - thread_function |'%s' process shutdown gracefully" % initiator)
+                                    return True
+                                elif count > 30:
+                                    debugger("service - thread_function |'%s' process timeout" % initiator)
+                                    Log("Stopping process for object '%s' because of timeout" % initiator, level=1).write()
+                                    work.terminate()
+                                    work.join()
+                                    return False
+                                else:
+                                    _ = VarHandler(name='service_stop').get()
+                                    if _ == '1' or _ is False:
+                                        debugger("service - thread_function |'%s' process termination" % initiator)
+                                        Log("Stopping process for object '%s' because service termination" % initiator, level=2).write()
+                                        work.terminate()
+                                        work.join()
+                                        return False
+                                time_sleep(5)
+                                count += 1
+                    except (ValueError, NameError, UnboundLocalError, AttributeError):
+                        debugger("service - thread_function |'%s' action '%s', invalid function to process '%s - %s'"
+                                 % (initiator, 'start' if start else 'init', type(function), function))
+                        return False
             Threader.start()
             systemd_journal.write('Finished starting service.')
             self.status()
@@ -142,6 +171,16 @@ class Service:
         systemd_journal.write('Finished configuration reload.')
         self.status()
 
+    def _wait_timer(self, time: int, interval=5):
+        count, start_time = 1, time_counter()
+        while True:
+            if count >= time:
+                return True
+            elif count % interval == 0:
+                debugger("service - wait_timer |waited for %.2f seconds" % (time_counter() - start_time))
+            time_sleep(1)
+            count += 1
+
     def stop(self, signum=None, stack=None):
         debugger('service - stop |stopping')
         Log('Stopping service', level=1).write()
@@ -153,9 +192,14 @@ class Service:
             except AttributeError:
                 debugger("service - stop |got signal %s" % signum)
                 Log("Service received signal %s" % signum)
-        VarHandler().stop()
+        debugger('service - stop |stopping threads')
         Threader.stop()
-        time_sleep(10)
+        self._wait_timer(10)
+        debugger('service - stop |setting process stop-var')
+        VarHandler(name='service_stop', data=1).set()
+        self._wait_timer(30)
+        debugger('service - stop |cleaning memory vars + disabling debug output')
+        VarHandler().stop()
         self.init_exit = True
         systemd_journal.write('Service stopped.')
         self._exit()
@@ -178,10 +222,10 @@ class Service:
     def _run(self):
         debugger('service - run |entering runtime')
         try:
-            while_count, tired_time = 0, 300
+            while_count, tired_time, start_time = 0, 300, time_counter()
             while True:
                 while_count += 1
-                debugger("service - run |loop count %s, loop runtime %s, pid %s" % (while_count, tired_time * (while_count - 1), os_getpid()))
+                debugger("service - run |loop count %s, loop runtime %.2f, pid %s" % (while_count, (time_counter() - start_time), os_getpid()))
                 if while_count == 288:
                     self.reload()
                     while_count = 0
