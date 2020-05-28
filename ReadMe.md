@@ -4,16 +4,25 @@ Making it easier and optimizing the process.
 
 And provide code samples to the diy community.
 
+## Contact information
+If you..
+- want to contribute to this project
+- have found bugs
+- miss information of how to use it 
+<br> contact us at contact@growautomation.at
+## Version information
+
 __The code is currently not in a stable state !__
 
 Version: 0.4
 
-## Currently active projects
-- rewriting setup script to use core modules
+### Currently active
 - writing installation manual
+- writing documentation
+- updating and testing action-master module
 - updating the installation script
 
-## New features
+### New features
 - version 0.4
     - sensor data collection working
     - designed and tested easy and clean way to wire sensors to controller
@@ -28,11 +37,10 @@ Version: 0.4
     - device sectors for limit actions to a physical area
     - linking of sensor and action devicetypes for easy action management
 
-## On hold projects
-- designing a clean plug&play alternative for connecting sensors
+### On hold 
 - documenting server installation on intel nuc
 
-## Future projects
+### Future features
 - creating a troubleshooing script to gather error logs
 - implement server/agent cofiguration
 - webserver for observation and manual actions
