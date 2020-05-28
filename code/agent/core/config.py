@@ -44,16 +44,23 @@ class Config:
         output = FileConfig(self.setting).get() if self.setting in parse_file_list else self._parse_failover() if self.setting in parse_failover_list else \
             self._parse_sql_custom() if self.nosql is False else self._error('all')
         if outtype is not None:
-            if outtype == 'list' and type(output) != list:
-                output = [output]
-            elif outtype == 'str' and type(output) != str:
+            try:
+                if outtype == 'list' and type(output) != list:
+                    output = [output]
+                elif outtype == 'str' and type(output) != str:
+                    output = str(output)
+                elif outtype == 'int':
+                    output = int(output)
+                elif outtype == 'dict':
+                    output = dict(output)
+            except ValueError:
                 output = str(output)
         debugger("config - get - output |'%s' '%s'" % (type(output), output))
         return self._error('sql') if output is False else output
 
     def _error(self, parser_type):
         if self.empty: return False
-        Log("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting)).write()
+        Log("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.setting)).write()
         if self.exit:
             raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
 
