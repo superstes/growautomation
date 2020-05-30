@@ -128,7 +128,7 @@ class VarHandler:
             self._debug("smallant - varhandler - tracker |action_list '%s' '%s'" % (type(action_list), action_list))
             if type(action_list) == bool: return False
 
-            def add_new_dummy(_count, _updated_list):
+            def add_new_dummy(_count, _updated_list, once=False):
                 while action_count > _count:
                     loop_count = 0
                     while True:
@@ -144,6 +144,7 @@ class VarHandler:
                             _count += 1
                             break
                         loop_count += 1
+                    if once: break
                 return _count, _updated_list
 
             if self.action == 'set':
@@ -165,7 +166,7 @@ class VarHandler:
                 count, custom_count = 1, 0
                 for action in action_list:
                     if action == self.name:
-                        count, updated_list = add_new_dummy(count, updated_list)
+                        count, updated_list = add_new_dummy(count, updated_list, once=True)
                     else:
                         updated_list.append(action)
                         custom_count += 1
@@ -177,11 +178,11 @@ class VarHandler:
                 self._memory(name='share_action', action='clean')
                 return True
 
+            self._debug("smallant - varhandler - tracker |updated_list '%s' '%s'" % (type(updated_list), updated_list))
             self._memory(name='share_action', action='set', data=updated_list)
             if self.action == 'clean' and custom_count == 0:
                 self._memory(name='share_action', action='clean')
                 return True
-
         return self._memory()
 
     def _memory(self, action=None, name=None, data=None):
