@@ -30,6 +30,7 @@ from core.smallant import process
 
 from time import sleep as time_sleep
 from time import perf_counter as time_counter
+from sys import argv as sys_argv
 
 
 class Balrog:
@@ -52,7 +53,8 @@ class Balrog:
         device_list, self.own_dt = [], self.sensor
         # check all for loops if they will break if only one element is in list -> find clean solution
         for device in Config(output='name', table='object', filter="class = '%s'" % self.sensor).get('list'):
-            if not Config(setting='timer', belonging=device, empty=True).get() and Config(setting='enabled', belonging=device).get() == '1':
+            if not Config(setting='timer', belonging=device, empty=True).get() and Config(setting='enabled',
+                                                                                          belonging=device).get() == '1':
                 device_list.append(device)
         for device in device_list:
             if device in self.processed_list: continue
@@ -64,7 +66,7 @@ class Balrog:
         # if device => self.sensor doesn't need to check if enabled since it was already checked when accepting the timer
         connection = Config(setting='connection', belonging=device).get()
         if connection == 'direct':
-            output = self._start(device)
+            output = self._work(device)
             debugger("snake - device |direct |output '%s'" % output)
             self._write_data(device, output)
         elif connection == 'downlink': self._downlink(device, Config(setting='downlink', belonging=device).get())
@@ -80,7 +82,8 @@ class Balrog:
         type_opp = Config(setting='output_per_port', belonging=devicetype).get()
 
         def _get_setting_dict():
-            type_setting, setting = Config(output="setting,data", belonging=devicetype).get(), Config(output="setting,data", belonging=downlink).get()
+            type_setting, setting = Config(output="setting,data", belonging=devicetype).get(), \
+                                    Config(output="setting,data", belonging=downlink).get()
             setting_dict, type_setting_dict = {}, {}
             for setting, data in setting: setting_dict[setting] = data
             for setting, data in type_setting:
@@ -91,7 +94,7 @@ class Balrog:
         if type_opp == '1':
             sensor_dict = {device: Config(setting='port', belonging=device).get()}
             debugger("snake - downlink |opp 1 |input '%s'" % sensor_dict)
-            output = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
+            output = self._work(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
             debugger("snake - downlink |opp 1 |output '%s'" % output)
             self._write_data(device, output)
         elif type_opp == '0':
@@ -111,7 +114,7 @@ class Balrog:
                         # portlist in dict will start at 0 => throw it into the docs
                 sensor_dict = {key: value for key, value in sorted(sensor_dict.items(), key=lambda item: item[1])}
             debugger("snake - downlink |opp 0 |input '%s'" % sensor_dict)
-            output_dict = self._start(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
+            output_dict = self._work(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
             debugger("snake - downlink |opp 0 |output '%s'" % output_dict)
             for sensor, data in output_dict.items():
                 if sensor in self.processed_list: self._write_data(sensor, data)
@@ -119,7 +122,7 @@ class Balrog:
             # if not opp -> output must be dict with sensor as key and data as value
         else: return False
 
-    def _start(self, device, device_mapping_dict=None, setting_dict=None):
+    def _work(self, device, device_mapping_dict=None, setting_dict=None):
         if device_mapping_dict is None: self.processed_list.extend(device)
         else:
             for device in device_mapping_dict.keys():
@@ -132,24 +135,78 @@ class Balrog:
         devicetype_class = Config(output='class', table='object', setting=self.own_dt).get()
 
         function_path = "%s/%s/%s" % (Config(setting='path_root').get(), devicetype_class, function)
-        Log("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'"
-            % (function_path, device, device_mapping_dict, setting_dict), level=4).write()
-        # need to lookup python bin path dynamically
-        debugger("snake - start |/usr/bin/python3.8 %s %s %s %s %s" %
-                 (function_path, port, device_mapping_dict, setting_dict, custom_arg))
-        output, error = process("/usr/bin/python3.8 %s %s %s %s %s" %
-                                (function_path, port, device_mapping_dict, setting_dict, custom_arg), out_error=True)
-        Log("Function '%s' was processed for device %s.\nOutput '%s'" % (function_path, device, output), level=3).write()
-        debugger("snake - start |output by processing %s '%s'" % (device, output))
-        if error != '':
-            Log("Error by executing %s:\n'%s'" % (device, error), level=1).write()
-            debugger("snake - start |error by executing %s '%s'" % (device, error))
-        if output == '' or output is None or output.find('debug') != -1:
-            Log("Error - output for device %s is empty or error.\nOutput: '%s'" % (device, output), level=1)
-            return None
+        output = self._get_data(device=device, func_arg1=function_path, func_arg2=port, func_arg3=device_mapping_dict,
+                                func_arg4=setting_dict, func_arg5=custom_arg)
         self._unlock(device)
         if device_mapping_dict is None: return output
         else: return dict(output)
+
+    def _get_data(self, device, func_arg1, func_arg2, func_arg3, func_arg4, func_arg5):
+        Log("Starting function %s for device %s.\nInput data:\nDevice mapping '%s'\nSettings '%s'\nCustom argument '%s'"
+            % (func_arg1, func_arg2, func_arg3, func_arg4, func_arg5), level=4).write()
+        # need to lookup python bin path dynamically
+        debugger("snake - start |/usr/bin/python3.8 %s %s %s %s %s" %
+                 (func_arg1, func_arg2, func_arg3, func_arg4, func_arg5))
+        try_count, max_retries = 1, 3
+        check_last_data = True
+        while True:
+            if check_last_data:
+                if try_count >= max_retries:
+                    debugger("snake - start |'%s' error - max retries reached " % device)
+                    Log("Error by executing %s:\n'max retries reached'" % device, level=1).write()
+                    return None
+            output, error = process("/usr/bin/python3.8 %s %s %s %s %s" % (func_arg1, func_arg2, func_arg3,
+                                                                           func_arg4, func_arg5), out_error=True)
+            Log("Function '%s' was processed for device %s.\nOutput '%s'" % (func_arg1, device, output), level=3).write()
+            debugger("snake - start |output by processing '%s' '%s'" % (device, output))
+            if error != '':
+                Log("Error by executing %s:\n'%s'" % (device, error), level=1).write()
+                debugger("snake - start |'%s' error by executing: '%s'" % (device, error))
+            if output == '' or output is None or output.find('debug') != -1 or output == 'error':
+                debugger("snake - start |'%s' error - output is not acceptable: '%s'" % (device, output))
+                Log("Error - output for device %s is empty or error.\nOutput: '%s'" % (device, output), level=2)
+            if check_last_data:
+                output_status = self._output_check(data=output, device=device)
+                debugger("snake - start |'%s' output_check status: '%s'" % (device, output_status))
+                if output_status is None: break
+                elif output_status is True: break
+                else: try_count += 1
+            else: break
+        return output
+
+    def _output_check(self, data, device):
+        count_last_data_checked, min_change_percent, max_change_percent = 5, -50, 50
+        data_is_digit = data.replace('.', '').isdigit()
+        if data_is_digit:
+            try:
+                last_data_list = Config(setting=Config('hostname').get(), table='data',
+                                        filter="device = '%s' order by created desc limit %s" %
+                                               (device, count_last_data_checked)).get('list')
+            except SystemExit: return None
+            debugger("snake - start |'%s' last data list: '%s'" % (device, last_data_list))
+            try:
+                if len(last_data_list) < 2:
+                    data_base_avg = float(last_data_list[0])
+                    data_base_percentage = 100 / data_base_avg
+                else:
+                    list_sum = float(0)
+                    for value in last_data_list:
+                        list_sum += float(value)
+                    data_base_avg = list_sum / float(len(last_data_list))
+                    data_base_percentage = 100 / data_base_avg
+                data_change_percent = 100 - float(data) * float(data_base_percentage)
+            except ValueError: return None
+            debugger("snake - start |'%s' data change: old_list '%s', new '%s', percent: '%.2f'"
+                     % (device, last_data_list, data, data_change_percent))
+            if data_change_percent < min_change_percent or data_change_percent > max_change_percent:
+                debugger("snake - start |'%s' error - output data change is not in acceptable range\n"
+                         "data before '%s', now '%s', change in percent '%.2f', min change '%s', max change '%s'"
+                         % (device, data_base_avg, data, data_change_percent, min_change_percent, max_change_percent))
+                Log("Error - output change for device %s is not in acceptable range\n"
+                    "Average data before '%s', now '%s', change in percent '%.2f' (min change '%s', max change '%s')"
+                    % (device, data_base_avg, data, data_change_percent, min_change_percent, max_change_percent), level=2)
+            else: return True
+            return False
 
     def _lock(self, device):
         try_count, wait_time, max_try_count, start_time = 1, 10, 30, time_counter()
@@ -160,7 +217,8 @@ class Balrog:
             elif int(lock) == 1:
                 if try_count > max_try_count + 1:
                     debugger("snake - lock |device %s reached max retries -> giving up to get lock" % device)
-                    Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." % (device, wait_time * try_count), level=2).write()
+                    Log("Unable to get lock for device '%s' in time. Timeout (%s sec) reached." %
+                        (device, wait_time * try_count), level=1).write()
                     return False
                 time_sleep(wait_time)
                 if try_count % 3 == 0 or try_count % (max_try_count / 2) == 0:
@@ -175,17 +233,26 @@ class Balrog:
         return True
 
     def _unlock(self, device):
-        VarHandler(name="lock_%s" % device, data=0).clean()
+        VarHandler(name="lock_%s" % device).clean()
         self.lock_list.remove(device)
         debugger("snake - unlock |device %s unlocked" % device)
         Log("Unlocked device '%s'." % device, level=2).write()
         return True
 
     def _write_data(self, device, data):
-        if data == '' or data is None:
+        if data == '' or data is None or data == 'error':
             Log("Output data is empty")
             return False
         else:
-            sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" % (Config('hostname').get(), data, device), write=True).start()
+            sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" %
+                        (Config('hostname').get(), data, device), write=True).start()
             Log("Wrote data for device '%s' to database. Output: '%s'" % (device, sql), level=4).write()
             return sql
+
+
+if __name__ == '__main__':
+    try:
+        sensor = sys_argv[1]
+    except (IndexError, NameError):
+        raise SystemExit('No sensor provided')
+    Balrog(sensor).start()
