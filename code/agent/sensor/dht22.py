@@ -24,6 +24,7 @@
 from core.smallant import Log
 
 from sys import argv as sys_argv
+from time import sleep as time_sleep
 
 import Adafruit_DHT
 
@@ -34,6 +35,8 @@ def LogWrite(output: str, level=3):
 
 try:
     port, argument = sys_argv[1], sys_argv[4]
+    arg_var_1, arg_var_2 = 'humidity', 'temperature'
+    arg_var_list = [arg_var_1, arg_var_2]
 except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
     raise SystemExit
@@ -47,6 +50,7 @@ except (IndexError, ValueError): pass
 
 class Device:
     def __init__(self):
+        LogWrite("Processing device '%s'" % argument, level=3)
         self.data = self._get_data()
         if not device_mapping: self.output_dict = False
         else: self.output_dict = True
@@ -54,19 +58,42 @@ class Device:
     def start(self):
         if self.output_dict: self._data_mapping()
         print("%.2f" % self.data)
-        LogWrite('Data was delivered.', level=4)
+        LogWrite("Data for device '%s' was delivered: '%s'." % (argument, self.data), level=4)
         raise SystemExit
 
     def _data_mapping(self):
         self.data = zip(device_mapping_dict.keys(), list(self.data))
 
     def _get_data(self):
-        if argument != 'humidity' and argument != 'temperature':
-            raise ValueError("Argument (sys-arg#4) must be either 'humidity' or 'temperature'!")
-        humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, port)
-        if argument == 'humidity': return humidity
-        elif argument == 'temperature': return temperature
-        else: Log('Input Error: Either define humidity or temperature').write()
+        if argument not in arg_var_list:
+            LogWrite("Argument (sys-arg#4) must be one of the following: '%s'" % arg_var_list, level=2)
+            raise SystemExit
+        loop_count, max_retries = 1, 3
+        while True:
+            def error_check(data, max, min):
+                if data is None:
+                    LogWrite("Device '%s' - output error - data is none" % argument, level=2)
+                elif max > float(data) > min: return True
+                else:
+                    LogWrite("Device '%s' - output error - not in acceptable range - data '%s', max '%s', min '%s'"
+                             % (argument, data, max, min), level=2)
+                return False
+
+            if loop_count >= max_retries:
+                LogWrite("Device '%s' - repeated error - max retries reached" % argument, level=1)
+                raise SystemExit('error')
+
+            humidity, temperature = Adafruit_DHT.read_retry(sensor=Adafruit_DHT.DHT22, pin=port, retries=3, delay_seconds=2)
+
+            if argument == arg_var_1:
+                if error_check(data=humidity, max=100, min=1) is True:
+                    return humidity
+            elif argument == arg_var_2:
+                if error_check(data=temperature, max=80, min=-15) is True:
+                    return temperature
+
+            time_sleep(3)
+            loop_count += 1
 
 
 Device().start()
