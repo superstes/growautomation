@@ -69,7 +69,7 @@ If the child-device has a specific configuration for this setting -> this overri
 Defines if the object will be processed or ignored by the core modules. <br>
 If a devicetype is disabled, none of its child-devices will be processed. <br>
 <br>
-Options:
+Options: <br>
   * 1 <br>
   Enables object.
   * 0 <br>
@@ -79,7 +79,7 @@ Options:
 * connection <i>(devicetype/device)</i> <br>
 Sets the way of how the controller can communicate to the sensor device. <br>
 <br>
-Options:
+Options: <br>
   * direct <br>
   The device is directly connected to the raspberry gpio pins
   * downlink <br>
@@ -119,7 +119,7 @@ If the connection of the device was set to 'downlink' -> an existing downlink-de
 * connection <i>(devicetype/device)</i> <br>
 Sets the way of how the controller can communicate to the sensor device. <br>
 <br>
-Options:
+Options: <br>
   * direct <br>
   The device is directly connected to the raspberry gpio pins
   * downlink <br>
@@ -140,7 +140,7 @@ It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
 * boomerang <i>(devicetype)</i> <br>
 Defines if the action must be actively reversed. <br>
 <br>
-Options:
+Options: <br>
   * 1 <br>
   Yes.
   * 0 <br>
@@ -149,7 +149,7 @@ Options:
 * boomerang_type <i>(devicetype)</i> <br>
 Indicates how it is decided when the action will be carried out. <br>
 <br>
-Options:
+Options: <br>
   * time <br>
   The reverse-action will be started after the given time.
   * threshold <br>
@@ -176,7 +176,7 @@ The count of ports provided by each downlink of this type. <br>
 Only relevant if sensors are connected via this type of downlink. <br>
 Defines if the downlink function can output data per port. <br>
 <br>
-Options:
+Options: <br>
   * 1 <br>
   The downlink function will output data per port <i>(outputs single string of data)</i>
   * 0 <br>
