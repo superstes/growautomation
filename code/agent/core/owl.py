@@ -39,8 +39,10 @@ from functools import lru_cache
 
 
 class DoSql:
-    def __init__(self, command=None, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None, test=False):
+    def __init__(self, command=None, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None, test=False,
+                 local_debug=None):
         self.command, self.write, self.user, self.pwd, self.exit, self.test = command, write, user, pwd, exit, test
+        self.local_debug = local_debug
         if hostname is None:
             self.hostname = Config('hostname').get()
         else: self.hostname = hostname
@@ -48,6 +50,12 @@ class DoSql:
             self.setuptype = Config('setuptype').get()
         else: self.setuptype = setuptype
         self.fallback = False
+
+    def _debug(self, output, level=1):
+        if self.local_debug is None or self.local_debug is True:
+            debugger(command=output, level=level)
+        elif self.local_debug is False:
+            return False
 
     def start(self):
         def systemd_check(typ):
@@ -64,7 +72,7 @@ class DoSql:
             if systemd_check('ok') is False:
                 if whilecount > 0:
                     if systemd_check('dead') is True: return False
-                debugger('owl - start |mysql not running')
+                self._debug('owl - start |mysql not running')
                 process('systemctl start mysql.service')
             else: break
             if whilecount > 2: break
@@ -73,7 +81,7 @@ class DoSql:
         whilecount = 0
         while connection_test_result is False:
             if whilecount == 1 and self.setuptype == 'agent':
-                debugger('owl - start |failing over to local db')
+                self._debug('owl - start |failing over to local db')
                 Log('Failing over to local read-only database').write()
                 self.fallback = True
             if self.fallback is True and self.write is True:
@@ -85,9 +93,11 @@ class DoSql:
                 else: return False
 
             if whilecount > 2:
-                Log("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.").write()
+                Log("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql "
+                    "login credentials.").write()
                 if self.exit:
-                    raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for correct sql login credentials.")
+                    raise SystemExit("Error connecting to database. Check content of %ga_root/core/core.conf file for "
+                                     "correct sql login credentials.")
                 else: return False
 
             @lru_cache()
@@ -108,17 +118,17 @@ class DoSql:
                     connection_test("INSERT IGNORE INTO ga.Setting (author, belonging, setting, data) VALUES "
                                     "('owl', '%s', 'conntest', 'ok');" % self.hostname)
                     data = connection_test("DELETE FROM ga.Setting WHERE author = 'owl' and setting = 'conntest';")
-            debugger("owl - start |conntest output '%s' '%s'" % (type(data), data), level=2)
+            self._debug("owl - start |conntest output '%s' '%s'" % (type(data), data), level=2)
             if type(data) == list or type(data) == str: connection_test_result = True
             elif type(data) == bool: connection_test_result = data
             else: connection_test_result = False
-            debugger("owl - start |conntest result '%s' " % connection_test_result)
+            self._debug("owl - start |conntest result '%s' " % connection_test_result)
             whilecount += 1
         if not self.test: return self._execute()
         else: return connection_test_result
 
     def _execute(self):
-        debugger("owl - execute |command '%s' '%s'" % (type(self.command), self.command))
+        self._debug("owl - execute |command '%s' '%s'" % (type(self.command), self.command))
         if type(self.command) == str:
             return self._connect()
         elif type(self.command) == list:
@@ -133,7 +143,7 @@ class DoSql:
     def _check_config(self, setting):
         output = Config(setting).get()
         if output is False:
-            debugger("owl - config_check |unable to get value for setting '%s'" % setting)
+            self._debug("owl - config_check |unable to get value for setting '%s'" % setting)
             Log("Unable to obtain value for setting '%s' - exiting sql connection").write()
             raise ValueError
         else:
@@ -163,7 +173,7 @@ class DoSql:
                                                        passwd="%s" % self._check_config('sql_admin_pwd'))
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
-            if connect_debug: debugger("owl - connect |command '%s' '%s'" % (type(command), command))
+            if connect_debug: self._debug("owl - connect |command '%s' '%s'" % (type(command), command))
             if self.write is False:
                 @lru_cache()
                 def readcache(doit):
@@ -183,10 +193,10 @@ class DoSql:
                 data = True
             cursor.close()
             connection.close()
-            if connect_debug: debugger("owl - connect |output '%s' '%s'" % (type(data), data))
+            if connect_debug: self._debug("owl - connect |output '%s' '%s'" % (type(data), data))
             return data
         except (mysql.connector.Error, mysql.connector.errors.InterfaceError, ValueError) as error:
-            debugger("owl - connect |error '%s'" % error)
+            self._debug("owl - connect |error '%s'" % error)
             try:
                 connection.rollback()
             except UnboundLocalError: pass
@@ -205,7 +215,7 @@ class DoSql:
         except IndexError: return False
 
     def find(self, searchfor):
-        debugger("owl - find |input '%s' '%s' '%s'" % (type(searchfor), searchfor, self.command))
+        self._debug("owl - find |input '%s' '%s' '%s'" % (type(searchfor), searchfor, self.command))
         if type(self.command) == str:
             data = str(self._execute())
             output = data.find(searchfor)
@@ -213,7 +223,7 @@ class DoSql:
             output, sqllist = -1, self._execute()
             for x in sqllist:
                 if x.find(searchfor) != -1: output +=1
-        debugger("owl - find |output '%s' '%s'" % (type(output), output))
+        self._debug("owl - find |output '%s' '%s'" % (type(output), output))
         return output
 
 
