@@ -164,9 +164,11 @@ class Create:
                     reverse_function = ShellInput('Does reversing need an other function?', default=False).get()
                     if reverse_function:
                         setting_dict['boomerang_function'] = ShellInput('Provide the name of the function.',
-                                                                        default="%s.py" % name, intype='free', max_value=50).get()
-                        setting_dict['function_arg'] = ShellInput('Provide system arguments to pass to the reverse function -> '
-                                                                  'if you need it.', intype='free', min_value=0, max_value=75).get()
+                                                                        default="%s.py" % name, intype='free', min_value=0,
+                                                                        max_value=50).get()
+                        setting_dict['boomerang_function_arg'] = ShellInput('Provide system arguments to pass to the reverse function '
+                                                                            '-> if you need it.', intype='free', min_value=0,
+                                                                            max_value=75).get()
             elif dt_object_dict[name] == 'sensor':
                 setting_dict['timer'] = ShellInput('Provide the interval to run the function in seconds.',
                                                    default=600, max_value=1209600, min_value=10).get()
@@ -215,26 +217,29 @@ class Create:
                                                poss=list(self.current_dt_dict.keys())).get()
                 if to_ask != 'downlink':
                     if create_dict[name] in self.new_dt_dict.keys():
-                        dt_conntype = [data for obj, nested in self.setting_dict.items() if obj == create_dict[name] for setting, data in dict(nested).items() if setting == 'connection'][0]
+                        dt_conntype = [data for obj, nested in self.setting_dict.items() if obj == create_dict[name]
+                                       for setting, data in dict(nested).items() if setting == 'connection'][0]
                     elif self.setup is False: dt_conntype = self.Config(setting='connection', belonging=create_dict[name]).get()
                     else: dt_conntype = 'specific'
                     debugger("confint - create_device |dt_conntype '%s'" % dt_conntype)
                     if dt_conntype != 'specific': setting_dict['connection'] = dt_conntype
                     else: setting_dict['connection'] = ShellInput("How is the device connected to the growautomation agent?\n"
-                                                                  "Info: 'downlink' => pe. analog to serial converter, 'direct' => gpio pin",
-                                                                  default='direct', poss=['downlink', 'direct']).get()
+                                                                  "Info: 'downlink' => pe. analog to serial converter, 'direct' => "
+                                                                  "gpio pin", default='direct', poss=['downlink', 'direct']).get()
 
                     if setting_dict['connection'] == 'downlink':
                         setting_dict['downlink'] = ShellInput("Provide the name of the downlink to which the device is connected to.\n"
                                                               "Info: the downlink must also be added as device",
                                                               default=str(random_choice(d_dl_list)), poss=d_dl_list).get()
                         if setting_dict['downlink'] == 'notinlist':
-                            setting_dict['downlink'] = ShellInput("Provide the exact name of the downlink-device to which this device is connected to.\n"
-                                                                  "Info: You will need to add this downlink-device in the next run of this config_interface.\n"
-                                                                  "Warning: If you misconfigure this connection the current %s will not work properly!" % to_ask,
-                                                                  default='ads1115', intype='free').get()
+                            setting_dict['downlink'] = ShellInput("Provide the exact name of the downlink-device to which this device "
+                                                                  "is connected to.\nInfo: You will need to add this downlink-device "
+                                                                  "in the next run of this config_interface.\nWarning: If you "
+                                                                  "misconfigure this connection the current %s will not work properly!"
+                                                                  % to_ask, default='ads1115', intype='free').get()
                 # check how many ports are already connected minus the max dl ports -> poss/no-poss
-                setting_dict['port'] = ShellInput('Provide the portnumber to which the device is/will be connected.', intype='free', min_value=1).get()
+                setting_dict['port'] = ShellInput('Provide the portnumber to which the device is/will be connected.', intype='free',
+                                                  min_value=1).get()
                 self.setting_dict[name] = setting_dict
                 self.current_obj_list.append(name)
                 debugger("confint - create_device |settings '%s'" % setting_dict)
@@ -511,6 +516,7 @@ class Edit:
         ShellOutput("This option isn't supported yet.")
         raise SystemExit
         # need to check dependencies -> add with new name and update settings+dependencies -> after that delete the old named obj
+        # need to extend optional character blacklist for objects -> no whitespace etc.
 
 
 def show():
