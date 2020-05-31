@@ -22,6 +22,7 @@
 # sensor function for adafruit dht22
 
 from core.smallant import Log
+from core.data_check import Check
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep
@@ -34,17 +35,19 @@ def LogWrite(output: str, level=3):
 
 
 try:
-    port, argument = sys_argv[1], sys_argv[4]
+    LogWrite("System argument 1 '%s'" % sys_argv[1], level=4)
+    for _1, _2 in eval(sys_argv[1]).items():
+        device, port = _1, _2
+    LogWrite("System argument 3 '%s'" % sys_argv[3], level=4)
+    argument = sys_argv[3]
     arg_var_1, arg_var_2 = 'humidity', 'temperature'
     arg_var_list = [arg_var_1, arg_var_2]
 except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
     raise SystemExit
 try:
-    device_mapping_dict = dict(sys_argv[2])
-except (IndexError, ValueError): device_mapping = False
-try:
-    setting_dict = dict(sys_argv[3])
+    LogWrite("System argument 2 '%s'" % sys_argv[2], level=4)
+    setting_dict = dict(sys_argv[2])
 except (IndexError, ValueError): pass
 
 
@@ -52,17 +55,11 @@ class Device:
     def __init__(self):
         LogWrite("Processing device '%s'" % argument, level=3)
         self.data = self._get_data()
-        if not device_mapping: self.output_dict = False
-        else: self.output_dict = True
 
     def start(self):
-        if self.output_dict: self._data_mapping()
         print("%.2f" % self.data)
         LogWrite("Data for device '%s' was delivered: '%s'." % (argument, self.data), level=4)
         raise SystemExit
-
-    def _data_mapping(self):
-        self.data = zip(device_mapping_dict.keys(), list(self.data))
 
     def _get_data(self):
         if argument not in arg_var_list:
@@ -73,10 +70,12 @@ class Device:
             def error_check(data, max, min):
                 if data is None:
                     LogWrite("Device '%s' - output error - data is none" % argument, level=2)
-                elif max > float(data) > min: return True
+                elif max > float(data) > min:
+                    if Check(device=device, data=float(data), max_change_percent=35).start() is True:
+                        return True
                 else:
                     LogWrite("Device '%s' - output error - not in acceptable range - data '%s', max '%s', min '%s'"
-                             % (argument, data, max, min), level=2)
+                             % (argument, data, max, min), level=3)
                 return False
 
             if loop_count >= max_retries:

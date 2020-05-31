@@ -33,6 +33,7 @@ from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 from sys import exc_info as sys_exc_info
+from pwd import getpwnam
 import signal
 
 # setup vars
@@ -59,7 +60,7 @@ try:
     from ..code.agent.core.smallant import VarHandler
     from ..code.agent.core.smallant import process
     from ..code.agent.maintenance.config_interface import setup as object_setup
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from owl import DoSql
     from ant import ShellInput
     from ant import ShellOutput
@@ -637,17 +638,22 @@ try:
 
     def ga_foldercreate(path):
         if os_path.exists(path) is False:
-            os_system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (path, path, ga_config['setup_log_redirect']))
+            os_system("mkdir -p %s & chown -R growautomation:growautomation %s %s" % (path, path, ga_config['setup_log_redirect']))
 
 
     def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
+        # need to test smb and nfs mount and correct it
         ShellOutput(font='head', output="Mounting %s share" % mname, symbol='-')
         if mtype == 'cifs':
             mcreds = "username=%s,password=%s,domain=%s" % (muser, mpwd, mdom)
         else:
             mcreds = 'auto'
         ga_fstab = open('/etc/fstab', 'a')
-        ga_fstab.write("#Growautomation %s mount\n//%s/%s %s %s %s 0 0\n\n" % (mname, msrv, mshr, mpath, mtype, mcreds))
+        uid = getpwnam('growautomation').pw_uid
+        if mtype == 'smb':
+            ga_fstab.write("#Growautomation %s mount\n%s:/%s %s cifs %s 0 0\n\n" % (mname, msrv, mshr, mpath, mcreds))
+        elif mtype == 'nfs':
+            ga_fstab.write("#Growautomation %s mount\n%s:/%s %s nfs rw,relatime,user 0 0\n\n" % (mname, msrv, mshr, mpath))
         ga_fstab.close()
         os_system("mount -a %s" % ga_config['setup_log_redirect'])
 
