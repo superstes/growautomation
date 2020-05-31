@@ -33,7 +33,6 @@ from string import digits as string_digits
 from sys import version_info as sys_version_info
 from sys import argv as sys_argv
 from sys import exc_info as sys_exc_info
-from pwd import getpwnam
 import signal
 
 # setup vars
@@ -649,7 +648,6 @@ try:
         else:
             mcreds = 'auto'
         ga_fstab = open('/etc/fstab', 'a')
-        uid = getpwnam('growautomation').pw_uid
         if mtype == 'smb':
             ga_fstab.write("#Growautomation %s mount\n%s:/%s %s cifs %s 0 0\n\n" % (mname, msrv, mshr, mpath, mcreds))
         elif mtype == 'nfs':
