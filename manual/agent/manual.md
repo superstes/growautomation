@@ -71,7 +71,7 @@ If a devicetype is disabled, none of its child-devices will be processed. <br>
 <br>
 Options: <br>
   * 1 <br>
-  Enables object.
+  Enables object. <br>
   * 0 <br>
   Disables object.<br>
 
@@ -81,9 +81,9 @@ Sets the way of how the controller can communicate to the sensor device. <br>
 <br>
 Options: <br>
   * direct <br>
-  The device is directly connected to the raspberry gpio pins
+  The device is directly connected to the raspberry gpio pins <br>
   * downlink <br>
-  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i>
+  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i> <br>
   * specific <i>(devicetype only)</i> <br>
   Deactivates the connection-type inheritence to its child-devices. <br>
   It must be configured for each device on its own.<br>
@@ -121,9 +121,9 @@ Sets the way of how the controller can communicate to the sensor device. <br>
 <br>
 Options: <br>
   * direct <br>
-  The device is directly connected to the raspberry gpio pins
+  The device is directly connected to the raspberry gpio pins <br>
   * downlink <br>
-  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i>
+  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i> <br>
   * specific <i>(devicetype only)</i> <br>
   Deactivates the connection-type inheritence to its child-devices. <br>
   It must be configured for each device on its own. <br>
@@ -142,7 +142,7 @@ Defines if the action must be actively reversed. <br>
 <br>
 Options: <br>
   * 1 <br>
-  Yes.
+  Yes. <br>
   * 0 <br>
   No. <br>
 
@@ -151,7 +151,7 @@ Indicates how it is decided when the action will be carried out. <br>
 <br>
 Options: <br>
   * time <br>
-  The reverse-action will be started after the given time.
+  The reverse-action will be started after the given time. <br>
   * threshold <br>
   The reverse-action will be started after the optimal threshold of the sensor is reached. <br>
 
@@ -178,7 +178,7 @@ Defines if the downlink function can output data per port. <br>
 <br>
 Options: <br>
   * 1 <br>
-  The downlink function will output data per port <i>(outputs single string of data)</i>
+  The downlink function will output data per port <i>(outputs single string of data)</i> <br>
   * 0 <br>
   The downlink function will output the data of all ports at once. <br>
   The output must be a data-dict that must look like this:<br>
