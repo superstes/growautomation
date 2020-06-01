@@ -1,7 +1,6 @@
 # Growautomation functionality manual
 
 Written for growautomation version 0.4 <br>
-Manual is not finished yet. <br>
 <br>
 
 ## Basic Workflow
@@ -28,6 +27,101 @@ If not every condition applies -> skip 3.
 3.1. If the action needs to be reversed - the action-master will handle it.
 4. Return to timer-loop. 
 
+---
+
+## Custom devices
+You can find templates for all types of devices in their associated directories.
+
+### Custom sensors
+
+#### Input
+The input received from the sensor-master will look like this: <br>
+<ul>
+  <li>
+    "{device: port}" "None" "custom_argument"
+    <ol>
+      <li>
+        dictionary with device and gpio port in it
+      </li>
+      <li>
+        left blank for sensors
+      </li>
+      <li>
+         custom function argument as configured for the sensor-devicetype
+      </li>
+    </ol>
+  </li>
+</ul>
+
+#### Output
+The output from a sensor-function must be a single string output via print(). <br>
+The function may not output any other data.
+
+### Custom downlinks
+
+#### Output per port
+
+##### Input
+The input for this type of downlink will look like this: <br>
+<ul>
+  <li>
+    "{device: port}" "{setting1: data1, setting2: data2}" "custom_argument"
+    <ol>
+      <li>
+        dictionary with device and downlink port in it
+      </li>
+      <li>
+        dictionary with all settings for the current downlink device in it
+      </li>
+      <li>
+         custom function argument as configured for the sensor-devicetype
+      </li>
+    </ol>
+  </li>
+</ul>
+
+##### Output
+If the downlink if only used to start actions - there is no need to output anything to the growautomation core. <br><br>
+The output for this type of downlink must be a single string output via print(). <br>
+The function may not output any other data.
+
+#### Output for all ports at once
+In this example - the downlink will have a count of two ports.
+
+##### Input
+The input for this type of downlink will look like this: <br>
+<ul>
+  <li>
+    "{device1: port1, device2: port2}" "{setting1: data1, setting2: data2}" "custom_argument"
+    <ol>
+      <li>
+        dictionary with devices and downlink ports in it
+      </li>
+      <li>
+        dictionary with all settings for the current downlink device in it
+      </li>
+      <li>
+         custom function argument as configured for the sensor-devicetype
+      </li>
+    </ol>
+  </li>
+</ul>
+
+##### Output
+This type of downlink must output its data in the form of a dictionary. <br>
+It must be formatted like this: <br>
+* {device1: data1, device2: data2}
+
+The output-dictionary **must have** all devices from the input-dictionary in it! <br>
+If no data was received for either of the devices -> its data must be set to one of the following values:
+* '' <br>
+  empty string <i>(two single quotes)</i>
+* None <br>
+  None-type
+* 'error' <br>
+  This error message will be filtered via the sensor-master
+
+---
 
 ## Configuration
 
@@ -172,15 +266,15 @@ It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
     Options:
     <ul>
       <li>
-        * direct <br>
+        direct <br>
         The device is directly connected to the raspberry gpio pins
       </li>
       <li>
-        * downlink <br>
+        downlink <br>
         The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i>
       </li>
       <li>
-        * specific <i>(devicetype only)</i> <br>
+        specific <i>(devicetype only)</i> <br>
         Deactivates the connection-type inheritence to its child-devices. <br>
         It must be configured for each device on its own.
       </li>
