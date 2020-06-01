@@ -22,7 +22,7 @@
 # sensor function for adafruit dht22
 
 from core.smallant import Log
-from core.data_check import Check
+from core.sensor_data_check import CompareData
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep
@@ -44,7 +44,7 @@ try:
     arg_var_list = [arg_var_1, arg_var_2]
 except IndexError as error:
     LogWrite("System argument error: %s" % error, level=2)
-    raise SystemExit
+    raise SystemExit('error')
 try:
     LogWrite("System argument 2 '%s'" % sys_argv[2], level=4)
     setting_dict = dict(sys_argv[2])
@@ -53,7 +53,7 @@ except (IndexError, ValueError): pass
 
 class Device:
     def __init__(self):
-        LogWrite("Processing device '%s'" % argument, level=3)
+        LogWrite("Processing device '%s'" % device, level=3)
         self.data = self._get_data()
 
     def start(self):
@@ -64,14 +64,14 @@ class Device:
     def _get_data(self):
         if argument not in arg_var_list:
             LogWrite("Argument (sys-arg#4) must be one of the following: '%s'" % arg_var_list, level=2)
-            raise SystemExit
+            raise SystemExit('error')
         loop_count, max_retries = 1, 3
         while True:
             def error_check(data, max, min):
                 if data is None:
                     LogWrite("Device '%s' - output error - data is none" % argument, level=2)
                 elif max > float(data) > min:
-                    if Check(device=device, data=float(data), max_change_percent=35).start() is True:
+                    if CompareData(device=device, data=float(data), max_change_percent=35).start() is True:
                         return True
                 else:
                     LogWrite("Device '%s' - output error - not in acceptable range - data '%s', max '%s', min '%s'"

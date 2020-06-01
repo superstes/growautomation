@@ -25,7 +25,7 @@ from core.smallant import debugger
 from core.smallant import Log
 
 
-class Check:
+class CompareData:
     def __init__(self, device: str, data, max_change_percent=35, local_debug=False):
         self.device, self.data, self.max_change_percent, self.local_debug = device, data, max_change_percent, local_debug
         self.last_data_list = []
