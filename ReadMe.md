@@ -17,13 +17,14 @@ __The code is currently not in a stable state !__
 Version: 0.4
 
 ### Currently active
-- writing installation manual
-- writing documentation
-- updating and testing action-master module
+- updating action-handling
+  - implementing complexer condition matching for actions
+  - updating and testing action-master module
 - updating the installation script
 
 ### New features
 - version 0.4
+    - written basic [manual](https://github.com/growautomation-at/controller/blob/master/manual/agent/manual.md)
     - sensor data collection working
     - designed and tested easy and clean way to wire sensors to controller
       - connect vcc, gnd and data lines to a network patchpanel
@@ -31,6 +32,7 @@ Version: 0.4
       - maximum 6 sensors per patchpanel port
       <br> <img src="https://github.com/growautomation-at/controller/blob/master/manual/hardware/cable-management.png" float="middle" border="4" alt="cable management topology">
 - version 0.3
+    - [setup notes](https://github.com/growautomation-at/controller/blob/master/setup/setup_notes.txt) if you wish to manually setup the growautomation core
     - service to dynamically start sensor data-collection and action-checks in threads
     - rewriting the whole core modules to support dynamic configuration
     - configuration interface to add and remove DeviceTypes/Devices easily
