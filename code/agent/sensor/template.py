@@ -18,11 +18,63 @@
 #     E-Mail: rene.rath@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.3
+# ga_version 0.4
+#
+# template for a sensor
+#
+# input from sensor-master
+# p.e. 'template.py "{device: port}" None "custom argument"'
+#
+# output to sensor-master
+# p.e. '22,2' (single string via print())
+#
+# if a soft error occurred you can exit your script/function like this:
+# raise SystemExit('error')
 
-# gets device settings and portdict if downlink
-# get data from gpio/downlink
-# process the data to list/string/int/float
-# if more than 1 datatype in data
-#   add unitnr to data_dict (migrate from list if needed, or better -> do it when getting the data from gpio/dl)
-# run insert function from owl.py (owl will check for input errors from bad scripts)
+from core.smallant import Log
+
+from sys import argv as sys_argv
+
+
+def LogWrite(output: str, level=3):
+    Log(output, typ='sensor', level=level).write()
+
+
+try:
+    device, port = (device, port for device, port in eval(sys_argv[1]).items())
+    argument = sys_argv[3]
+except IndexError as error:
+    LogWrite("System argument error: %s" % error, level=2)
+    raise SystemExit('error')
+
+
+class Device:
+    def __init__(self):
+        LogWrite("Processing device '%s'" % device)
+
+    def start(self):
+        data = self._get_data()
+        print(data)
+        LogWrite("Data for device '%s' was delivered: '%s'." % (device, data), level=4)
+        raise SystemExit
+
+    def _get_data(self):
+        # put some way to receive the sensor data here
+        #
+        # usable variables:
+        # device -> name of the device to process
+        # port -> gpio port configured for the device
+        # argument -> a custom function argument as configured as configured for the devicetype
+        #
+        # you can log errors to the growautomation-sensor-log link this:
+        # LogWrite('YOUR_ERROR_TEXT_HERE')
+        # on default -> the logs will only be written to its file if the growautomation log_level is set to '3' (to not spam the logfile)
+        # you can pass the loglevel on which to write the specific log via the 'level' argument - p.e.:
+        # LogWrite('YOUR_ERROR_TEXT_HERE', level=2)
+        #
+        # you need to return the data from this function like this:
+        # return YOUR_DATA_VARIABLE_HERE
+        return ''
+
+
+Device().start()
