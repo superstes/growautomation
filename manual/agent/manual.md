@@ -9,10 +9,24 @@ Manual is not finished yet. <br>
 <br>
 
 ### Pulling sensor data
+Basic workflow:
+1. The service will run a sensor timer for each sensor-devicetype there is.
+2. This timer will start the sensor-master with the devicetype as argument.
+3. Some filtering on base of the object settings will happen <i>(p.e. if the sensor-devicetype and -device is enabled)</i>
+4. All sensor-data will be pulled via starting the configured sensor-function.
+5. The data will be written to the database.
+6. Return to timer-loop.
 
-
-### Perform actions
-
+### Performing actions
+The action-handling is still work-in-progress. <br>
+<br>
+Basically it will look like this:
+1. The service will run a action-check timer for each action-profile there is.
+2. This action-check then will inspect every condition in the action-profile. <br>
+If not every condition applies -> skip 3.
+3. Starts the action-function as configured for the devicetype. <br>
+3.1. If the action needs to be reversed - the action-master will handle it.
+4. Return to timer-loop. 
 
 
 ## Configuration
@@ -38,7 +52,8 @@ In this case two devices must be created for each physical sensor. <i>(since eve
 #### Agents
 Will be relevant after the server-agent installation-type gets available. <br>
 All growautomation agents are added so their settings can be linked to them. <br>
-<br>
+
+---
 
 ### Groups
 The following types of groups currently exist:
@@ -58,6 +73,8 @@ Groups sectors into bigger areas. <i>(p.e. greenhouse)</i> <br>
 Links sensor- and action-devicetypes. <br>
 If the threshold limit of a sensor-devicetype is reached their linked actions will be started. <br>
 
+---
+
 ### Settings
 * Each setting must be linked to an existing object.
 * There is a set of settings that are needed to be processed via the growautomation core modules.
@@ -65,28 +82,50 @@ If the threshold limit of a sensor-devicetype is reached their linked actions wi
 If the child-device has a specific configuration for this setting -> this overrides the devicetype config. <br>
 
 #### General settings
-* enabled <i>(devicetype/device)</i> <br>
-Defines if the object will be processed or ignored by the core modules. <br>
-If a devicetype is disabled, none of its child-devices will be processed. <br>
-<br>
-Options: <br>
-  * 1 <br>
-  Enables object. <br>
-  * 0 <br>
-  Disables object.<br>
+<ul>
+  <li>
+    enabled <i>(devicetype/device)</i> <br>
+    Defines if the object will be processed or ignored by the core modules. <br>
+    If a devicetype is disabled, none of its child-devices will be processed. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        1 <br>
+        Enables object.
+      </li>
+      <li>
+        0 <br>
+        Disables object.
+      </li>
+    </ul>
+  </li>
+</ul>
 
 #### Sensor settings
-* connection <i>(devicetype/device)</i> <br>
-Sets the way of how the controller can communicate to the sensor device. <br>
-<br>
-Options: <br>
-  * direct <br>
-  The device is directly connected to the raspberry gpio pins <br>
-  * downlink <br>
-  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i> <br>
-  * specific <i>(devicetype only)</i> <br>
-  Deactivates the connection-type inheritence to its child-devices. <br>
-  It must be configured for each device on its own.<br>
+<ul>
+  <li>
+    connection <i>(devicetype/device)</i> <br>
+    Sets the way of how the controller can communicate to the sensor device. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        direct <br>
+        The device is directly connected to the raspberry gpio pins
+      </li>
+      <li>
+        downlink <br>
+        The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i>
+      </li>
+      <li>
+        specific <i>(devicetype only)</i> <br>
+        Deactivates the connection-type inheritence to its child-devices. <br>
+        It must be configured for each device on its own.
+      </li>
+    </ul>
+  </li>
+</ul>
 
 * function <i>(devicetype)</i> <br>
 Defines which function will be started to pull the sensor data. <br>
@@ -116,18 +155,6 @@ Sets the unit of data received by the sensors from this type. <br>
 If the connection of the device was set to 'downlink' -> an existing downlink-device must be linked to it. <br>
 
 #### Action settings
-* connection <i>(devicetype/device)</i> <br>
-Sets the way of how the controller can communicate to the sensor device. <br>
-<br>
-Options: <br>
-  * direct <br>
-  The device is directly connected to the raspberry gpio pins <br>
-  * downlink <br>
-  The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i> <br>
-  * specific <i>(devicetype only)</i> <br>
-  Deactivates the connection-type inheritence to its child-devices. <br>
-  It must be configured for each device on its own. <br>
-
 * function <i>(devicetype)</i> <br>
 Defines which function will be started to pull the sensor data. <br>
 The path to the growautomation sensor-folder will prepended -> so only the filename needs to be provided. <br>
@@ -137,23 +164,61 @@ P.e. function = pump.py, executed = '/etc/growautomation/action/pump.py' <br>
 You can define an argument to pass to the function-to-start. <br>
 It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
 
-* boomerang <i>(devicetype)</i> <br>
-Defines if the action must be actively reversed. <br>
-<br>
-Options: <br>
-  * 1 <br>
-  Yes. <br>
-  * 0 <br>
-  No. <br>
-
-* boomerang_type <i>(devicetype)</i> <br>
-Indicates how it is decided when the action will be carried out. <br>
-<br>
-Options: <br>
-  * time <br>
-  The reverse-action will be started after the given time. <br>
-  * threshold <br>
-  The reverse-action will be started after the optimal threshold of the sensor is reached. <br>
+<ul>
+  <li>
+    connection <i>(devicetype/device)</i> <br>
+    Sets the way of how the controller can communicate to the sensor device. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        * direct <br>
+        The device is directly connected to the raspberry gpio pins
+      </li>
+      <li>
+        * downlink <br>
+        The device is connected through a downlink device <i>(p.e. an analog to digital converter)</i>
+      </li>
+      <li>
+        * specific <i>(devicetype only)</i> <br>
+        Deactivates the connection-type inheritence to its child-devices. <br>
+        It must be configured for each device on its own.
+      </li>
+    </ul>
+  </li>
+  <li>
+    boomerang <i>(devicetype)</i> <br>
+    Defines if the action must be actively reversed. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        1 <br>
+        Yes.
+      </li>
+      <li>
+        0 <br>
+        No.
+      </li>
+    </ul>
+  </li>
+  <li>
+    boomerang_type <i>(devicetype)</i> <br>
+    Indicates how it is decided when the action will be carried out. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        time <br>
+        The reverse-action will be started after the given time.
+      </li>
+      <li>
+        threshold <br>
+        The reverse-action will be started after the optimal threshold of the sensor is reached.
+      </li>
+    </ul>
+  </li>
+</ul>
 
 * boomerang_time <i>(devicetype, optional)</i> <br>
 If 'boomerang_type' is set to 'time' -> the time in seconds is defined.<br>
@@ -172,17 +237,27 @@ If the connection of the device was set to 'downlink' -> an existing downlink-de
 * portcount <i>(devicetype)</i> <br>
 The count of ports provided by each downlink of this type. <br>
 
-* output_per_port <i>(devicetype)</i> <br>
-Only relevant if sensors are connected via this type of downlink. <br>
-Defines if the downlink function can output data per port. <br>
-<br>
-Options: <br>
-  * 1 <br>
-  The downlink function will output data per port <i>(outputs single string of data)</i> <br>
-  * 0 <br>
-  The downlink function will output the data of all ports at once. <br>
-  The output must be a data-dict that must look like this:<br>
-  {sensor1name: data1, sensor2name: data2} <br>
+<ul>
+  <li>
+    output_per_port <i>(devicetype)</i> <br>
+    Only relevant if sensors are connected via this type of downlink. <br>
+    Defines if the downlink function can output data per port. <br>
+    <br>
+    Options:
+    <ul>
+      <li>
+        1 <br>
+        The downlink function will output data per port <i>(outputs single string of data)</i>
+      </li>
+      <li>
+        0 <br>
+        The downlink function will output the data of all ports at once. <br>
+        The output must be a data-dict that must look like this:<br>
+        {sensor1name: data1, sensor2name: data2}
+      </li>
+    </ul>
+  </li>
+</ul>
 
 * function <i>(devicetype)</i> <br>
 Defines which function will be started to pull the sensor data. <br>
@@ -193,12 +268,44 @@ P.e. function = ads1115.py, executed = '/etc/growautomation/downlink/ads1115.py'
 You can define an argument to pass to the function-to-start. <br>
 It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
 
+---
+
+## Growautomation Core
+
+<table>
+<tr><th>Name</th><th>Description</th></tr>
+<tr><td>core/ant.py</td><td>Diverse shared functions/classes (extended use)</td></tr>
+<tr><td>core/backup.py</td><td>Backups the database and root-path on timer</td></tr>
+<tr><td>core/config.py</td><td>Config parser</td></tr>
+<tr><td>core/hamster.py</td><td>For agent-server installation - will cache data to write to database if it isn't reachable</td></tr>
+<tr><td>core/owl.py</td><td>Handles sql connections</td></tr>
+<tr><td>core/parrot.py</td><td>Action-Master - checks if action should be started, starts actions</td></tr>
+<tr><td>core/sensor_data_check.py</td><td>For usage in sensor functions - compares current data output to older ones</td></tr>
+<tr><td>core/smallant.py</td><td>Diverse shared functions/classes (basic use)</td></tr>
+<tr><td>core/smallconfig.py</td><td>Config parser for config file</td></tr>
+<tr><td>core/snake.py</td><td>Sensor-Master - starts sensor functions to pull data, writes data to database</td></tr>
+<tr><td>maintenance/config_interface.py</td><td>Commandline interface to interact with growautomation configuration</td></tr>
+<tr><td>maintenance/update.sh</td><td>Will update all growautomation modules to the newest version found on github</td></tr>
+<tr><td>service/systemd/growautomation.service</td><td>Systemd service file</td></tr>
+<tr><td>service/earlybird.py</td><td>Checks system for dependencies before service start</td></tr>
+<tr><td>service/threader.py</td><td>Runs timed threads</td></tr>
+<tr><td>service/service.py</td><td>Service to handle timed threads</td></tr>
+<tr><td>service/worker.py</td><td>Decides which module to start for a thread</td></tr>
+</table>
+
+---
 
 ## Detailed Workflow
 
 ### Service
 
+
+---
+
 ### Sensor master
+
+
+---
 
 ### Action master
 
