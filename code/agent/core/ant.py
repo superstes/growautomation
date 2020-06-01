@@ -62,7 +62,7 @@ class ShellInput:
         if self.max_value is None: self.max_value = 20
         if self.min_value is None: self.min_value = 2
         to_check = str(to_check)
-        char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,"
+        char_blacklist = "!$§?^´`µ{}()><|\\*ÄÖÜüöä@,\"'"
         if len(to_check) > self.max_value or len(to_check) < self.min_value:
             ShellOutput("Input error. Input must be between %s and %s characters long" % (self.min_value, self.max_value), style='warn', font='text')
             return False
