@@ -15,7 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#     E-Mail: rene.rath@growautomation.at
+#     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
 # ga_version 0.4
@@ -80,7 +80,7 @@ class Service:
         return name_dict
 
     def start(self):
-        VarHandler(name='init', data=1).set()
+        VarHandler(name='service_init', data=1).set()
         VarHandler(name='service_stop', data=0).set()
         try:
             if sys_argv[1] == 'debug': VarHandler(name='debug', data=1).set()

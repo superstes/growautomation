@@ -15,7 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#     E-Mail: rene.rath@growautomation.at
+#     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
 # ga_version 0.4

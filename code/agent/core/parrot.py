@@ -15,7 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#     E-Mail: rene.rath@growautomation.at
+#     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
 # ga_version 0.4
@@ -37,7 +37,10 @@ import signal
 def _signal_handler(signum=None, stack=None):
     # get list of memory-vars added -> Varhandler("peritem").clean()
     # clean other stuff ..
-    raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+    try:
+        raise SystemExit("Received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+    except AttributeError:
+        raise SystemExit("Received signal %s" % signum)
 
 
 signal.signal(signal.SIGTERM, _signal_handler)
@@ -121,23 +124,26 @@ class ThresholdCheck:
         self.sensor = sensor
         self.check_range = None
 
-    def __repr__(self):
+    def start(self):
         # checks only devicetypes
         # will check if input is sensor or type
-        if Config(setting=self.sensor, table='object').get() == 'sensor':
-            if Config(setting='enabled', belonging=self.sensor).get() == '1':
-                threshold = Config(setting='threshold', belonging=self.sensor).get()
-                for sector in self.get_sector_list():
+        if self.sensor not in Config(output='name', table='object', filter="type = 'devicetype'").get('list'):
+            return False
+        if Config(output='class', setting=self.sensor, table='object').get() == 'sensor':
+            if Config(setting='enabled', belonging=self.sensor).get('int') == 1:
+                threshold = Config(setting='threshold_max', belonging=self.sensor).get('int')
+                for sector in self._get_sector_list():
                     average_data_list = []
-                    for device, device_sector in self.get_device_dict().items():
-                        if self.check_device_sector(device_sector, sector) is True:
-                            average_data = self.get_average_data(device)
+                    for device, device_sector in self._get_device_dict().items():
+                        if self._check_device_sector(device_sector, sector) is True:
+                            average_data = self._get_average_data(device)
                             average_data_list.append(average_data)
                             Log("Device %s in sector %s.\nAverage data: %s" % (device, sector, average_data), level=3).write()
                         else:
                             Log("Device %s not in sector %s." % (device, sector), level=3).write()
                             continue
                     sector_average = sum(average_data_list) / len(average_data_list)
+                    # >= or <= must be checked against max/optional threshold
                     if sector_average >= threshold:
                         Log("DeviceType %s did exceed it's threshold in sector %s. (%s/%s)\nStarting SectorCheck."
                             % (self.sensor, sector, sector_average, threshold), level=2).write()
@@ -147,52 +153,54 @@ class ThresholdCheck:
                             % (self.sensor, sector, sector_average, threshold), level=2).write()
                         continue
                 SectorCheck(sector_dict)
+        return False
 
-    def input_device(self):
-        print('no')
-
-    def input_devicetype(self):
-        print('no')
-
-    def get_device_dict(self):
-        device_list = Config(filter="class = '%s'" % self.sensor, table='object').get()
+    def _get_device_dict(self):
+        device_list, device_dict = Config(filter="class = '%s'" % self.sensor, table='object').get(), {}
         for device in device_list:
-            if Config(setting='enabled', belonging=device).get() == '1':
-                device_dict = {device: Config(setting='sector', belonging=device, table='member').get()}
+            if Config(setting='enabled', belonging=device).get('int') == 1:
+                device_dict[device] = Config(setting='sector', belonging=device, table='member').get()
             else:
                 Log("Device %s is disabled." % device, level=3).write()
                 continue
         return device_dict
 
-    def get_sector_list(self):
+    def _get_sector_list(self):
         sector_inuse_list, sector_list, sector_exist_list = [], [], Config(setting='sector', table='member').get()
-        for sector in self.get_device_dict().values():
+        for sector in self._get_device_dict().values():
             sector_inuse_list.append(sector.split(",")) if sector.find(",") != -1 else sector_inuse_list.append(sector)
         [sector_list.append(sector) for sector in sector_inuse_list if sector in sector_exist_list]
         return sector_list
 
-    def get_data(self, device):
+    def _get_data(self, device):
         if self.check_range is None:
-            self.check_range = int(Config(setting='range', belonging='check').get())
-        time_now, time_before = time_subtract(int(Config(setting='timer', belonging=self.sensor).get()) * self.check_range, both=True)
-        return Config(table='data', belonging=device, filter="changed => '%s' AND changed <= '%s' AND device = '%s'" % (time_now, time_before, device)).get()
+            self.check_range = Config(setting='range', belonging='check').get('int')
+        device_timer = Config(setting='timer', belonging=self.sensor).get('int')
+        if device_timer is not False:
+            timer = device_timer
+        else:
+            timer = Config(setting='timer', belonging=self.sensor).get('int')
+        time_now, time_before = time_subtract(timer * self.check_range, both=True)
+        return Config(table='data', filter="changed between TIMESTAMP('%s') AND TIMESTAMP('%s') AND device = '%s'"
+                                           % (time_before, time_now, device)).get()
 
-    def get_average_data(self, device):
+    def _get_average_data(self, device):
         if type(device) == 'list':
             data_list = []
-            [data_list.append(self.get_data(device)) for device in device]
-        elif type(device) == 'str': data_list = self.get_data(device)
+            [data_list.append(self._get_data(device)) for device in device]
+        elif type(device) == 'str': data_list = self._get_data(device)
         else: return False
         return sum(data_list) / len(data_list)
 
-    def check_device_sector(self, value, sector):
+    def _check_device_sector(self, value, sector):
         value_sector_list = []
         value_sector_list.append(value.split(",")) if value.find(",") != -1 else value_sector_list.append(value)
         return True if sector in value_sector_list else False
 
 
-try: ThresholdCheck(sys_argv[1])
-except IndexError:
-    Log('No sensor provided. Exiting.').write()
-    raise SystemExit
-
+if __name__ is '__main__':
+    try:
+        ThresholdCheck(sys_argv[1])
+    except IndexError:
+        Log('No sensor provided. Exiting.').write()
+        raise SystemExit
