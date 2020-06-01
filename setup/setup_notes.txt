@@ -60,5 +60,7 @@ May have changed since then
   - systemctl enable growautomation.service
   - systemctl daemon-reload
 - add basic configuration to db
-  - core config
-    run the config module with the start argument: "/etc/growautomation/maintenance/config_interface.py start"
+  - config
+    run the config module: "/etc/growautomation/maintenance/config_interface.py"
+      choose the 'setup' option to create the basic core config
+      choose the 'add' option to add your objects, settings and groups
