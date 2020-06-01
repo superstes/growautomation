@@ -82,12 +82,12 @@ class Balrog:
         type_opp = Config(setting='output_per_port', belonging=devicetype).get()
 
         def _get_setting_dict():
-            type_setting, setting = Config(output="setting,data", belonging=devicetype).get(), \
+            type_setting, device_setting = Config(output="setting,data", belonging=devicetype).get(), \
                                     Config(output="setting,data", belonging=downlink).get()
             setting_dict, type_setting_dict = {}, {}
-            for setting, data in setting: setting_dict[setting] = data
             for setting, data in type_setting:
                 if setting not in setting_dict.keys(): setting_dict[setting] = data
+            for setting, data in device_setting: setting_dict[setting] = data
             debugger("snake - downlink |get_setting_dict |output '%s'" % setting_dict)
             return setting_dict
 
@@ -108,18 +108,15 @@ class Balrog:
             else:
                 sensor_dict = {device: Config(setting='port', belonging=device).get()}
             if len(sensor_dict.keys()) < portcount:
-                for i in range(portcount):
+                for i in range(1, portcount):
                     if i not in sensor_dict.values():
                         sensor_dict["dummy_%s" % i] = i
-                        # portlist in dict will start at 0 => throw it into the docs
                 sensor_dict = {key: value for key, value in sorted(sensor_dict.items(), key=lambda item: item[1])}
             debugger("snake - downlink |opp 0 |input '%s'" % sensor_dict)
             output_dict = eval(self._work(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict()))
             debugger("snake - downlink |opp 0 |output '%s'" % output_dict)
             for sensor, data in output_dict.items():
                 if sensor in self.processed_list: self._write_data(sensor, data)
-            # if opp -> output must be string
-            # if not opp -> output must be dict with sensor as key and data as value
         else: return False
 
     def _work(self, device, device_mapping_dict, setting_dict=None):
@@ -187,7 +184,8 @@ class Balrog:
         return True
 
     def _write_data(self, device, data):
-        if data == '' or data is None or data == 'error' or data == '{}':
+        error_string_list = ['', 'error', '{}', 'None']
+        if data is None or data in error_string_list:
             Log("Output data is empty")
             return False
         else:
