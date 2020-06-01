@@ -46,4 +46,4 @@ Windows: [Notepad++](https://notepad-plus-plus.org/)
 14. You are good to go!
 
 ### Growautomation setup
-See [raspberry pi ga installation](https://git.growautomation.at/blob/master/manual/agent/install-ga.md)
+You can find a installation script or notes for a manual installation here: [ga-setup](https://github.com/growautomation-at/controller/tree/master/setup)
