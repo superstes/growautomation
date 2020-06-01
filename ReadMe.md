@@ -41,6 +41,7 @@ Version: 0.4
 
 ### On hold 
 - documenting server installation on intel nuc
+- documenting clean and easy wiring [as displayed here](https://github.com/growautomation-at/controller/blob/master/manual/hardware/cable-management.png) _(how-to video)_
 
 ### Future features
 - creating a troubleshooing script to gather error logs
