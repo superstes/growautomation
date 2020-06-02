@@ -12,18 +12,7 @@ create table IF NOT EXISTS Data (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS Category (
-	id smallint unsigned not null auto_increment,
-	changed timestamp not null default current_timestamp on update current_timestamp,
-	author varchar(20) not null,
-	name varchar(30) not null unique key,
-	description varchar(50) null,
-	primary key (id)
-)engine innodb,
- character set utf8,
- collate utf8_unicode_ci;
-
-create table IF NOT EXISTS ObjectReference (
+create table IF NOT EXISTS Reference (
 	id smallint unsigned not null auto_increment,
 	changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
@@ -44,9 +33,9 @@ create table IF NOT EXISTS Object (
 	type varchar(30) not null,
 	description varchar(50) null,
 	primary key (id),
-	foreign key (class) references ObjectReference (name) on update cascade on delete cascade,
-	foreign key (parent) references ObjectReference (name) on update cascade on delete cascade,
-	foreign key (type) references Category (name) on update cascade on delete cascade
+	foreign key (class) references Reference (name) on update cascade on delete cascade,
+	foreign key (parent) references Reference (name) on update cascade on delete cascade,
+	foreign key (type) references Reference (name) on update cascade on delete cascade
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -68,12 +57,13 @@ create table IF NOT EXISTS Setting (
 
 create table IF NOT EXISTS Grp (
     id smallint unsigned not null auto_increment,
+    parent smallint unsigned null default null,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
 	type varchar(30) not null,
 	description varchar(50) not null,
     primary key (id),
-    foreign key (type) references Category (name) on update cascade on delete cascade,
+    foreign key (type) references Reference (name) on update cascade on delete cascade,
     unique key (description)
 )engine innodb,
  character set utf8,
@@ -90,6 +80,24 @@ create table IF NOT EXISTS Member (
     foreign key (member) references Object (name) on update cascade on delete cascade,
     foreign key (gid) references Grp (id) on update cascade on delete cascade,
     unique key unique_gid_member (gid, member)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+create table IF NOT EXISTS ActionProfile (
+    id smallint unsigned not null auto_increment,
+    changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(20) not null,
+	parent smallint unsigned null default null,
+	gid smallint unsigned not null,
+	object varchar(20) not null,
+	threshold varchar(20) not null,
+	condi varchar(10) not null,
+	operator varchar(10) null default null,
+	description varchar(50) not null,
+    primary key (id),
+    foreign key (object) references Object (name) on update cascade on delete cascade,
+    foreign key (gid) references Grp (id) on update cascade on delete cascade
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
