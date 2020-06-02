@@ -380,8 +380,8 @@ class Create:
                 tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         ShellOutput('Writing object configuration', font='text')
-        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
-        [DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s');" % key, write=True).start()
+        DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
+        [DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % key, write=True).start()
          for key in self.object_dict.keys()]
         insert_count, error_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
@@ -389,7 +389,7 @@ class Create:
                 count, error_count = 0, 0
                 for object_name, object_class in sorted(values.items()):
                     if object_class != 'NULL':
-                        DoSql("INSERT IGNORE INTO ga.ObjectReference (author,name) VALUES ('setup','%s');" % object_class,
+                        DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % object_class,
                               write=True).start()
                         object_class = "'%s'" % object_class
                     if parent != 'NULL' and parent.find("'") == -1:
@@ -433,7 +433,7 @@ class Create:
         for group_type, packed_values in self.group_dict.items():
             for group_id, also_packed_values in dict(packed_values).items():
                 for group_desc, group_member_list in dict(also_packed_values).items():
-                    DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
+                    DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
                     if DoSql("INSERT INTO ga.Grp (author,type,description) VALUES ('setup','%s','%s');"
                              % (group_type, group_desc), write=True).start() is False:
                         error_count += 1
@@ -443,7 +443,7 @@ class Create:
                     for member in sorted(group_member_list):
                         if group_type == 'sectorgroup':
                             sector_gid = DoSql("SELECT id FROM ga.Grp WHERE description = '%s';" % member).start()
-                            DoSql("INSERT IGNORE INTO ga.Category (author,name) VALUES ('setup','group');", write=True).start()
+                            DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','group');", write=True).start()
                             if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
                                      % (sector_gid, member), write=True).start() is False: error_count +=1
                             if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');"
