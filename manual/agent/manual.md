@@ -173,7 +173,7 @@ If the threshold limit of a sensor-devicetype is reached their linked actions wi
 * Each setting must be linked to an existing object.
 * There is a set of settings that are needed to be processed via the growautomation core modules.
 * Most settings will <b>inherit</b> their configuration from devicetype to child-devices. <br>
-If the child-device has a specific configuration for this setting -> this overrides the devicetype config. <br>
+If the child-device has a specific configuration for this setting -> this overwrites the devicetype config. <br>
 
 #### General settings
 <ul>
@@ -388,6 +388,11 @@ It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
 </table>
 
 ---
+
+## Database overview
+Here you can see an overview over the tables used: <br> <br>
+<img src="https://github.com/growautomation-at/controller/blob/master/manual/agent/database-plan.jpg" float="middle" border="4" alt="cable management topology"> <br>
+<br>
 
 ## Detailed Workflow
 
