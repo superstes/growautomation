@@ -14,7 +14,7 @@ If you..
 
 __The code is currently not in a stable state !__
 
-Version: 0.4
+Version: 0.5
 
 ### Currently active
 - updating action-handling
