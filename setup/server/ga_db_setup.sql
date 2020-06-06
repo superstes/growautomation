@@ -57,14 +57,15 @@ create table IF NOT EXISTS Setting (
 
 create table IF NOT EXISTS Grp (
     id smallint unsigned not null auto_increment,
-    parent smallint unsigned null default null,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
 	type varchar(30) not null,
-	description varchar(50) not null,
+	name varchar(20) not null,
+    parent smallint unsigned null default null,
+	description varchar(50) null default null,
     primary key (id),
     foreign key (type) references Reference (name) on update cascade on delete cascade,
-    unique key (description)
+    unique key (name)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -84,18 +85,39 @@ create table IF NOT EXISTS Member (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS ActionProfile (
+create table IF NOT EXISTS ProfileGrp (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
+	stage_id smallint unsigned not null default 1,
+	parent smallint unsigned null default null,
+	parent_id smallint unsigned not null,
+	gid smallint unsigned not null,
+	operator varchar(10) null default null,
+	name varchar(20) not null,
+	description varchar(50) null default null,
+    primary key (id),
+    foreign key (gid) references Grp (id) on update cascade on delete cascade,
+    unique key unique_gid_parent_id (gid, parent_id)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+create table IF NOT EXISTS Profile (
+    id smallint unsigned not null auto_increment,
+    changed timestamp not null default current_timestamp on update current_timestamp,
+	author varchar(20) not null,
+	stage_id smallint unsigned not null default 1,
 	parent smallint unsigned null default null,
 	gid smallint unsigned not null,
 	object varchar(20) not null,
 	threshold varchar(20) not null,
 	condi varchar(10) not null,
 	operator varchar(10) null default null,
-	description varchar(50) not null,
+	name varchar(20) not null,
+	description varchar(50) null default null,
     primary key (id),
+--    foreign key (parent) references ProfileGrp (parent_id) on update cascade on delete cascade,
     foreign key (object) references Object (name) on update cascade on delete cascade,
     foreign key (gid) references Grp (id) on update cascade on delete cascade
 )engine innodb,
