@@ -301,74 +301,77 @@ class Create:
 
     def create_group(self):
         ShellOutput('Groups', symbol='#', font='head')
-        if ShellInput('Do you want to create groups?', default=True).get() is False: return False
+        # if ShellInput('Do you want to create groups?', default=True).get() is False: return False
+        #
+        # def to_create(to_ask, info, info_member):
+        #     create_count, create_dict, posslist = 0, {}, []
+        #     create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
+        #     if to_ask == 'sector':
+        #         posslist = self.current_dev_list
+        #         [posslist.remove(dev) for dev in self.object_downlink_list]
+        #     # elif to_ask == 'sectorgroup':
+        #     #     posslist = grp_sector_exist_list
+        #     # elif to_ask == 'link':
+        #     #     posslist = dt_action_list
+        #     #     posslist.extend(dt_sensor_list)
+        #     debugger("confint - create_group |posslist '%s'" % posslist)
+        #     while create:
+        #         ShellOutput(symbol='-', font='line')
+        #         member_list, current_posslist = [], posslist
+        #         member_count, add_member = 0, True
+        #         while add_member:
+        #             if member_count == 0: info = "\nInfo: %s" % info_member
+        #             else: info = ''
+        #             member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
+        #                                           poss=current_posslist, default=str(random_choice(current_posslist)), intype='free').get())
+        #             member_count += 1
+        #             current_posslist = list(set(posslist) - set(member_list))
+        #             if member_count > 1:
+        #                 if len(current_posslist) > 0:
+        #                     add_member = ShellInput('Want to add another member?', default=True, style='info').get()
+        #                 else: add_member = False
+        #         desc = ShellInput('Give the group an unique name!', max_value=50, min_value=2, neg=True, poss=grp_desc_exist_list).get()
+        #         grp_desc_exist_list.append(desc)
+        #         create_dict[create_count] = {desc: member_list}
+        #         create_count += 1
+        #         debugger("confint - create_group |members '%s'" % member_list)
+        #         create = ShellInput("Want to add another %s?" % to_ask, default=True, style='info').get()
+        #     return create_dict
+        #
+        # if self.setup is False:
+        #     grp_desc_exist_list = self.Config(output='name', table='grp').get()
+        # else:
+        #     grp_desc_exist_list = []
+        #
+        # ShellOutput('Sectors', symbol='-', font='head')
+        # self.group_dict['sector'] = to_create('sector', 'links objects which are in the same area', 'must match one device')
+        #
+        # grp_sector_exist_list = [desc for typ, nested in self.group_dict.items() if typ == 'sector'
+        #                          for nested_too in dict(nested).values() for desc in dict(nested_too).keys()]
+        # if self.setup is False:
+        #     sector_exist_list = self.Config(output='name', filter="type = 'sector'", table='grp').get()
+        #     grp_sector_exist_list.extend(sector_exist_list)
 
-        def to_create(to_ask, info, info_member):
-            create_count, create_dict, posslist = 0, {}, []
-            create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
-            if to_ask == 'sector':
-                posslist = self.current_dev_list
-                [posslist.remove(dev) for dev in self.object_downlink_list]
-            elif to_ask == 'sectorgroup':
-                posslist = grp_sector_exist_list
-            elif to_ask == 'link':
-                posslist = dt_action_list
-                posslist.extend(dt_sensor_list)
-            debugger("confint - create_group |posslist '%s'" % posslist)
-            while create:
-                ShellOutput(symbol='-', font='line')
-                member_list, current_posslist = [], posslist
-                member_count, add_member = 0, True
-                while add_member:
-                    if member_count == 0: info = "\nInfo: %s" % info_member
-                    else: info = ''
-                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
-                                                  poss=current_posslist, default=str(random_choice(current_posslist)), intype='free').get())
-                    member_count += 1
-                    current_posslist = list(set(posslist) - set(member_list))
-                    if member_count > 1:
-                        if len(current_posslist) > 0:
-                            add_member = ShellInput('Want to add another member?', default=True, style='info').get()
-                        else: add_member = False
-                desc = ShellInput("Add a unique description to the %s" % to_ask, max_value=50, min_value=2, neg=True, poss=grp_desc_exist_list).get()
-                grp_desc_exist_list.append(desc)
-                create_dict[create_count] = {desc: member_list}
-                create_count += 1
-                debugger("confint - create_group |members '%s'" % member_list)
-                create = ShellInput("Want to add another %s?" % to_ask, default=True, style='info').get()
-            return create_dict
 
-        if self.setup is False:
-            grp_desc_exist_list = self.Config(output='description', table='grp').get()
-        else:
-            grp_desc_exist_list = []
 
-        ShellOutput('Sectors', symbol='-', font='head')
-        self.group_dict['sector'] = to_create('sector', 'links objects which are in the same area', 'must match one device')
-
-        grp_sector_exist_list = [desc for typ, nested in self.group_dict.items() if typ == 'sector'
-                                 for nested_too in dict(nested).values() for desc in dict(nested_too).keys()]
-        if self.setup is False:
-            sector_exist_list = self.Config(output='description', filter="type = 'sector'", table='grp').get()
-            grp_sector_exist_list.extend(sector_exist_list)
-        if len(grp_sector_exist_list) > 1:
-            ShellOutput('Sector groups', symbol='-', font='head')
-            self.group_dict['sectorgroup'] = to_create('sectorgroup', "links sectors to areas (beds in field)", 'must match one sector')
-
-        ShellOutput('Devicetype links', symbol='-', font='head')
-        dt_action_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
-                          for name, typ in dict(value).items() if typ == 'action']
-        if self.setup is False:
-            dt_action_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'action'",
-                                              table='object').get('list'))
-        dt_sensor_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
-                          for name, typ in dict(value).items() if typ == 'sensor']
-        if self.setup is False:
-            dt_sensor_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'sensor'",
-                                              table='object').get('list'))
-        if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
-            self.group_dict['link'] = to_create('link', "links action- and sensortypes\npe. earth humidity sensor with water pump",
-                                                'must match one devicetype')
+        # if len(grp_sector_exist_list) > 1:
+        #     ShellOutput('Sector groups', symbol='-', font='head')
+        #     self.group_dict['sectorgroup'] = to_create('sectorgroup', "links sectors to areas (beds in field)", 'must match one sector')
+        #
+        # ShellOutput('Devicetype links', symbol='-', font='head')
+        # dt_action_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
+        #                   for name, typ in dict(value).items() if typ == 'action']
+        # if self.setup is False:
+        #     dt_action_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'action'",
+        #                                       table='object').get('list'))
+        # dt_sensor_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
+        #                   for name, typ in dict(value).items() if typ == 'sensor']
+        # if self.setup is False:
+        #     dt_sensor_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'sensor'",
+        #                                       table='object').get('list'))
+        # if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
+        #     self.group_dict['link'] = to_create('link', "links action- and sensortypes\npe. earth humidity sensor with water pump",
+        #                                         'must match one devicetype')
 
     def write_config(self):
         ShellOutput('Writing configuration to database', symbol='#', font='head')
@@ -434,25 +437,25 @@ class Create:
             for group_id, also_packed_values in dict(packed_values).items():
                 for group_desc, group_member_list in dict(also_packed_values).items():
                     DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
-                    if DoSql("INSERT INTO ga.Grp (author,type,description) VALUES ('setup','%s','%s');"
+                    if DoSql("INSERT INTO ga.Grp (author,type,name) VALUES ('setup','%s','%s');"
                              % (group_type, group_desc), write=True).start() is False:
                         error_count += 1
                     else: insert_count += 1
                     sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
                                     group_type).start()
                     for member in sorted(group_member_list):
-                        if group_type == 'sectorgroup':
-                            sector_gid = DoSql("SELECT id FROM ga.Grp WHERE description = '%s';" % member).start()
-                            DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','group');", write=True).start()
-                            if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
-                                     % (sector_gid, member), write=True).start() is False: error_count +=1
-                            if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');"
-                                     % (sql_gid, sector_gid, member), write=True).start() is False: error_count += 1
-                            else: member_count += 1
-                        else:
-                            if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                                     write=True).start() is False: error_count += 1
-                            else: member_count += 1
+                        # if group_type == 'sectorgroup':
+                        #     sector_gid = DoSql("SELECT id FROM ga.Grp WHERE name = '%s';" % member).start()
+                        #     DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','group');", write=True).start()
+                        #     if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
+                        #              % (sector_gid, member), write=True).start() is False: error_count +=1
+                        #     if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');"
+                        #              % (sql_gid, sector_gid, member), write=True).start() is False: error_count += 1
+                        #     else: member_count += 1
+                        # else:
+                        if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
+                                 write=True).start() is False: error_count += 1
+                        else: member_count += 1
         ShellOutput("added %s group%s with a total of %s member%s" % (insert_count, plural(insert_count), member_count, plural(member_count)), style='info', font='text')
         if error_count > 0:
             ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
