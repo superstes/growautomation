@@ -4,7 +4,7 @@ Written for growautomation version 0.4 <br>
 <br>
 
 ## Basic Workflow
-<img src="https://github.com/growautomation-at/controller/blob/master/manual/agent/basic_workflow.jpg" float="middle" border="4" alt="cable management topology"> <br>
+<img src="https://github.com/growautomation-at/controller/blob/master/manual/agent/pictures/basic_workflow.jpg" float="middle" border="4" alt="cable management topology"> <br>
 <br>
 
 ### Pulling sensor data
@@ -391,7 +391,7 @@ It will be passed as system argument #3 <i>(sys.argv[3])</i> <br>
 
 ## Database overview
 Here you can see an overview over the tables used: <br> <br>
-<img src="https://github.com/growautomation-at/controller/blob/master/manual/agent/database-plan.jpg" float="middle" border="4" alt="cable management topology"> <br>
+<img src="https://github.com/growautomation-at/controller/blob/master/manual/agent/pictures/database-plan.jpg" float="middle" border="4" alt="cable management topology"> <br>
 <br>
 
 ## Detailed Workflow
