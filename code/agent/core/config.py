@@ -84,7 +84,7 @@ class Config:
     def _parse_sql_custom(self):
         command, custom = ['SELECT', 'data', 'FROM ga.Setting WHERE'], False
         if self.table is not None:
-            if self.table == 'grp': command = ['SELECT', 'description', 'FROM ga.Grp WHERE']
+            if self.table == 'grp': command = ['SELECT', 'name', 'FROM ga.Grp WHERE']
             elif self.table == 'member': command = ['SELECT', 'member', 'FROM ga.Member WHERE']
             elif self.table == 'object': command = ['SELECT', 'type', 'FROM ga.Object WHERE']
             elif self.table == 'data': command = ['SELECT', 'data', 'FROM ga.Data WHERE']
