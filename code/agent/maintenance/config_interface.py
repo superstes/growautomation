@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 try:
     from core.owl import DoSql
@@ -26,16 +26,22 @@ try:
     from core.ant import ShellInput
     from core.smallant import Log
     from core.ant import plural
+    from core.ant import int_leading_zero
+    from core.ant import ModifyIdiedDict
     from core.smallant import debugger
     from core.smallant import VarHandler
+    from core.smallant import list_remove_duplicates
 except (ImportError, ModuleNotFoundError):
     from owl import DoSql
     from ant import ShellOutput
     from ant import ShellInput
     from smallant import Log
     from ant import plural
+    from ant import int_leading_zero
+    from ant import ModifyIdiedDict
     from smallant import debugger
     from smallant import VarHandler
+    from smallant import list_remove_duplicates
 
 from os import system as os_system
 from sys import argv as sys_argv
@@ -58,9 +64,9 @@ signal.signal(signal.SIGINT, signal_handler)
 
 class Create:
     def __init__(self, setup_config_dict=None):
-        self.object_dict, self.setting_dict, self.group_dict = {}, {}, {}
+        self.object_dict, self.setting_dict, self.group_dict, self.profile_dict = {}, {}, {}, {}
         self.current_dev_list, self.current_dt_dict, self.current_setting_dict, self.current_obj_list = [], {}, {}, []
-        self.new_dt_dict, self.new_dev_list = {}, []
+        self.new_dt_dict, self.new_dev_dict = {}, {}
         self.object_downlink_list = []
         if setup_config_dict is not None:
             self.setup = True
@@ -69,10 +75,20 @@ class Create:
         else:
             self.setup = False
             from core.config import Config
-            self.Config = Config
+            self.ConfigParser = Config
             self.hostname = Config('hostname').get()
             self.setuptype = Config('setuptype').get()
         self.start()
+
+    def _config(self, output=None, table=None, filter=None, setting=None, outtype=None, belonging=None):
+        result = self.ConfigParser(output=output, table=table, filter=filter, setting=setting, belonging=belonging,
+                                   empty=True).get(outtype)
+        if result is False or (type(result) == str and result == 'False') or (type(result) == list and result[0] == False):
+            if outtype == 'list': output = []
+            else: output = ''
+        else: output = result
+        debugger("confint - config - output |'%s' '%s'" % (type(output), output))
+        return output
 
     def start(self):
         # check if tmp_config_dump is currently in folder -> ask to load old config and try to import it into the db
@@ -80,29 +96,29 @@ class Create:
             self.create_core()
             self.create_agent()
         else:
-            self.current_obj_list = [name for name in self.Config(output='name', table='object').get()]
+            self.current_obj_list = [name for name in self._config(output='name', table='object')]
         if self.create_devicetype() is not False:
             for grouping, nested in self.object_dict.items():
                 for name, typ in dict(nested).items():
                     self.new_dt_dict[name] = typ
-                    self.current_obj_list.append(name)
                     if grouping == 'core' or grouping == 'agent': continue
                     self.current_dt_dict[name] = typ
         if self.setup is False:
-            for name, typ in self.Config(output="name, class", filter="type = 'devicetype'", table='object').get():
+            for name, typ in self._config(output='name,class', filter="type = 'devicetype'", table='object', outtype='list'):
                 self.current_dt_dict[name] = typ
 
         if self.create_device() is not False:
             self.current_dev_list = [name for key, value in self.object_dict.items() if key == 'device'
                                      for nested in dict(value).values() for name in dict(nested).keys()]
-            self.new_dev_list.extend(self.current_dev_list)
+            self.new_dev_dict = {name: typ for key, value in self.object_dict.items() if key == 'device'
+                                 for typ, nested in dict(value).items() for name in dict(nested).keys()}
             self.current_obj_list.extend(self.current_dev_list)
             for obj, nested in self.setting_dict.items():
                 for setting, data in dict(nested).items():
                     self.current_setting_dict[obj] = setting
         if self.setup is False:
-            self.current_dev_list.extend(self.Config(output='name', filter="type = 'device'", table='object').get('list'))
-            for setting, belonging in self.Config(output="setting,belonging").get():
+            self.current_dev_list.extend(self._config(output='name', filter="type = 'device'", table='object', outtype='list'))
+            for setting, belonging in self._config(output='setting,belonging', outtype='list'):
                 self.current_setting_dict[belonging] = setting
 
         self.create_custom_setting()
@@ -123,18 +139,18 @@ class Create:
     def create_devicetype(self):
         ShellOutput('Device Types', symbol='#', font='head')
         while_devicetype = ShellInput("Do you want to add devicetypes?\nInfo: must be created for every sensor/action/downlink "
-                                      "hardware model; "
-                                      "they provide per model configuration", True).get()
+                                      "hardware model\nthey provide per model configuration", True).get()
         if while_devicetype is False: return False
         dt_object_dict = {}
-        # if self.setup is False:
-        #     for name in self.Config(output='name', filter="type = 'devicetype'", table='object').get(): dt_exist_list.append(name)
         debugger("confint - create_devicetype |obj_exist_list '%s'" % self.current_obj_list)
         ShellOutput('Devicetypes', symbol='-', font='head')
         while while_devicetype:
             ShellOutput(symbol='-', font='line')
-            name, setting_dict = ShellInput("Provide a unique name - at max 20 characters long.\n",
-                                            default='AirHumidity', poss=self.current_obj_list, neg=True).get(), {}
+            name = ShellInput("Provide a unique name - at max 20 characters long.\n", default='AirHumidity',
+                              poss=self.current_obj_list, neg=True, max_value=20, min_value=2).get()
+            setting_dict = {}
+            setting_dict['enabled'] = 1
+            # exits without message from setup if given
             dt_object_dict[name] = ShellInput('Provide a type.', default='sensor', poss=['sensor', 'action', 'downlink']).get()
             if dt_object_dict[name] != 'downlink':
                 if ShellInput("Are all devices of this type connected the same way?\nInfo: If all devices are connected "
@@ -170,18 +186,17 @@ class Create:
                                                                             '-> if you need it.', intype='free', min_value=0,
                                                                             max_value=75).get()
             elif dt_object_dict[name] == 'sensor':
-                setting_dict['timer'] = ShellInput('Provide the interval to run the function in seconds.',
+                setting_dict['timer'] = ShellInput('Provide the interval pull data from the sensor. (in seconds)',
                                                    default=600, max_value=1209600, min_value=10).get()
                 setting_dict['unit'] = ShellInput('Provide the unit for the sensor input.', default='°C', intype='free').get()
-                setting_dict['threshold_max'] = ShellInput("Provide a maximum threshold value for the sensor.\n"
-                                                           "Info: if this value is exceeded the linked action(s) will be started",
-                                                           default=26, max_value=1000000, min_value=1).get()
-                setting_dict['threshold_optimal'] = ShellInput("Provide a optimal threshold value for the sensor.\n"
-                                                               "Info: if this value is reached the linked action(s) will be reversed",
-                                                               default=20, max_value=1000000, min_value=1).get()
-
-                setting_dict['timer_check'] = ShellInput('How often should the threshold be checked? Interval in seconds.',
-                                                         default=3600, max_value=1209600, min_value=60).get()
+                setting_dict['datatype'] = ShellInput('Provide the type of data the sensor provides.', default='float',
+                                                      poss=['str', 'int', 'float']).get()
+                # setting_dict['threshold_max'] = ShellInput("Provide a maximum threshold value for the sensor.\n"
+                #                                            "Info: if this value is exceeded the linked action(s) will be started",
+                #                                            default=26, max_value=1000000, min_value=1).get()
+                # setting_dict['threshold_optimal'] = ShellInput("Provide a optimal threshold value for the sensor.\n"
+                #                                                "Info: if this value is reached the linked action(s) will be reversed",
+                #                                                default=20, max_value=1000000, min_value=1).get()
             elif dt_object_dict[name] == 'downlink':
                 setting_dict['portcount'] = ShellInput('How many client-ports does this downlink provide?', default=4).get()
                 setting_dict['output_per_port'] = ShellInput("Can the downlink output data per port basis?\n"
@@ -198,20 +213,22 @@ class Create:
         if ShellInput('Do you want to create devices?', default=True).get() is False: return False
         d_object_dict, d_dl_list = {}, []
         if self.setup is False:
-            # for name in self.Config(output='name', filter="type = 'device'", table='object').get(): d_exist_list.append(name)
-            for name, dt in self.Config(output="name,class", filter="type = 'device'", table='object').get():
-                if self.Config(output='class', setting=dt, table='object').get() == 'downlink': d_dl_list.append(name)
+            for name, dt in self._config(output='name,class', filter="type = 'device'", table='object', outtype='list'):
+                if self._config(output='class', setting=dt, table='object') == 'downlink': d_dl_list.append(name)
         d_dl_list.append('notinlist')
 
         def to_create(to_ask, info):
-            create, create_dict = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get(), {}
+            create = ShellInput("Do you want to add a %s\nInfo: %s" % (to_ask, info), default=True).get()
+            create_dict = {}
             current_new_dt_list = [name for name, typ in self.new_dt_dict.items() if typ == to_ask]
             while create:
                 ShellOutput(symbol='-', font='line')
                 try: default_name = random_choice(current_new_dt_list)
                 except IndexError: default_name = random_choice([dt for dt, typ in self.current_dt_dict.items() if typ == to_ask])
-                name, setting_dict = ShellInput('Provide a unique name - at max 20 characters long.', default="%s01" % default_name,
-                                                intype='free', poss=self.current_obj_list, neg=True).get(), {}
+                name = ShellInput('Provide a unique name - at max 20 characters long.', default="%s01" % default_name,
+                                  intype='free', poss=self.current_obj_list, neg=True, max_value=20, min_value=2).get()
+                setting_dict = {}
+                setting_dict['enabled'] = 1
                 create_dict[name] = ShellInput('Provide its devicetype.', default=[dt for dt in list(self.current_dt_dict.keys())
                                                                                    if name.find(dt) != -1][0],
                                                poss=list(self.current_dt_dict.keys())).get()
@@ -219,7 +236,7 @@ class Create:
                     if create_dict[name] in self.new_dt_dict.keys():
                         dt_conntype = [data for obj, nested in self.setting_dict.items() if obj == create_dict[name]
                                        for setting, data in dict(nested).items() if setting == 'connection'][0]
-                    elif self.setup is False: dt_conntype = self.Config(setting='connection', belonging=create_dict[name]).get()
+                    elif self.setup is False: dt_conntype = self._config(setting='connection', belonging=create_dict[name])
                     else: dt_conntype = 'specific'
                     debugger("confint - create_device |dt_conntype '%s'" % dt_conntype)
                     if dt_conntype != 'specific': setting_dict['connection'] = dt_conntype
@@ -276,11 +293,11 @@ class Create:
             setting_exist_list = [setting for obj, nested in self.setting_dict.items() if obj == object_name
                                   for setting in dict(nested).keys()]
             if self.setup is False:
-                setting_exist_list.extend(self.Config(output='setting', filter="belonging = '%s'" % object_name).get('list'))
+                setting_exist_list.extend(self._config(output='setting', filter="belonging = '%s'" % object_name, outtype='list'))
             change_dict, setting_count, setting_dict = {}, 0, {}
             while True:
                 setting = ShellInput("Provide the setting name.\nInfo: max 30 chars & cannot already exist.", poss=setting_exist_list,
-                                     intype='free', neg=True, max_value=30).get()
+                                     intype='free', neg=True, max_value=30, min_value=2).get()
                 data = ShellInput("Provide the setting data.\nInfo: max 100 chars", intype='free', max_value=100, min_value=1).get()
                 setting_dict[setting] = data
                 if another() is False: break
@@ -293,111 +310,386 @@ class Create:
 
         if ShellInput('Do you want to add custom settings?', default=True).get() is False: return False
         while True:
+            option_list = self.current_dev_list
+            option_list.extend(self.current_dt_dict.keys())
             object_to_edit = ShellInput("Choose one of the listed objects to edit.\n\nDeviceTypes:\n%s\nDevices:\n%s\n"
-                                        % (list(self.current_dt_dict.keys()), self.current_dev_list), poss=self.current_dev_list,
-                                        default=random_choice(self.current_dev_list), intype='free').get()
+                                        % (list(self.current_dt_dict.keys()), self.current_dev_list),
+                                        poss=option_list, default=random_choice(option_list)).get()
             add_setting(object_to_edit)
             if ShellInput('Do you want to add settings to another object?', default=True).get() is False: break
 
     def create_group(self):
         ShellOutput('Groups', symbol='#', font='head')
-        # if ShellInput('Do you want to create groups?', default=True).get() is False: return False
-        #
-        # def to_create(to_ask, info, info_member):
-        #     create_count, create_dict, posslist = 0, {}, []
-        #     create = ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get()
-        #     if to_ask == 'sector':
-        #         posslist = self.current_dev_list
-        #         [posslist.remove(dev) for dev in self.object_downlink_list]
-        #     # elif to_ask == 'sectorgroup':
-        #     #     posslist = grp_sector_exist_list
-        #     # elif to_ask == 'link':
-        #     #     posslist = dt_action_list
-        #     #     posslist.extend(dt_sensor_list)
-        #     debugger("confint - create_group |posslist '%s'" % posslist)
-        #     while create:
-        #         ShellOutput(symbol='-', font='line')
-        #         member_list, current_posslist = [], posslist
-        #         member_count, add_member = 0, True
-        #         while add_member:
-        #             if member_count == 0: info = "\nInfo: %s" % info_member
-        #             else: info = ''
-        #             member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
-        #                                           poss=current_posslist, default=str(random_choice(current_posslist)), intype='free').get())
-        #             member_count += 1
-        #             current_posslist = list(set(posslist) - set(member_list))
-        #             if member_count > 1:
-        #                 if len(current_posslist) > 0:
-        #                     add_member = ShellInput('Want to add another member?', default=True, style='info').get()
-        #                 else: add_member = False
-        #         desc = ShellInput('Give the group an unique name!', max_value=50, min_value=2, neg=True, poss=grp_desc_exist_list).get()
-        #         grp_desc_exist_list.append(desc)
-        #         create_dict[create_count] = {desc: member_list}
-        #         create_count += 1
-        #         debugger("confint - create_group |members '%s'" % member_list)
-        #         create = ShellInput("Want to add another %s?" % to_ask, default=True, style='info').get()
-        #     return create_dict
-        #
-        # if self.setup is False:
-        #     grp_desc_exist_list = self.Config(output='name', table='grp').get()
-        # else:
-        #     grp_desc_exist_list = []
-        #
-        # ShellOutput('Sectors', symbol='-', font='head')
-        # self.group_dict['sector'] = to_create('sector', 'links objects which are in the same area', 'must match one device')
-        #
-        # grp_sector_exist_list = [desc for typ, nested in self.group_dict.items() if typ == 'sector'
-        #                          for nested_too in dict(nested).values() for desc in dict(nested_too).keys()]
-        # if self.setup is False:
-        #     sector_exist_list = self.Config(output='name', filter="type = 'sector'", table='grp').get()
-        #     grp_sector_exist_list.extend(sector_exist_list)
+        if ShellInput('Do you want to create groups?', default=True).get() is False: return False
 
+        def to_create(to_ask, info, info_member=None):
+            create_dict, posslist, group_setting_dict, create = {}, [], {}, True
+            if ShellInput("Do you want to add a %s?\nInfo: %s" % (to_ask, info), True).get() is False: return False
+            group_name = ShellInput('Give the group an unique name!', max_value=20, min_value=2,
+                                    neg=True, default='grp01', poss=grp_exist_list).get()
+            description = ShellInput('Add a description to this group. (optional)', default='NULL', intype='free', min_value=0,
+                                     max_value=50).get()
+            if len(grp_exist_list) > 0:
+                if ShellInput("Should this %s be nested under another group?" % to_ask, False).get() is True:
+                    parent = ShellInput('Provide the name of the parent group.', default=str(random_choice(grp_exist_list)),
+                                        poss=grp_exist_list).get()
+                else: parent = 'NULL'
+            else: parent = 'NULL'
+            if to_ask == 'profile':
+                group_setting_dict['timer'] = ShellInput("Provide the interval in which this profile should be checked! (in seconds)",
+                                                         default=3600, max_value=2764800, min_value=60).get()
+                group_setting_dict['enabled'] = 1
+            else: group_setting_dict['enabled'] = 1
 
+            # generate option lists
+            if to_ask == 'profile':
+                member_posslist, condi_posslist, sector_posslist = [], [], ['NULL']
+                for dev, typ in self.new_dev_dict.items():
+                    if typ == 'action': member_posslist.append(dev)
+                    elif typ == 'sensor': condi_posslist.append(dev)
+                if len(self.group_dict) > 0:
+                    for typ, nested in self.group_dict.items():
+                        if typ == 'sector':
+                            for name in dict(nested).keys():
+                                sector_posslist.append(name)
+                condi_posslist.extend([name for name, typ in self.current_dt_dict.items() if typ == 'sensor'])
+                if self.setup is False:
+                    sector_posslist.extend(self._config(output='name', table='grp', filter="type = 'sector'", outtype='list'))
+                    for dt, typ in {name: typ for name, typ in self.current_dt_dict.items()}.items():
+                        if typ == 'action':
+                            _ = self._config(table='object', output='name', filter="class = '%s'" % dt)
+                            if type(_) == list: member_posslist.extend(_)
+                            else: member_posslist.append(_)
+                        elif typ == 'sensor':
+                            _ = self._config(table='object', output='name', filter="class = '%s'" % dt)
+                            if type(_) == list: condi_posslist.extend(_)
+                            else: condi_posslist.append(_)
+                # member_posslist.extend(sector_posslist)
+            elif to_ask == 'sector':
+                member_posslist = self.current_dev_list
+                [member_posslist.remove(dev) for dev in self.object_downlink_list]
+                debugger("confint - create_group |member_posslist '%s'" % member_posslist)
+            else: return False
 
-        # if len(grp_sector_exist_list) > 1:
-        #     ShellOutput('Sector groups', symbol='-', font='head')
-        #     self.group_dict['sectorgroup'] = to_create('sectorgroup', "links sectors to areas (beds in field)", 'must match one sector')
-        #
-        # ShellOutput('Devicetype links', symbol='-', font='head')
-        # dt_action_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
-        #                   for name, typ in dict(value).items() if typ == 'action']
-        # if self.setup is False:
-        #     dt_action_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'action'",
-        #                                       table='object').get('list'))
-        # dt_sensor_list = [name for key, value in self.object_dict.items() if key == 'devicetype'
-        #                   for name, typ in dict(value).items() if typ == 'sensor']
-        # if self.setup is False:
-        #     dt_sensor_list.extend(self.Config(output='name', filter="type = 'devicetype' AND class = 'sensor'",
-        #                                       table='object').get('list'))
-        # if len(dt_action_list) > 0 and len(dt_sensor_list) > 0:
-        #     self.group_dict['link'] = to_create('link', "links action- and sensortypes\npe. earth humidity sensor with water pump",
-        #                                         'must match one devicetype')
+            while create:
+                ShellOutput(symbol='-', font='line')
+
+                # add condition profiles
+                if to_ask == 'profile':
+                    stage_dict, add_stage, parent_count, condi_count, new_stage_nr = {}, True, 0, 0, 1
+                    profile_exist_list = list(self.profile_dict.keys())
+                    dt_datatype_tuple_list = self._config(output='belonging,data', setting='datatype')
+                    if self.setup is False:
+                        profile_exist_list.extend(self._config(table='grp', output='name', filter="type = 'profile'", outtype='list'))
+                    while add_stage:
+                        def _show_profile_tree():
+                            def _recursive_child_lookup(parent, whitespace):
+                                # stage_dict {stage_id {'parent': stage_parent, 'data': { substage_id: { setting: data} } } }
+                                output_list = []
+                                for sid, nested in stage_dict.items():
+                                    stage_value_dict = dict(nested)
+                                    if stage_value_dict['parent'] != parent: continue
+                                    whitespace += 2
+                                    output_list = ["%s> stage-id: %s" % ('-' * (whitespace + 1), sid)]
+                                    condition_dict = dict(stage_value_dict['data'])
+                                    for subid in sorted(condition_dict.keys()):
+                                        _dict = condition_dict[subid]
+                                        _desc = ", description: %s" % _dict['description'] if _dict['description'] != 'null' else ''
+                                        if _dict['type'] == 'parent':
+                                            output_list.append("%s-> order-id: %s. \"name: %s, operator: %s%s\""
+                                                               % (' ' * whitespace, subid, _dict['name'], _dict['operator'], _desc))
+                                            output_list.append(_recursive_child_lookup(parent=_dict['name'], whitespace=whitespace))
+                                        else:
+                                            output_list.append("%s-> order-id: %s. \"name: %s, condition: '%s %s %s', operator: %s%s\""
+                                                               % (' ' * whitespace, subid, _dict['name'], _dict['object'],
+                                                                  _dict['condi'], _dict['threshold'], _dict['operator'], _desc))
+                                return "\n".join(output_list)
+                            main_stage_list = [sid for sid, nested in stage_dict.items() if dict(nested)['parent'] == 'NULL']
+                            if 1 < len(main_stage_list) > 1:
+                                debugger('confint - create_group - profile - tree |more or less than one stage without parent')
+                                # error/log/debug or whatever
+                            else:
+                                tree_view = _recursive_child_lookup(parent='NULL', whitespace=0)
+                                _desc = "%s:\n" % description if description != 'null' else ''
+                                ShellOutput("\nCurrent profile configuration:\n\n%s%s\n\n" % (_desc, tree_view), style='info')
+
+                        ShellOutput(symbol='-', font='line')
+                        stage_count, loop_condition = len(stage_dict), False
+                        if stage_count > 0: _show_profile_tree()
+                        posslist = ['add'] if stage_count == 0 else ['add', 'edit'] if stage_count == 1 else ['add', 'edit', 'delete']
+                        if len(posslist) == 1: stage_action = posslist[0]
+                        else: stage_action = ShellInput('Do you want to add, edit or delete a stage?', default='add',
+                                                        poss=posslist).get()
+                        parent_dict, parent_active_list, condition_name_list = {}, [], []
+                        # stage_dict {stage_id {'parent': stage_parent, 'data': { substage_id: { setting: data} } } }
+                        for _sid, nested in stage_dict.items():
+                            for key, value in dict(nested).items():
+                                if key == 'parent' and value is not None:
+                                    parent_active_list.append(value)
+                                elif key == 'data':
+                                    for condition in dict(value).values():
+                                        condi_dict = dict(condition)
+                                        if condi_dict['type'] == 'parent':
+                                            parent_dict[condi_dict['name']] = _sid
+                                        elif condi_dict['type'] == 'child':
+                                            condition_name_list.append(condi_dict['name'])
+                        condition_name_list.extend(parent_dict.keys())
+                        possible_parent_dict = {name: sid for name, sid in parent_dict.items() if name not in parent_active_list}
+                        debugger("confint - create_group - profile - prequesits |parent exist '%s', parent active '%s'"
+                                 % (parent_dict, parent_active_list))
+                        if stage_action == 'add':
+                            if len(possible_parent_dict) < 1 and stage_count != 0:
+                                ShellOutput('There is no free parent to add a stage to. '
+                                            'You first need to add a parent to any stage.', style='warn')
+                            else:
+                                if stage_count != 0:
+                                    stage_parent = ShellInput('Provide the parent under which this stage should be nested!',
+                                                              poss=list(possible_parent_dict.keys()),
+                                                              default=random_choice(list(possible_parent_dict.keys()))).get()
+                                else: stage_parent = 'NULL'
+                                current_stage, loop_condition = new_stage_nr, True
+                        elif stage_action == 'edit':
+                            current_stage = ShellInput('Provide the stage-id to edit!', default=str(list(stage_dict.keys())[0]),
+                                                       poss=list(stage_dict.keys())).get('int')
+                            loop_condition = True
+                            stage_parent = dict(stage_dict[current_stage])['parent']
+                        elif stage_action == 'delete':
+                            stage_id_list = [str(key) for key in stage_dict.keys()]
+                            current_stage = ShellInput('Provide the stage-id to delete!', default=stage_id_list[0],
+                                                       poss=stage_id_list).get()
+                            condition_dict = dict(dict(stage_dict[current_stage])['data'])
+                            if any([dict(condition)['name'] for condition in condition_dict.values()]) in parent_active_list:
+                                ShellOutput('You cannot delete a stage which has sub-stages configured.\n'
+                                            'You must delete the sub-stages first!', style='err')
+                            else: del stage_dict[current_stage]
+                        else: stage_action, loop_condition, current_stage = 'add', True, 1
+                        if loop_condition:
+                            if stage_action != 'add':
+                                condition_dict = dict(dict(stage_dict[current_stage])['data'])
+                            else: condition_dict = {}
+                            while loop_condition:
+                                ShellOutput(symbol='-', font='line')
+                                condi_count = len(condition_dict)
+                                posslist = ['add'] if condi_count == 0 else ['add', 'edit'] if condi_count == 1 else ['add', 'edit', 'delete']
+                                if len(posslist) == 1: condi_action = posslist[0]
+                                else: condi_action = ShellInput('Do you want to add, edit or delete a condition?',
+                                                                default='add', poss=posslist).get()
+                                current_condi_name_list = [dict(condi)['name'] for condi in condition_dict.values()]
+                                condition_name_list.extend(current_condi_name_list)
+                                condition_name_list = list_remove_duplicates(condition_name_list)
+                                if condi_action in ['add', 'edit']: new_condi_dict = {}
+                                if condi_action in ['edit', 'delete']:
+                                    while True:
+                                        current_condi_name = ShellInput("Provide a name for the condition/parent which to %s"
+                                                                        % condi_action, default=random_choice(current_condi_name_list),
+                                                                        poss=current_condi_name_list).get()
+                                        condi_found = False
+                                        for stage_id, condition in condition_dict.items():
+                                            if dict(condition)['name'] == current_condi_name:
+                                                current_condi_dict = {stage_id: condition}
+                                                condi_found = True
+                                        if condi_found: break
+                                        else: ShellOutput("The condition '%s' could not be found" % current_condi_name, style='err')
+                                    if condi_action == 'edit':
+                                        renew_config = ShellInput('Do you want to renew the whole config of this condition/parent?',
+                                                                  default=False).get()
+                                        if renew_config:
+                                            current_condi_name_list.pop(current_condi_name)
+                                            condition_dict = ModifyIdiedDict(condition_dict).delete([key for key in current_condi_dict.keys()][0])
+                                            condi_action = 'add'
+
+                                def condi_input(setting, action='add', filter=None):
+                                    if setting == 'name':
+                                        return ShellInput('Provide a unique name for the condition/parent.\n'
+                                                          'Info: a unique name inside of the profile', neg=True,
+                                                          poss=condition_name_list, max_value=20, min_value=2, default='condi1').get()
+                                    elif setting == 'object':
+                                        return ShellInput('Provide a sensor/sensortype for the condition.', poss=condi_posslist,
+                                                          default=random_choice(condi_posslist)).get()
+                                    elif setting == 'sector':
+                                        return ShellInput('Provide a sector to which to limit the condition. (optional)',
+                                                          default='NULL', poss=sector_posslist).get()
+                                    elif setting == 'data_source':
+                                        return ShellInput("Where should the comparable data be sourced from?\n"
+                                                          "Info: direct - we will read the data directly from the sensor (current state)",
+                                                          default='database', poss=['database', 'direct']).get()
+                                    elif setting == 'data_points':
+                                        return ShellInput("How many data entries should be checked for this condition? (optional)\n"
+                                                          "Info: if this condition is linked to a devicetype -> this amount "
+                                                          "of entries will be checked for each of its devices.",
+                                                          default='NULL', max_value=10000, min_value=1).get()
+                                    elif setting == 'condi':
+                                        if filter is None: _datatype = 'int'
+                                        else:
+                                            if filter in [dt for dt, data in dt_datatype_tuple_list]: _dt = filter
+                                            else: _dt = self._config(table='object', output='class', setting=filter)
+                                            _datatype = [data for dt, data in dt_datatype_tuple_list if dt == _dt][0]
+                                        if _datatype not in ['int', 'float', 'time', 'date']:
+                                            return ShellInput("Provide which condition must be true.\n"
+                                                              "Info:\n  '=' - must be exactly the threshold\n"
+                                                              "  '!' - must not be exactly the threshold\n",
+                                                              poss=['!', '='], default='=').get()
+                                        else:
+                                            return ShellInput("Provide which condition must be true.\n"
+                                                              "Info:\n  '<' - must be smaller than threshold\n"
+                                                              "  '>' - must be bigger than threshold\n"
+                                                              "  '=' - must be exactly the threshold\n"
+                                                              "  '!' - must not be exactly the threshold\n",
+                                                              poss=['!', '=', '<', '>'], default='>').get()
+                                    elif setting == 'threshold':
+                                        return ShellInput('Provide a threshold.', intype='free', max_value=20, min_value=1).get()
+                                    elif setting == 'stage_id':
+                                        if len(condition_dict) > 0:
+                                            _list = []
+                                            for sid in sorted(condition_dict.keys()):
+                                                _dict = dict(condition_dict[sid])
+                                                if _dict['type'] == 'child':
+                                                    _list.append("%s. \"name: %s, condition: '%s %s %s', operator: %s'\""
+                                                                 % (sid, _dict['name'], _dict['object'], _dict['condi'],
+                                                                    _dict['threshold'], _dict['operator']))
+                                                else: _list.append("%s. \"name: %s, operator: %s'\""
+                                                                   % (sid, _dict['name'], _dict['operator']))
+                                            ShellOutput("\n\nCurrent in-stage placement:\n%s" % '\n'.join(_list), style='info')
+                                        if action == 'add':
+                                            posslist = [str(i) for i in range(1, len(condition_dict) + 2)]
+                                        else: posslist = [str(i) for i in range(1, len(condition_dict) + 1)]
+                                        return ShellInput('Choose the in-stage placement for this condition/parent.', poss=posslist,
+                                                          default=posslist[-1]).get('int')
+                                    elif setting == 'operator':
+                                        return ShellInput("How should this condition/parent be linked to the next one on this stage?\n"
+                                                          "Info: the processing priorities are the following:\n"
+                                                          "  1. leading with '-',\n  2. 'not', \n  3. 'and' in it,\n  4. 'or' in it",
+                                                          poss=['and', 'or', 'not', 'nand', 'nor', 'xor', 'xnor', '-and',
+                                                                '-or', '-not', '-nand', '-nor', '-xor', '-xnor'],
+                                                          default=random_choice(['and', 'or'])).get()
+                                    elif setting == 'description':
+                                        return ShellInput('Provide a description for the condition/parent. (optional)', default='NULL',
+                                                          intype='free', max_value=50, min_value=2).get()
+
+                                if condi_action == 'add':
+                                    condi_typ = ShellInput("Do you want to create a condition or a parent?\n"
+                                                           "Info: a parent can have another sub-stage nested under it",
+                                                           poss=['condition', 'parent'],
+                                                           default=random_choice(['condition', 'parent'])).get()
+                                    new_condi_dict['name'] = condi_input('name')
+                                    if condi_typ == 'condition':
+                                        new_condi_dict['type'] = 'child'
+                                        new_condi_dict['object'] = condi_input('object')
+                                        if new_condi_dict['object'] in self.current_dt_dict.keys():
+                                            new_condi_dict['sector'] = condi_input('sector')
+                                        else: new_condi_dict['sector'] = 'NULL'
+                                        new_condi_dict['data_source'] = condi_input('data_source')
+                                        if new_condi_dict['data_source'] == 'database':
+                                            new_condi_dict['data_points'] = condi_input('data_points')
+                                        new_condi_dict['condi'] = condi_input('condi', filter=new_condi_dict['object'])
+                                        new_condi_dict['threshold'] = condi_input('threshold')
+                                    else: new_condi_dict['type'] = 'parent'
+                                    new_condi_dict['operator'] = condi_input('operator')
+                                    new_condi_dict['description'] = condi_input('description')
+                                    condition_dict = ModifyIdiedDict(condition_dict).add(condi_input('stage_id'), new_condi_dict)
+                                elif condi_action == 'edit':
+                                    another_edit = True
+                                    condi_setting_list = [_ for _2 in current_condi_dict.values() for _ in dict(_2).keys()]
+                                    condi_setting_list.append('stage_id')
+                                    cur_sid = [key for key in current_condi_dict.keys()][0]
+                                    cur_condi_dict = current_condi_dict[cur_sid]
+                                    new_sid, new_condi_dict = cur_sid, cur_condi_dict.copy()
+                                    while another_edit:
+                                        if new_condi_dict != cur_condi_dict:
+                                            ShellOutput("\n\nNew condition:\nOrder-id: '%s', Settings: '%s'" % (new_sid, new_condi_dict),
+                                                        style='info')
+                                        ShellOutput("\n\nCurrent condition:\nOrder-id: '%s', Settings: '%s'" % (cur_sid, cur_condi_dict),
+                                                    style='info')
+                                        to_edit = ShellInput('Provide the setting to edit.', poss=condi_setting_list,
+                                                             default=random_choice(condi_setting_list)).get()
+                                        if to_edit == 'stage_id':
+                                            new_sid = condi_input(to_edit, action='edit')
+                                        elif to_edit == 'condi':
+                                            new_condi_dict[to_edit] = condi_input(to_edit, filter=new_condi_dict['object'])
+                                        else: new_condi_dict[to_edit] = condi_input(to_edit)
+                                        another_edit = ShellInput('Want to edit another setting?', default=True).get()
+                                    condition_dict = ModifyIdiedDict(condition_dict).edit(cur_sid, new_sid, new_condi_dict)
+                                elif condi_action == 'delete':
+                                    if current_condi_name in parent_active_list:
+                                        ShellOutput("The parent '%s' is still in use! You must delete its sub-stage first!" %
+                                                    current_condi_name, style='err')
+                                    else: condition_dict = ModifyIdiedDict(condition_dict).delete([key for key in current_condi_dict.keys()][0])
+
+                                def show_condi_config():
+                                    output_list = []
+                                    for oid, condi in condition_dict.items():
+                                        setting_list = ["%s: %s" % (setting, data) for setting, data in dict(condi).items()]
+                                        output_list.append("Order-id: '%s', Settings: \"%s\"" % (oid, ', '.join(setting_list)))
+                                    ShellOutput("\n\n%s" % "\n".join(output_list), style='info')
+
+                                show_condi_config()
+                                loop_condition = ShellInput('Do you want to make further changes to this stage?',
+                                                            default=True, style='info').get()
+                            debugger("confint - create_group - profile - loop_condition |stage config '%s' '%s'"
+                                     % (type(condition_dict), condition_dict))
+                            if stage_action in ['add', 'edit'] and len(condition_dict) > 0:
+                                stage_dict[current_stage] = {'parent': stage_parent, 'data': condition_dict}
+                                if stage_action == 'add': new_stage_nr += 1
+                            else: debugger("confint - create_group - profile - loop_condition |no condition in stage")
+
+                        add_stage = ShellInput('Do you want to make further changes to this profile?', default=True, style='info').get()
+                        if len(possible_parent_dict) > 1 and add_stage is False:
+                            ShellOutput('There are unused parents configured! You need to delete or use them to proceed.', style='warn')
+                            add_stage = True
+
+                    self.profile_dict[group_name] = stage_dict
+
+                # add group members
+                member_list, current_posslist = [], member_posslist
+                member_count, add_member = 0, True
+                member_count_min = 2 if to_ask == 'sector' else 1
+                while add_member:
+                    if member_count == 0: info = "\nInfo: %s" % info_member
+                    else: info = ''
+                    member_list.append(ShellInput("Provide a name for member %s%s." % (member_count + 1, info),
+                                                  poss=current_posslist, default=random_choice(current_posslist)).get())
+                    member_count += 1
+                    current_posslist = list(set(member_posslist) - set(member_list))
+                    if member_count >= member_count_min:
+                        if len(current_posslist) > 0:
+                            add_member = ShellInput('Want to add another member?', default=True, style='info').get()
+                        else: add_member = False
+                grp_exist_list.append(group_name)
+                create_dict[group_name] = {'setting': group_setting_dict, 'member': member_list, 'parent': parent, 'description': description}
+                debugger("confint - create_group |members '%s'" % member_list)
+                create = ShellInput("Want to add another %s?" % to_ask, default=True, style='info').get()
+            return create_dict
+
+        if self.setup is False:
+            grp_exist_list = self._config(output='name', table='grp', outtype='list')
+        else: grp_exist_list = []
+
+        ShellOutput('Sectors', symbol='-', font='head')
+        _ = to_create('sector', 'links objects which are in the same area', 'must match one device')
+        if _ is not False: self.group_dict['sector'] = _
+        ShellOutput('Action conditions', symbol='-', font='head')
+        _ = to_create('profile', 'lets you configure conditions on which action should be started',
+                      'action-devices/-devicetypes which to start or sector on which to limit the actions')
+        if _ is not False: self.group_dict['profile'] = _
 
     def write_config(self):
         ShellOutput('Writing configuration to database', symbol='#', font='head')
-        Log("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'"
-            % (self.object_dict, self.setting_dict, self.group_dict), level=3).write()
+        Log("Writing configuration to database:\n\nobjects: '%s'\nsettings: '%s'\ngroups: '%s'\nprofiles: '%s'"
+            % (self.object_dict, self.setting_dict, self.group_dict, self.profile_dict), level=3).write()
         if self.setup is not True:
-            tmp_config_dump = "%s/maintenance/add_config.tmp" % self.Config('path_root').get()
+            tmp_config_dump = "%s/maintenance/add_config.tmp" % self._config(setting='path_root')
             with open(tmp_config_dump, 'w') as tmp:
                 tmp.write("%s\n%s\n%s" % (self.object_dict, self.setting_dict, self.group_dict))
 
         ShellOutput('Writing object configuration', font='text')
-        DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % self.hostname, write=True).start()
-        [DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % key, write=True).start()
-         for key in self.object_dict.keys()]
+        # dts {obj_type: {object_name: object_class}}
+        # devs {obj_type: {obj_subtype: {object_name: object_class}}}
         insert_count, error_count = 0, 0
         for object_type, packed_values in self.object_dict.items():
             def unpack_values(values, parent='NULL'):
                 count, error_count = 0, 0
                 for object_name, object_class in sorted(values.items()):
-                    if object_class != 'NULL':
-                        DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s');" % object_class,
-                              write=True).start()
-                        object_class = "'%s'" % object_class
-                    if parent != 'NULL' and parent.find("'") == -1:
-                        parent = "'%s'" % parent
-                    if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s',%s,%s,'%s');" %
+                    if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s','%s','%s','%s');" %
                              (object_name, parent, object_class, object_type), write=True).start() is False: error_count += 1
                     else: count += 1
                 return count, error_count
@@ -414,9 +706,9 @@ class Create:
             Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         ShellOutput('Writing object settings', font='text')
+        # {object: {'setting_name': 'setting_data'}}
         insert_count, error_count = 0, 0
         for object_name, packed_values in self.setting_dict.items():
-            if object_name in self.new_dev_list or object_name in self.new_dt_dict: packed_values['enabled'] = 1
             for setting, data in sorted(packed_values.items()):
                 if data == '': pass
                 elif type(data) == bool:
@@ -432,31 +724,96 @@ class Create:
             Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         ShellOutput('Writing group configuration', font='text')
-        insert_count, member_count, error_count = 0, 0, 0
-        for group_type, packed_values in self.group_dict.items():
-            for group_id, also_packed_values in dict(packed_values).items():
-                for group_desc, group_member_list in dict(also_packed_values).items():
-                    DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','%s')" % group_type, write=True).start()
-                    if DoSql("INSERT INTO ga.Grp (author,type,name) VALUES ('setup','%s','%s');"
-                             % (group_type, group_desc), write=True).start() is False:
-                        error_count += 1
-                    else: insert_count += 1
-                    sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
-                                    group_type).start()
-                    for member in sorted(group_member_list):
-                        # if group_type == 'sectorgroup':
-                        #     sector_gid = DoSql("SELECT id FROM ga.Grp WHERE name = '%s';" % member).start()
-                        #     DoSql("INSERT IGNORE INTO ga.Reference (author,name) VALUES ('setup','group');", write=True).start()
-                        #     if DoSql("INSERT INTO ga.Object (author,name,type,description) VALUES ('setup','group_%s','group','%s');"
-                        #              % (sector_gid, member), write=True).start() is False: error_count +=1
-                        #     if DoSql("INSERT INTO ga.Member (author,gid,member,description) VALUES ('setup','%s','group_%s','%s');"
-                        #              % (sql_gid, sector_gid, member), write=True).start() is False: error_count += 1
-                        #     else: member_count += 1
-                        # else:
-                        if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                                 write=True).start() is False: error_count += 1
-                        else: member_count += 1
-        ShellOutput("added %s group%s with a total of %s member%s" % (insert_count, plural(insert_count), member_count, plural(member_count)), style='info', font='text')
+        # {group_type: {group_name: {'setting': {setting_dict}, 'description': -, 'parent': -, 'member': [member_list]}}}
+        insert_count, member_count, setting_count, error_count = 0, 0, 0, 0
+        for group_type, nested in self.group_dict.items():
+            for group_name, group_data in dict(nested).items():
+                group_data_dict = dict(group_data)
+                if group_data_dict['parent'] != 'NULL':
+                    _parent_gid = DoSql("SELECT id FROM ga.Grp WHERE name = '%s';" % group_data_dict['parent']).start()
+                else: _parent_gid = group_data_dict['parent']
+                if DoSql("INSERT INTO ga.Grp (author,type,name,description,parent) VALUES ('setup','%s','%s','%s','%s');"
+                         % (group_type, group_name, group_data_dict['description'], _parent_gid),
+                         write=True).start() is False: error_count += 1
+                else: insert_count += 1
+                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
+                                group_type).start()
+                if sql_gid is False: continue
+                for member in sorted(group_data_dict['member']):
+                    if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
+                             write=True).start() is False: error_count += 1
+                    else: member_count += 1
+                for setting, data in sorted(dict(group_data_dict['setting']).items()):
+                    if DoSql("INSERT INTO ga.GrpSetting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
+                             % (group_name, setting, data), write=True).start() is False: error_count += 1
+                    else: setting_count += 1
+        ShellOutput("added %s group%s with a total of %s member%s and %s setting%s"
+                    % (insert_count, plural(insert_count), member_count, plural(member_count), setting_count, plural(setting_count)),
+                    style='info', font='text')
+        if error_count > 0:
+            ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
+            Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
+
+        ShellOutput('Writing profile configuration', font='text')
+        # {group_name: {stage_id: {'parent': stage_parent, 'data': {sub_stage_id: {condition_dict}}}}}
+        main_parent_list, parent_list, child_list, parent_id, group_count = [], [], [], 1, 0
+        for group_name, nested in self.profile_dict.items():
+            sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND name = '%s' ORDER BY changed DESC LIMIT 1;"
+                            % group_name).start()
+            if sql_gid is False: continue
+            group_count += 1
+            for stage_id, also_nested in dict(nested).items():
+                stage_dict = dict(also_nested)
+                for sub_sid, condition_data in dict(stage_dict['data']).items():
+                    _dict = dict(condition_data)
+                    _dict['parent'] = stage_dict['parent']
+                    _dict['stage_id'] = sub_sid
+                    _dict['gid'] = sql_gid
+                    if _dict['type'] == 'parent':
+                        _dict['parent_id'] = "%s%s" % (sql_gid, int_leading_zero(2, parent_id))
+                        parent_id += 1
+                        if _dict['parent'] == 'NULL':
+                            main_parent_list.append(_dict)
+                        else: parent_list.append(_dict)
+                    else: child_list.append(_dict)
+
+        def insert_parent(_list):
+            _error_count, _parent_count = 0, 0
+            for parent in _list:
+                parent_dict = dict(parent)
+                if DoSql("INSERT INTO ga.ProfileGrp (author,stage_id,parent,parent_id,gid,operator,name,description) "
+                         "VALUES ('setup','%s','%s','%s','%s','%s','%s','%s');"
+                         % (parent_dict['stage_id'], parent_dict['parent'], parent_dict['parent_id'], parent_dict['gid'],
+                            parent_dict['operator'], parent_dict['name'], parent_dict['description'], ), write=True).start() is False:
+                    _error_count += 1
+                else: _parent_count += 1
+            return _error_count, _parent_count
+
+        parent_count, condi_count, error_count = 0, 0, 0
+        _error_count, _parent_count = insert_parent(main_parent_list)
+        error_count += _error_count
+        parent_count += _parent_count
+        _error_count, _parent_count = insert_parent(parent_list)
+        error_count += _error_count
+        parent_count += _parent_count
+
+        _all_parent_list = main_parent_list
+        _all_parent_list.extend(parent_list)
+        for child in child_list:
+            child_dict = dict(child)
+            if child_dict['parent'] != 'NULL':
+                _parent_id = [dict(_)['parent_id'] for _ in _all_parent_list if dict(_)['name'] == child_dict['parent']]
+            else: _parent_id = child_dict['parent']
+            if DoSql("INSERT INTO ga.Profile (author,stage_id,parent,gid,object,sector,data_source,data_points,threshold,"
+                     "condi,operator,name,description) VALUES ('setup','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                     % (child_dict['stage_id'], _parent_id, child_dict['gid'], child_dict['object'], child_dict['sector'],
+                        child_dict['data_source'], child_dict['data_points'], child_dict['threshold'], child_dict['condi'],
+                        child_dict['operator'], child_dict['name'], child_dict['description'],),
+                     write=True).start() is False: error_count += 1
+            else: condi_count += 1
+        ShellOutput("added %s profile%s with a total of %s parent%s and %s condition%s"
+                    % (group_count, plural(group_count), parent_count, plural(parent_count), condi_count, plural(condi_count)),
+                    style='info', font='text')
         if error_count > 0:
             ShellOutput("%s error%s while inserting" % (error_count, plural(error_count)), style='err')
             Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
@@ -487,7 +844,8 @@ class Edit:
             if self.enabled_state is not None:
                 self.edit_setting(object_to_edit, setting_name='enabled', setting_data=1 if self.enabled_state == 'enable' else 0)
             else:
-                what_to_edit = ShellInput('Do you want to edit a object itself or its settings?', poss=['object', 'setting'], default='setting', intype='free').get()
+                what_to_edit = ShellInput('Do you want to edit a object itself or its settings?', poss=['object', 'setting'],
+                                          default='setting', intype='free').get()
                 if what_to_edit == 'setting': self.edit_setting(object_to_edit)
                 elif what_to_edit == 'object': self.edit_object(object_to_edit)
             if ShellInput('Do you want to %s another object?' % todo, default=True).get() is False: break
@@ -497,11 +855,14 @@ class Edit:
         if setting_name is not None and setting_data is not None:
             change_dict[setting_name] = setting_data
         else:
-            setting_dict = {setting: data for setting, data in self.Config(output="setting,data", filter="belonging = '%s'" % object_name).get('list')}
+            setting_dict = {setting: data for setting, data in self.Config(output='setting,data', filter="belonging = '%s'" %
+                                                                                                         object_name).get('list')}
             while True:
                 setting = ShellInput('Choose the setting you want to edit.',
-                                     poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())), intype='free').get()
-                ShellOutput("\nIts current configuration: %s = %s" % (setting, [val for key, val in setting_dict.items() if key == setting][0]), style='info')
+                                     poss=list(setting_dict.keys()), default=random_choice(list(setting_dict.keys())),
+                                     intype='free').get()
+                ShellOutput("\nIts current configuration: %s = %s" % (setting, [val for key, val in setting_dict.items() if
+                                                                                key == setting][0]), style='info')
                 data = ShellInput("Provide the new setting data.\n"
                                   "Warning: If you misconfigure any settings it may lead to unforeseen problems!",
                                   intype='free', max_value=100, min_value=1).get()
@@ -523,6 +884,7 @@ class Edit:
 
 
 def show():
+    # add GrpSetting
     from core.config import Config
     object_list = ['exit']
     object_agent_list = Config(output='name', table='object', filter="type = 'agent'").get('list')
@@ -537,8 +899,8 @@ def show():
                                  % (object_agent_list, object_dt_list, object_dev_list),
                                  poss=object_list, default=random_choice(object_list), intype='free').get()
         if object_name == 'exit': break
-        setting_list = ["'%s' = '%s'" % (setting, data) for setting, data in Config(output="setting,data", #
-                                                                                    filter="belonging = '%s'" % object_name).get()]
+        setting_list = ["'%s' = '%s'" % (setting, data) for setting, data in Config(output="setting,data",
+                                                                                    filter="belonging = '%s'" % object_name).get('list')]
         ShellOutput("\n\nThe following settings exist for the object '%s':\n\n%s" % (object_name, ' | '.join(setting_list)))
         ShellOutput(font='line', symbol='-')
     return True
@@ -556,15 +918,15 @@ class Delete:
 def setup(setup_dict=None):
     if setup_dict is None:
         setup_dict = {}
-        setup_dict['hostname'] = ShellInput(prompt='Provide the name of this growautomation host.', default='gacon01')
+        setup_dict['hostname'] = ShellInput(prompt='Provide the name of this growautomation host.', default='gacon01').get()
         setup_dict['setuptype'] = ShellInput(prompt="Setup as growautomation standalone, agent or server?\n"
                                                     "Agent and Server setup is disabled for now. It will become available after further testing!",
-                                             poss='standalone', default='standalone')  # ['agent', 'standalone', 'server']
-        setup_dict['path_root'] = ShellInput(prompt='Want to choose a custom install path?', default='/etc/growautomation')
-        setup_dict['log_level'] = ShellInput(prompt='Want to change the log level?', default='1', poss=['0', '1', '2', '3', '4', '5'])
-        setup_dict['backup'] = ShellInput('Want to enable backup?', default=True)
-        setup_dict['path_backup'] = ShellInput(prompt='Want to choose a custom backup path?', default='/mnt/growautomation/backup/')
-        setup_dict['path_log'] = ShellInput(prompt='Want to choose a custom log path?', default='/var/log/growautomation')
+                                             poss='standalone', default='standalone').get()  # ['agent', 'standalone', 'server']
+        setup_dict['path_root'] = ShellInput(prompt='Want to choose a custom install path?', default='/etc/growautomation').get()
+        setup_dict['log_level'] = ShellInput(prompt='Want to change the log level?', default='1', poss=['0', '1', '2', '3', '4', '5']).get()
+        setup_dict['backup'] = ShellInput('Want to enable backup?', default=True).get()
+        setup_dict['path_backup'] = ShellInput(prompt='Want to choose a custom backup path?', default='/mnt/growautomation/backup/').get()
+        setup_dict['path_log'] = ShellInput(prompt='Want to choose a custom log path?', default='/var/log/growautomation').get()
     return Create(setup_config_dict=setup_dict)
 
 
@@ -596,11 +958,9 @@ def exit():
 
 if __name__ == '__main__':
     try:
-        if sys_argv[2] == 'debug':
+        if sys_argv[1] == 'debug':
             debug = True
             VarHandler(name='debug', data=1).set()
-        else:
-            debug = False
-    except (IndexError, NameError):
-        debug = False
+        else: debug = False
+    except (IndexError, NameError): debug = False
     choose()
