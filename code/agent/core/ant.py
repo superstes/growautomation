@@ -52,13 +52,14 @@ timestamp = "%Y-%m-%d %H:%M:%S"
 
 
 class ShellInput:
-    def __init__(self, prompt, default='', poss='', intype='', style='', posstype='', max_value=None, min_value=None, neg=False, lower=True):
+    def __init__(self, prompt, default='', poss='', intype='', style='', posstype='', max_value=None, min_value=None, neg=False, lower=True, null=False):
         self.prompt, self.default, self.poss, self.intype, self.style = prompt, default, poss, intype, style
-        self.posstype, self.max_value, self.min_value, self.neg, self.lower = posstype, max_value, min_value, neg, lower
+        self.posstype, self.max_value, self.min_value, self.neg, self.lower, self.null = posstype, max_value, min_value, neg, lower, null
         self.style_type, self.output = ShellOutput(style=style).colors(), ''
         self.lower, self.default_str, self.poss_str = '', '', ''
 
     def _string_check(self, to_check: str):
+        # move functionality to shared string_check function?
         if self.max_value is None: self.max_value = 20
         if self.min_value is None: self.min_value = 2
         to_check = str(to_check)
@@ -69,8 +70,7 @@ class ShellInput:
         elif any((char in char_blacklist) for char in to_check):
             ShellOutput("Input error. Input must not include the following characters: %s" % char_blacklist, style='warn', font='text')
             return False
-        else:
-            return True
+        else: return True
 
     def _poss_check(self):
         while_count = 0
@@ -80,6 +80,7 @@ class ShellInput:
             else: ShellOutput("Input error. Choose one of the following: %s\n" % self.poss, style='warn', font='text')
         while True:
             try:
+                input_ok = False
                 if while_count > 0: _poss_error()
                 user_input = str(input(self.style_type + "\n%s%s%s%s%s\n > " %
                                        (self.prompt, self.poss_str, self.poss, self.default_str, self.default) +
@@ -87,19 +88,29 @@ class ShellInput:
                 if self.posstype != '':
                     if self.posstype == 'int': user_input = int(user_input)
                     elif self.posstype == 'str': user_input = str(user_input)
+                if self.null is False:
+                    if user_input in ['False', 'None']: continue
+
+                def _test(check):
+                    type_check, test = type(self.default), False
+                    try:
+                        if type_check(check) == type_check(user_input): test = True
+                    except ValueError:
+                        if user_input == check: test = True
+                    if test and type_check == str:
+                        test = self._string_check(check)
+                    return test
                 if type(self.poss) == list:
-                    if user_input in self.poss: input_ok = True
-                    else: input_ok = False
-                else:
-                    if user_input == self.poss: input_ok = True
-                    else: input_ok = False
+                    for poss in self.poss:
+                        if _test(poss) is True: input_ok = True
+                else: input_ok = _test(self.poss)
                 if self.neg: input_ok = not input_ok
                 if input_ok: break
             except (KeyError, ValueError): _poss_error()
             while_count += 1
         return user_input
 
-    def get(self):
+    def get(self, outtype=None):
         if self.poss != '' or type(self.default) == bool:
             if self.neg: self.poss_str = "\nNo Poss: "
             else: self.poss_str = "\nPoss: "
@@ -115,7 +126,7 @@ class ShellInput:
                 except KeyError:
                     ShellOutput("WARNING: Invalid input please enter either yes/true/no/false!\n", style='warn', font='text')
             self.lower = False
-        elif type(self.default) == str:
+        elif type(self.default) == str or self.default is None:
             if self.intype == 'pass' and self.default != '':
                 getpass(prompt="\n%s\nRandom: %s\n > " % (self.prompt, self.default)) or "%s" % self.default
             elif self.intype == 'pass':
@@ -156,18 +167,20 @@ class ShellInput:
                     ShellOutput("Input error. Value should be between %s and %s." % (self.min_value, self.max_value), style='warn', font='text')
                 else: break
             self.output, self.lower = user_input, False
-        else: raise KeyError("Default value was neither str/int/bool | Value: '%s', '%s'" % (type(self.default), self.default))
+        else: raise KeyError("Default value was neither str/int/bool/none | Value: '%s', '%s'" % (type(self.default), self.default))
 
-        if self.lower is False: return self.output
+        if outtype is not None:
+            self.output = format_output(typ=outtype, data=self.output)
+        if self.lower is False or type(self.output) != str: return self.output
         else: return self.output.lower()
 
 
 # Shell output
 class ShellOutput:
     def __init__(self, output=None, font='text', style='', symbol='#'):
-        self.output, self.font,  self.style, self.symbol = output, font, style, symbol
-        self._header() if self.font == 'head' else self._line if self.font == 'line' \
-            else self._text() if self.output is not None else None
+        self.output,  self.style, self.symbol = output, style, symbol
+        self._header() if font == 'head' else self._line if font == 'line' \
+            else self._text() if self.output is not None else False
 
     def _header(self):
         print("\n")
@@ -227,12 +240,23 @@ def dict_nested_search(dictionary, tosearch):
     return [(subkey if tosearch in subkey else None) for key in dictionary for subkey in dictionary[key]]
 
 
-def string_check(string, maxlength=10, minlength=2):
-    return False if type(string) != 'str' else False if len(string) > maxlength or len(string) < minlength else False if any((char in "!%$§?^´`µ{}()°><|\\*ÄÖÜüöä@,") for char in string) else True
+def dict_sort_keys(list_of_dict):
+    output_list = []
+    sorted_key_list = sorted(key for _dict in list_of_dict for key in _dict.keys())
+    for key in sorted_key_list:
+        output_list.append({key: list_of_dict[key]})
+    return output_list
 
 
 def dict_keycheck(dictionary, dictkey):
     return False if dictionary[dictkey] is None else True if dictkey in dictionary else False
+
+
+def string_check(string, maxlength=10, minlength=2):
+    if type(string) != 'str': return False
+    elif (len(string) > maxlength or len(string) < minlength) or (any((char in "!%$§?^´`µ{}()°><|\\*ÄÖÜüöä@,") for char in string)):
+        return False
+    else: return True
 
 
 def time_subtract(subtract, timeformat=timestamp, both=False):
@@ -252,3 +276,72 @@ def plural(data):
         except ValueError:
             return ''
     else: return ''
+
+
+def int_leading_zero(length: int, number: int):
+    digits = len(str(number))
+    if digits < length:
+        return "%s%s" % ('0' * (length - digits), number)
+    elif digits == length:
+        return number
+    else: return False
+
+
+class ModifyIdiedDict:
+    def __init__(self, dict_to_process: dict):
+        self.dict = dict_to_process
+
+    def add(self, id_new: int, data: dict):
+        new_dict, added = {}, False
+        for i in range(1, len(self.dict) + 2):
+            if i == id_new:
+                new_dict[i] = data
+                added = True
+            elif added is False:
+                new_dict[i] = self.dict[i]
+            else: new_dict[i] = self.dict[i - 1]
+        return new_dict
+
+    def delete(self, id_del: int):
+        new_dict, deleted = {}, False
+        for i in range(1, len(self.dict) + 1):
+            if i == id_del:
+                deleted = True
+            elif deleted is False:
+                new_dict[i] = self.dict[i]
+            else: new_dict[i - 1] = self.dict[i]
+        return new_dict
+
+    def edit(self, id_old: int, id_new: int, data_new=None):
+        new_dict, change = {}, 0
+        for i in range(1, len(self.dict) + 1):
+            if i == id_new:
+                if data_new is not None: data = data_new
+                else: data = self.dict[id_old]
+                new_dict[i] = data
+                change -= 1
+            elif i == id_old:
+                if change == 0: change += 1
+                new_dict[i] = self.dict[i + change]
+                if change == -1: change += 1
+            else: new_dict[i] = self.dict[i + change]
+        return new_dict
+
+
+def format_output(typ, data):
+    try:
+        if typ == 'list' and type(data) != list:
+            output = [data]
+        elif typ == 'str' and type(data) != str:
+            output = str(data)
+        elif typ == 'int':
+            output = int(data)
+        elif typ == 'tuple':
+            if type(data) != str:
+                output = tuple(data)
+            else: output = tuple(data[2:-2].split("', '"))
+        elif typ == 'dict':
+            output = dict(data)
+        else: output = data
+    except ValueError: output = data
+    return output
