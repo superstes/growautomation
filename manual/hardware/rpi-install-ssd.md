@@ -24,10 +24,10 @@ Download coming soon
 
 ### Install a raspberry from scratch
 1. Format ssd to have one partition
-2. Download latest [raspbian](https://www.raspberrypi.org/downloads/raspbian/)
+2. Download latest [raspbian/raspios](https://www.raspberrypi.org/downloads/raspberry-pi-os/)
 3. Write .img file to ssd with a tool like<br> 
 Windows: [Win32DiskImager](https://sourceforge.net/projects/win32diskimager/)  or [Rufus](https://rufus.ie/)<br>
-Linux: "dd bs=4M if=/PATH/TO/raspbian.img of=/dev/SDCARD_DEVID conv=fsync"
+Linux: "dd bs=4M if=/PATH/TO/raspberry-pi-os.img of=/dev/SDCARD_DEVID conv=fsync"
 4. Unplug the ssd
 5. Replug the ssd to your computer
 6. Go to the new "boot" partition
