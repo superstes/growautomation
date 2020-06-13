@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 try:
     from core.smallconfig import Config
 except (ImportError, ModuleNotFoundError):
@@ -283,3 +283,7 @@ def process(command, out_error=False, debug=False):
     if debug: debugger(command="smallant - process |output: '%s' |error: '%s'" % (output.decode('utf-8'), error.decode('utf-8')), hard_debug=True)
     if out_error is False: return output.decode('utf-8')
     else: return output.decode('utf-8').strip(), error.decode('utf-8').strip()
+
+
+def list_remove_duplicates(_list):
+    return list(dict.fromkeys(_list))
