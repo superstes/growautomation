@@ -64,6 +64,10 @@ def default_python():
 
 def self_compiled():
     print('#' * (int(shellwidth) - 1))
+    if input("Make sure the power supply connected to the raspberry delivers enough ampere - else it might crash because of the high cpu load.\n"
+             "Proceed? (Type 'yes' or anykey)\n > ") != 'yes':
+        print('Setup is exiting.\nChange your power supply and start the setup again!\n')
+        raise SystemExit
     print("This process may take over an hour.\nDO NOT INTERUPT THIS PROCESS.\n")
     print('-' * (int(shellwidth) - 1))
     background = input("Do you want to run the compiler in the background?\n"
@@ -80,22 +84,22 @@ def self_compiled():
     print('#' * (int(shellwidth) - 1))
 
 
-def pre_compiled(link, file):
-    print('#' * (int(shellwidth) - 1))
-    print("Downloading pre-compiled package.\n")
-    if os_path.exists("/tmp/%s" % file) is False:
-        os_system('apt-get update && apt-get install wget')
-        os_system("cd /tmp && wget %s%s" % (link, file))
-    print("Installing pre-compiled package.\n")
-    os_system("sudo tar -xvzf /tmp/%s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
-    os_system("sudo tar -xvzf /tmp/%s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
-    default_python()
-    print('#' * (int(shellwidth) - 1))
-    print('Process finished.')
-    print('#' * (int(shellwidth) - 1))
+# def pre_compiled(link, file):
+#     print('#' * (int(shellwidth) - 1))
+#     print("Downloading pre-compiled package.\n")
+#     if os_path.exists("/tmp/%s" % file) is False:
+#         os_system('apt-get update && apt-get install wget')
+#         os_system("cd /tmp && wget %s%s" % (link, file))
+#     print("Installing pre-compiled package.\n")
+#     os_system("sudo tar -xvzf /tmp/%s -C /usr/local/bin usr-local-bin --strip-components 1" % file)
+#     os_system("sudo tar -xvzf /tmp/%s -C /usr/local/lib usr-local-lib --strip-components 1" % file)
+#     default_python()
+#     print('#' * (int(shellwidth) - 1))
+#     print('Process finished.')
+#     print('#' * (int(shellwidth) - 1))
 
 
-official_repo = 'https://www.growautomation.at/files/python/precompiled/'
+# official_repo = 'https://www.growautomation.at/files/python/precompiled/'
 # if rpi_version.find('RaspberryPi3ModelBRev1.2') != -1:
 #     if linux_version == '10':
 #         pre_compiled(official_repo, 'python3.8_pi3brev1.2-buster.tar.gz')

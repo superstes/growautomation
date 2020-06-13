@@ -10,6 +10,10 @@ May have changed since then
 - install software packages
   - install python 3.8 or higher -> you might need to compile it from source
     you can find a compiler script here: https://git.growautomation.at/blob/master/setup/python/
+      - run it like this: (so it runs in the background -> compiling might close your ssh session)
+        - sudo nohup bash compile_python3.8.sh &
+        - disown
+        - tail -f nohup
     If you run version 3.8.2 you will run into a bug when using the shared_memory module.
           You can apply this hotfix to work around this bug:
           - Edit file: /usr/local/lib/python3.8/multiprocessing/shared_memory.py
