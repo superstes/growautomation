@@ -173,6 +173,8 @@ class DoSql:
                                                        passwd="%s" % self._check_config('sql_admin_pwd'))
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
+            command = command.replace("'null'", 'NULL')
+            command = command.replace("'NULL'", 'NULL')
             if connect_debug: self._debug("owl - connect |command '%s' '%s'" % (type(command), command))
             if self.write is False:
                 @lru_cache()
@@ -185,7 +187,11 @@ class DoSql:
                             if len(row_tuple) == 1:
                                 if row_tuple[0]: data_list.append(row_tuple[0])
                             else: data_list.append(row_tuple)
-                        return str(data_list[0]) if len(data_list) == 1 else data_list
+                        if len(data_list) == 1:
+                            if type(data_list[0]) == tuple and len(data_list[0]) > 1:
+                                return data_list[0]
+                            else: return str(data_list[0])
+                        else: return data_list
                 data = readcache(command)
             else:
                 cursor.execute(command)
