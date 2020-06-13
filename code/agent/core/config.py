@@ -18,9 +18,10 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 from core.owl import DoSql
+from core.ant import format_output
 from core.smallant import Log
 from core.smallant import debugger
 from core.smallconfig import Config as FileConfig
@@ -52,17 +53,7 @@ class Config:
         output = FileConfig(self.setting).get() if self.setting in parse_file_list else self._parse_failover() if self.setting in parse_failover_list else \
             self._parse_sql_custom() if self.nosql is False else self._error('all')
         if outtype is not None:
-            try:
-                if outtype == 'list' and type(output) != list:
-                    output = [output]
-                elif outtype == 'str' and type(output) != str:
-                    output = str(output)
-                elif outtype == 'int':
-                    output = int(output)
-                elif outtype == 'dict':
-                    output = dict(output)
-            except ValueError:
-                output = str(output)
+            output = format_output(typ=outtype, data=output)
         self._debug("config - get - output |'%s' '%s'" % (type(output), output))
         return self._error('sql') if output is False else output
 
@@ -79,7 +70,9 @@ class Config:
             response = DoSql("SELECT data FROM ga.Setting WHERE setting = '%s' and belonging = '%s';"
                              % (self.setting, FileConfig('hostname').get()), local_debug=self.local_debug).start()
         self._debug("config - parse_sql - output |'%s' '%s'" % (type(response), response))
-        return self._error('sql') if response is False or response is None or response == '' else response
+        if response is False or response is None or response == '':
+            return self._error('sql')
+        else: return response
 
     def _parse_sql_custom(self):
         command, custom = ['SELECT', 'data', 'FROM ga.Setting WHERE'], False
