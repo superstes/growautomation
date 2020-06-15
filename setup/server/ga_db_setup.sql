@@ -89,7 +89,7 @@ create table IF NOT EXISTS ProfileGrp (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
-	stage_id smallint unsigned not null default 1,
+	order_id tinyint unsigned not null default 1,
 	parent smallint unsigned null default null,
 	parent_id smallint unsigned not null,
 	gid smallint unsigned not null,
@@ -99,7 +99,8 @@ create table IF NOT EXISTS ProfileGrp (
     primary key (id),
     foreign key 6_fk_grp_id (gid) references Grp (id) on update cascade on delete cascade,
     unique key 6_uk_parent_id (parent_id),
-    unique key 6_uk_gid_name (gid, name)
+    unique key 6_uk_gid_name (gid, name),
+    unique key 6_uk_gid_parent_order_id (gid, parent, order_id)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -108,7 +109,7 @@ create table IF NOT EXISTS Profile (
     id smallint unsigned not null auto_increment,
     changed timestamp not null default current_timestamp on update current_timestamp,
 	author varchar(20) not null,
-	stage_id smallint unsigned not null default 1,
+	order_id tinyint unsigned not null default 1,
 	parent smallint unsigned null default null,
 	gid smallint unsigned not null,
 	object varchar(20) not null,
@@ -125,7 +126,8 @@ create table IF NOT EXISTS Profile (
     foreign key 7_fk_object_name (object) references Object (name) on update cascade on delete cascade,
     foreign key 7_fk_grp_name (sector) references Grp (name) on update cascade on delete cascade,
     foreign key 7_fk_grp_id (gid) references Grp (id) on update cascade on delete cascade,
-    unique key 7_uk_gid_name (gid, name)
+    unique key 7_uk_gid_name (gid, name),
+    unique key 7_uk_gid_parent_order_id (gid, parent, order_id)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
