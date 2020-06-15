@@ -384,7 +384,7 @@ class Create:
                     while add_stage:
                         def _show_profile_tree():
                             def _recursive_child_lookup(parent, whitespace):
-                                # stage_dict {stage_id {'parent': stage_parent, 'data': { substage_id: { setting: data} } } }
+                                # stage_dict {stage_id {'parent': stage_parent, 'data': { order_id: { setting: data} } } }
                                 output_list = []
                                 for sid, nested in stage_dict.items():
                                     stage_value_dict = dict(nested)
@@ -421,7 +421,7 @@ class Create:
                         else: stage_action = ShellInput('Do you want to add, edit or delete a stage?', default='add',
                                                         poss=posslist).get()
                         parent_dict, parent_active_list, condition_name_list = {}, [], []
-                        # stage_dict {stage_id {'parent': stage_parent, 'data': { substage_id: { setting: data} } } }
+                        # stage_dict {stage_id {'parent': stage_parent, 'data': { order_id: { setting: data} } } }
                         for _sid, nested in stage_dict.items():
                             for key, value in dict(nested).items():
                                 if key == 'parent' and value is not None:
@@ -484,9 +484,9 @@ class Create:
                                                                         % condi_action, default=random_choice(current_condi_name_list),
                                                                         poss=current_condi_name_list).get()
                                         condi_found = False
-                                        for stage_id, condition in condition_dict.items():
+                                        for order_id, condition in condition_dict.items():
                                             if dict(condition)['name'] == current_condi_name:
-                                                current_condi_dict = {stage_id: condition}
+                                                current_condi_dict = {order_id: condition}
                                                 condi_found = True
                                         if condi_found: break
                                         else: ShellOutput("The condition '%s' could not be found" % current_condi_name, style='err')
@@ -495,7 +495,8 @@ class Create:
                                                                   default=False).get()
                                         if renew_config:
                                             current_condi_name_list.pop(current_condi_name)
-                                            condition_dict = ModifyIdiedDict(condition_dict).delete([key for key in current_condi_dict.keys()][0])
+                                            condition_dict = ModifyIdiedDict(condition_dict).delete(
+                                                [key for key in current_condi_dict.keys()][0])
                                             condi_action = 'add'
 
                                 def condi_input(setting, action='add', filter=None):
@@ -538,7 +539,7 @@ class Create:
                                                               poss=['!', '=', '<', '>'], default='>').get()
                                     elif setting == 'threshold':
                                         return ShellInput('Provide a threshold.', intype='free', max_value=20, min_value=1).get()
-                                    elif setting == 'stage_id':
+                                    elif setting == 'order_id':
                                         if len(condition_dict) > 0:
                                             _list = []
                                             for sid in sorted(condition_dict.keys()):
@@ -586,11 +587,11 @@ class Create:
                                     else: new_condi_dict['type'] = 'parent'
                                     new_condi_dict['operator'] = condi_input('operator')
                                     new_condi_dict['description'] = condi_input('description')
-                                    condition_dict = ModifyIdiedDict(condition_dict).add(condi_input('stage_id'), new_condi_dict)
+                                    condition_dict = ModifyIdiedDict(condition_dict).add(condi_input('order_id'), new_condi_dict)
                                 elif condi_action == 'edit':
                                     another_edit = True
                                     condi_setting_list = [_ for _2 in current_condi_dict.values() for _ in dict(_2).keys()]
-                                    condi_setting_list.append('stage_id')
+                                    condi_setting_list.append('order_id')
                                     cur_sid = [key for key in current_condi_dict.keys()][0]
                                     cur_condi_dict = current_condi_dict[cur_sid]
                                     new_sid, new_condi_dict = cur_sid, cur_condi_dict.copy()
@@ -602,7 +603,7 @@ class Create:
                                                     style='info')
                                         to_edit = ShellInput('Provide the setting to edit.', poss=condi_setting_list,
                                                              default=random_choice(condi_setting_list)).get()
-                                        if to_edit == 'stage_id':
+                                        if to_edit == 'order_id':
                                             new_sid = condi_input(to_edit, action='edit')
                                         elif to_edit == 'condi':
                                             new_condi_dict[to_edit] = condi_input(to_edit, filter=new_condi_dict['object'])
@@ -755,19 +756,19 @@ class Create:
             Log("%s error%s while inserting" % (error_count, plural(error_count))).write()
 
         ShellOutput('Writing profile configuration', font='text')
-        # {group_name: {stage_id: {'parent': stage_parent, 'data': {sub_stage_id: {condition_dict}}}}}
+        # {group_name: {stage_id: {'parent': stage_parent, 'data': {order_id: {condition_dict}}}}}
         main_parent_list, parent_list, child_list, parent_id, group_count = [], [], [], 1, 0
         for group_name, nested in self.profile_dict.items():
             sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND name = '%s' ORDER BY changed DESC LIMIT 1;"
                             % group_name).start()
             if sql_gid is False: continue
             group_count += 1
-            for stage_id, also_nested in dict(nested).items():
+            for order_id, also_nested in dict(nested).items():
                 stage_dict = dict(also_nested)
                 for sub_sid, condition_data in dict(stage_dict['data']).items():
                     _dict = dict(condition_data)
                     _dict['parent'] = stage_dict['parent']
-                    _dict['stage_id'] = sub_sid
+                    _dict['order_id'] = sub_sid
                     _dict['gid'] = sql_gid
                     if _dict['type'] == 'parent':
                         _dict['parent_id'] = "%s%s" % (sql_gid, int_leading_zero(2, parent_id))
@@ -781,9 +782,9 @@ class Create:
             _error_count, _parent_count = 0, 0
             for parent in _list:
                 parent_dict = dict(parent)
-                if DoSql("INSERT INTO ga.ProfileGrp (author,stage_id,parent,parent_id,gid,operator,name,description) "
+                if DoSql("INSERT INTO ga.ProfileGrp (author,order_id,parent,parent_id,gid,operator,name,description) "
                          "VALUES ('setup','%s','%s','%s','%s','%s','%s','%s');"
-                         % (parent_dict['stage_id'], parent_dict['parent'], parent_dict['parent_id'], parent_dict['gid'],
+                         % (parent_dict['order_id'], parent_dict['parent'], parent_dict['parent_id'], parent_dict['gid'],
                             parent_dict['operator'], parent_dict['name'], parent_dict['description'], ), write=True).start() is False:
                     _error_count += 1
                 else: _parent_count += 1
@@ -804,9 +805,9 @@ class Create:
             if child_dict['parent'] != 'NULL':
                 _parent_id = [dict(_)['parent_id'] for _ in _all_parent_list if dict(_)['name'] == child_dict['parent']]
             else: _parent_id = child_dict['parent']
-            if DoSql("INSERT INTO ga.Profile (author,stage_id,parent,gid,object,sector,data_source,data_points,threshold,"
+            if DoSql("INSERT INTO ga.Profile (author,order_id,parent,gid,object,sector,data_source,data_points,threshold,"
                      "condi,operator,name,description) VALUES ('setup','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
-                     % (child_dict['stage_id'], _parent_id, child_dict['gid'], child_dict['object'], child_dict['sector'],
+                     % (child_dict['order_id'], _parent_id, child_dict['gid'], child_dict['object'], child_dict['sector'],
                         child_dict['data_source'], child_dict['data_points'], child_dict['threshold'], child_dict['condi'],
                         child_dict['operator'], child_dict['name'], child_dict['description'],),
                      write=True).start() is False: error_count += 1
