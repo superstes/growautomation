@@ -72,12 +72,14 @@ class Create:
             self.setup = True
             self.hostname = setup_config_dict['hostname']
             self.setuptype = setup_config_dict['setuptype']
+            self.author = 'setup'
         else:
             self.setup = False
             from core.config import Config
             self.ConfigParser = Config
             self.hostname = Config('hostname').get()
             self.setuptype = Config('setuptype').get()
+            self.author = 'maintenance'
         self.start()
 
     def _config(self, output=None, table=None, filter=None, setting=None, outtype=None, belonging=None):
@@ -127,9 +129,13 @@ class Create:
 
     def create_core(self):
         self.setting_dict = {'check': {'range': 10, 'function': 'parrot.py'}, 'backup': {'timer': 86400, 'function': 'backup.py'},
-                             'sensor_master': {'function': 'snake.py'}}
+                             'sensor_master': {'function': 'snake.py'},
+                             'core_time': {'function': 'time.py', 'function_arg': 'time', 'datatype': 'time'},
+                             'core_date': {'function': 'time.py', 'function_arg': 'date', 'datatype': 'date'}}
         self.object_dict = {'core': {'check': 'NULL', 'backup': 'NULL', 'sensor_master': 'NULL', 'service': 'NULL'},
-                            'agent': {self.hostname: 'NULL'}}
+                            'agent': {self.hostname: 'NULL'},
+                            'devicetype': {'core_time': 'sensor', 'core_date': 'sensor'},
+                            'device': {'sensor': {'time': 'core_time', 'date': 'core_date'}}}
 
     def create_agent(self):
         agent_object_dict = {}
@@ -690,8 +696,9 @@ class Create:
             def unpack_values(values, parent='NULL'):
                 count, error_count = 0, 0
                 for object_name, object_class in sorted(values.items()):
-                    if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('setup','%s','%s','%s','%s');" %
-                             (object_name, parent, object_class, object_type), write=True).start() is False: error_count += 1
+                    if DoSql("INSERT INTO ga.Object (author,name,parent,class,type) VALUES ('%s','%s','%s','%s','%s');" %
+                             (self.author, object_name, parent, object_class, object_type), write=True).start() is False:
+                        error_count += 1
                     else: count += 1
                 return count, error_count
             if object_type == 'device':
@@ -711,12 +718,12 @@ class Create:
         insert_count, error_count = 0, 0
         for object_name, packed_values in self.setting_dict.items():
             for setting, data in sorted(packed_values.items()):
-                if data == '': pass
+                if data == '': continue
                 elif type(data) == bool:
                     if data is True: data = 1
                     else: data = 0
-                if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
-                         % (object_name, setting, data), write=True).start() is False:
+                if DoSql("INSERT INTO ga.Setting (author,belonging,setting,data) VALUES ('%s','%s','%s','%s');"
+                         % (self.author, object_name, setting, data), write=True).start() is False:
                     error_count += 1
                 else: insert_count += 1
         ShellOutput("added %s object setting%s" % (insert_count, plural(insert_count)), style='info', font='text')
@@ -733,20 +740,22 @@ class Create:
                 if group_data_dict['parent'] != 'NULL':
                     _parent_gid = DoSql("SELECT id FROM ga.Grp WHERE name = '%s';" % group_data_dict['parent']).start()
                 else: _parent_gid = group_data_dict['parent']
-                if DoSql("INSERT INTO ga.Grp (author,type,name,description,parent) VALUES ('setup','%s','%s','%s','%s');"
-                         % (group_type, group_name, group_data_dict['description'], _parent_gid),
+                if DoSql("INSERT INTO ga.Grp (author,type,name,description,parent) VALUES ('%s','%s','%s','%s','%s');"
+                         % (self.author, group_type, group_name, group_data_dict['description'], _parent_gid),
                          write=True).start() is False: error_count += 1
                 else: insert_count += 1
-                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND type = '%s' ORDER BY changed DESC LIMIT 1;" %
-                                group_type).start()
+                sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = '%s' AND type = '%s' ORDER BY changed DESC LIMIT 1;"
+                                % (self.author, group_type)).start()
                 if sql_gid is False: continue
                 for member in sorted(group_data_dict['member']):
-                    if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('setup','%s','%s');" % (sql_gid, member),
-                             write=True).start() is False: error_count += 1
+                    if DoSql("INSERT INTO ga.Member (author,gid,member) VALUES ('%s','%s','%s');"
+                             % (self.author, sql_gid, member), write=True).start() is False:
+                        error_count += 1
                     else: member_count += 1
                 for setting, data in sorted(dict(group_data_dict['setting']).items()):
-                    if DoSql("INSERT INTO ga.GrpSetting (author,belonging,setting,data) VALUES ('setup','%s','%s','%s');"
-                             % (group_name, setting, data), write=True).start() is False: error_count += 1
+                    if DoSql("INSERT INTO ga.GrpSetting (author,belonging,setting,data) VALUES ('%s','%s','%s','%s');"
+                             % (self.author, group_name, setting, data), write=True).start() is False:
+                        error_count += 1
                     else: setting_count += 1
         ShellOutput("added %s group%s with a total of %s member%s and %s setting%s"
                     % (insert_count, plural(insert_count), member_count, plural(member_count), setting_count, plural(setting_count)),
@@ -759,8 +768,8 @@ class Create:
         # {group_name: {stage_id: {'parent': stage_parent, 'data': {order_id: {condition_dict}}}}}
         main_parent_list, parent_list, child_list, parent_id, group_count = [], [], [], 1, 0
         for group_name, nested in self.profile_dict.items():
-            sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = 'setup' AND name = '%s' ORDER BY changed DESC LIMIT 1;"
-                            % group_name).start()
+            sql_gid = DoSql("SELECT id FROM ga.Grp WHERE author = '%s' AND name = '%s' ORDER BY changed DESC LIMIT 1;"
+                            % (self.author, group_name)).start()
             if sql_gid is False: continue
             group_count += 1
             for order_id, also_nested in dict(nested).items():
@@ -783,8 +792,8 @@ class Create:
             for parent in _list:
                 parent_dict = dict(parent)
                 if DoSql("INSERT INTO ga.ProfileGrp (author,order_id,parent,parent_id,gid,operator,name,description) "
-                         "VALUES ('setup','%s','%s','%s','%s','%s','%s','%s');"
-                         % (parent_dict['order_id'], parent_dict['parent'], parent_dict['parent_id'], parent_dict['gid'],
+                         "VALUES ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                         % (self.author, parent_dict['order_id'], parent_dict['parent'], parent_dict['parent_id'], parent_dict['gid'],
                             parent_dict['operator'], parent_dict['name'], parent_dict['description'], ), write=True).start() is False:
                     _error_count += 1
                 else: _parent_count += 1
@@ -806,8 +815,8 @@ class Create:
                 _parent_id = [dict(_)['parent_id'] for _ in _all_parent_list if dict(_)['name'] == child_dict['parent']]
             else: _parent_id = child_dict['parent']
             if DoSql("INSERT INTO ga.Profile (author,order_id,parent,gid,object,sector,data_source,data_points,threshold,"
-                     "condi,operator,name,description) VALUES ('setup','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
-                     % (child_dict['order_id'], _parent_id, child_dict['gid'], child_dict['object'], child_dict['sector'],
+                     "condi,operator,name,description) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                     % (self.author, child_dict['order_id'], _parent_id, child_dict['gid'], child_dict['object'], child_dict['sector'],
                         child_dict['data_source'], child_dict['data_points'], child_dict['threshold'], child_dict['condi'],
                         child_dict['operator'], child_dict['name'], child_dict['description'],),
                      write=True).start() is False: error_count += 1
