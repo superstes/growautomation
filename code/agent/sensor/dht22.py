@@ -22,7 +22,6 @@
 # sensor function for adafruit dht22
 
 from core.smallant import Log
-from core.sensor_data_check import CompareData
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep
@@ -70,9 +69,7 @@ class Device:
             def error_check(data, max, min):
                 if data is None:
                     LogWrite("Device '%s' - output error - data is none" % argument, level=2)
-                elif max > float(data) > min:
-                    if CompareData(device=device, data=float(data), max_change_percent=35).start() is True:
-                        return True
+                elif max > float(data) > min: return True
                 else:
                     LogWrite("Device '%s' - output error - not in acceptable range - data '%s', max '%s', min '%s'"
                              % (argument, data, max, min), level=3)
