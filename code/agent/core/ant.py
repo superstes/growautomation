@@ -46,8 +46,8 @@ def now(time_format):
     return datetime.now().strftime(time_format)
 
 
-time01, time02, time03 = now("%H-%M-%S"), now("%H:%M:%S"), now("%H-%M")
-date01, date02, date03, date04 = now("%Y-%m-%d"), now("%Y"), now("%m"), now("%d")
+time_hour_minute = now("%H-%M")
+date_year_month_day, date_year = now("%Y-%m-%d"), now("%Y")
 timestamp = "%Y-%m-%d %H:%M:%S"
 
 
@@ -206,8 +206,8 @@ class ShellOutput:
 class Line:
     def __init__(self, action, search, replace='', backup=False, file='./core.conf'):
         self.file, self.backup, self.searchfor, self.action, self.replacewith = file, backup, search, action, replace
-        self.backupfile = "%s_%s_%s.bak" % (file, date01, time03)
-        self.backupdir = "%s/%s" % (Config('path_backup').get(), date02)
+        self.backupfile = "%s_%s_%s.bak" % (file, date_year_month_day, time_hour_minute)
+        self.backupdir = "%s/%s" % (Config('path_backup').get(), date_year)
 
     def __repr__(self):
         self.find() if self.action == 'find' else self.delete() if self.action == 'delete' else self.replace() if self.action == 'replace' else self.add() if self.action == 'add' else None
@@ -264,6 +264,35 @@ def string_check(string, maxlength=10, minlength=2):
 def time_subtract(subtract, timeformat=timestamp, both=False):
     calculated = (datetime.now() - timedelta(seconds=subtract)).strftime(timeformat)
     return datetime.now().strftime(timeformat), calculated if both is True else calculated
+
+
+def compare_datetime(typ: str, operator: str, data, formatted=False):
+    if typ not in ['time', 'date']: return None
+    if operator not in ['<', '>', '!', '=']: return None
+    try:
+        if typ == 'time':
+            _format = "%H:%M:%S"
+            now = datetime.now().time()
+            if not formatted:
+                data = datetime.strptime(data, _format).time()
+        else:
+            _format = "%Y-%m-%d"
+            now = datetime.now().date()
+            if not formatted:
+                data = datetime.strptime(data, _format).date()
+    except ValueError: return None
+    if operator in ['<', '>']:
+        later = True if now > data else False
+        if operator == '<':
+            if not later: return True
+        elif later: return True
+        return False
+    else:
+        equal = True if now == data else False
+        if operator == '=':
+            if equal: return True
+        elif not equal: return True
+        return False
 
 
 def plural(data):
