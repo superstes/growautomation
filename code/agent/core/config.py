@@ -58,10 +58,8 @@ class Config:
         return self._error('sql') if output is False else output
 
     def _error(self, parser_type):
-        if self.empty: return False
         Log("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.setting)).write()
-        if self.exit:
-            raise SystemExit("%s parser could not find setting %s" % (parser_type.capitalize(), self.setting))
+        if self.empty or self.exit: return False
 
     def _parse_sql(self, command=None):
         if command is not None:
