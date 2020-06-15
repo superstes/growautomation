@@ -149,6 +149,16 @@ class DoSql:
         else:
             return output
 
+    def _command_prep(self, command):
+        replace_dict = {'NULL': ["'null'", "'NULL'"], 'NOT NULL': ["'not null'", "'NOT NULL'"]}
+        new_command = None
+        for replace, search_list in replace_dict.items():
+            for search in search_list:
+                if command.find(search) != -1:
+                    new_command = command.replace(search, replace)
+        if new_command is None: new_command = command
+        return new_command
+
     def _connect(self, command=None, connect_debug=True):
         import mysql.connector
         try:
@@ -173,8 +183,7 @@ class DoSql:
                                                        passwd="%s" % self._check_config('sql_admin_pwd'))
             cursor = connection.cursor(buffered=True)
             if command is None: command = self.command
-            command = command.replace("'null'", 'NULL')
-            command = command.replace("'NULL'", 'NULL')
+            command = self._command_prep(command)
             if connect_debug: self._debug("owl - connect |command '%s' '%s'" % (type(command), command))
             if self.write is False:
                 @lru_cache()
