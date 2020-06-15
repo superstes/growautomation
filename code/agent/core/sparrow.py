@@ -24,6 +24,7 @@
 from core.config import Config
 from core.owl import DoSql
 from core.ant import time_subtract
+from core.ant import compare_datetime
 from core.smallant import debugger
 from core.smallant import Log
 from core.smallant import internal_process
@@ -32,6 +33,7 @@ from core.snake import Balrog
 
 from time import sleep as time_sleep
 from sys import argv as sys_argv
+from datetime import datetime
 
 
 class Condition:
@@ -55,33 +57,54 @@ class Condition:
             self.is_devicetype = False
         self.datatype = Config(setting='datatype', belonging=devicetype).get()
 
-        data_list = self._get_data()
-        if data_list is None:
-            debugger("sparrow - condition - check |error - could not pull data")
-            return None
+        if self.datatype in ['date', 'time']:
+            data = self._process(data=None)
+        else:
+            data_list = self._get_data()
+            if data_list is None:
+                debugger("sparrow - condition - check |error - could not pull data")
+                return None
 
-        avg_data = self._get_average_data(data_list)
-        if avg_data is None:
-            debugger("sparrow - condition - check |error - could calculate average data")
-            return None
+            avg_data = self._get_average_data(data_list)
+            if avg_data is None:
+                debugger("sparrow - condition - check |error - could calculate average data")
+                return None
 
-        data = self._process(avg_data)
+            data = self._process(data=avg_data)
+
         debugger("sparrow - condition - check |output - '%s' '%s'" % (type(data), data))
         return data
 
     def _process(self, data):
         # checks if average data meets the condition
-        datatype = type(data)
-        condition, threshold = self.condition_dict['condition'], datatype(self.condition_dict['threshold'])
+        try:
+            threshold = self.condition_dict['threshold']
+            if self.datatype == 'date':
+                threshold = datetime.strptime(threshold, "%Y-%m-%d").date()
+            elif self.datatype == 'time':
+                threshold = datetime.strptime(threshold, "%H-%M-%S").time()
+            else:
+                threshold = self.datatype(threshold)
+            condition = self.condition_dict['condition']
+        except ValueError:
+            Log("Error in %s! Unable to process threshold - needs incompatible format '%s'"
+                % (self.placement, self.datatype), level=1).write()
+            debugger("sparrow - condition - process |error - cant format threshold as type '%s'" % self.datatype)
+            return None
+
         debugger("sparrow - condition - process |input - '%s %s %s'" % (data, condition, threshold))
+
         if condition not in ['<', '>', '=', '!']:
             debugger("sparrow - condition - process |error - provided condition '%s' '%s' not supported"
                      % (type(condition), condition))
             return None
-        elif condition in ['<', '>'] and datatype not in [float, int]:
-            debugger("sparrow - condition - process |error - provided condition '%s' '%s' can only process float/int data"
-                     % (type(condition), condition))
+        elif condition in ['<', '>'] and self.datatype not in [float, int, 'time', 'date']:
+            debugger("sparrow - condition - process |error - provided condition '%s' '%s' can only process "
+                     "float/int/time/date data" % (type(condition), condition))
             return None
+
+        if self.datatype in ['date', 'time']:
+            output = compare_datetime(typ=self.datatype, operator=condition, data=threshold, formatted=True)
         else:
             output = False
             if condition in ['=', '!']:
@@ -153,7 +176,12 @@ class Condition:
                 try:
                     data = self.datatype(data)
                     break
-                except ValueError: time_sleep(3)
+                except ValueError:
+                    Log("Error in %s! Unable to process data - needs incompatible format '%s'"
+                        % (self.placement, self.datatype), level=1).write()
+                    debugger("sparrow - condition - data |error - cant format data as type '%s'" % self.datatype)
+                    return None
+                    time_sleep(3)
                 retry_count += 1
         if data is False or data == [False]:
             debugger("sparrow - condition - data |error - could not pull data for device '%s' from database" % self.device)
