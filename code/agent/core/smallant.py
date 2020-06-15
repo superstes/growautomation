@@ -30,10 +30,13 @@ from os import getenv as os_getenv
 from datetime import datetime
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
-from multiprocessing.shared_memory import ShareableList
+from multiprocessing import Process as MP_Process
+from multiprocessing import Queue as MP_Queue
+from multiprocessing.shared_memory import ShareableList as MP_ShareableList
 from inspect import stack as inspect_stack
 from inspect import getfile as inspect_getfile
 from random import choice as random_choice
+from time import sleep as time_sleep
 
 
 def now(time_format):
@@ -211,13 +214,13 @@ class VarHandler:
                     return False
                 count += 1
             try:
-                memory = ShareableList(data_list, name="ga_%s" % name)
+                memory = MP_ShareableList(data_list, name="ga_%s" % name)
                 self._debug("smallant - varhandler - memory |set: '%s' successful" % name, name=name)
                 memory.shm.close()
                 return True
             except (FileExistsError, KeyError):
                 try:
-                    memory = ShareableList(name="ga_%s" % name)
+                    memory = MP_ShareableList(name="ga_%s" % name)
                     if len(data_list) > len(list(memory)):
                         self._debug("smallant - varhandler - memory |set: cant update '%s' - too long" % name, name=name)
                         self._debug("Memory block '%s' could not be updated.\nNew data list is too long. Old: %s, new: %s"
@@ -238,7 +241,7 @@ class VarHandler:
                 return False
         elif action == 'get':
             try:
-                memory = ShareableList(name="ga_%s" % name)
+                memory = MP_ShareableList(name="ga_%s" % name)
                 data = [_ for _ in memory]
                 memory.shm.close()
                 self._debug("smallant - varhandler - memory |get: '%s' output '%s' '%s'" %
@@ -250,7 +253,7 @@ class VarHandler:
                 return False
         elif action == 'clean':
             try:
-                memory = ShareableList(name="ga_%s" % name)
+                memory = MP_ShareableList(name="ga_%s" % name)
                 memory.shm.close()
                 memory.shm.unlink()
                 self._debug("smallant - varhandler - memory |clean: '%s' successful" % name, name=name)
@@ -280,9 +283,35 @@ def debugger(command, hard_debug=False, hard_only=False, level=1):
 def process(command, out_error=False, debug=False):
     if debug: debugger(command="smallant - process |input: '%s'" % command, hard_debug=True)
     output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-    if debug: debugger(command="smallant - process |output: '%s' |error: '%s'" % (output.decode('utf-8'), error.decode('utf-8')), hard_debug=True)
-    if out_error is False: return output.decode('utf-8')
-    else: return output.decode('utf-8').strip(), error.decode('utf-8').strip()
+    output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
+    if debug: debugger(command="smallant - process |output: '%s' '%s' |error: '%s' '%s'"
+                               % (type(output), output, type(error), error), hard_debug=True)
+    if out_error is False: return output
+    else: return output, error
+
+
+def internal_process(target, argument=None, stdout=True, debug=False):
+    if debug: debugger(command="smallant - internal_process |input: '%s' '%s'" % (type(target), target.__name__), hard_debug=True)
+    stdout_pipe = MP_Queue()
+    if stdout is True: _process = MP_Process(target=target, args=(argument, stdout_pipe))
+    else: _process = MP_Process(target=target, args=argument)
+    _process.start()
+    runtime_count, finished = 1, False
+    while True:
+        if not _process.is_alive():
+            _process.join()
+            if stdout is True:
+                output = stdout_pipe.get()
+                if debug: debugger(command="smallant - internal_process |output: '%s' '%s'" % (type(output), output), hard_debug=True)
+                return output
+            return True
+        elif runtime_count > 5:
+            _process.terminate()
+            _process.join()
+            if debug: debugger(command="smallant - internal_process |timeout - terminated", hard_debug=True)
+            return False
+        else: time_sleep(3)
+        runtime_count += 1
 
 
 def list_remove_duplicates(_list):
