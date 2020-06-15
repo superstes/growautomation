@@ -240,11 +240,13 @@ def dict_nested_search(dictionary, tosearch):
     return [(subkey if tosearch in subkey else None) for key in dictionary for subkey in dictionary[key]]
 
 
-def dict_sort_keys(list_of_dict):
+def dict_sort_keys(list_of_dict: list):
     output_list = []
-    sorted_key_list = sorted(key for _dict in list_of_dict for key in _dict.keys())
-    for key in sorted_key_list:
-        output_list.append({key: list_of_dict[key]})
+    try:
+        sorted_key_list = sorted([key for _dict in list_of_dict for key in dict(_dict).keys()])
+        for key in sorted_key_list:
+            output_list.append({key: list_of_dict[key]})
+    except TypeError: output_list = list_of_dict
     return output_list
 
 
