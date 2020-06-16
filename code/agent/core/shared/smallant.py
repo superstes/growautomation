@@ -171,35 +171,6 @@ def time_subtract(subtract, timeformat=timestamp, both=False):
     return datetime.now().strftime(timeformat), calculated if both is True else calculated
 
 
-def compare_datetime(typ: str, operator: str, data, formatted=False):
-    if typ not in ['time', 'date']: return None
-    if operator not in ['<', '>', '!', '=']: return None
-    try:
-        if typ == 'time':
-            _format = "%H:%M:%S"
-            now = datetime.now().time()
-            if not formatted:
-                data = datetime.strptime(data, _format).time()
-        else:
-            _format = "%Y-%m-%d"
-            now = datetime.now().date()
-            if not formatted:
-                data = datetime.strptime(data, _format).date()
-    except ValueError: return None
-    if operator in ['<', '>']:
-        later = True if now > data else False
-        if operator == '<':
-            if not later: return True
-        elif later: return True
-        return False
-    else:
-        equal = True if now == data else False
-        if operator == '=':
-            if equal: return True
-        elif not equal: return True
-        return False
-
-
 def plural(data):
     def _base_check(nr):
         if nr > 1: return 's'
