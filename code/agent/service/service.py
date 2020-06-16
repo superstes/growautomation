@@ -59,23 +59,22 @@ class Service:
         debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'"
                  % (function_path, core_list, sensor_type_list))
         # need to rewrite to check GrpSetting table for timers
-        for timer_setting in Config(setting='timer', output="belonging,data", exit=False, distributed=True).get('list'):
-            name, timer = timer_setting[0], timer_setting[1]
-            if name in core_list or Config(setting='enabled', belonging=name, exit=False, distributed=True).get('int') == 1:
-                if name in core_list:
-                    name_dict["core_%s" % name] = {'timer': timer, 'function': function_path
-                                                   % Config(setting='function', belonging=name, exit=False).get('str')}
-                elif name in profile_list:
-                    name_dict["profile_%s" % name] = {'timer': timer, 'function': function_path % function_check}
+        for obj, timer in Config(setting='timer', output="belonging,data", exit=False, distributed=True).get('list'):
+            if obj in core_list or Config(setting='enabled', belonging=obj, exit=False, distributed=True).get('int') == 1:
+                if obj in core_list:
+                    name_dict["core_%s" % obj] = {'timer': timer, 'function': function_path
+                                                   % Config(setting='function', belonging=obj, exit=False).get('str')}
+                elif obj in profile_list:
+                    name_dict["profile_%s" % obj] = {'timer': timer, 'function': function_path % function_check}
                 else:
-                    if name in sensor_type_list: devicetype = name
-                    else: devicetype = Config(output='class', table='object', setting=name, exit=False).get('str')
+                    if obj in sensor_type_list: devicetype = obj
+                    else: devicetype = Config(output='class', table='object', setting=obj, exit=False).get('str')
                     if devicetype in sensor_type_list:
                         if Config(setting='enabled', belonging=devicetype, exit=False).get('int') == 1:
-                            if name is False or timer is False:
+                            if obj is False or timer is False:
                                 debugger("service - timer |removed thread because of bad sql output")
                                 continue
-                            name_dict["sensor_%s" % name] = {'timer': timer, 'function': function_path % function_sensor}
+                            name_dict["sensor_%s" % obj] = {'timer': timer, 'function': function_path % function_sensor}
                         else: continue
                     else: continue
             else: continue
