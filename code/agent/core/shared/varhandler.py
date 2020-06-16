@@ -23,8 +23,12 @@
 # allows passing of variables between multiple processes without passing it directly from their parents
 #   (child-to-child communication if they have different parents)
 
-from smallant import Log
-from smallant import debugger
+try:
+    from core.shared.smallant import Log
+    from core.shared.ant import debugger
+except (ImportError, ModuleNotFoundError):
+    from smallant import Log
+    from ant import debugger
 
 from multiprocessing.shared_memory import ShareableList as MP_ShareableList
 from random import choice as random_choice

@@ -22,7 +22,10 @@
 
 # provides classes for shell input/output
 
-from smallant import format_output
+try:
+    from core.shared.smallant import format_output
+except (ImportError, ModuleNotFoundError):
+    from smallant import format_output
 
 from colorama import Fore as colorama_fore
 from getpass import getpass
