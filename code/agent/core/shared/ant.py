@@ -20,14 +20,17 @@
 
 # ga_version 0.5
 
-# provides functions/classes that are used throughout the project (and need other core modules like owl or config)
+# provides functions/classes that are used throughout the project
+#   (to prevent recursive imports)
 
 try:
     from core.config import Config
     import core.shared.smallant
+    from core.shared.debug import debugger
 except (ImportError, ModuleNotFoundError):
     from config import Config
     import smallant
+    from debug import debugger
 
 from os import system as os_system
 from time import sleep as time_sleep
@@ -59,38 +62,6 @@ class Line:
         # insert after linenr / search = linenr
         os_system("sed -i%s '%s a %s' %s && mv %s %s %s" % (self.backupfile, self.searchfor, self.replacewith, self.file, self.file, self.backupfile, self.backupdir)) if self.backup == 'yes' \
             else os_system("sed -i '%s a %s' %s" % (self.searchfor, self.replacewith, self.file))
-
-
-def debugger(command, hard_debug=False, hard_only=False, level=1):
-    if level > 1: return False
-    if hard_debug: debug = True
-    elif not hard_only:
-        try:
-            from core.shared.varhandler import VarHandler
-        except (ImportError, ModuleNotFoundError):
-            from varhandler import VarHandler
-        debug = True if VarHandler(name='debug').get() == '1' else False
-    else: debug = False
-    if debug is True:
-        prefix = "%s debug:" % smallant.now("%H:%M:%S")
-        if type(command) == str:
-            print(prefix, command)
-        elif type(command) == list:
-            [print(prefix, call) for call in command]
-        return True
-    else: return False
-
-
-def process(command, out_error=False, debug=False):
-    from subprocess import Popen as subprocess_popen
-    from subprocess import PIPE as subprocess_pipe
-    if debug: debugger(command="smallant - process |input: '%s'" % command, hard_debug=True)
-    output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
-    output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
-    if debug: debugger(command="smallant - process |output: '%s' '%s' |error: '%s' '%s'"
-                               % (type(output), output, type(error), error), hard_debug=True)
-    if out_error is False: return output
-    else: return output, error
 
 
 def internal_process(target, argument=None, stdout=True, debug=False):
