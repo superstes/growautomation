@@ -326,10 +326,10 @@ class Operator:
 
 
 class Profile:
-    def __init__(self, gid):
-        self.gid = gid
+    def __init__(self, profile_name):
+        self.profile_name = profile_name
         self.profile_dict, self.data_points, self.timer_tuple_list, self.group_tuple_list = {}, None, None, None
-        self.member_tuple_list = None
+        self.member_tuple_list, self.gid = None, None
 
     def parse(self):
         self._cache_data()
@@ -347,8 +347,9 @@ class Profile:
     def _cache_data(self):
         self.data_points = Config(setting='range', belonging='check').get('int')
         self.timer_tuple_list = Config(output='belonging,data', setting='timer').get('list')
-        self.group_tuple_list = Config(table='grp', output='name,id', filter='id is NOT NULL').get('list')
         self.member_tuple_list = Config(table='member', output='member,gid', filter='gid is NOT NULL').get('list')
+        self.group_tuple_list = Config(table='grp', output='name,id', filter='id is NOT NULL').get('list')
+        self.gid = [gid for name, gid in self.group_tuple_list if name == self.profile_name][0]
 
     def _prequesits(self):
         columns_to_get = 'id,order_id,parent,object,sector,data_source,data_points,threshold,condi,operator,name,description'
@@ -392,7 +393,7 @@ class Profile:
 
 if __name__ == '__main__':
     try:
-        gid = sys_argv[1]
-        Profile(gid).parse()
+        _profile_name = sys_argv[1]
+        Profile(_profile_name).parse()
     except IndexError:
-        raise SystemExit('You need to pass the profiles group id as argument!')
+        raise SystemExit('You need to pass the name of the profile as argument!')
