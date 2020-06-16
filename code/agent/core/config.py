@@ -30,11 +30,11 @@ from functools import lru_cache
 
 
 class Config:
-    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None, empty=False, exit=True,
-                 local_debug=None):
-        self.setting,  self.filter, self.belonging, self.output, self.table, self.exit = setting, filter, belonging, output, table, exit
-        self.local_debug = local_debug
-        self.empty, self.nosql = empty, nosql
+    def __init__(self, setting=None, nosql=False, output=None, belonging=None, filter=None, table=None,
+                 empty=False, exit=True, local_debug=None, distributed=False):
+        self.setting,  self.filter, self.belonging, self.output = setting, filter, belonging, output
+        self.table, self.exit, self.local_debug, self.distributed = table, exit, local_debug, distributed
+        self.empty, self.nosql, self.sql_custom = empty, nosql, False
 
     def _debug(self, output, level=1):
         if self.local_debug is None or self.local_debug is True:
@@ -50,12 +50,23 @@ class Config:
         parse_file_list = ['setuptype', 'sql_pwd', 'sql_local_user', 'sql_local_pwd', 'sql_agent_pwd', 'sql_admin_pwd']
         parse_failover_list = ['path_root', 'hostname', 'sql_server_port', 'sql_server_ip', 'sql_agent_user', 'sql_admin_user',
                                'sql_server_port', 'sql_sock']
-        output = FileConfig(self.setting).get() if self.setting in parse_file_list else self._parse_failover() if self.setting in parse_failover_list else \
-            self._parse_sql_custom() if self.nosql is False else self._error('all')
+
+        if self.setting in parse_file_list:
+            output = FileConfig(self.setting).get()
+        elif self.setting in parse_failover_list:
+            output = self._parse_failover()
+        elif self.nosql is False:
+            if self.distributed:
+                output = self._parse_sql_distributed_setting()
+            else: output = self._parse_sql_custom()
+        else: output = self._error('all')
+
         if outtype is not None:
             output = format_output(typ=outtype, data=output)
+
         self._debug("config - get - output |'%s' '%s'" % (type(output), output))
-        return self._error('sql') if output is False else output
+        if output is False: return self._error('sql')
+        else: return output
 
     def _error(self, parser_type):
         Log("%s parser could not find setting '%s'" % (parser_type.capitalize(), self.setting)).write()
@@ -73,39 +84,84 @@ class Config:
         else: return response
 
     def _parse_sql_custom(self):
-        command, custom = ['SELECT', 'data', 'FROM ga.Setting WHERE'], False
-        if self.table is not None:
-            if self.table == 'grp': command = ['SELECT', 'name', 'FROM ga.Grp WHERE']
-            elif self.table == 'member': command = ['SELECT', 'member', 'FROM ga.Member WHERE']
-            elif self.table == 'object': command = ['SELECT', 'type', 'FROM ga.Object WHERE']
-            elif self.table == 'data': command = ['SELECT', 'data', 'FROM ga.Data WHERE']
+        command = self._parse_sql_table()
         if self.output is not None:
-            command[1], custom = self.output, True
+            command[1] = self.output
         if self.setting is not None:
-            if self.table is not None:
-                if self.table == 'member': command.append("gid = '%s'" % self.setting)
-                elif self.table == 'grp': command.append("id = '%s'" % self.setting)
-                elif self.table == 'object': command.append("name = '%s'" % self.setting)
-                elif self.table == 'data': command.append("agent = '%s'" % self.setting)
-            else: command.append("setting = '%s'" % self.setting)
-            custom = True
+            command.append(self._parse_sql_setting())
         if self.belonging is not None:
-            prefix = 'AND' if self.setting is not None else ''
-            if self.table is not None:
-                if self.table == 'member': insert = 'member'
-                elif self.table == 'grp': insert = 'id'
-                elif self.table == 'data': insert = 'agent'
-            else: insert = 'belonging'
-            command.append("%s %s = '%s'" % (prefix, insert, self.belonging))
-            custom = True
+            command.append(self._parse_sql_belonging())
         if self.filter is not None:
-            prefix = 'AND ' if self.setting is not None or self.belonging is not None else ''
-            command.append("%s%s" % (prefix, self.filter))
-            custom = True
+            command.append(self._parse_sql_filter())
         if self.filter is None and self.setting is None:
             command.append('id IS NOT NULL')
-        self._debug("config - sql_custom |custom '%s' '%s', command '%s' '%s'" % (type(custom), custom, type(command), command))
-        return self._parse_sql(' '.join(command) + ';') if custom is True else self._parse_sql()
+
+        self._debug("config - sql_custom |command '%s' '%s'" % (type(command), command))
+        if self.sql_custom:
+            return self._parse_sql(' '.join(command) + ';')
+        else: return self._parse_sql()
+
+    def _parse_sql_distributed_setting(self):
+        setting_table_list = ['ga.Setting', 'ga.GrpSetting']
+        if self.table is not None and self.table not in setting_table_list:
+            return False
+        output_list = []
+        for table in setting_table_list:
+            self.table = table
+            output = self._parse_sql_custom()
+            if type(output) == list:
+                if len(output) == 0: continue
+                else: output_list.extend(output)
+            elif type(output) == str:
+                output_list.append(output)
+        return output_list
+
+    def _parse_sql_table(self):
+        if self.table is not None:
+            if self.table == 'grp':
+                output = ['SELECT', 'name', 'FROM ga.Grp WHERE']
+            elif self.table == 'grpsetting':
+                output = ['SELECT', 'data', 'FROM ga.GrpSetting WHERE']
+            elif self.table == 'member':
+                output = ['SELECT', 'member', 'FROM ga.Member WHERE']
+            elif self.table == 'object':
+                output = ['SELECT', 'type', 'FROM ga.Object WHERE']
+            elif self.table == 'data':
+                output = ['SELECT', 'data', 'FROM ga.Data WHERE']
+            self.sql_custom = True
+        else: output = ['SELECT', 'data', 'FROM ga.Setting WHERE']
+        return output
+
+    def _parse_sql_setting(self):
+        if self.table is not None and self.table.find('Setting') == -1:
+            if self.table == 'member':
+                output = "gid = '%s'" % self.setting
+            elif self.table == 'grp':
+                output = "id = '%s'" % self.setting
+            elif self.table == 'object':
+                output = "name = '%s'" % self.setting
+            elif self.table == 'data':
+                output = "agent = '%s'" % self.setting
+            self.sql_custom = True
+        else: output = "setting = '%s'" % self.setting
+        return output
+
+    def _parse_sql_belonging(self):
+        prefix = 'AND' if self.setting is not None else ''
+        if self.table is not None:
+            if self.table == 'member': insert = 'member'
+            elif self.table == 'grp': insert = 'id'
+            elif self.table == 'data': insert = 'agent'
+            else: insert = 'belonging'
+        else: insert = 'belonging'
+        self.sql_custom = True
+        return "%s %s = '%s'" % (prefix, insert, self.belonging)
+
+    def _parse_sql_filter(self):
+        if self.setting is not None or self.belonging is not None: prefix = 'AND '
+        else: prefix = ''
+        self.sql_custom = True
+        return "%s%s" % (prefix, self.filter)
 
     @lru_cache()
     def _parse_hardcoded(self):
