@@ -26,7 +26,7 @@ from core.config import Config
 from core.shared.shell import Output as ShellOutput
 from core.shared.ant import debugger
 from core.shared.varhandler import VarHandler
-from core.shared.smallant import Log
+from core.shared.debug import Log
 
 from systemd import journal as systemd_journal
 from time import sleep as time_sleep

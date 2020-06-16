@@ -20,9 +20,9 @@
 
 # ga_version 0.5
 
-from core.shared.ant import debugger
+from core.shared.debug import debugger
 from core.shared.varhandler import VarHandler
-from core.shared.smallant import Log
+from core.shared.debug import Log
 
 from multiprocessing import Process
 from time import sleep as time_sleep

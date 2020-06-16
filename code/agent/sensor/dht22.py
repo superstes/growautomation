@@ -21,7 +21,7 @@
 # ga_version 0.5
 # sensor function for adafruit dht22
 
-from core.shared.smallant import Log
+from core.shared.debug import Log
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep

@@ -24,22 +24,22 @@ try:
     from core.owl import DoSql
     from core.shared.shell import Output as ShellOutput
     from core.shared.shell import Input as ShellInput
-    from core.shared.smallant import Log
+    from core.shared.debug import Log
     from core.shared.smallant import plural
     from core.shared.smallant import int_leading_zero
     from core.shared.smallant import ModifyIdiedDict
-    from core.shared.ant import debugger
+    from core.shared.debug import debugger
     from core.shared.varhandler import VarHandler
     from core.shared.smallant import list_remove_duplicates
 except (ImportError, ModuleNotFoundError):
     from owl import DoSql
     from shell import Output as ShellOutput
     from shell import Input as ShellInput
-    from smallant import Log
+    from debug import Log
     from smallant import plural
     from smallant import int_leading_zero
     from smallant import ModifyIdiedDict
-    from ant import debugger
+    from debug import debugger
     from smallant import VarHandler
     from smallant import list_remove_duplicates
 

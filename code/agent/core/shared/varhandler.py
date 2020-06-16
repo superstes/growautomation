@@ -24,11 +24,11 @@
 #   (child-to-child communication if they have different parents)
 
 try:
-    from core.shared.smallant import Log
-    from core.shared.ant import debugger
+    from core.shared.debug import Log
+    from core.shared.debug import debugger
 except (ImportError, ModuleNotFoundError):
-    from smallant import Log
-    from ant import debugger
+    from debug import Log
+    from debug import debugger
 
 from multiprocessing.shared_memory import ShareableList as MP_ShareableList
 from random import choice as random_choice
@@ -74,7 +74,7 @@ class VarHandler:
         elif os_getenv('USER') == 'growautomation' and not log:
             debugger(output, hard_only=True, level=1)
         elif name == 'debug' and not log:
-            debugger(output, hard_debug=True, level=1)
+            debugger(output, hard_only=True, hard_debug=True, level=1)
         else:
             if log: Log(output, level=level).write()
             else: debugger(output, level=level)

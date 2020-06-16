@@ -21,10 +21,10 @@
 # ga_version 0.5
 
 from core.owl import DoSql
-from core.shared.ant import debugger
+from core.shared.debug import debugger
 from core.shared.varhandler import VarHandler
 from core.config import Config
-from core.shared.smallant import Log
+from core.shared.debug import Log
 
 from systemd import journal as systemd_journal
 from sys import argv as sys_argv

@@ -23,8 +23,8 @@
 # base code source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-from core.shared.smallant import Log
-from core.shared.ant import debugger
+from core.shared.debug import Log
+from core.shared.debug import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep
