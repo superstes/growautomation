@@ -364,7 +364,10 @@ def format_output(typ, data):
         if typ == 'list' and type(data) != list:
             output = [data]
         elif typ == 'str' and type(data) != str:
-            output = str(data)
+            if type(data) == list:
+                if len(data) > 0: output = data[0]
+                else: output = ''
+            else: output = str(data)
         elif typ == 'int':
             output = int(data)
         elif typ == 'tuple':
