@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 from threader import Loop
 from worker import process as worker_process
@@ -46,35 +46,38 @@ class Service:
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        self.start()
 
     def _get_timer_dict(self):
         name_dict = {}
-        core_list = Config(output='name', table='object', filter="type = 'core'", exit=False).get()[0]
-        sensor_type_list = Config(output='name', table='object', filter="class = 'sensor'", exit=False).get()
-        function_sensor = Config(setting='function', belonging='sensor_master', exit=False).get()
-        function_check = Config(setting='function', belonging='check', exit=False).get()
-        function_path = Config(setting='path_root').get() + "/core/%s"
-        debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'" % (function_path, core_list, sensor_type_list))
-        for timer_setting in Config(setting='timer', output="belonging,data", exit=False).get():
+        core_list = Config(output='name', table='object', filter="type = 'core'", exit=False).get('list')
+        profile_list = Config(output='name', table='grp', filter="type = 'profile'", exit=False).get('list')
+        sensor_type_list = Config(output='name', table='object', filter="class = 'sensor'", exit=False).get('list')
+        function_sensor = Config(setting='function', belonging='sensor_master', exit=False).get('str')
+        function_check = Config(setting='function', belonging='check', exit=False).get('str')
+        function_path = Config(setting='path_root').get('str') + "/core/%s"
+
+        debugger("service - timer |vars function_path '%s' |core_list '%s' |sensor_type_list '%s'"
+                 % (function_path, core_list, sensor_type_list))
+        # need to rewrite to check GrpSetting table for timers
+        for timer_setting in Config(setting='timer', output="belonging,data", exit=False, distributed=True).get('list'):
             name, timer = timer_setting[0], timer_setting[1]
-            if name in core_list or Config(setting='enabled', belonging=name, exit=False).get() == '1':
-                if name not in core_list:
+            if name in core_list or Config(setting='enabled', belonging=name, exit=False, distributed=True).get('int') == 1:
+                if name in core_list:
+                    name_dict["core_%s" % name] = {'timer': timer, 'function': function_path
+                                                   % Config(setting='function', belonging=name, exit=False).get('str')}
+                elif name in profile_list:
+                    name_dict["profile_%s" % name] = {'timer': timer, 'function': function_path % function_check}
+                else:
                     if name in sensor_type_list: devicetype = name
-                    else: devicetype = Config(output='class', table='object', setting=name, exit=False).get()
+                    else: devicetype = Config(output='class', table='object', setting=name, exit=False).get('str')
                     if devicetype in sensor_type_list:
-                        if Config(setting='enabled', belonging=devicetype, exit=False).get() == '1':
-                            check_timer = Config(belonging=name, setting='timer_check', output="data", exit=False).get()
-                            if name is False or timer is False or check_timer is False:
+                        if Config(setting='enabled', belonging=devicetype, exit=False).get('int') == 1:
+                            if name is False or timer is False:
                                 debugger("service - timer |removed thread because of bad sql output")
                                 continue
-                            name_dict["check_%s" % name] = [check_timer, function_path % function_check]
-                            name_dict["sensor_%s" % name] = [timer, function_path % function_sensor]
+                            name_dict["sensor_%s" % name] = {'timer': timer, 'function': function_path % function_sensor}
                         else: continue
                     else: continue
-                elif name in core_list:
-                    name_dict["core_%s" % name] = [timer, function_path % Config(setting='function', belonging=name, exit=False).get()]
-                else: continue
             else: continue
             debugger("service - timer |dict '%s' '%s'" % (type(name_dict), name_dict))
         return name_dict
@@ -88,9 +91,11 @@ class Service:
         try:
             debugger("service - start |starting pid %s" % os_getpid())
             self.name_dict = self._get_timer_dict()
-            for thread_name, nested_settings in self.name_dict.items():
-                interval, function = nested_settings[0], nested_settings[1]
-                debugger("service - start |function '%s' '%s', interval '%s' '%s'" % (type(function), function, type(interval), interval))
+            for thread_name, setting in self.name_dict.items():
+                setting_dict = dict(setting)
+                interval, function = setting_dict['timer'], setting_dict['function']
+                debugger("service - start |function '%s' '%s', interval '%s' '%s'"
+                         % (type(function), function, type(interval), interval))
 
                 @Threader.thread(int(interval), thread_name)
                 def thread_process(initiator, start=False):
@@ -107,22 +112,26 @@ class Service:
 
     def reload(self, signum=None, stack=None):
         debugger('service - reload |reloading config')
-        name_dict_overwrite, dict_reloaded = {}, {}
-        for thread_name_reload, settings_reload in self._get_timer_dict().items():
-            interval_reload, function_reload = settings_reload[0], settings_reload[1]
-            if thread_name_reload in self.name_dict.keys():
-                for thread_name, settings in self.name_dict.items():
-                    if thread_name_reload == thread_name:
-                        interval, function = settings[0], settings[1]
-                        if interval_reload != interval:
-                            name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
-                            Threader.reload_thread(int(interval_reload), thread_name_reload)
-                        else: name_dict_overwrite[thread_name] = [interval, function]
+        name_dict_overwrite, reloaded_dict = {}, {}
+        for reload_thread_name, reload_setting in self._get_timer_dict().items():
+            reload_setting_dict = dict(reload_setting)
+            reload_interval, reload_function = reload_setting_dict['timer'], reload_setting_dict['function']
+            if reload_thread_name in self.name_dict:
+                current_thread_dict = {key: value for key, value in self.name_dict.items() if key == reload_thread_name}
+                current_thread_name = list(current_thread_dict.keys())[0]
+                current_setting_dict = list(current_thread_dict.values())[0]
+                current_interval, current_function = current_setting_dict['timer'], current_setting_dict['function']
+                if reload_interval != current_interval:
+                    name_dict_overwrite[reload_thread_name] = {'timer': reload_interval, 'function': reload_function}
+                    reloaded_dict = [reload_interval, reload_function]
+                    Threader.reload_thread(int(reload_interval), reload_thread_name)
+                else: name_dict_overwrite[current_thread_name] = {'timer':current_interval, 'function': current_interval}
             else:
-                name_dict_overwrite[thread_name_reload], dict_reloaded = [interval_reload, function_reload], [interval_reload, function_reload]
-                Threader.start_thread(int(interval_reload), thread_name_reload)
+                name_dict_overwrite[reload_thread_name] = {'timer': reload_interval, 'function': reload_function}
+                reloaded_dict = [reload_interval, reload_function]
+                Threader.start_thread(int(reload_interval), reload_thread_name)
         debugger("service - reload |overwrite_dict '%s' '%s'" % (type(name_dict_overwrite), name_dict_overwrite))
-        if len(dict_reloaded) > 0: systemd_journal.write("Updated configuration:\n%s" % dict_reloaded)
+        if len(reloaded_dict) > 0: systemd_journal.write("Updated configuration:\n%s" % reloaded_dict)
         self.name_dict = name_dict_overwrite
         systemd_journal.write('Finished configuration reload.')
         self._status()
@@ -173,7 +182,11 @@ class Service:
         debugger(['service - status |updating status', "service - status |threads '%s'" % Threader.list(),
                   "service - status |config '%s'" % self.name_dict])
         systemd_journal.write("Threads running:\n%s\nConfiguration:\n" % Threader.list())
-        [systemd_journal.write("'%s': '%s'\n" % (key, value)) for key, value in self.name_dict.items()]
+        for thread_name, setting_dict in self.name_dict.items():
+            _list = []
+            for setting, data in dict(setting_dict).items():
+                _list.append("'%s': '%s'" % (setting, data))
+            systemd_journal.write("'%s' | %s\n" % (thread_name, ', '.join(_list)))
 
     def _run(self):
         debugger('service - run |entering runtime')
@@ -195,4 +208,4 @@ class Service:
             else: self._exit()
 
 
-Service()
+Service().start()
