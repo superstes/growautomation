@@ -72,15 +72,17 @@ tar cfvz $tmp_path/update_$now.tar.gz $ga_path
 mv $tmp_path/update_$now.tar.gz $ga_path/backup
 
 echo 'Updating modules'
-cp -r controller/code/agent/core/*.py $ga_path/core
-cp -r controller/code/agent/maintenance/*.py $ga_path/maintenance
-cp -r controller/code/agent/service/*.py $ga_path/service
+cp -r controller/code/agent/core/* $ga_path/core
+cp -r controller/code/agent/maintenance/* $ga_path/maintenance
+cp -r controller/code/agent/service/* $ga_path/service
 chown -R growautomation:growautomation $ga_path
+find $ga_path -type f -iname '*.py' -exec chmod 754 {} \;
 echo 'Restarting systemd service'
 systemctl daemon-reload
-sysetmctl restart growautomation.service
+systemctl restart growautomation.service
 echo 'Cleaning up'
-cd &rm -rf $tmppath
+cd ~
+rm -rf $tmppath
 
 echo 'Update finished.'
 echo 'Goodbye!'
