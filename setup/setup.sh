@@ -18,8 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
-
+# ga_version 0.5
 
 command -v "git" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
@@ -31,5 +30,6 @@ cd /tmp
 cd controller/setup
 /usr/bin/python3 python/install-python3.8.py $PWD
 cp ../code/agent/core/*.py .
+cp ../code/agent/core/shared/*.py .
 cp ../code/agent/maintenance/*.py .
 /usr/bin/python3.8 setup_linux.py $1
