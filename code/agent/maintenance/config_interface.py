@@ -22,23 +22,23 @@
 
 try:
     from core.owl import DoSql
-    from core.ant import ShellOutput
-    from core.ant import ShellInput
-    from core.smallant import Log
-    from core.ant import plural
-    from core.ant import int_leading_zero
-    from core.ant import ModifyIdiedDict
-    from core.smallant import debugger
-    from core.smallant import VarHandler
-    from core.smallant import list_remove_duplicates
+    from core.shared.shell import Output as ShellOutput
+    from core.shared.shell import Input as ShellInput
+    from core.shared.smallant import Log
+    from core.shared.smallant import plural
+    from core.shared.smallant import int_leading_zero
+    from core.shared.smallant import ModifyIdiedDict
+    from core.shared.smallant import debugger
+    from core.shared.varhandler import VarHandler
+    from core.shared.smallant import list_remove_duplicates
 except (ImportError, ModuleNotFoundError):
     from owl import DoSql
-    from ant import ShellOutput
-    from ant import ShellInput
+    from shell import Output as ShellOutput
+    from shell import Input as ShellInput
     from smallant import Log
-    from ant import plural
-    from ant import int_leading_zero
-    from ant import ModifyIdiedDict
+    from smallant import plural
+    from smallant import int_leading_zero
+    from smallant import ModifyIdiedDict
     from smallant import debugger
     from smallant import VarHandler
     from smallant import list_remove_duplicates
@@ -128,10 +128,9 @@ class Create:
         self.write_config()
 
     def create_core(self):
-        self.setting_dict = {'check': {'range': 10, 'function': 'parrot.py'}, 'backup': {'timer': 86400, 'function': 'backup.py'},
+        self.setting_dict = {'check': {'range': 10, 'function': 'sparrow.py'}, 'backup': {'timer': 86400, 'function': 'backup.py'},
                              'sensor_master': {'function': 'snake.py'},
-                             'core_time': {'function': 'time.py', 'function_arg': 'time', 'datatype': 'time'},
-                             'core_date': {'function': 'time.py', 'function_arg': 'date', 'datatype': 'date'}}
+                             'core_time': {'datatype': 'time'}, 'core_date': {'datatype': 'date'}}
         self.object_dict = {'core': {'check': 'NULL', 'backup': 'NULL', 'sensor_master': 'NULL', 'service': 'NULL'},
                             'agent': {self.hostname: 'NULL'},
                             'devicetype': {'core_time': 'sensor', 'core_date': 'sensor'},
@@ -195,8 +194,8 @@ class Create:
                 setting_dict['timer'] = ShellInput('Provide the interval pull data from the sensor. (in seconds)',
                                                    default=600, max_value=1209600, min_value=10).get()
                 setting_dict['unit'] = ShellInput('Provide the unit for the sensor input.', default='°C', intype='free').get()
-                setting_dict['datatype'] = ShellInput('Provide the type of data the sensor provides.', default='float',
-                                                      poss=['str', 'int', 'float']).get()
+                setting_dict['datatype'] = ShellInput('Provide the type of data the sensor provides.', default='number',
+                                                      poss=['string', 'number']).get()
                 # setting_dict['threshold_max'] = ShellInput("Provide a maximum threshold value for the sensor.\n"
                 #                                            "Info: if this value is exceeded the linked action(s) will be started",
                 #                                            default=26, max_value=1000000, min_value=1).get()
