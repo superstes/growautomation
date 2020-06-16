@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -18,16 +18,13 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
-import os
-import inspect
-
-from config import Config
-from smallant import Log
-from smallant import debugger
-from smallant import process
-from smallant import now
+from core.config import Config
+from core.shared.smallant import Log
+from core.shared.smallant import now
+from core.shared.ant import debugger
+from core.shared.ant import process
 
 from os import path as os_path
 
@@ -74,7 +71,7 @@ class Backup:
         else: return True
 
     def _work(self):
-        work_status = False
+        work_status_list = []
         backup_dir = "%s/%s/%s" % (self.backup_path, now("%Y"), now("%m"))
         tmp_dir = "/tmp/%s_growautomation_backup" % (now("%Y_%m_%d-%H_%M_%S"))
         debugger('backup - work |copying code to tmp dir')
@@ -88,14 +85,14 @@ class Backup:
                 return True
             return False
 
-        work_status = task(command="mkdir -p %s & mkdir -p %s" % (tmp_dir, backup_dir), debug_output='creating directories')
-        work_status = task(command="cp -r %s %s" % (Config(setting='path_root', belonging=self.hostname).get(), tmp_dir),
-                           debug_output='copying root directory')
-        work_status = task(command="mysqldump ga > %s/ga.mysqldump" % tmp_dir, debug_output='dumping database')
-        work_status = task(command="tar -czvf %s/%s_backup.tar.gz -C /tmp ./%s" % (backup_dir, now("%d_%H-%M-%S"), tmp_dir[4:]),
-                           debug_output='compressing backup')
-        work_status = task(command="rm -rf %s" % tmp_dir, debug_output='cleaning temporary files')
-        return work_status
+        work_status_list.append(task(command="mkdir -p %s & mkdir -p %s" % (tmp_dir, backup_dir), debug_output='creating directories'))
+        work_status_list.append(task(command="cp -r %s %s" % (Config(setting='path_root', belonging=self.hostname).get(), tmp_dir),
+                                     debug_output='copying root directory'))
+        work_status_list.append(task(command="mysqldump ga > %s/ga.mysqldump" % tmp_dir, debug_output='dumping database'))
+        work_status_list.append(task(command="tar -czvf %s/%s_backup.tar.gz -C /tmp ./%s" % (backup_dir, now("%d_%H-%M-%S"), tmp_dir[4:]),
+                                     debug_output='compressing backup'))
+        work_status_list.append(task(command="rm -rf %s" % tmp_dir, debug_output='cleaning temporary files'))
+        return False if any(work_status_list) is False else True
 
 
 if __name__ == '__main__':
