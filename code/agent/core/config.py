@@ -43,10 +43,10 @@ class Config:
             return False
 
     def get(self, outtype=None):
-        self._debug("config - get - input |setting '%s' '%s', nosql '%s' '%s', output '%s' '%s', belonging '%s' '%s', "
-                    "filter '%s' '%s', table '%s' '%s'"
-                    % (type(self.setting), self.setting, type(self.nosql), self.nosql, type(self.output), self.output,
-                       type(self.belonging), self.belonging, type(self.filter), self.filter, type(self.table), self.table))
+        self._debug("config - get - input |setting: '%s', nosql: '%s', output: '%s', belonging: '%s', filter: '%s', table: '%s', "
+                    "empty: '%s', exit: '%s', local_debug: '%s', distributed: '%s'"
+                    % (self.setting, self.nosql, self.output, self.belonging, self.filter, self.table, self.empty, self.exit,
+                       self.local_debug, self.distributed))
         parse_file_list = ['setuptype', 'sql_pwd', 'sql_local_user', 'sql_local_pwd', 'sql_agent_pwd', 'sql_admin_pwd']
         parse_failover_list = ['path_root', 'hostname', 'sql_server_port', 'sql_server_ip', 'sql_agent_user', 'sql_admin_user',
                                'sql_server_port', 'sql_sock']
@@ -87,6 +87,7 @@ class Config:
         command = self._parse_sql_table()
         if self.output is not None:
             command[1] = self.output
+            self.sql_custom = True
         if self.setting is not None:
             command.append(self._parse_sql_setting())
         if self.belonging is not None:
@@ -102,12 +103,12 @@ class Config:
         else: return self._parse_sql()
 
     def _parse_sql_distributed_setting(self):
-        setting_table_list = ['ga.Setting', 'ga.GrpSetting']
-        if self.table is not None and self.table not in setting_table_list:
+        setting_table_dict = {'ga.Setting': None, 'ga.GrpSetting': 'grpsetting'}
+        if self.table is not None and self.table not in setting_table_dict.values():
             return False
         output_list = []
-        for table in setting_table_list:
-            self.table = table
+        for table, shorty in setting_table_dict.items():
+            self.table = shorty
             output = self._parse_sql_custom()
             if type(output) == list:
                 if len(output) == 0: continue
@@ -128,6 +129,7 @@ class Config:
                 output = ['SELECT', 'type', 'FROM ga.Object WHERE']
             elif self.table == 'data':
                 output = ['SELECT', 'data', 'FROM ga.Data WHERE']
+            else: output = ['SELECT', 'data', 'FROM ga.Setting WHERE']
             self.sql_custom = True
         else: output = ['SELECT', 'data', 'FROM ga.Setting WHERE']
         return output
@@ -142,6 +144,7 @@ class Config:
                 output = "name = '%s'" % self.setting
             elif self.table == 'data':
                 output = "agent = '%s'" % self.setting
+            else: output = "setting = '%s'" % self.setting
             self.sql_custom = True
         else: output = "setting = '%s'" % self.setting
         return output
