@@ -24,11 +24,11 @@
 
 try:
     from core.smallconfig import Config
+    from core.shared.debug import debugger
 except (ImportError, ModuleNotFoundError):
     from smallconfig import Config
+    from debug import debugger
 
-from os import system as os_system
-from os import path as os_path
 from datetime import datetime
 from random import choice as random_choice
 
@@ -42,35 +42,16 @@ time_hour_minute = now("%H-%M")
 timestamp = "%Y-%m-%d %H:%M:%S"
 
 
-class Log:
-    def __init__(self, output, typ='core', level=1):
-        from inspect import stack as inspect_stack
-        from inspect import getfile as inspect_getfile
-        self.typ, self.output, self.log_level = typ.lower(), output, level
-        self.name = inspect_getfile((inspect_stack()[1])[0])
-        self.log_dir = "%s/%s/%s" % (Config('path_log').get(), self.typ, date_year)
-        self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.typ)
-
-    def _censor(self):
-        return False
-        # censor passwords -> check for strings in output ('IDENTIFIED by', 'pwd', 'password')
-
-    def write(self):
-        if self.typ == 'core':
-            try:
-                if self.log_level > Config('log_level').get('int'): return False
-            except AttributeError: pass
-        else:
-            if self.log_level > Config('log_level').get('int'): return False
-        if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
-        with open("%s/%s_%s.log" % (self.log_dir, date_month, self.typ), 'a') as logfile:
-            logfile.write("%s - %s - %s\n" % (datetime.now().strftime("%H:%M:%S:%f"), self.name, self.output))
-        return True
-
-    def file(self):
-        if os_path.exists(self.log_dir) is False: os_system("mkdir -p %s" % self.log_dir)
-        if os_path.exists(self.log_file) is False: os_system("touch %s" % self.log_file)
-        return self.log_file
+def process(command, out_error=False, debug=False):
+    from subprocess import Popen as subprocess_popen
+    from subprocess import PIPE as subprocess_pipe
+    if debug: debugger(command="smallant - process |input: '%s'" % command, hard_debug=True)
+    output, error = subprocess_popen([command], shell=True, stdout=subprocess_pipe, stderr=subprocess_pipe).communicate()
+    output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
+    if debug: debugger(command="smallant - process |output: '%s' '%s' |error: '%s' '%s'"
+                               % (type(output), output, type(error), error), hard_debug=True)
+    if out_error is False: return output
+    else: return output, error
 
 
 def list_remove_duplicates(_list):
