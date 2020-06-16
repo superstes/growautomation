@@ -21,9 +21,9 @@
 # ga_version 0.5
 
 from core.owl import DoSql
-from core.ant import format_output
-from core.smallant import Log
-from core.smallant import debugger
+from core.shared.smallant import format_output
+from core.shared.smallant import Log
+from core.shared.smallant import debugger
 from core.smallconfig import Config as FileConfig
 
 from functools import lru_cache

@@ -18,15 +18,15 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 # sensor master module
 
 from core.config import Config
 from core.owl import DoSql
-from core.smallant import Log
-from core.smallant import debugger
-from core.smallant import VarHandler
-from core.smallant import process
+from core.shared.smallant import Log
+from core.shared.smallant import debugger
+from core.shared.varhandler import VarHandler
+from core.shared.smallant import process
 
 from time import sleep as time_sleep
 from time import perf_counter as time_counter
@@ -34,10 +34,10 @@ from sys import argv as sys_argv
 
 
 class Balrog:
-    def __init__(self, sensor):
-        self.sensor, self.own_dt = sensor, None
-        self.processed_list, self.lock_list = [], []
-        self.sensor_type = ''
+    def __init__(self, sensor, output='database', stdout_pipe=None):
+        self.sensor, self.output, self.stdout_pipe = sensor, output, stdout_pipe
+        self.processed_list, self.lock_list, self.own_dt = [], [], None
+        self.sensor_type = None
 
     def start(self):
         debugger("snake - init - input |sensor '%s'" % self.sensor)
@@ -68,7 +68,7 @@ class Balrog:
         if connection == 'direct':
             output = self._work(device=device, device_mapping_dict={device: Config(setting='port', belonging=device).get()})
             debugger("snake - device |direct |output '%s'" % output)
-            self._write_data(device, output)
+            self._output_data(device, output)
         elif connection == 'downlink': self._downlink(device, Config(setting='downlink', belonging=device).get())
         else:
             debugger("snake - device |%s has no connection configured" % device)
@@ -96,10 +96,10 @@ class Balrog:
             debugger("snake - downlink |opp 1 |input '%s'" % sensor_dict)
             output = self._work(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict())
             debugger("snake - downlink |opp 1 |output '%s'" % output)
-            self._write_data(device, output)
+            self._output_data(device, output)
         elif type_opp == '0':
             portcount = Config(setting='portcount', belonging=downlink).get()
-            if self.sensor_type:
+            if self.sensor_type is True:
                 sensor_list, sensor_dict = Config(output='name', setting='downlink', filter="data = '%s'" % downlink).get(), {}
                 for sensor in sensor_list:
                     if Config(output='class', table='object', setting=sensor).get() == self.sensor:
@@ -116,7 +116,7 @@ class Balrog:
             output_dict = eval(self._work(downlink, device_mapping_dict=sensor_dict, setting_dict=_get_setting_dict()))
             debugger("snake - downlink |opp 0 |output '%s'" % output_dict)
             for sensor, data in output_dict.items():
-                if sensor in self.processed_list: self._write_data(sensor, data)
+                if sensor in self.processed_list: self._output_data(sensor, data)
         else: return False
 
     def _work(self, device, device_mapping_dict, setting_dict=None):
@@ -179,25 +179,41 @@ class Balrog:
     def _unlock(self, device):
         VarHandler(name="lock_%s" % device).clean()
         self.lock_list.remove(device)
-        debugger("snake - unlock |device %s unlocked" % device)
+        debugger("snake - unlock |device '%s' unlocked" % device)
         Log("Unlocked device '%s'." % device, level=2).write()
         return True
 
-    def _write_data(self, device, data):
+    def _output_data(self, device, data):
         error_string_list = ['', 'error', '{}', 'None']
         if data is None or data in error_string_list:
-            Log("Output data is empty")
+            _msg = 'empty' if data in ['', '{}', 'None'] else 'error'
+            Log("Output data is %s" % _msg)
+            debugger("snake - output_data |device '%s' %s output '%s' '%s'" % (device, _msg, type(data), data))
             return False
+        if self.output == 'stdout' and self.stdout_pipe is not None:
+            debugger("snake - output_data |output to stdout")
+            self._print_data(device, data)
         else:
-            sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" %
-                        (Config('hostname').get(), data, device), write=True).start()
-            Log("Wrote data for device '%s' to database. Output: '%s'" % (device, sql), level=4).write()
-            return sql
+            debugger("snake - output_data |output to database")
+            self._write_data(device, data)
+
+    def _print_data(self, device, data):
+        self.stdout_pipe.put("\"{%s: %s}\"" % (device, data))
+
+    def _write_data(self, device, data):
+        sql = DoSql("INSERT INTO ga.Data (agent,data,device) VALUES ('%s','%s','%s');" %
+                    (Config('hostname').get(), data, device), write=True).start()
+        Log("Wrote data for device '%s' to database. Output: '%s'" % (device, sql), level=4).write()
+        return sql
 
 
 if __name__ == '__main__':
     try:
-        sensor = sys_argv[1]
+        arg_sensor = sys_argv[1]
+        try:
+            arg_output = sys_argv[2]
+        except (IndexError, NameError):
+            arg_output = 'database'
     except (IndexError, NameError):
         raise SystemExit('No sensor provided')
-    Balrog(sensor).start()
+    Balrog(sensor=arg_sensor, output=arg_output).start()

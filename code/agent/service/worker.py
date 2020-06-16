@@ -18,11 +18,11 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
-from core.smallant import debugger
-from core.smallant import VarHandler
-from core.smallant import Log
+from core.shared.smallant import debugger
+from core.shared.varhandler import VarHandler
+from core.shared.smallant import Log
 
 from multiprocessing import Process
 from time import sleep as time_sleep

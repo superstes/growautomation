@@ -23,12 +23,12 @@
 
 from core.config import Config
 from core.owl import DoSql
-from core.ant import time_subtract
-from core.ant import compare_datetime
-from core.smallant import debugger
-from core.smallant import Log
-from core.smallant import internal_process
-from core.smallant import list_remove_duplicates
+from core.shared.smallant import time_subtract
+from core.shared.smallant import compare_datetime
+from core.shared.smallant import debugger
+from core.shared.smallant import Log
+from core.shared.smallant import internal_process
+from core.shared.smallant import list_remove_duplicates
 from core.snake import Balrog
 
 from time import sleep as time_sleep

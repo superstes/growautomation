@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 ########################################################################################################################
 
@@ -54,15 +54,15 @@ from colorama import Fore as colorama_fore
 
 try:
     from ..code.agent.core.owl import DoSql
-    from ..code.agent.core.ant import ShellInput
-    from ..code.agent.core.ant import ShellOutput
-    from ..code.agent.core.smallant import VarHandler
-    from ..code.agent.core.smallant import process
+    from ..code.agent.core.shared.smallant import ShellInput
+    from ..code.agent.core.shared.smallant import ShellOutput
+    from code.agent.core.shared.varhandler import VarHandler
+    from code.agent.core.shared.smallant import process
     from ..code.agent.maintenance.config_interface import setup as object_setup
 except (ImportError, ModuleNotFoundError):
     from owl import DoSql
-    from ant import ShellInput
-    from ant import ShellOutput
+    from shell import Input as ShellInput
+    from shell import Output as ShellOutput
     from smallant import VarHandler
     from smallant import process
     from config_interface import setup as object_setup
@@ -637,7 +637,7 @@ try:
 
     def ga_foldercreate(path):
         if os_path.exists(path) is False:
-            os_system("mkdir -p %s & chown -R growautomation:growautomation %s %s" % (path, path, ga_config['setup_log_redirect']))
+            os_system("mkdir -p %s && chown -R growautomation:growautomation %s %s" % (path, path, ga_config['setup_log_redirect']))
 
 
     def ga_mounts(mname, muser, mpwd, mdom, msrv, mshr, mpath, mtype):
@@ -1045,7 +1045,7 @@ try:
         ShellOutput(output="Wrote %s setup settings to database" % len(insertdict), style='succ')
 
 
-    ShellOutput(font='head', output='Writing configuration to database', symbol='#')
+    ShellOutput(font='head', output='Writing setup configuration to database', symbol='#')
     setup_log_write_vars()
     writedict = {**ga_config_server, **ga_config}
     setup_mysql_write_config(writedict)

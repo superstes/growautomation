@@ -18,10 +18,10 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 # sensor function for adafruit dht22
 
-from core.smallant import Log
+from core.shared.smallant import Log
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep

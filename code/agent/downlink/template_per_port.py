@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 #
 # template for downlink if it should output data on per-port basis
 #
@@ -30,7 +30,7 @@
 # if a soft error occurred you can exit your script/function like this:
 # raise SystemExit('error')
 
-from core.smallant import Log
+from core.shared.smallant import Log
 
 from sys import argv as sys_argv
 

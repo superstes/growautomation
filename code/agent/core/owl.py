@@ -18,14 +18,15 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
-# sql module
+# ga_version 0.5
+
+# handles sql connections
 
 try:
-    from core.smallant import Log
+    from core.shared.smallant import Log
     from core.smallconfig import Config
-    from core.smallant import debugger
-    from core.smallant import process
+    from core.shared.smallant import debugger
+    from core.shared.smallant import process
 except (ImportError, ModuleNotFoundError):
     from smallant import Log
     from smallconfig import Config

@@ -18,13 +18,13 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 from core.owl import DoSql
-from core.smallant import debugger
-from core.smallant import VarHandler
+from core.shared.smallant import debugger
+from core.shared.varhandler import VarHandler
 from core.config import Config
-from core.smallant import Log
+from core.shared.smallant import Log
 
 from systemd import journal as systemd_journal
 from sys import argv as sys_argv

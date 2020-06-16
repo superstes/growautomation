@@ -18,13 +18,13 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.4
+# ga_version 0.5
 
 # base code source: https://github.com/sankalpjonn/timeloop
 # modified for use in ga
 
-from core.smallant import Log
-from core.smallant import debugger
+from core.shared.smallant import Log
+from core.shared.smallant import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep
