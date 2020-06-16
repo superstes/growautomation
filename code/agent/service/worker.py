@@ -21,8 +21,8 @@
 # ga_version 0.5
 
 from core.shared.debug import debugger
-from core.shared.varhandler import VarHandler
 from core.shared.debug import Log
+from core.shared.varhandler import VarHandler
 
 from multiprocessing import Process
 from time import sleep as time_sleep
@@ -31,18 +31,20 @@ from time import sleep as time_sleep
 def process(initiator, start=False):
     debugger("service - thread_function |'%s'" % initiator)
     if initiator.find('sensor') != -1:
-        debugger("service - thread_function |'%s' using sensor module" % initiator)
+        obj = initiator.replace('sensor_', '')
+        debugger("service - thread_function |using sensor module for object '%s'" % obj)
         from core.snake import Balrog
-        function = Balrog(initiator).start
-    elif initiator.find('check') != -1:
-        debugger("service - thread_function |'%s' using check module" % initiator)
-        return False
-        # from core.parrot import ThresholdCheck.start
-        # function = ThresholdCheck(initiator)
+        function = Balrog(obj).start
+    elif initiator.find('profile') != -1:
+        obj = initiator.replace('profile_', '')
+        debugger("service - thread_function |using check module for object '%s'" % obj)
+        from core.sparrow import Profile
+        function = Profile(obj).parse
     elif initiator.find('backup') != -1:
-        debugger("service - thread_function |'%s' using backup module" % initiator)
+        debugger("service - thread_function |using backup module")
         from core.backup import Backup
         function = Backup().start
+    else: return False
     try:
         work = Process(target=function)
         if start:
