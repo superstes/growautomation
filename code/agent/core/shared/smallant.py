@@ -162,21 +162,20 @@ class ModifyIdiedDict:
 
 def format_output(typ, data):
     try:
-        if typ == 'list' and type(data) != list:
-            output = [data]
-        elif typ == 'str' and type(data) != str:
+        if typ in ['str', 'int'] and type(data) == list:
             if type(data) == list:
-                if len(data) > 0: output = data[0]
-                else: output = ''
-            else: output = str(data)
-        elif typ == 'int':
-            output = int(data)
-        elif typ == 'tuple':
+                if len(data) > 0:
+                    data = data[0]
+                else: return False
+        if typ == 'tuple':
             if type(data) != str:
                 output = tuple(data)
             else: output = tuple(data[2:-2].split("', '"))
-        elif typ == 'dict':
-            output = dict(data)
+        elif typ == 'list' and type(data) != list: output = [data]
+        elif typ == 'str': output = str(data)
+        elif typ == 'int': output = int(data)
+        elif typ == 'float': output = float(data)
+        elif typ == 'dict': output = dict(data)
         else: output = data
     except ValueError: output = data
     return output
