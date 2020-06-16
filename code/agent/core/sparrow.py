@@ -24,7 +24,6 @@
 from core.config import Config
 from core.owl import DoSql
 from core.shared.smallant import time_subtract
-from core.shared.smallant import compare_datetime
 from core.shared.smallant import debugger
 from core.shared.smallant import Log
 from core.shared.smallant import internal_process
@@ -57,67 +56,103 @@ class Condition:
             self.is_devicetype = False
         self.datatype = Config(setting='datatype', belonging=devicetype).get()
 
-        if self.datatype in ['date', 'time']:
-            data = self._process(data=None)
-        else:
-            data_list = self._get_data()
-            if data_list is None:
-                debugger("sparrow - condition - check |error - could not pull data")
-                return None
+        data_list = self._get_data()
+        if data_list is None:
+            debugger("sparrow - condition - check |error - could not pull data")
+            return None
 
-            avg_data = self._get_average_data(data_list)
-            if avg_data is None:
-                debugger("sparrow - condition - check |error - could calculate average data")
-                return None
+        avg_data = self._get_average_data(data_list)
+        if avg_data is None:
+            debugger("sparrow - condition - check |error - could not calculate average data")
+            return None
 
-            data = self._process(data=avg_data)
+        avg_data, threshold = self._prepare_data(avg_data)
+        if avg_data is None or threshold is None:
+            debugger("sparrow - condition - check |error - prepare data")
+            return None
+
+        data = self._process(data=avg_data, threshold=threshold)
 
         debugger("sparrow - condition - check |output - '%s' '%s'" % (type(data), data))
         return data
 
-    def _process(self, data):
+    def _process(self, data, threshold):
         # checks if average data meets the condition
-        try:
-            threshold = self.condition_dict['threshold']
-            if self.datatype == 'date':
-                threshold = datetime.strptime(threshold, "%Y-%m-%d").date()
-            elif self.datatype == 'time':
-                threshold = datetime.strptime(threshold, "%H-%M-%S").time()
-            else:
-                threshold = self.datatype(threshold)
-            condition = self.condition_dict['condition']
-        except ValueError:
-            Log("Error in %s! Unable to process threshold - needs incompatible format '%s'"
-                % (self.placement, self.datatype), level=1).write()
-            debugger("sparrow - condition - process |error - cant format threshold as type '%s'" % self.datatype)
-            return None
-
+        condition = self.condition_dict['condition']
         debugger("sparrow - condition - process |input - '%s %s %s'" % (data, condition, threshold))
 
         if condition not in ['<', '>', '=', '!']:
             debugger("sparrow - condition - process |error - provided condition '%s' '%s' not supported"
                      % (type(condition), condition))
             return None
-        elif condition in ['<', '>'] and self.datatype not in [float, int, 'time', 'date']:
+        elif condition in ['<', '>'] and self.datatype not in ['number', 'time', 'date']:
             debugger("sparrow - condition - process |error - provided condition '%s' '%s' can only process "
                      "float/int/time/date data" % (type(condition), condition))
             return None
 
-        if self.datatype in ['date', 'time']:
-            output = compare_datetime(typ=self.datatype, operator=condition, data=threshold, formatted=True)
-        else:
-            output = False
-            if condition in ['=', '!']:
-                if data == threshold:
-                    output = True
-                if condition == '!':
-                    output = not output
-            elif condition in ['<', '>']:
-                if data < threshold:
-                    output = True
-                if condition == '>':
-                    output = not output
+        output = False
+        if condition in ['=', '!']:
+            if data == threshold:
+                output = True
+            if condition == '!':
+                output = not output
+        elif condition in ['<', '>']:
+            if data < threshold:
+                output = True
+            if condition == '>':
+                output = not output
         debugger("sparrow - condition - process |output - '%s' '%s'" % (type(output), output))
+        return output
+
+    def _prepare_data(self, avg_data):
+        # format float to int
+        threshold = self.condition_dict['threshold']
+        debugger("sparrow - condition - prepare_data |input - avg_data: '%s %s', threshold: '%s %s'"
+                 % (type(avg_data), avg_data, type(threshold), threshold))
+        if self.datatype == 'number':
+            def _decimals(dec_count, data):
+                multiplier = int("1%s" % '0' * dec_count)
+                return data * multiplier
+
+            decimals_to_process = 4  # may add this as config to the db in the future
+            avg_data = _decimals(dec_count=decimals_to_process, data=avg_data)
+            threshold = _decimals(dec_count=decimals_to_process, data=threshold)
+            try:
+                new_avg_data = int(avg_data)
+                new_threshold = int(threshold)
+                output = new_avg_data, new_threshold
+            except ValueError:
+                debugger("sparrow - condition - prepare_data |error - unable to format data as integer")
+                output = None, None
+        elif self.datatype in ['date', 'time']:
+            if self.datatype == 'time':
+                threshold = datetime.strptime(threshold, "%H:%M:%S").time()
+            else: threshold = datetime.strptime(threshold, "%Y-%m-%d").date()
+            output = avg_data, threshold
+        else: output = avg_data, threshold
+        debugger("sparrow - condition - prepare_data |output - avg_data: '%s' '%s', threshold '%s' '%s'"
+                 % (type(output[0]), output[0], type(output[1]), output[1]))
+        return output
+
+    def _get_average_data(self, data):
+        debugger("sparrow - condition - average_data |input - data: '%s' '%s'" % (type(data), data))
+        if self.datatype == 'string': data = [data]
+
+        if self.datatype in ['date', 'time']: output = data
+        elif self.datatype == 'number':
+            float_data_list = [float(_) for _ in data]
+            output = sum(float_data_list) / float(len(float_data_list))
+        elif self.datatype == 'string':
+            last_datapoint = data[0]
+            data_no_duplicates = list_remove_duplicates(data)
+            if len(data_no_duplicates) > 1:
+                output = last_datapoint
+            else: output = data_no_duplicates[0]
+        else:
+            debugger("sparrow - condition - average_data |error - configured datatype not supported, "
+                     "device '%s', datatype '%s' '%s'" % (self.device, type(self.datatype), self.datatype))
+            output = None
+        debugger("sparrow - condition - average_data |output - '%s' '%s'" % (type(output), output))
         return output
 
     def _get_data(self):
@@ -126,24 +161,20 @@ class Condition:
         if self.datatype is None:
             debugger("sparrow - condition - data |error - device '%s' has no datatype configured" % self.device)
             return None
-        elif self.datatype == 'int': self.datatype = int
-        elif self.datatype == 'float': self.datatype = float
-        elif self.datatype == 'str': self.datatype = str
         data = None
 
         if data_source == 'database':
-            data_points_configured = self.condition_dict['data_points']
+            try:
+                data_points_configured = int(self.condition_dict['data_points'])
+            except ValueError: data_points_configured = None
             if data_points_configured is None:
                 data_points = self.default_data_points
             else: data_points = int(data_points_configured)
-            if self.is_devicetype is True:
-                _timer = Config(setting='timer', belonging=self.device).get('int')
+            if self.is_devicetype is True or self.device in [name for name, data in self.timer_tuple_list]:
+                _timer_owner = self.device
             else:
-                if self.device in [name for name, data in self.timer_tuple_list]:
-                    _timer = [data for name, data in self.timer_tuple_list if name == self.device][0]
-                else:
-                    own_devicetype = Config(table='object', output='class', setting=self.device).get()
-                    _timer = [data for name, data in self.timer_tuple_list if name == own_devicetype][0]
+                _timer_owner = Config(table='object', output='class', setting=self.device).get()
+            _timer = [data for name, data in self.timer_tuple_list if name == _timer_owner][0]
             if _timer is False:
                 debugger("sparrow - condition - data |error - while looking up timer for device '%s'" % self.device)
                 return None
@@ -167,45 +198,25 @@ class Condition:
                 data_list = Config(table='data', filter=command % (time_before, time_now, self.device)).get('list')
             data = data_list
         elif data_source == 'direct':
-            retry_count = 1
-            while True:
-                if retry_count > 5:
-                    debugger("sparrow - condition - data |error - could not directly pull data for device '%s'" % self.device)
-                    return None
-                data = internal_process(target=Balrog(sensor=self.condition_dict['object'], output='stdout').start, stdout=True)
-                try:
-                    data = self.datatype(data)
-                    break
-                except ValueError:
-                    Log("Error in %s! Unable to process data - needs incompatible format '%s'"
-                        % (self.placement, self.datatype), level=1).write()
-                    debugger("sparrow - condition - data |error - cant format data as type '%s'" % self.datatype)
-                    return None
-                    time_sleep(3)
-                retry_count += 1
+            if self.datatype in ['date', 'time']:
+                if self.datatype == 'time':
+                    data = datetime.now().time()
+                else: data = datetime.now().date()
+            else:
+                retry_count = 1
+                while True:
+                    if retry_count > 5:
+                        debugger("sparrow - condition - data |error - could not directly pull data for device '%s'" % self.device)
+                        return None
+                    data = internal_process(target=Balrog(sensor=self.condition_dict['object'], output='stdout').start, stdout=True)
+                    if data in [None, False, '', [], 'error']:
+                        time_sleep(3)
+                    else: break
+                    retry_count += 1
         if data is False or data == [False]:
             debugger("sparrow - condition - data |error - could not pull data for device '%s' from database" % self.device)
             return None
         else: return data
-
-    def _get_average_data(self, data):
-        debugger("sparrow - condition - average_data |input - data: '%s' '%s'" % (type(data), data))
-        if type(data) == str: data = [data]
-        if self.datatype in [int, float]:
-            int_data_list = [self.datatype(_) for _ in data]
-            output = self.datatype(sum(int_data_list)) / self.datatype(len(data))
-        elif self.datatype == str:
-            last_datapoint = data[0]
-            data_no_duplicates = list_remove_duplicates(data)
-            if len(data_no_duplicates) > 1:
-                output = last_datapoint
-            else: output = data_no_duplicates[0]
-        else:
-            debugger("sparrow - condition - average_data |error - configured datatype not supported, "
-                     "device '%s', datatype '%s' '%s'" % (self.device, type(self.datatype), self.datatype))
-            output = None
-        debugger("sparrow - condition - average_data |output - '%s' '%s'" % (type(output), output))
-        return output
 
 
 class Operator:
