@@ -24,7 +24,7 @@
 # modified for use in ga
 
 from core.shared.smallant import Log
-from core.shared.smallant import debugger
+from core.shared.ant import debugger
 
 from threading import Thread, Event
 from time import sleep as time_sleep

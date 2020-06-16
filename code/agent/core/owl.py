@@ -25,13 +25,13 @@
 try:
     from core.shared.smallant import Log
     from core.smallconfig import Config
-    from core.shared.smallant import debugger
-    from core.shared.smallant import process
+    from core.shared.ant import debugger
+    from core.shared.ant import process
 except (ImportError, ModuleNotFoundError):
     from smallant import Log
     from smallconfig import Config
-    from smallant import debugger
-    from smallant import process
+    from ant import debugger
+    from ant import process
 
 from random import choice as random_choice
 from os import path as os_path

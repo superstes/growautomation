@@ -21,7 +21,7 @@
 # ga_version 0.5
 
 from core.owl import DoSql
-from core.shared.smallant import debugger
+from core.shared.ant import debugger
 from core.shared.varhandler import VarHandler
 from core.config import Config
 from core.shared.smallant import Log

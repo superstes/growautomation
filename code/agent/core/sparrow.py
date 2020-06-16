@@ -24,9 +24,9 @@
 from core.config import Config
 from core.owl import DoSql
 from core.shared.smallant import time_subtract
-from core.shared.smallant import debugger
+from core.shared.ant import debugger
 from core.shared.smallant import Log
-from core.shared.smallant import internal_process
+from core.shared.ant import internal_process
 from core.shared.smallant import list_remove_duplicates
 from core.snake import Balrog
 

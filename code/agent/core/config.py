@@ -23,7 +23,7 @@
 from core.owl import DoSql
 from core.shared.smallant import format_output
 from core.shared.smallant import Log
-from core.shared.smallant import debugger
+from core.shared.ant import debugger
 from core.smallconfig import Config as FileConfig
 
 from functools import lru_cache

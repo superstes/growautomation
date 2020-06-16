@@ -64,7 +64,7 @@ except (ImportError, ModuleNotFoundError):
     from shell import Input as ShellInput
     from shell import Output as ShellOutput
     from smallant import VarHandler
-    from smallant import process
+    from ant import process
     from config_interface import setup as object_setup
 
 

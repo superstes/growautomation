@@ -24,9 +24,9 @@
 from core.config import Config
 from core.owl import DoSql
 from core.shared.smallant import Log
-from core.shared.smallant import debugger
+from core.shared.ant import debugger
 from core.shared.varhandler import VarHandler
-from core.shared.smallant import process
+from core.shared.ant import process
 
 from time import sleep as time_sleep
 from time import perf_counter as time_counter

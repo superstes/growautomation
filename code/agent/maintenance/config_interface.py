@@ -28,7 +28,7 @@ try:
     from core.shared.smallant import plural
     from core.shared.smallant import int_leading_zero
     from core.shared.smallant import ModifyIdiedDict
-    from core.shared.smallant import debugger
+    from core.shared.ant import debugger
     from core.shared.varhandler import VarHandler
     from core.shared.smallant import list_remove_duplicates
 except (ImportError, ModuleNotFoundError):
@@ -39,7 +39,7 @@ except (ImportError, ModuleNotFoundError):
     from smallant import plural
     from smallant import int_leading_zero
     from smallant import ModifyIdiedDict
-    from smallant import debugger
+    from ant import debugger
     from smallant import VarHandler
     from smallant import list_remove_duplicates
 
