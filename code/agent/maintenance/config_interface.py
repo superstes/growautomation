@@ -505,6 +505,12 @@ class Create:
                                             condi_action = 'add'
 
                                 def condi_input(setting, action='add', filter=None):
+                                    if filter is not None:
+                                        if filter in [dt for dt, data in dt_datatype_tuple_list]:
+                                            _dt = filter
+                                        else: _dt = self._config(table='object', output='class', setting=filter)
+                                        _datatype = [data for dt, data in dt_datatype_tuple_list if dt == _dt][0]
+                                    else: _datatype = None
                                     if setting == 'name':
                                         return ShellInput('Provide a unique name for the condition/parent.\n'
                                                           'Info: a unique name inside of the profile', neg=True,
@@ -516,21 +522,19 @@ class Create:
                                         return ShellInput('Provide a sector to which to limit the condition. (optional)',
                                                           default='NULL', poss=sector_posslist).get()
                                     elif setting == 'data_source':
+                                        if _datatype in ['date', 'time']: return 'direct'
                                         return ShellInput("Where should the comparable data be sourced from?\n"
                                                           "Info: direct - we will read the data directly from the sensor (current state)",
                                                           default='database', poss=['database', 'direct']).get()
                                     elif setting == 'data_points':
+                                        if _datatype in ['date', 'time']: return 'NULL'
                                         return ShellInput("How many data entries should be checked for this condition? (optional)\n"
                                                           "Info: if this condition is linked to a devicetype -> this amount "
                                                           "of entries will be checked for each of its devices.",
                                                           default='NULL', max_value=10000, min_value=1).get()
                                     elif setting == 'condi':
-                                        if filter is None: _datatype = 'int'
-                                        else:
-                                            if filter in [dt for dt, data in dt_datatype_tuple_list]: _dt = filter
-                                            else: _dt = self._config(table='object', output='class', setting=filter)
-                                            _datatype = [data for dt, data in dt_datatype_tuple_list if dt == _dt][0]
-                                        if _datatype not in ['int', 'float', 'time', 'date']:
+                                        if filter is None: _datatype = 'number'
+                                        if _datatype not in ['number', 'time', 'date']:
                                             return ShellInput("Provide which condition must be true.\n"
                                                               "Info:\n  '=' - must be exactly the threshold\n"
                                                               "  '!' - must not be exactly the threshold\n",
@@ -584,7 +588,7 @@ class Create:
                                         if new_condi_dict['object'] in self.current_dt_dict.keys():
                                             new_condi_dict['sector'] = condi_input('sector')
                                         else: new_condi_dict['sector'] = 'NULL'
-                                        new_condi_dict['data_source'] = condi_input('data_source')
+                                        new_condi_dict['data_source'] = condi_input('data_source', filter=new_condi_dict['object'])
                                         if new_condi_dict['data_source'] == 'database':
                                             new_condi_dict['data_points'] = condi_input('data_points')
                                         new_condi_dict['condi'] = condi_input('condi', filter=new_condi_dict['object'])
@@ -610,7 +614,7 @@ class Create:
                                                              default=random_choice(condi_setting_list)).get()
                                         if to_edit == 'order_id':
                                             new_sid = condi_input(to_edit, action='edit')
-                                        elif to_edit == 'condi':
+                                        elif to_edit in ['condi', 'data_source', 'data_points']:
                                             new_condi_dict[to_edit] = condi_input(to_edit, filter=new_condi_dict['object'])
                                         else: new_condi_dict[to_edit] = condi_input(to_edit)
                                         another_edit = ShellInput('Want to edit another setting?', default=True).get()
