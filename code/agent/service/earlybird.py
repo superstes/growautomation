@@ -20,11 +20,11 @@
 
 # ga_version 0.5
 
-from core.owl import DoSql
-from core.shared.debug import debugger
-from core.shared.varhandler import VarHandler
-from core.config import Config
-from core.shared.debug import Log
+from core.handlers.database import Interact as DoSql
+from core.handlers.debug import debugger
+from core.handlers.var import VarHandler
+from core.handlers.config import Config
+from core.handlers.debug import Log
 
 from systemd import journal as systemd_journal
 from sys import argv as sys_argv

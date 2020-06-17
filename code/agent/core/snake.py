@@ -21,11 +21,11 @@
 # ga_version 0.5
 # sensor master module
 
-from core.config import Config
-from core.owl import DoSql
-from core.shared.debug import Log
-from core.shared.debug import debugger
-from core.shared.varhandler import VarHandler
+from core.handlers.config import Config
+from core.handlers.database import Interact as DoSql
+from core.handlers.debug import Log
+from core.handlers.debug import debugger
+from core.handlers.var import VarHandler
 from core.shared.smallant import process
 
 from time import sleep as time_sleep
@@ -41,7 +41,6 @@ class Balrog:
 
     def start(self):
         debugger("snake - init - input |sensor '%s'" % self.sensor)
-        self.sensor = self.sensor.replace('sensor_', '')
         if self.sensor in Config(output='name', table='object', filter="class = 'sensor'").get('list'):
             self.sensor_type = True
         else: self.sensor_type = False

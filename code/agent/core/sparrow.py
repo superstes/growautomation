@@ -21,11 +21,11 @@
 # ga_version 0.5
 # checks action profiles/conditions
 
-from core.config import Config
-from core.owl import DoSql
+from core.handlers.config import Config
+from core.handlers.database import Interact as DoSql
 from core.shared.smallant import time_subtract
-from core.shared.debug import debugger
-from core.shared.debug import Log
+from core.handlers.debug import debugger
+from core.handlers.debug import Log
 from core.shared.ant import internal_process
 from core.shared.smallant import list_remove_duplicates
 from core.snake import Balrog

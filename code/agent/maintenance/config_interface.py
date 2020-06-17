@@ -21,18 +21,18 @@
 # ga_version 0.5
 
 try:
-    from core.owl import DoSql
-    from core.shared.shell import Output as ShellOutput
-    from core.shared.shell import Input as ShellInput
-    from core.shared.debug import Log
+    from core.handlers.database import Interact as DoSql
+    from core.handlers.shell import Output as ShellOutput
+    from core.handlers.shell import Input as ShellInput
+    from core.handlers.debug import Log
     from core.shared.smallant import plural
     from core.shared.smallant import int_leading_zero
     from core.shared.smallant import ModifyIdiedDict
-    from core.shared.debug import debugger
-    from core.shared.varhandler import VarHandler
+    from core.handlers.debug import debugger
+    from core.handlers.var import VarHandler
     from core.shared.smallant import list_remove_duplicates
 except (ImportError, ModuleNotFoundError):
-    from owl import DoSql
+    from database import Interact as DoSql
     from shell import Output as ShellOutput
     from shell import Input as ShellInput
     from debug import Log
@@ -75,7 +75,7 @@ class Create:
             self.author = 'setup'
         else:
             self.setup = False
-            from core.config import Config
+            from core.handlers.config import Config
             self.ConfigParser = Config
             self.hostname = Config('hostname').get()
             self.setuptype = Config('setuptype').get()
@@ -832,7 +832,7 @@ class Create:
 
 class Edit:
     def __init__(self, enabled_state=None):
-        from core.config import Config
+        from core.handlers.config import Config
         self.Config, self.enabled_state = Config, enabled_state
         self.start()
 
@@ -894,7 +894,7 @@ class Edit:
 
 def show():
     # add GrpSetting
-    from core.config import Config
+    from core.handlers.config import Config
     object_list = ['exit']
     object_agent_list = Config(output='name', table='object', filter="type = 'agent'").get('list')
     object_dev_list = Config(output='name', table='object', filter="type = 'device'").get('list')

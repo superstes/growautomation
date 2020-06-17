@@ -20,11 +20,11 @@
 
 # ga_version 0.5
 
-from core.owl import DoSql
+from core.handlers.database import Interact as DoSql
 from core.shared.smallant import format_output
-from core.shared.debug import Log
-from core.shared.debug import debugger
-from core.smallconfig import Config as FileConfig
+from core.handlers.debug import Log
+from core.handlers.debug import debugger
+from core.handlers.smallconfig import Config as FileConfig
 
 from functools import lru_cache
 

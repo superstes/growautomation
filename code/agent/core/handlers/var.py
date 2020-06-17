@@ -24,8 +24,8 @@
 #   (child-to-child communication if they have different parents)
 
 try:
-    from core.shared.debug import Log
-    from core.shared.debug import debugger
+    from core.handlers.debug import Log
+    from core.handlers.debug import debugger
 except (ImportError, ModuleNotFoundError):
     from debug import Log
     from debug import debugger

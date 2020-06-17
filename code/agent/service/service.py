@@ -22,11 +22,11 @@
 
 from threader import Loop
 from worker import process as worker_process
-from core.config import Config
-from core.shared.shell import Output as ShellOutput
+from core.handlers.config import Config
+from core.handlers.shell import Output as ShellOutput
 from core.shared.ant import debugger
-from core.shared.varhandler import VarHandler
-from core.shared.debug import Log
+from core.handlers.var import VarHandler
+from core.handlers.debug import Log
 
 from systemd import journal as systemd_journal
 from time import sleep as time_sleep

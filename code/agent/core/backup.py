@@ -20,10 +20,10 @@
 
 # ga_version 0.5
 
-from core.config import Config
-from core.shared.debug import Log
+from core.handlers.config import Config
+from core.handlers.debug import Log
 from core.shared.smallant import now
-from core.shared.debug import debugger
+from core.handlers.debug import debugger
 from core.shared.smallant import process
 
 from os import path as os_path

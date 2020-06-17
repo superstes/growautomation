@@ -23,8 +23,8 @@
 # provides functions/classes that are used throughout the project (and don't need other core modules)
 
 try:
-    from core.smallconfig import Config
-    from core.shared.debug import debugger
+    from core.handlers.smallconfig import Config
+    from core.handlers.debug import debugger
 except (ImportError, ModuleNotFoundError):
     from smallconfig import Config
     from debug import debugger

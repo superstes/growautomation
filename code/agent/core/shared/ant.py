@@ -24,9 +24,9 @@
 #   (to prevent recursive imports)
 
 try:
-    from core.config import Config
+    from core.handlers.config import Config
     import core.shared.smallant
-    from core.shared.debug import debugger
+    from core.handlers.debug import debugger
 except (ImportError, ModuleNotFoundError):
     from config import Config
     import smallant

@@ -31,7 +31,7 @@
 # if a soft error occurred you can exit your script/function like this:
 # raise SystemExit('error')
 
-from core.shared.debug import Log
+from core.handlers.debug import Log
 
 from sys import argv as sys_argv
 

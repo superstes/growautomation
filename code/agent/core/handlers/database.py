@@ -23,9 +23,9 @@
 # handles sql connections
 
 try:
-    from core.shared.debug import Log
-    from core.smallconfig import Config
-    from core.shared.debug import debugger
+    from core.handlers.debug import Log
+    from core.handlers.smallconfig import Config
+    from core.handlers.debug import debugger
     from core.shared.smallant import process
 except (ImportError, ModuleNotFoundError):
     from debug import Log
@@ -39,7 +39,7 @@ from time import sleep as time_sleep
 from functools import lru_cache
 
 
-class DoSql:
+class Interact:
     def __init__(self, command=None, write=False, user=None, pwd=None, exit=True, hostname=None, setuptype=None, test=False,
                  local_debug=None):
         self.command, self.write, self.user, self.pwd, self.exit, self.test = command, write, user, pwd, exit, test

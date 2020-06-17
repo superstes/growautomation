@@ -53,17 +53,17 @@ os_system("/usr/bin/python%s -m pip install wheel mysql-connector-python coloram
 from colorama import Fore as colorama_fore
 
 try:
-    from ..code.agent.core.owl import DoSql
-    from ..code.agent.core.shared.shell import Input as ShellInput
-    from ..code.agent.core.shared.shell import Output as ShellOutput
-    from ..code.agent.core.shared.varhandler import VarHandler
+    from ..code.agent.core.handlers.database import Interact as DoSql
+    from ..code.agent.core.handlers.shell import Input as ShellInput
+    from ..code.agent.core.handlers.shell import Output as ShellOutput
+    from ..code.agent.core.handlers.var import VarHandler
     from ..code.agent.core.shared.smallant import process
     from ..code.agent.maintenance.config_interface import setup as object_setup
 except (ImportError, ModuleNotFoundError):
-    from owl import DoSql
+    from database import Interact as DoSql
     from shell import Input as ShellInput
     from shell import Output as ShellOutput
-    from varhandler import VarHandler
+    from var import VarHandler
     from smallant import process
     from config_interface import setup as object_setup
 

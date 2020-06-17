@@ -21,7 +21,7 @@
 # ga_version 0.5
 
 try:
-    from core.smallconfig import Config
+    from core.handlers.smallconfig import Config
 except (ImportError, ModuleNotFoundError):
     from smallconfig import Config
 
@@ -42,7 +42,7 @@ def debugger(command, hard_debug=False, hard_only=False, level=1):
     if hard_debug: debug = True
     elif not hard_only:
         try:
-            from core.shared.varhandler import VarHandler
+            from core.handlers.var import VarHandler
         except (ImportError, ModuleNotFoundError):
             from varhandler import VarHandler
         debug = True if VarHandler(name='debug').get() == '1' else False
