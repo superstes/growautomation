@@ -20,6 +20,8 @@ Version: 0.6
 
 ### Currently active
 - implementing object-oriented config management
+  - basic workflow: <br>
+  <img src="https://github.com/superstes/growautomation/blob/dev/img/GaObjectCreationWorkflow.png" float="middle" border="4" alt="cable management topology">
 
 ### New features
 - v0.3 - v0.5
