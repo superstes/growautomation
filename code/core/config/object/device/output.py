@@ -1,7 +1,7 @@
 # output device objects (devices used for some kind of action)
 #   hold their model or device specific settings
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaActorModel(GaBaseModel):

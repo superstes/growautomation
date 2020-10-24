@@ -1,7 +1,7 @@
 # controller objects
 #   holds controller specific config
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaControllerModel(GaBaseControllerModel):

@@ -1,7 +1,7 @@
 # connection device objects (used if devices cannot be addressed directly from the controller)
 #   hold their model or device specific settings
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaDownlinkModel(GaBaseModel):

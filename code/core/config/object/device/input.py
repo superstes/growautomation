@@ -1,7 +1,7 @@
 # input device objects (devices used to get data)
 #   hold their model or device specific settings
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaSensorDevice(GaBaseDevice):

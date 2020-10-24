@@ -24,10 +24,10 @@ Version: 0.6
   <img src="https://github.com/superstes/growautomation/blob/dev/img/GaObjectCreationWorkflow.png" float="middle" border="4" alt="cable management topology">
 
 ### New features
-- v0.3 - v0.5
+- v0.3 - v0.5 _(2020-02 - 2020-10)_
   - optimized code via implementing classes
   - created a systemd service to run the core
-- v0.1 - v0.2
+- v0.1 - v0.2 _(2019-05 - 2020-01)_
   - creating basic code structure _(functional programming)_
 
 ### On hold 

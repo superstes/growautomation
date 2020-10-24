@@ -1,7 +1,7 @@
 # pulls data from config file
 
-from ...utils.crypto import AESCipher
-from ...utils.key import get as get_key
+from core.utils.crypto import AESCipher
+from core.utils.key import get as get_key
 
 crypto = AESCipher(get_key())
 
@@ -11,7 +11,7 @@ def go(file):
         file_data_dict = {}
 
         for line in _.readlines():
-            decrypted_line = crypto.decrypt(line)
+            decrypted_line = crypto.decrypt(str.encode(line))
             key, value = decrypted_line.split('=')
             file_data_dict[key] = value
 

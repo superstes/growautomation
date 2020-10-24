@@ -4,7 +4,7 @@
 #     if it correlates with other conditions
 #     the output device for which it is checked for
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaCondition(GaBase):

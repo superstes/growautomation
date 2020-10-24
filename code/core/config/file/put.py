@@ -1,14 +1,14 @@
 # writes config to file
 # if setting already in file it should be replaced
 
-from ...utils.crypto import AESCipher
-from ...utils.key import get as get_key
+from core.utils.crypto import AESCipher
+from core.utils.key import get as get_key
 
 crypto = AESCipher(get_key())
 
 
 def go(file, data_dict: dict):
-    with open(file, 'w') as _:
+    with open(file, 'r+') as _:
         replace_dict = {}
         file_data_dict = {}
 
@@ -26,4 +26,4 @@ def go(file, data_dict: dict):
 
         write_dict = {**file_data_dict, **replace_dict}
         for key, value in write_dict.items():
-            _.write(crypto.encrypt("%s=%s" % (key, value)))
+            _.write("%s\n" % crypto.encrypt("%s=%s" % (key, value)).decode("utf-8"))

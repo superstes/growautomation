@@ -7,5 +7,5 @@ class Go:
     def __init__(self):
         pass
 
-    def get(self):
+    def get(self) -> dict:
         return {}

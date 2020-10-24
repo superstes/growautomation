@@ -3,7 +3,7 @@ from re import search as regex_search
 
 
 def _file():
-    subdir_count = 1
+    subdir_count = 2
     current_path = Path(__file__).parent.absolute()
     ga_root_path = '/'.join(str(current_path).split('/')[:-subdir_count])
     secret_file_path = '/core/secret/random.key'

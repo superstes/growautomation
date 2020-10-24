@@ -1,7 +1,7 @@
 # core objects
 #   holds settings needed by the core modules
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaCoreModel(GaBaseCoreModel):

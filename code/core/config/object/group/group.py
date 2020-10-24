@@ -2,7 +2,7 @@
 #   hold the information of their members
 #   know if they themselves are nested inside another group
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaGroup(GaBase):

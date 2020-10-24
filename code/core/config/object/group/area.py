@@ -2,7 +2,7 @@
 #   hold the information which devices are placed 'in them'
 #   know if they themselves are nested inside another area
 
-from ..base import *
+from core.config.object.base import *
 
 
 class GaArea(GaBase):
