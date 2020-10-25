@@ -3,13 +3,11 @@
 
 
 class GaBase(object):
-    def __init__(self, name, description, object_id, enabled):
+    def __init__(self, name, description, object_id):
         self.name = name
         self.description = description
         self.state = None
         self.object_id = object_id
-        if enabled is not None:  # if a subclass wants needs more logic
-            self.is_enabled = enabled
 
     def __repr__(self):
         return "%s(id: '%s', name: '%s')" % (self.__class__.__name__, self.object_id, self.name)
@@ -20,25 +18,31 @@ class GaBase(object):
 
 
 class GaBaseModel(GaBase):
-    def __init__(self, function: str, function_arg, function_bin: str, model_type: int, child_list: list, **kwargs):
+    def __init__(self, parent: int, type_id: int, member_list: list, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all models
-        self.function = function
-        self.function_arg = function_arg
-        self.function_bin = function_bin
-        self.model_type = model_type
-        self.child_list = child_list
+        self.parent = parent
+        self.type_id = type_id
+        self.member_list = member_list
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        self.is_enabled = setting_dict['enabled']
+        self.function = setting_dict['function']
+        self.function_arg = setting_dict['function_arg']
+        self.function_bin = setting_dict['function_bin']
 
 
 class GaBaseDevice(GaBase):
-    def __init__(self, model_instance, enabled, **kwargs):
+    def __init__(self, model_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
-        super().__init__(enabled=None, **kwargs)
+        super().__init__(**kwargs)
         # vars for all devices
         self.model_instance = model_instance
         self.is_locked = False
-        self.device_enabled = enabled
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        self.device_enabled = setting_dict['enabled']
 
     @property
     def is_enabled(self):
@@ -52,22 +56,25 @@ class GaBaseDevice(GaBase):
 
 
 class GaBaseCoreModel(GaBase):
-    def __init__(self, model_type: int, child_list: list, **kwargs):
+    def __init__(self, model_type: int, member_list: list, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all models
         self.model_type = model_type
-        self.child_list = child_list
+        self.member_list = member_list
+        self.setting_dict = setting_dict
 
 
 class GaBaseCoreDevice(GaBase):
-    def __init__(self, model_instance, enabled, **kwargs):
+    def __init__(self, model_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
-        super().__init__(enabled=None, **kwargs)
+        super().__init__(**kwargs)
         # vars for all devices
         self.model_instance = model_instance
         self.is_locked = False
-        self.device_enabled = enabled
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        self.device_enabled = self.setting_dict['enabled']
 
     @property
     def is_enabled(self):
@@ -81,22 +88,25 @@ class GaBaseCoreDevice(GaBase):
 
 
 class GaBaseControllerModel(GaBase):
-    def __init__(self, model_type: int, child_list: list, **kwargs):
+    def __init__(self, model_type: int, member_list: list, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all models
         self.model_type = model_type
-        self.child_list = child_list
+        self.child_list = member_list
+        self.setting_dict = setting_dict
 
 
 class GaBaseControllerDevice(GaBase):
-    def __init__(self, model_instance, enabled, **kwargs):
+    def __init__(self, model_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
-        super().__init__(enabled=None, **kwargs)
+        super().__init__(**kwargs)
         # vars for all devices
         self.model_instance = model_instance
         self.is_locked = False
-        self.device_enabled = enabled
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        self.device_enabled = self.setting_dict['enabled']
 
     @property
     def is_enabled(self):

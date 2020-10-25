@@ -5,17 +5,16 @@ from core.config.object.base import *
 
 
 class GaControllerModel(GaBaseControllerModel):
-    def __init__(self, timezone: str, path_log: str, path_backup: str, backup_log: bool, log_level: int,
-                 backup: bool, **kwargs):
+    def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        self.timezone = timezone
-        self.path_log = path_log
-        self.path_backup = path_backup
-        self.backup_log = backup_log
-        self.log_level = log_level
-        self.backup = backup
+        self.timezone = self.setting_dict['timezone']
+        self.path_log = self.setting_dict['path_log']
+        self.path_backup = self.setting_dict['path_backup']
+        self.backup_log = self.setting_dict['backup_log']
+        self.log_level = self.setting_dict['log_level']
+        self.backup = self.setting_dict['backup']
 
 
 class GaControllerDevice(GaBaseControllerDevice):

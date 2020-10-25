@@ -4,17 +4,17 @@
 from core.config.object.base import *
 
 
-class GaDownlinkModel(GaBaseModel):
-    def __init__(self, port_count: int, port_outtype: int, **kwargs):
+class GaConnectionModel(GaBaseModel):
+    def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        self.port_count = port_count
-        self.port_outtype = port_outtype
+        self.port_count = self.setting_dict['port_count']
+        self.port_outtype = self.setting_dict['port_outtype']
 
 
-class GaDownlinkDevice(GaBaseDevice):
-    def __init__(self, model_instance, connection, **kwargs):
+class GaConnectionDevice(GaBaseDevice):
+    def __init__(self, model_instance, **kwargs):
         # inheritance from superclasses
         super().__init__(model_instance=model_instance, **kwargs)
         # inheritance from model instance
@@ -22,4 +22,4 @@ class GaDownlinkDevice(GaBaseDevice):
         self.port_count = model_instance.port_outtype
         # device instance vars
         self.model_instance = model_instance
-        self.connection = connection
+        self.connection = self.setting_dict['connection']

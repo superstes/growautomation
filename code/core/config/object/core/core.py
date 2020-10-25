@@ -5,11 +5,9 @@ from core.config.object.base import *
 
 
 class GaCoreModel(GaBaseCoreModel):
-    def __init__(self, setting_dict, **kwargs):
+    def __init__(self, **kwargs):
         # inheritance from superclasses
-        super().__init__(enabled=None, **kwargs)
-        # model specific vars
-        self.setting_dict = setting_dict
+        super().__init__(**kwargs)
 
 
 class GaCoreDevice(GaBaseCoreDevice):
