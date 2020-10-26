@@ -2,6 +2,7 @@
 #   hold their model or device specific settings
 
 from core.config.object.base import *
+from core.output.output import Go as Output
 
 
 class GaOutputModel(GaBaseModel):
@@ -38,3 +39,6 @@ class GaOutputDevice(GaBaseDevice):
         # device instance vars
         self.connection = self.setting_dict['connection']
         self.downlink = self.setting_dict['downlink']
+
+    def start(self, instance):
+        Output(instance=instance).start()

@@ -1,6 +1,8 @@
 # should check for db connectivity problems before connecting
 
 from core.config.db.link import Go as Link
+from core.config.db.template import DB_CHECK_DICT
+from core.utils.debug import debugger
 
 import mysql.connector
 from random import choice as random_choice
@@ -8,12 +10,8 @@ import socket
 
 
 class Go:
-    TEST_READ_COMMAND = 'SELECT * FROM ga.test LIMIT 10;'
-    TEST_WRITE_RAND_TBL = ''.join(random_choice('0123456789') for _ in range(5))
-    TEST_WRITE_COMMAND_LIST = [
-        'CREATE TABLE ga.test_%s;' % TEST_WRITE_RAND_TBL,
-        'DROP TABLE ga.test_%s;' % TEST_WRITE_RAND_TBL
-    ]
+    TEST_READ_COMMAND = DB_CHECK_DICT['read']
+    TEST_WRITE_COMMAND_LIST = DB_CHECK_DICT['write']
 
     def __init__(self, connection_data_dict):
         self.connection_data_dict = connection_data_dict
@@ -46,8 +44,9 @@ class Go:
     def _test_write(self) -> bool:
         # may need to add a ignore argument for server/agent installation (since server db will be r/o for agent)
         try:
+            random_table = ''.join(random_choice('0123456789') for _ in range(5))
             for c in self.TEST_WRITE_COMMAND_LIST:
-                if not self.link.put(c):
+                if not self.link.put(c % random_table):
                     return self._error(msg="Error while executing command '%s'" % c)
 
             return True
@@ -75,5 +74,6 @@ class Go:
 
     @staticmethod
     def _error(msg):
+        debugger("config-db-check | _error | received error '%s'" % msg)
         # log error or whatever
         return False

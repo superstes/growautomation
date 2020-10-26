@@ -3,21 +3,20 @@
 #  gets information on what to load from load module
 #  loads data from db
 
-from core.config.object.data.file import GaDataFile
 from core.config.object.data.db import GaDataDb
-from core.config.object.factory.load import SUPPLY_DICT
+from core.config.db.template import SUPPLY_DICT
 
 
 class Go:
     def __init__(self):
         # loading data from db
-        database = GaDataDb(GaDataFile().get())
+        self.database = GaDataDb()
 
-        self.raw_object_lot = database.get(SUPPLY_DICT['object']['command'])
-        self.raw_group_lot = database.get(SUPPLY_DICT['group']['command'])
-        self.raw_object_member_lot = database.get(SUPPLY_DICT['member']['object']['command'])
+        self.raw_object_lot = self.database.get(SUPPLY_DICT['object']['command'])
+        self.raw_group_lot = self.database.get(SUPPLY_DICT['group']['command'])
+        self.raw_object_member_lot = self.database.get(SUPPLY_DICT['member']['object']['command'])
         # self.raw_setting_member_lot = database.get(SUPPLY_DICT['member']['setting']['command'])
-        self.raw_grouptype_list = database.get(SUPPLY_DICT['grouptype']['command'])
+        self.raw_grouptype_list = self.database.get(SUPPLY_DICT['grouptype']['command'])
 
     def get(self) -> tuple:
         object_dict = self._prepare_data(
@@ -34,6 +33,8 @@ class Go:
             raw_lot=self.raw_grouptype_list,
             obj_type='grouptype'
         )
+
+        self.database.disconnect()
 
         return object_dict, group_dict, grouptype_dict
 

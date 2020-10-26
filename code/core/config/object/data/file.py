@@ -4,6 +4,7 @@
 
 from core.config.file.put import go as Put
 from core.config.file.get import go as Get
+from core.config.file.reset import go as Reset
 from core.config.file.validate import Go as Validate
 from core.config.file.update import Go as Update
 
@@ -38,3 +39,7 @@ class GaDataFile:
     def update(self) -> bool:
         update_data_dict = Update().get()
         return self.put(data=update_data_dict)
+
+    def reset(self, data: dict):
+        validated_data = self._validate(data=data)
+        return Reset(file=self.file, data_dict=validated_data)

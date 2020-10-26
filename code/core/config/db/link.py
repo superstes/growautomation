@@ -2,6 +2,8 @@
 # gets connection settings passed from GaDataDb instance
 
 from core.utils.process import subprocess
+from core.utils.debug import debugger
+from core.utils.debug import Log
 
 import mysql.connector
 from time import sleep as time_sleep
@@ -18,13 +20,18 @@ class Go:
         self.connection = None
         self._connect()
 
-    def _connect(self) -> None:
+    def _connect(self) -> bool:
         try:
+            debugger("config-db-link | _connect |user '%s', database '%s', ip '%s', port '%s'"
+                     % (self.connection_data_dict['user'], self.connection_data_dict['database'],
+                        self.connection_data_dict['ip'], self.connection_data_dict['port']))
+
             if self.connection_data_dict['ip'] == '127.0.0.1':
                 if self.connection_data_dict['user'] == 'root':
                     try:
                         # local logon as root
                         # will only work if it is run with root privileges
+                        # should only be used in the setup and update
                         _connection = mysql.connector.connect(
                             unix_socket=self._unixsock(),
                             user=self.connection_data_dict['user'],
@@ -41,7 +48,8 @@ class Go:
                     _connection = mysql.connector.connect(
                         unix_socket=self._unixsock(),
                         user=self.connection_data_dict['user'],
-                        passwd=self.connection_data_dict['secret']
+                        passwd=self.connection_data_dict['secret'],
+                        database=self.connection_data_dict['database']
                     )
             else:
                 # remote logon
@@ -49,15 +57,25 @@ class Go:
                     host=self.connection_data_dict['ip'],
                     port=self.connection_data_dict['port'],
                     user=self.connection_data_dict['user'],
-                    passwd=self.connection_data_dict['secret']
+                    passwd=self.connection_data_dict['secret'],
+                    database=self.connection_data_dict['database']
                 )
 
-        except (mysql.connector.Error, mysql.connector.errors.InterfaceError, ValueError) as error_msg:
+        except (
+                mysql.connector.Error,
+                mysql.connector.errors.InterfaceError,
+                ValueError,
+                FileNotFoundError,  # if unix socket file does not exist
+        ) as error_msg:
             self._error(error_msg)
 
         finally:
-            self.connection = _connection
-            self.cursor = _connection.cursor(buffered=True)
+            try:
+                self.connection = _connection
+                self.cursor = _connection.cursor(buffered=True)
+                return True
+            except UnboundLocalError:
+                raise ConnectionError('Connection instance not created')
 
     def get(self, query: [str, list]) -> list:
         if type(query) == str:
@@ -98,11 +116,13 @@ class Go:
         return True
 
     def _error(self, msg: str):
+        debugger("config-db-link | _error | received error '%s'" % msg)
         # log error or whatever
+
         try:
             self.connection.rollback()
 
-        except UnboundLocalError:
+        except (UnboundLocalError, AttributeError):
             pass
 
         self.disconnect()
@@ -110,8 +130,12 @@ class Go:
         raise ConnectionError(msg)
 
     def disconnect(self) -> None:
-        self.cursor.close()
-        self.connection.close()
+        try:
+            self.cursor.close()
+            self.connection.close()
+
+        except (UnboundLocalError, AttributeError):
+            pass
 
     @lru_cache
     def _readcache(self, query: str):

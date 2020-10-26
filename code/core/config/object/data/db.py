@@ -5,19 +5,22 @@
 from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
 from core.config.db.validate import Go as Validate
+from core.config.object.data.file import GaDataFile
+from core.utils.debug import debugger
 
 
 class GaDataDb:
-    def __init__(self, file_config_dict: dict):
+    def __init__(self):
+        file_config_dict = GaDataFile().get()
         try:
             self.connection_data_dict = {
                 'ip': file_config_dict['sql_server_ip'],
                 'port': file_config_dict['sql_server_port'],
                 'user': file_config_dict['sql_user'],
-                'secret': file_config_dict['sql_secret']
+                'secret': file_config_dict['sql_secret'],
+                'database': file_config_dict['sql_database']
             }
         except IndexError as error_msg:
-            # log error or whatever
             self._error(error_msg)
 
         self.link = None
@@ -41,4 +44,9 @@ class GaDataDb:
         return self.link.put(command)
 
     def _error(self, msg):
+        debugger("config-object-data-db | _error | received error '%s'" % msg)
+        # log error or whatever
         raise ConnectionError(msg)
+
+    def disconnect(self):
+        self.link.disconnect()

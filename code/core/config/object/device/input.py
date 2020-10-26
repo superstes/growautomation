@@ -2,6 +2,7 @@
 #   hold their model or device specific settings
 
 from core.config.object.base import *
+from core.input.input import Go as Input
 
 
 class GaInputDevice(GaBaseDevice):
@@ -13,10 +14,11 @@ class GaInputDevice(GaBaseDevice):
         self.function_arg = model_instance.function_arg
         self.function_bin = model_instance.function_bin
         self.unit = model_instance.unit
-        # device instance vars
         if 'timer' in self.setting_dict:
             self.timer = self.setting_dict['timer']
-        else: self.timer = model_instance.timer
+        else:
+            self.timer = model_instance.timer
+        # device instance vars
         self.connection = self.setting_dict['connection']
         self.downlink = self.setting_dict['downlink']
 
@@ -28,3 +30,6 @@ class GaInputModel(GaBaseModel):
         # model specific vars
         self.timer = self.setting_dict['timer']
         self.unit = self.setting_dict['unit']
+
+    def start(self, instance):
+        Input(instance=instance).start()

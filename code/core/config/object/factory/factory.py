@@ -18,10 +18,12 @@ class Go:
 
         self.object_dict = {}
 
-    def get(self) -> dict:
+    def get(self) -> tuple:
         self._forge_instance_group()
         print(self.object_dict)
-        return self.object_dict
+        return self.object_dict, {'object': self.OBJECT_DICT,
+                                  'group': self.GROUP_DICT,
+                                  'grouptype': self.GROUPTYPE_DICT}
 
     def _forge_instance_object(self, oid: int, type_id: int, model_instance):
         config_dict = self.OBJECT_DICT[oid]

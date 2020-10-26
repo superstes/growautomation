@@ -41,7 +41,7 @@ try:
     argument = sys_argv[3]
     arg_var_1, arg_var_2 = 'humidity', 'temperature'
     arg_var_list = [arg_var_1, arg_var_2]
-except IndexError as error:
+except IndexError as error_msg:
     LogWrite("System argument error: %s" % error, level=2)
     raise SystemExit('error')
 try:
