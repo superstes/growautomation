@@ -4,33 +4,51 @@
 from core.config.object.base import *
 
 
-class GaControllerModel(GaBaseControllerModel):
-    def __init__(self, **kwargs):
+class GaControllerModel(GaBase):
+    def __init__(self, member_list: list, setting_dict: dict, parent: int, type_id: int, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
-        # model specific vars
-        self.timezone = self.setting_dict['timezone']
-        self.path_log = self.setting_dict['path_log']
-        self.path_backup = self.setting_dict['path_backup']
-        self.backup_log = self.setting_dict['backup_log']
-        self.log_level = self.setting_dict['log_level']
-        self.backup = self.setting_dict['backup']
+        # specific vars
+        self.type_id = type_id
+        self.parent = parent
+        self.member_list = member_list
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        print("controller model: %s" % self.setting_dict)
+        self.setting_list = [
+            'path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
+            'log_level', 'security', 'debug', 'backup', 'timezone'
+        ]
+        try:
+            for key in self.setting_list:
+                if key not in self.setting_dict:
+                    raise SETTING_DICT_EXCEPTION("Setting '%s' was not provided" % key)
+                else:
+                    setattr(self, key, self.setting_dict[key])
+
+        except SETTING_DICT_EXCEPTION as error_msg:
+            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaControllerModel, error_msg))
 
 
-class GaControllerDevice(GaBaseControllerDevice):
-    def __init__(self, model_instance, **kwargs):
+class GaControllerDevice(GaBase):
+    def __init__(self, model_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
-        super().__init__(model_instance=model_instance, **kwargs)
-        # inheritance from model instance
-        # device instance vars
+        super().__init__(**kwargs)
+        # specific vars
         self.model_instance = model_instance
-        #
-        # 'name': 'gacon01', 'description': 'controller gacon01', 'enabled': True, 'setuptype': 'standalone',
-        # 'path_root': '/etc/growautomation', 'path_log': '/var/log/growautomation', 'path_backup': '/mnt/backup',
-        # 'install_timestamp': '2020-10-18', 'backup_log': False, 'python_path': '/usr/sbin/python3.8', 'log_level': 1,
-        # 'version': '0.6', 'mnt_log_share': '/test', 'mnt_log_server': '192.168.1.1', 'mnt_log_pwd': '1234',
-        # 'mnt_log_user': 'testuser', 'mnt_log_dom': 'nope', 'mnt_log_type': 'nfs', 'mnt_backup_share': '/testbak',
-        # 'mnt_backup_server': '192.168.1.1', 'mnt_backup_pwd': '4321', 'mnt_backup_user': 'bakuser',
-        # 'mnt_backup_dom': 'nope', 'mnt_backup_type': 'cifs', 'mnt_log': True, 'mnt_backup': False,
-        # 'python_version': '3.8', 'sql_server_ip': '127.0.0.1', 'sql_server_port': 3306, 'sql_admin_user': 'gadmin',
-        # 'sql_admin_pwd': 'nicey'
+        self.setting_dict = setting_dict
+        # vars from settings dict
+        try:
+            for key in self.model_instance.setting_list:
+                if key in self.setting_dict:
+                    setattr(self, key, self.setting_dict[key])
+                else:
+                    setattr(self, key, self.model_instance.setting_dict[key])
+
+        except SETTING_DICT_EXCEPTION as error_msg:
+            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaControllerDevice, error_msg))
+
+        # name, description
+        # enabled, setuptype, path_root, path_log, path_backup, install_timestamp, backup_log, python_path,
+        # python_version, log_level, version, mnt_log_share, mnt_log_server, mnt_log_pwd, mnt_log_user, mnt_log_domain,
+        # mnt_log_type, -,,- with backup mount, mnt_log, sql_server_ip, sql_server_port, sql_user, sql_pwd

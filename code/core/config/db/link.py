@@ -24,9 +24,9 @@ class Go:
         try:
             debugger("config-db-link | _connect |user '%s', database '%s', ip '%s', port '%s'"
                      % (self.connection_data_dict['user'], self.connection_data_dict['database'],
-                        self.connection_data_dict['ip'], self.connection_data_dict['port']))
+                        self.connection_data_dict['server'], self.connection_data_dict['port']))
 
-            if self.connection_data_dict['ip'] == '127.0.0.1':
+            if self.connection_data_dict['server'] == '127.0.0.1':
                 if self.connection_data_dict['user'] == 'root':
                     try:
                         # local logon as root
@@ -54,7 +54,7 @@ class Go:
             else:
                 # remote logon
                 _connection = mysql.connector.connect(
-                    host=self.connection_data_dict['ip'],
+                    host=self.connection_data_dict['server'],
                     port=self.connection_data_dict['port'],
                     user=self.connection_data_dict['user'],
                     passwd=self.connection_data_dict['secret'],
@@ -137,7 +137,7 @@ class Go:
         except (UnboundLocalError, AttributeError):
             pass
 
-    @lru_cache
+    @lru_cache(maxsize=16)
     def _readcache(self, query: str):
         self.cursor.execute(query)
         if self.cursor.rowcount < 1:

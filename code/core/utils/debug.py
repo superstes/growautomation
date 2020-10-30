@@ -22,7 +22,10 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
     if hard_debug:
         debug = True
     elif not hard_only:
-        debug = shared_vars.DEBUG
+        try:
+            debug = shared_vars.SYSTEM.debug
+        except AttributeError:
+            debug = shared_vars.DEBUG
     else:
         debug = False
 
@@ -45,9 +48,9 @@ class Log:
         from inspect import getfile as inspect_getfile
         self.type = typ
         self.name = inspect_getfile((inspect_stack()[1])[0])
-        self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM_CONFIG.path_log, self.type, date_year)
+        self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM.path_log, self.type, date_year)
         self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
-        self.log_level = shared_vars.SYSTEM_CONFIG.log_level
+        self.log_level = shared_vars.SYSTEM.log_level
 
     def _censor(self):
         return False

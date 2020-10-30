@@ -29,6 +29,7 @@ from core.config import shared as shared_vars
 from core.utils.debug import debugger
 from core.utils.debug import Log
 from core.config.object.core.controller import GaControllerDevice
+from core.config.object.data.file import GaDataFile
 
 from systemd import journal as systemd_journal
 from time import sleep as time_sleep
@@ -52,7 +53,9 @@ class Service:
         self.THREAD = Thread()
         self.CONFIG, self.current_config_dict = Factory().get()
         self.timer_list, self.custom_timer_list = Timer(config_dict=self.CONFIG)
+        self.CONFIG_FILE = GaDataFile()
         self._init_shared_vars()
+        self._update_config_file()
 
     def start(self) -> None:
         try:
@@ -76,13 +79,15 @@ class Service:
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
             object_list=self.CONFIG,
-            config_dict=self.current_config_dict).get()
+            config_dict=self.current_config_dict
+        ).get()
 
         shared_vars.CONFIG = self.CONFIG
 
         if reload:
             debugger('service | reload | reloading threads tue to config changes')
             systemd_journal.write('Reload - config changed. Restarting threads.')
+            self._update_config_file()
             # re-create the list of possible timers
             self.timer_list, self.custom_timer_list = Timer(config_dict=self.CONFIG)
             # stop and reset all current threads
@@ -117,11 +122,28 @@ class Service:
     def _init_shared_vars(self):
         shared_vars.init()
         shared_vars.CONFIG = self.CONFIG
+        found = False
 
-        for obj in self.CONFIG:
+        for obj in self.CONFIG['object']:
             if isinstance(obj, GaControllerDevice):
-                shared_vars.SYSTEM_CONFIG = obj
-                break
+                try:
+                    if obj.name == self.CONFIG_FILE.get()['name']:
+                        shared_vars.SYSTEM = obj
+                        found = True
+                        break
+                except KeyError:
+                    shared_vars.SYSTEM = obj
+                    found = True
+                    break
+
+        if not found:
+            debugger("service | _init_shared_vars | no acceptable system object found in list:\n'%s'" % self.CONFIG)
+            systemd_journal.write("Init-shared-vars - no acceptable system object found:\n%s\n" % self.CONFIG)
+            print("dead")
+            self._exit()
+
+    def _update_config_file(self):
+        self.CONFIG_FILE.update()
 
     def _thread(self, instance) -> None:
         @self.THREAD.thread(sleep_time=int(instance.timer), thread_instance=instance)

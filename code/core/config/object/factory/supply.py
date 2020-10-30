@@ -77,17 +77,30 @@ class Go:
             return SUPPLY_DICT[obj_type]['obj_key_list']
 
     @staticmethod
-    def _convert_bool(data):
+    def _correct_typing(raw_set_dict: dict) -> dict:
+        # set right types for booleans and integers
+        value_type = raw_set_dict[SUPPLY_DICT['setting']['valuetype_key']]
+
+        value_type_bool = SUPPLY_DICT['setting']['value_type_bool']
+        value_type_int = SUPPLY_DICT['setting']['value_type_int']
+
+        key = raw_set_dict[SUPPLY_DICT['setting']['key_key']]
+
         try:
-            data_int = int(data)
-            if data_int in [1, 0]:
-                return bool(data_int)
+            if value_type == value_type_bool:
+                value = bool(int(raw_set_dict[SUPPLY_DICT['setting']['value_key']]))
+            elif value_type == value_type_int:
+                value = int(raw_set_dict[SUPPLY_DICT['setting']['value_key']])
             else:
-                return data_int
+                raise ValueError
         except ValueError:
-            return data
+            value = raw_set_dict[SUPPLY_DICT['setting']['value_key']]
+
+        return {key: value}
 
     def _prepare_data(self, raw_lot: list, obj_type: str) -> dict:
+        # debug output raw lot
+
         # creates config-dict for all objects
         #   {
         #     ObjectId :
@@ -103,7 +116,8 @@ class Go:
 
         if 'set_key_list' in SUPPLY_DICT[obj_type]:
             has_setting = True
-        else: has_setting = False
+        else:
+            has_setting = False
 
         raw_dict_list = self._converter_lot_list(lot=raw_lot, reference_list=self._get_full_key_list(obj_type=obj_type))
         factory_dict = {}
@@ -119,14 +133,8 @@ class Go:
                 # { settingid : {setting: data, s2: d2} }
                 raw_set_dict = self._filter_dict(data_dict=config_dict, key_list=SUPPLY_DICT[obj_type]['set_key_list'])
 
-                # convert int to bool
-                if int(raw_set_dict[SUPPLY_DICT['setting']['valuetype_key']]) == \
-                        int(SUPPLY_DICT['setting']['bool_value_type']):
-                    set_config_dict = {raw_set_dict[SUPPLY_DICT['setting']['key_key']]:
-                                       self._convert_bool(raw_set_dict[SUPPLY_DICT['setting']['value_key']])}
-                else:
-                    set_config_dict = {raw_set_dict[SUPPLY_DICT['setting']['key_key']]:
-                                       raw_set_dict[SUPPLY_DICT['setting']['value_key']]}
+                set_config_dict = self._correct_typing(raw_set_dict=raw_set_dict)
+                # debug output set_config_dict
 
             if map_id not in factory_dict:
                 obj_config_dict = self._filter_dict(data_dict=config_dict, key_list=SUPPLY_DICT[obj_type]['obj_key_list'])

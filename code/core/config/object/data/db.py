@@ -13,9 +13,10 @@ class GaDataDb:
     def __init__(self):
         file_config_dict = GaDataFile().get()
         try:
+            # debug input
             self.connection_data_dict = {
-                'ip': file_config_dict['sql_server_ip'],
-                'port': file_config_dict['sql_server_port'],
+                'server': file_config_dict['sql_server'],
+                'port': file_config_dict['sql_port'],
                 'user': file_config_dict['sql_user'],
                 'secret': file_config_dict['sql_secret'],
                 'database': file_config_dict['sql_database']

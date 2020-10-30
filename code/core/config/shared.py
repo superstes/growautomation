@@ -2,10 +2,12 @@
 
 
 def init():
-    global DEBUG
     global CONFIG
-    global SYSTEM_CONFIG
+    global SYSTEM
 
-    DEBUG = False
     CONFIG = []
-    SYSTEM_CONFIG = None
+    SYSTEM = None
+
+
+CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
+DEBUG = False

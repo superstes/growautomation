@@ -1,0 +1,3 @@
+pycryptodome (Crypto)
+mysql.connector
+systemd

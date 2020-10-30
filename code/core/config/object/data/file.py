@@ -6,7 +6,8 @@ from core.config.file.put import go as Put
 from core.config.file.get import go as Get
 from core.config.file.reset import go as Reset
 from core.config.file.validate import Go as Validate
-from core.config.file.update import Go as Update
+from core.config.file.update import get as Update
+from core.config import shared as shared_var
 
 from pathlib import Path
 
@@ -17,6 +18,7 @@ class GaDataFile:
 
     def __init__(self):
         self.file = self._config_path()
+        self.encryption = self._check_encryption()
 
     @staticmethod
     def _validate(data) -> dict:
@@ -29,17 +31,31 @@ class GaDataFile:
         return "%s%s" % (ga_root_path, cls.CONFIG_FILE_PATH)
 
     def get(self) -> dict:
-        data = Get(file=self.file)
+        data = Get(file=self.file, encrypted=self.encryption)
         return self._validate(data)
 
-    def put(self, data: dict) -> bool:
+    def put(self, data: dict) -> None:
         validated_data = self._validate(data=data)
-        return Put(file=self.file, data_dict=validated_data)
+        return Put(file=self.file, data_dict=validated_data, encrypted=self.encryption)
 
-    def update(self) -> bool:
-        update_data_dict = Update().get()
-        return self.put(data=update_data_dict)
+    def update(self) -> None:
+        update_data_dict = Update(current_config=self.get())
+        self.encryption = shared_var.SYSTEM.security
+        return self.reset(data=update_data_dict)
 
     def reset(self, data: dict):
         validated_data = self._validate(data=data)
-        return Reset(file=self.file, data_dict=validated_data)
+        return Reset(file=self.file, data_dict=validated_data, encrypted=self.encryption)
+
+    def _check_encryption(self) -> bool:
+        try:
+            return shared_var.SYSTEM.security
+        except AttributeError:
+            with open(self.file, 'r') as _:
+                first_line = _.readline().strip()
+                if first_line == shared_var.CRYPTO_RECOGNITION_TEXT:
+                    # debug unencrypted
+                    return False
+                else:
+                    # debug encrypted
+                    return True

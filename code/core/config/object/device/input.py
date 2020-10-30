@@ -19,8 +19,11 @@ class GaInputDevice(GaBaseDevice):
         else:
             self.timer = model_instance.timer
         # device instance vars
-        self.connection = self.setting_dict['connection']
-        self.downlink = self.setting_dict['downlink']
+        try:
+            self.connection = self.setting_dict['connection']
+            self.downlink = self.setting_dict['downlink']
+        except SETTING_DICT_EXCEPTION as error_msg:
+            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaInputDevice, error_msg))
 
 
 class GaInputModel(GaBaseModel):
@@ -28,8 +31,11 @@ class GaInputModel(GaBaseModel):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        self.timer = self.setting_dict['timer']
-        self.unit = self.setting_dict['unit']
+        try:
+            self.timer = self.setting_dict['timer']
+            self.unit = self.setting_dict['unit']
+        except SETTING_DICT_EXCEPTION as error_msg:
+            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaInputModel, error_msg))
 
     def start(self, instance):
         Input(instance=instance).start()

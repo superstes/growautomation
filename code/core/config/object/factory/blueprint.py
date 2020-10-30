@@ -20,6 +20,7 @@ class Go:
             self.object_list.append(config_dict[self.GROUPTYPE_OBJECT_ARG])
 
         self._blueprint_device()
+        self._blueprint_core()
 
         return self.object_mapping_dict
 
@@ -33,35 +34,46 @@ class Go:
                 self.object_mapping_dict[map_id] = {}
 
             self.object_mapping_dict[map_id] = {'model': model, 'object': obj}
-        except NameError:
+        except KeyError:
             # log error or whatever -> mapping value not in type_dict (?)
             return None
 
     def _blueprint_device(self) -> None:
         if 'device' in self.category_list:
             if 'input' in self.object_list:
-                self._blueprint_device_input(map_key='device')
+                self._blueprint_device_input()
 
             if 'output' in self.object_list:
-                self._blueprint_device_output(map_key='device')
+                self._blueprint_device_output()
 
             if 'connection' in self.object_list:
-                self._blueprint_device_connection(map_key='device')
+                self._blueprint_device_connection()
 
-    def _blueprint_device_input(self, map_key: str) -> None:
+    def _blueprint_device_input(self) -> None:
         from core.config.object.device.input import GaInputDevice
         from core.config.object.device.input import GaInputModel
 
         self._add_mapping(model=GaInputModel, obj=GaInputDevice, map_value='input')
 
-    def _blueprint_device_output(self, map_key: str) -> None:
+    def _blueprint_device_output(self) -> None:
         from core.config.object.device.output import GaOutputDevice
         from core.config.object.device.output import GaOutputModel
 
         self._add_mapping(model=GaOutputModel, obj=GaOutputDevice, map_value='output')
 
-    def _blueprint_device_connection(self, map_key: str) -> None:
+    def _blueprint_device_connection(self) -> None:
         from core.config.object.device.connection import GaConnectionDevice
         from core.config.object.device.connection import GaConnectionModel
 
         self._add_mapping(model=GaConnectionModel, obj=GaConnectionDevice, map_value='connection')
+
+    def _blueprint_core(self) -> None:
+        if 'core' in self.category_list:
+            if 'controller' in self.object_list:
+                self._blueprint_core_controller()
+
+    def _blueprint_core_controller(self) -> None:
+        from core.config.object.core.controller import GaControllerDevice
+        from core.config.object.core.controller import GaControllerModel
+
+        self._add_mapping(model=GaControllerModel, obj=GaControllerDevice, map_value='controller')

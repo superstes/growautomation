@@ -51,7 +51,8 @@ SUPPLY_DICT = {
         'id_key': 'SettingID',
         'key_key': 'TypeKey',
         'value_key': 'SettingValue',
-        'bool_value_type': '2',
+        'value_type_bool': 2,
+        'value_type_int': 4,
         'valuetype_key': 'TypeValueID'
     }
 }

@@ -59,7 +59,7 @@ class Go:
         try:
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = connection.connect_ex(
-                    (self.connection_data_dict['ip'],
+                    (self.connection_data_dict['server'],
                      self.connection_data_dict['port'])
             )
 

@@ -19,6 +19,7 @@ class Go:
         self.object_dict = {}
 
     def get(self) -> tuple:
+        #print(self.GROUP_DICT)
         self._forge_instance_group()
         print(self.object_dict)
         return self.object_dict, {'object': self.OBJECT_DICT,
@@ -47,14 +48,19 @@ class Go:
 
     def _forge_instance_group(self) -> None:
         for gid, config_dict in self.GROUP_DICT.items():
-            blueprint = self.blueprint_dict[config_dict[SUPPLY_DICT['group']['type_id_key']]]['model']
-
-            member_instance_list = []
+            # if gid == 7:
+            #     print("forge instance %s" % config_dict)
+            try:
+                blueprint = self.blueprint_dict[config_dict[SUPPLY_DICT['group']['type_id_key']]]['model']
+            except KeyError as error_msg:
+                # log error or whatever (typeid not found)
+                raise KeyError("No blueprint found for type '%s'. Error: '%s'" %
+                               (config_dict[SUPPLY_DICT['group']['type_id_key']], error_msg))
 
             instance = blueprint(
                 parent=config_dict['GroupParent'],
                 type_id=int(config_dict['GroupTypeID']),
-                member_list=member_instance_list,
+                member_list=[],
                 setting_dict=config_dict['setting_dict'],
                 name=config_dict['GroupName'],
                 description=config_dict['GroupDescription'],
