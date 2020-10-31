@@ -25,7 +25,7 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
         try:
             debug = shared_vars.SYSTEM.debug
         except AttributeError:
-            debug = shared_vars.DEBUG
+            debug = shared_vars.STARTUP_DEBUG
     else:
         debug = False
 

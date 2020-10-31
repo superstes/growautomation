@@ -29,6 +29,7 @@ from core.config import shared as shared_vars
 from core.utils.debug import debugger
 from core.utils.debug import Log
 from core.config.object.core.controller import GaControllerDevice
+from core.device.input.input import Go as Input
 from core.config.object.data.file import GaDataFile
 
 from systemd import journal as systemd_journal
@@ -59,7 +60,7 @@ class Service:
 
     def start(self) -> None:
         try:
-            debugger("service | start | starting pid %s" % os_getpid())
+            debugger("service | start | process id %s" % os_getpid())
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
@@ -87,7 +88,9 @@ class Service:
         if reload:
             debugger('service | reload | reloading threads tue to config changes')
             systemd_journal.write('Reload - config changed. Restarting threads.')
+            # update shared config
             self._update_config_file()
+            self._init_shared_vars()
             # re-create the list of possible timers
             self.timer_list, self.custom_timer_list = Timer(config_dict=self.CONFIG)
             # stop and reset all current threads
@@ -139,7 +142,6 @@ class Service:
         if not found:
             debugger("service | _init_shared_vars | no acceptable system object found in list:\n'%s'" % self.CONFIG)
             systemd_journal.write("Init-shared-vars - no acceptable system object found:\n%s\n" % self.CONFIG)
-            print("dead")
             self._exit()
 
     def _update_config_file(self):
@@ -147,8 +149,8 @@ class Service:
 
     def _thread(self, instance) -> None:
         @self.THREAD.thread(sleep_time=int(instance.timer), thread_instance=instance)
-        def thread(thread_instance, start=False):
-            instance.start(instance=thread_instance)
+        def thread_task(thread_instance, start=False):
+            Input(instance=thread_instance).start()
 
     def _wait(self, seconds: int) -> None:
         start_time = time()

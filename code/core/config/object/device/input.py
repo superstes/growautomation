@@ -2,28 +2,35 @@
 #   hold their model or device specific settings
 
 from core.config.object.base import *
-from core.input.input import Go as Input
+from core.config.object.helper import *
 
 
 class GaInputDevice(GaBaseDevice):
-    def __init__(self, model_instance, **kwargs):
+    def __init__(self, parent_instance, **kwargs):
         # inheritance from superclasses
-        super().__init__(model_instance=model_instance, **kwargs)
+        super().__init__(parent_instance=parent_instance, **kwargs)
         # inheritance from model instance
-        self.function = model_instance.function
-        self.function_arg = model_instance.function_arg
-        self.function_bin = model_instance.function_bin
-        self.unit = model_instance.unit
-        if 'timer' in self.setting_dict:
-            self.timer = self.setting_dict['timer']
-        else:
-            self.timer = model_instance.timer
+        parent_setting_list = ['function', 'function_arg', 'function_bin', 'start', 'unit']
+        set_parent_attribute(
+            child_instance=self,
+            setting_list=parent_setting_list,
+            obj=GaInputDevice
+        )
+        inheritence_setting_list = ['timer', 'unit', 'datatype']
+        set_inherited_attribute(
+            child_setting_dict=self.setting_dict,
+            setting_list=inheritence_setting_list,
+            child_instance=self,
+            obj=GaInputDevice
+        )
         # device instance vars
-        try:
-            self.connection = self.setting_dict['connection']
-            self.downlink = self.setting_dict['downlink']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaInputDevice, error_msg))
+        setting_list = ['connection', 'downlink']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=setting_list,
+            instance=self,
+            obj=GaInputDevice
+        )
 
 
 class GaInputModel(GaBaseModel):
@@ -31,11 +38,10 @@ class GaInputModel(GaBaseModel):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        try:
-            self.timer = self.setting_dict['timer']
-            self.unit = self.setting_dict['unit']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaInputModel, error_msg))
-
-    def start(self, instance):
-        Input(instance=instance).start()
+        setting_list = ['timer', 'unit', 'datatype']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=setting_list,
+            instance=self,
+            obj=GaInputModel
+        )

@@ -2,8 +2,8 @@ create database IF NOT EXISTS ga;
 use ga;
 
 create table IF NOT EXISTS Object (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	ObjectID bigint unsigned not null auto_increment,
 	ObjectName varchar(255) not null,
 	ObjectDescription varchar(255) null default null,
@@ -12,10 +12,10 @@ create table IF NOT EXISTS Object (
  character set utf8,
  collate utf8_unicode_ci;
 
-create table IF NOT EXISTS SettingValueType (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
-	ValueID bigint unsigned not null auto_increment,
+create table IF NOT EXISTS ValueType (
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
+	ValueID varchar(255) not null,
 	ValueName varchar(255) not null,
 	ValueUnit varchar(255) not null,
 	ValueDescription varchar(255) null default null,
@@ -25,21 +25,21 @@ create table IF NOT EXISTS SettingValueType (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS SettingType (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	TypeID bigint unsigned not null auto_increment,
 	TypeKey varchar(255) not null,
 	TypeDescription varchar(255) null default null,
-	TypeValueID bigint unsigned not null,
+	TypeValueID varchar(255) not null,
 	primary key (TypeID),
-	foreign key st_fk_typevalueid (TypeValueID) references SettingValueType (ValueID) on update cascade on delete cascade
+	foreign key st_fk_typevalueid (TypeValueID) references ValueType (ValueID) on update cascade on delete cascade
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS ObjectSetting (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	SettingID bigint unsigned not null auto_increment,
 	ObjectID bigint unsigned null default null,
 	SettingTypeID bigint unsigned not null,
@@ -53,8 +53,8 @@ create table IF NOT EXISTS ObjectSetting (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS GrpType (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	TypeID bigint unsigned not null auto_increment,
 	TypeName varchar(255) not null,
 	TypeCategory varchar(255) not null,
@@ -65,8 +65,8 @@ create table IF NOT EXISTS GrpType (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS Grp (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	GroupID bigint unsigned not null auto_increment,
 	GroupName varchar(255) not null,
 	GroupParent bigint unsigned null default null,
@@ -79,12 +79,12 @@ create table IF NOT EXISTS Grp (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS GrpSetting (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	SettingID bigint unsigned not null auto_increment,
 	GroupID bigint unsigned not null,
 	SettingTypeID bigint unsigned not null,
-	SettingValue varchar(255),
+	SettingValue varchar(255) not null,
 	primary key (SettingID),
 	foreign key gs_fk_grpid (GroupID) references Grp (GroupID) on update cascade on delete cascade,
 	foreign key gs_fk_settingtypeid (SettingTypeID) references SettingType (TypeID) on update cascade on delete cascade,
@@ -94,8 +94,8 @@ create table IF NOT EXISTS GrpSetting (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS SettingGroupMember (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	ChainID bigint unsigned not null auto_increment,
 	GroupID bigint unsigned not null,
 	SettingID bigint unsigned not null,
@@ -108,8 +108,8 @@ create table IF NOT EXISTS SettingGroupMember (
  collate utf8_unicode_ci;
 
 create table IF NOT EXISTS ObjectGroupMember (
-	created_at timestamp not null default current_timestamp,
-	updated_at timestamp not null default current_timestamp on update current_timestamp,
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
 	ChainID bigint unsigned not null auto_increment,
 	GroupID bigint unsigned not null,
 	ObjectID bigint unsigned not null,
@@ -121,8 +121,28 @@ create table IF NOT EXISTS ObjectGroupMember (
  character set utf8,
  collate utf8_unicode_ci;
 
-# data table
-#   source, value
+create table IF NOT EXISTS InputData (
+	created timestamp not null default current_timestamp,
+	DatasetID bigint unsigned not null auto_increment,
+	ObjectID bigint unsigned not null,
+	DataValue varchar(255) not null,
+	DataValueID varchar(255) not null,
+	primary key (DatasetID),
+	foreign key id_fk_objectid (ObjectID) references Object (ObjectID) on update cascade on delete cascade,
+	foreign key id_fk_datavalueid (DataValueID) references ValueType (ValueID) on update cascade on delete cascade
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
 
-# task table
-#   result, category, taskname, objectid, message (error/success msg)
+create table IF NOT EXISTS TaskLog (
+	created timestamp not null default current_timestamp,
+	LogID bigint unsigned not null auto_increment,
+	TaskCategory varchar(255) not null,
+	TaskResult varchar(255) not null,
+	TaskMessage varchar(255) not null,
+	ObjectID bigint unsigned not null,
+	primary key (LogID),
+	foreign key tl_fk_objectid (ObjectID) references Object (ObjectID) on update cascade on delete cascade
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;

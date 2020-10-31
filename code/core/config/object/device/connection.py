@@ -17,15 +17,15 @@ class GaConnectionModel(GaBaseModel):
 
 
 class GaConnectionDevice(GaBaseDevice):
-    def __init__(self, model_instance, **kwargs):
+    def __init__(self, parent_instance, **kwargs):
         # inheritance from superclasses
-        super().__init__(model_instance=model_instance, **kwargs)
+        super().__init__(parent_instance=parent_instance, **kwargs)
         # inheritance from model instance
-        self.port_count = model_instance.port_count
-        self.port_count = model_instance.port_outtype
+        self.port_count = parent_instance.port_count
+        self.port_count = parent_instance.port_outtype
         # device instance vars
         try:
-            self.model_instance = model_instance
+            self.parent_instance = parent_instance
             self.connection = self.setting_dict['connection']
         except SETTING_DICT_EXCEPTION as error_msg:
             raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaConnectionDevice, error_msg))

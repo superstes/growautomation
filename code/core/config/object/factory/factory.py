@@ -9,9 +9,6 @@ from core.config.object.factory.supply import SUPPLY_DICT
 class Go:
     def __init__(self):
         self.OBJECT_DICT, self.GROUP_DICT, self.GROUPTYPE_DICT = GetDataDictTuple().get()
-        # print("object dict:\n", self.OBJECT_DICT)
-        # print("group dict:\n", self.GROUP_DICT)
-        # print("grouptype dict:\n", self.GROUPTYPE_DICT)
 
         self.blueprint_dict = GetBlueprint(type_dict=self.GROUPTYPE_DICT).get()
         # print(self.blueprint_dict)
@@ -19,14 +16,13 @@ class Go:
         self.object_dict = {}
 
     def get(self) -> tuple:
-        #print(self.GROUP_DICT)
         self._forge_instance_group()
         print(self.object_dict)
         return self.object_dict, {'object': self.OBJECT_DICT,
                                   'group': self.GROUP_DICT,
                                   'grouptype': self.GROUPTYPE_DICT}
 
-    def _forge_instance_object(self, oid: int, type_id: int, model_instance):
+    def _forge_instance_object(self, oid: int, type_id: int, parent_instance):
         config_dict = self.OBJECT_DICT[oid]
 
         blueprint = self.blueprint_dict[type_id]['object']
@@ -36,7 +32,7 @@ class Go:
             name=config_dict['ObjectName'],
             description=config_dict['ObjectDescription'],
             object_id=oid,
-            model_instance=model_instance
+            parent_instance=parent_instance
         )
 
         if 'object' in self.object_dict:
@@ -83,7 +79,7 @@ class Go:
                 self._forge_instance_object(
                     oid=int(member_id),
                     type_id=int(config_dict['GroupTypeID']),
-                    model_instance=instance
+                    parent_instance=instance
                 ))
             # only a group knows its type-id
             # to choose a blueprint the type-id is needed

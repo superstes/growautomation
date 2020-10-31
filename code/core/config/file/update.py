@@ -10,12 +10,12 @@ ADDITIONAL_SETTING_LIST = ['name']
 def get(current_config: dict) -> dict:
     loaded_config = {}
 
-    for key in shared_var.SYSTEM.model_instance.setting_list:
+    for key in shared_var.SYSTEM.parent_instance.setting_list:
         try:
             if key in shared_var.SYSTEM.setting_dict:
                 loaded_config[key] = shared_var.SYSTEM.setting_dict[key]
             else:
-                loaded_config[key] = shared_var.SYSTEM.model_instance.setting_dict[key]
+                loaded_config[key] = shared_var.SYSTEM.parent_instance.setting_dict[key]
         except KeyError:
             loaded_config[key] = current_config[key]
 

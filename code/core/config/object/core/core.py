@@ -11,9 +11,9 @@ class GaCoreModel(GaBaseCoreModel):
 
 
 class GaCoreDevice(GaBaseCoreDevice):
-    def __init__(self, model_instance, **kwargs):
+    def __init__(self, parent_instance, **kwargs):
         # inheritance from superclasses
-        super().__init__(model_instance=model_instance, **kwargs)
+        super().__init__(parent_instance=parent_instance, **kwargs)
         # inheritance from model instance
         # device instance vars
-        self.model_instance = model_instance
+        self.parent_instance = parent_instance

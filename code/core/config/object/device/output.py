@@ -2,7 +2,36 @@
 #   hold their model or device specific settings
 
 from core.config.object.base import *
-from core.output.output import Go as Output
+from core.config.object.helper import *
+from core.device.output.output import Go as Output
+
+
+class GaOutputDevice(GaBaseDevice):
+    def __init__(self, parent_instance, **kwargs):
+        # inheritance from superclasses
+        super().__init__(parent_instance=parent_instance, **kwargs)
+        # inheritance from model instance
+        parent_setting_list = ['function', 'function_arg', 'function_bin', 'start', 'reverse']
+        set_parent_attribute(
+            child_instance=self,
+            setting_list=parent_setting_list,
+            obj=GaOutputDevice
+        )
+        if self.reverse:  # not dynamically set because of dependencies
+            self.reverse_type = parent_instance.reverse_type
+            if self.reverse_type == 1:
+                self.reverse_timer = parent_instance.reverse_timer
+            self.reverse_function = parent_instance.reverse_function
+            self.reverse_function_arg = parent_instance.reverse_function_arg
+            self.reverse_function_bin = parent_instance.reverse_function_bin
+        # device instance vars
+        setting_list = ['connection', 'downlink']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=setting_list,
+            instance=self,
+            obj=GaOutputDevice
+        )
 
 
 class GaOutputModel(GaBaseModel):
@@ -10,7 +39,7 @@ class GaOutputModel(GaBaseModel):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        try:
+        try:  # not dynamically set because of dependencies
             self.reverse = self.setting_dict['reverse']
             if self.reverse:
                 self.reverse_type = self.setting_dict['reverse_type']
@@ -22,29 +51,6 @@ class GaOutputModel(GaBaseModel):
         except SETTING_DICT_EXCEPTION as error_msg:
             raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaOutputModel, error_msg))
 
-
-class GaOutputDevice(GaBaseDevice):
-    def __init__(self, model_instance, **kwargs):
-        # inheritance from superclasses
-        super().__init__(model_instance=model_instance, **kwargs)
-        # inheritance from model instance
-        self.function = model_instance.function
-        self.function_arg = model_instance.function_arg
-        self.function_bin = model_instance.function_bin
-        self.reverse = model_instance.reverse
-        if self.reverse:
-            self.reverse_type = model_instance.reverse_type
-            if self.reverse_type == 1:
-                self.reverse_timer = model_instance.reverse_timer
-            self.reverse_function = model_instance.reverse_function
-            self.reverse_function_arg = model_instance.reverse_function_arg
-            self.reverse_function_bin = model_instance.reverse_function_bin
-        # device instance vars
-        try:
-            self.connection = self.setting_dict['connection']
-            self.downlink = self.setting_dict['downlink']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaOutputDevice, error_msg))
-
-    def start(self, instance):
+    @staticmethod
+    def start(instance):
         Output(instance=instance).start()

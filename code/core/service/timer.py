@@ -19,7 +19,7 @@ def get(config_dict: dict) -> tuple:
 
     for category, obj_list in config_dict.items():
         for obj in obj_list:
-            if isinstance(obj, ALLOWED_OBJECT_TUPLE):
+            if isinstance(obj, ALLOWED_OBJECT_TUPLE) and obj.enabled:
                 if category == 'object':
                     if 'timer' in obj.setting_dict:
                         custom_list.append(obj)

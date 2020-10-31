@@ -21,7 +21,7 @@ class Workload(Thread):
         self.state_stop = Event()
 
     def stop(self) -> bool:
-        debugger("utils-threader | workload-stop | thread stopping '%s'" % self.instance.name)
+        debugger("utils-threader | workload-stop | thread stopping '%s' ('%s')" % (self.name, self.instance.name))
         self.state_stop.set()
         try:
             self.join()
@@ -33,19 +33,21 @@ class Workload(Thread):
     def run(self) -> None:
         try:
             Log().write("Starting thread '%s'" % self.instance.name, level=4)
-            debugger("utils-threader | workload-run | thread runtime '%s'" % self.instance.name)
+            debugger("utils-threader | workload-run | thread runtime '%s' ('%s')" % (self.name, self.instance.name))
             if self.once:
                 self.execute()
                 Loop.stop_thread(self.loop_instance, thread_instance=self.instance)
             else:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
                     if self.state_stop.isSet():
-                        debugger("utils-threader | workload-run | thread exiting '%s'" % self.instance.name)
+                        debugger("utils-threader | workload-run | thread exiting '%s' ('%s')"
+                                 % (self.name, self.instance.name))
                         Log().write("Exiting thread '%s'" % self.instance.name, level=4)
                         break
                     else:
-                        debugger("utils-threader | workload-run | thread starting '%s'" % self.instance.name)
-                        self.execute(initiator=self.instance, start=True)
+                        debugger("utils-threader | workload-run | thread starting '%s' ('%s')"
+                                 % (self.name, self.instance.name))
+                        self.execute(thread_instance=self.instance, start=True)
         except (RuntimeError,
                 ValueError,
                 IndexError,
@@ -53,10 +55,10 @@ class Workload(Thread):
                 AttributeError,
                 TypeError
                 ) as error_msg:
-            debugger("utils-threader | workload-run | thread '%s' error occurred: '%s'"
-                     % (self.instance.name, error_msg))
-            Log().write("Stopping thread '%s' because the following error occurred: '%s'"
-                        % (self.instance.name, error_msg))
+            debugger("utils-threader | workload-run | thread '%s' ('%s') error occurred: '%s'"
+                     % (self.name, self.instance.name, error_msg))
+            Log().write("Stopping thread '%s' ('%s') because the following error occurred: '%s'"
+                        % (self.name, self.instance.name, error_msg))
             self.stop()
 
 

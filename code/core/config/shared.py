@@ -10,4 +10,4 @@ def init():
 
 
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
-DEBUG = False
+STARTUP_DEBUG = True

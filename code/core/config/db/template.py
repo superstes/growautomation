@@ -51,16 +51,16 @@ SUPPLY_DICT = {
         'id_key': 'SettingID',
         'key_key': 'TypeKey',
         'value_key': 'SettingValue',
-        'value_type_bool': 2,
-        'value_type_int': 4,
+        'value_type_bool': 'bool',
+        'value_type_int': 'int',
         'valuetype_key': 'TypeValueID'
     }
 }
 
 DEVICE_DICT = {
     'task': "INSERT INTO TaskLog (TaskResult, TaskMessage, TaskCategory, ObjectID) "
-            "VALUES ('%s','%s','%s','%s','%s');",
-    'data': "INSERT INTO Data (DataSource, DataValue) VALUES ('%s','%s');",
+            "VALUES ('%s','%s','%s','%s');",
+    'data': "INSERT INTO InputData (ObjectID, DataValue, DataValueID) VALUES ('%s','%s','%s');",
 }
 
 DB_CHECK_DICT = {

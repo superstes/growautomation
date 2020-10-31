@@ -1,8 +1,7 @@
 # base objects
 #   are setting some basic functions and variables that should be inherited
 
-SETTING_DICT_ERROR = "A required setting for instance '%s' (id '%s') of the object '%s' was not defined: %s"
-SETTING_DICT_EXCEPTION = KeyError
+from core.config.object.helper import *
 
 
 class GaBase(object):
@@ -30,37 +29,37 @@ class GaBaseModel(GaBase):
         self.member_list = member_list
         self.setting_dict = setting_dict
         # vars from settings dict
-        try:
-            self.is_enabled = setting_dict['enabled']
-            self.function = setting_dict['function']
-            self.function_arg = setting_dict['function_arg']
-            self.function_bin = setting_dict['function_bin']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % error_msg)
+        self.setting_list = ['enabled', 'function', 'function_arg', 'function_bin']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=GaBaseModel
+        )
 
 
 class GaBaseDevice(GaBase):
-    def __init__(self, model_instance, setting_dict: dict, **kwargs):
+    def __init__(self, parent_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all devices
-        self.model_instance = model_instance
-        self.is_locked = False
+        self.parent_instance = parent_instance
+        self.locked = False
         self.setting_dict = setting_dict
         # vars from settings dict
         try:
-            self.device_enabled = setting_dict['enabled']
+            self.device_enabled = setting_dict['enabled']  # not dynamically set because of device-only attribute
         except SETTING_DICT_EXCEPTION as error_msg:
             raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % error_msg)
 
     @property
-    def is_enabled(self):
-        if self.model_instance.is_enabled and self.device_enabled:
+    def enabled(self):
+        if self.parent_instance.enabled and self.device_enabled:
             return True
         return False
 
-    @is_enabled.setter
-    def is_enabled(self, value: bool):
+    @enabled.setter
+    def enabled(self, value: bool):
         self.device_enabled = value
 
 
@@ -75,25 +74,18 @@ class GaBaseCoreModel(GaBase):
 
 
 class GaBaseCoreDevice(GaBase):
-    def __init__(self, model_instance, setting_dict: dict, **kwargs):
+    def __init__(self, parent_instance, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all devices
-        self.model_instance = model_instance
-        self.is_locked = False
+        self.parent_instance = parent_instance
+        self.locked = False
         self.setting_dict = setting_dict
         # vars from settings dict
-        try:
-            self.device_enabled = self.setting_dict['enabled']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % error_msg)
-
-    @property
-    def is_enabled(self):
-        if self.model_instance.is_enabled and self.device_enabled:
-            return True
-        return False
-
-    @is_enabled.setter
-    def is_enabled(self, value: bool):
-        self.device_enabled = value
+        setting_list = ['enabled']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=setting_list,
+            instance=self,
+            obj=GaBaseCoreDevice
+        )

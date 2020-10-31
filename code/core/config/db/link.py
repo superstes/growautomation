@@ -13,6 +13,13 @@ from functools import lru_cache
 
 class Go:
     MARIADB_CONFIG_FILE = '/etc/mysql/mariadb.conf.d/50-server.cnf'
+    SQL_EXCEPTION_TUPLE = (
+        mysql.connector.errors.ProgrammingError,  # if sql syntax has an error
+        mysql.connector.Error,
+        mysql.connector.errors.InterfaceError,
+        ValueError,
+        FileNotFoundError  # if unix socket file does not exist
+    )
 
     def __init__(self, connection_data_dict):
         self.connection_data_dict = connection_data_dict
@@ -61,12 +68,7 @@ class Go:
                     database=self.connection_data_dict['database']
                 )
 
-        except (
-                mysql.connector.Error,
-                mysql.connector.errors.InterfaceError,
-                ValueError,
-                FileNotFoundError,  # if unix socket file does not exist
-        ) as error_msg:
+        except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
         finally:
@@ -83,6 +85,8 @@ class Go:
         else:
             query_list = query
 
+        debugger("config-db-link | get | query to process '%s'" % query_list)
+
         data_list = []
 
         try:
@@ -93,16 +97,18 @@ class Go:
                         data_list.append(data)
                 else:
                     data_list = data
-        except (mysql.connector.Error, mysql.connector.errors.InterfaceError, ValueError) as error_msg:
+        except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
         return data_list  # list of tuples
 
     def put(self, command: [str, list]) -> bool:
         if type(command) == str:
-            command_list = [str]
+            command_list = [command]
         else:
             command_list = command
+
+        debugger("config-db-link | put | command to process '%s'" % command_list)
 
         try:
             for c in command_list:
@@ -110,7 +116,7 @@ class Go:
 
             self.connection.commit()
 
-        except (mysql.connector.Error, mysql.connector.errors.InterfaceError, ValueError) as error_msg:
+        except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
         return True
@@ -133,6 +139,8 @@ class Go:
         try:
             self.cursor.close()
             self.connection.close()
+
+            debugger('config-db-link | disconnect | disconnected from db')
 
         except (UnboundLocalError, AttributeError):
             pass

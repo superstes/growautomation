@@ -96,6 +96,10 @@ class Go:
         except ValueError:
             value = raw_set_dict[SUPPLY_DICT['setting']['value_key']]
 
+        # debug type correcting
+        # print(value_type_bool, value_type, "before '%s'; after '%s'"
+        #       % (raw_set_dict[SUPPLY_DICT['setting']['value_key']], value))
+
         return {key: value}
 
     def _prepare_data(self, raw_lot: list, obj_type: str) -> dict:

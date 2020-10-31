@@ -1,8 +1,8 @@
 # handles output processing
 
-from core.output.check import Go as Check
-from core.output.process import Go as Process
-from core.output.condition.condition import Go as Condition
+from core.device.output.check import Go as Check
+from core.device.output.process import Go as Process
+from core.device.output.condition.condition import Go as Condition
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 
