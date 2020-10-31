@@ -11,6 +11,8 @@ from datetime import timedelta
 
 
 class Workload(Thread):
+    JOIN_TIMEOUT = 5
+
     def __init__(self, sleep, execute, instance, loop_instance, once=False):
         Thread.__init__(self)
         self.sleep = sleep
@@ -24,7 +26,10 @@ class Workload(Thread):
         debugger("utils-threader | workload-stop | thread stopping '%s' ('%s')" % (self.name, self.instance.name))
         self.state_stop.set()
         try:
-            self.join()
+            self.join(self.JOIN_TIMEOUT)
+            if self.isAlive():
+                debugger("utils-threader | workload-stop | unable to join thread '%s' ('%s')"
+                         % (self.name, self.instance.name))
         except RuntimeError:
             pass
         Log().write("Stopped thread '%s'" % self.instance.name, level=3)

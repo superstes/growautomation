@@ -23,7 +23,7 @@ class Go:
             # log error or whatever
             pass
 
-        debugger("input | check | instance '%s' - instance_list to process: '%s'"
+        debugger("input-check | get | instance '%s' - instance_list to process: '%s'"
                  % (self.instance.name, self.task_instance_list))
 
         return self.task_instance_list
@@ -34,7 +34,6 @@ class Go:
                 self._device(instance=device_instance)
 
     def _device(self, instance):
-        print(type(instance.downlink), instance.downlink)
         if instance.downlink is not None:
             self._downlink(instance=instance)
         else:

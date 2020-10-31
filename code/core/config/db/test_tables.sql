@@ -84,7 +84,7 @@ create table IF NOT EXISTS GrpSetting (
 	SettingID bigint unsigned not null auto_increment,
 	GroupID bigint unsigned not null,
 	SettingTypeID bigint unsigned not null,
-	SettingValue varchar(255) not null,
+	SettingValue varchar(255),
 	primary key (SettingID),
 	foreign key gs_fk_grpid (GroupID) references Grp (GroupID) on update cascade on delete cascade,
 	foreign key gs_fk_settingtypeid (SettingTypeID) references SettingType (TypeID) on update cascade on delete cascade,

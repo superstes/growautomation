@@ -20,12 +20,15 @@
 
 # ga_version 0.6
 
+# environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
+#   (export PYTHONPATH=/etc/ga)
+#   is being set automatically by the systemd service
+
 from core.utils.threader import Loop as Thread
 from core.config.object.factory.factory import Go as Factory
 from core.config.object.factory.reload import Go as Reload
 from core.service.timer import get as Timer
 from core.config import shared as shared_vars
-# from core.utils.shell import Output as ShellOutput
 from core.utils.debug import debugger
 from core.utils.debug import Log
 from core.config.object.core.controller import GaControllerDevice
@@ -44,10 +47,12 @@ class Service:
     RUN_RELOAD_INTERVAL = 86400
     RUN_STATUS_INTERVAL = 1200
     RUN_LOOP_INTERVAL = 60
+    MAX_STOP_COUNT = 3
+    WAIT_TIME = 5
 
     def __init__(self):
-        self.init_exit = False
         self.exit_count = 0
+        self.stop_count = 0
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
@@ -57,8 +62,9 @@ class Service:
         self.CONFIG_FILE = GaDataFile()
         self._init_shared_vars()
         self._update_config_file()
+        self.LOG = Log()
 
-    def start(self) -> None:
+    def start(self):
         try:
             debugger("service | start | process id %s" % os_getpid())
 
@@ -71,11 +77,11 @@ class Service:
 
         except TypeError as error_msg:
             debugger("service | start | encountered error '%s'" % error_msg)
-            Log().write(output="Service encountered an error while starting:\n'%s'" % error_msg)
+            self.LOG.write(output="Service encountered an error while starting:\n'%s'" % error_msg)
             self.stop()
         self._run()
 
-    def reload(self, signum=None, stack=None) -> None:
+    def reload(self, signum=None, stack=None):
         debugger('service | reload | checking for config changes')
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
@@ -96,7 +102,7 @@ class Service:
             # stop and reset all current threads
             self.THREAD.stop()
             self.THREAD.jobs = []
-            self._wait(seconds=10)
+            self._wait(seconds=self.WAIT_TIME)
             # re-create all the threads
             self.start()
         else:
@@ -104,21 +110,23 @@ class Service:
             systemd_journal.write('Reload - config is up-to-date.')
             self._run()
 
-    def stop(self, signum=None, stack=None) -> None:
+    def stop(self, signum=None, stack=None):
+        if self.stop_count >= self.MAX_STOP_COUNT:
+            self._hard_exit()
+        self.stop_count += 1
         debugger('service | stop | stopping')
-        Log().write(output='Stopping service', level=1)
+        self.LOG.write(output='Stopping service', level=1)
         systemd_journal.write('Stopping service.')
         if signum is not None:
             try:
                 debugger("service | stop | got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-                Log().write(output="Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+                self.LOG.write(output="Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
             except AttributeError:
                 debugger("service | stop | got signal %s" % signum)
-                Log().write(output="Service received signal %s" % signum)
+                self.LOG.write(output="Service received signal %s" % signum)
         debugger('service | stop | stopping threads')
         self.THREAD.stop()
-        self._wait(seconds=10)
-        self.init_exit = True
+        self._wait(seconds=self.WAIT_TIME)
         systemd_journal.write('Service stopped.')
         self._exit()
 
@@ -147,12 +155,12 @@ class Service:
     def _update_config_file(self):
         self.CONFIG_FILE.update()
 
-    def _thread(self, instance) -> None:
+    def _thread(self, instance):
         @self.THREAD.thread(sleep_time=int(instance.timer), thread_instance=instance)
         def thread_task(thread_instance, start=False):
             Input(instance=thread_instance).start()
 
-    def _wait(self, seconds: int) -> None:
+    def _wait(self, seconds: int):
         start_time = time()
         while time() < start_time + seconds:
             time_sleep(1)
@@ -166,11 +174,18 @@ class Service:
             # ShellOutput(font='line', symbol='#')
         raise SystemExit('Service exited gracefully.')
 
-    def _status(self) -> None:
+    def _hard_exit(self):
+        debugger("service | _hard_exit | hard exiting service sice it was stopped more than %s times"
+                 % self.MAX_STOP_COUNT)
+        self.LOG.write(output='Stopping service merciless', level=1)
+        systemd_journal.write('Service stopped.')
+        raise SystemExit('Service exited merciless!')
+
+    def _status(self):
         debugger("service | status | threads running: '%s'" % self.THREAD.list())
         systemd_journal.write("Status - threads running:\n%s\n" % self.THREAD.list())
 
-    def _run(self) -> None:
+    def _run(self):
         try:
             debugger('service | run | starting runtime')
             run_last_reload_time = time()
@@ -184,10 +199,10 @@ class Service:
                     run_last_status_time = time()
                 time_sleep(self.RUN_LOOP_INTERVAL)
         except:
-            if self.init_exit is False:
-                self.stop()
-            else:
+            if self.exit_count > 0:
                 self._exit()
+            else:
+                self.stop()
 
 
 Service().start()

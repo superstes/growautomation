@@ -29,18 +29,17 @@ class Go:
             return None
 
     def _execute(self):
-        print("executing")
         config_dict = {
             'connection': self.instance.connection,
         }
 
-        command = "%s %s/%s/%s %s %s" % (
+        command = "%s %s/%s/%s \"%s\" \"%s\"" % (
             self.instance.function_bin,
             shared_vars.SYSTEM.path_root,
             self.INPUT_SCRIPT_SUBPATH,
             self.instance.function,
             self.instance.function_arg,
-            json_dumps(config_dict)
+            str(json_dumps(config_dict)).replace("\"", "\\\"")
         )
 
         json_data = subprocess(command=command)

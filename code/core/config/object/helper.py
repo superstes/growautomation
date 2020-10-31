@@ -32,7 +32,7 @@ def set_attribute(setting_dict: dict, setting_list: list, instance, obj):
         raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (instance.name, instance.object_id, obj, error_msg))
 
 
-# check parent instance for attribute; if not present -> use own value from setting_dict
+# use own value from setting_dict; if not present -> else create it as class property for inheritance from parent class
 def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_instance, obj):
     try:
         for key in setting_list:
@@ -56,7 +56,7 @@ def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_
                                                            obj, error_msg))
 
 
-# inherit all parent instance attributes listed in setting_list
+# inherit all parent instance attributes listed in setting_list (via properties)
 def set_parent_attribute(child_instance, setting_list: list, obj):
     try:
         for key in setting_list:

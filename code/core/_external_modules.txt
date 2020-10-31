@@ -1,3 +1,18 @@
-pycryptodome (Crypto)
-mysql.connector
-systemd
+usage of 3th party python modules
+
+  core
+    pycryptodome (Crypto)
+    mysql.connector
+    systemd
+
+  input devices/sensors
+    adafruit-circuitpython-dht
+
+apt packages
+  core
+    mariadb-server
+    python3-pip
+    python3
+
+  input devices/sensors
+    libgpiod2 (adafruit dht)

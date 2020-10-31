@@ -11,3 +11,4 @@ def init():
 
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
 STARTUP_DEBUG = True
+TASK_LOG = False

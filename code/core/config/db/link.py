@@ -29,7 +29,7 @@ class Go:
 
     def _connect(self) -> bool:
         try:
-            debugger("config-db-link | _connect |user '%s', database '%s', ip '%s', port '%s'"
+            debugger("config-db-link | _connect | user '%s', database '%s', ip '%s', port '%s'"
                      % (self.connection_data_dict['user'], self.connection_data_dict['database'],
                         self.connection_data_dict['server'], self.connection_data_dict['port']))
 
@@ -43,7 +43,7 @@ class Go:
                             unix_socket=self._unixsock(),
                             user=self.connection_data_dict['user'],
                         )
-                    except mysql.connector.Error:
+                    except self.SQL_EXCEPTION_TUPLE:
                         # if failed without password, try again with it
                         _connection = mysql.connector.connect(
                             unix_socket=self._unixsock(),

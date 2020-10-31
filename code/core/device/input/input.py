@@ -4,6 +4,7 @@ from core.device.input.check import Go as Check
 from core.device.input.process import Go as Process
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
+from core.config import shared as shared_vars
 
 
 class Go:
@@ -22,12 +23,15 @@ class Go:
             data = Process(instance=task_instance).start()
 
             if data is None:
-                self.database.put(command=self.SQL_TASK_COMMAND % ('failure', 'No data received', self.TASK_CATEGORY,
-                                                                   task_instance.object_id))
+                if shared_vars.TASK_LOG:
+                    self.database.put(command=self.SQL_TASK_COMMAND
+                                      % ('failure', 'No data received', self.TASK_CATEGORY,
+                                         task_instance.object_id))
             else:
                 self.database.put(command=self.SQL_DATA_COMMAND % (task_instance.object_id, data,
                                                                    task_instance.datatype))
-                self.database.put(command=self.SQL_TASK_COMMAND % ('success', 'Data received', self.TASK_CATEGORY,
-                                                                   task_instance.object_id))
+                if shared_vars.TASK_LOG:
+                    self.database.put(command=self.SQL_TASK_COMMAND % ('success', 'Data received', self.TASK_CATEGORY,
+                                                                       task_instance.object_id))
 
         self.database.disconnect()
