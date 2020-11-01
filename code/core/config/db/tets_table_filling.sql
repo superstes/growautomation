@@ -1,16 +1,20 @@
 -- objects
-INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('sensor-dht22','Air Humidity and Temperature sensor');
-INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('sensor-ceh','Capacitive earth humidity sensor');
+INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('sensor-dht22-temp','Air Humidity and Temperature sensor');
+INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('sensor-dht22-humi','Capacitive earth humidity sensor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('sensor-wind','Wind speed and direction sensor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-pump','Water pump actor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-heat','Air heater actor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-win','Window opener actor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('controller','Controller system object');
+INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('output-timer','System output timer');
+INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('backup-timer','System backup timer');
 
 -- grp type
 INSERT IGNORE INTO ga.GrpType (TypeName, TypeCategory, TypeDescription) VALUES ('input','device','Input device aka sensor');
 INSERT IGNORE INTO ga.GrpType (TypeName, TypeCategory, TypeDescription) VALUES ('output','device','Input device aka actor');
 INSERT IGNORE INTO ga.GrpType (TypeName, TypeCategory, TypeDescription) VALUES ('controller','core','Controller system');
+INSERT IGNORE INTO ga.GrpType (TypeName, TypeCategory, TypeDescription) VALUES ('timer','core','System timers');
+INSERT IGNORE INTO ga.GrpType (TypeName, TypeCategory, TypeDescription) VALUES ('condition','setting','Output conditions');
 
 -- groups
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('model-dht22-temp','DHT22 temperature sensor model', '1');
@@ -20,6 +24,9 @@ INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('mo
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('model-heat','Air heater actor model', '2');
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('model-win','Window opener actor model', '2');
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('system-controller','Controller system group', '3');
+INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('system-timer','System timer group', '4');
+INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('condi-grp1','Condition group 1', '5');
+INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID, GroupParent) VALUES ('condi-grp2','Condition group 2', '5', '9');
 
 -- object group member
 INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('1','1');
@@ -29,6 +36,7 @@ INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('4','4');
 INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('5','5');
 INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('6','6');
 INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('7','7');
+INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('8','8');
 
 -- settingvaluetype
 INSERT IGNORE INTO ga.ValueType (ValueID, ValueName, ValueUnit) VALUES ('str', 'String','str');
@@ -108,8 +116,15 @@ INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALU
 INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','27','MEZ');
 INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','15','/etc/ga');
 
+-- system timers
+INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','2','1');
+INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','4','60');
+INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('9','2','0');
+INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('9','4','86400');
+
 -- group settings
 -- select * from GrpSetting INNER JOIN SettingType ON GrpSetting.SettingTypeID = SettingType.TypeID;
+-- each group must have at least 1 setting for the supply query to catch it
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','2','1');
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','5','dht22.py');
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','6','temperature');
@@ -170,3 +185,37 @@ INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES (
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','25','1');
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','26','1');
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','27','UTC');
+
+INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('8','4','600');
+
+-- conditions
+-- get groups including links:
+-- select Grp.GroupID, Grp.GroupParent, Grp.GroupDescription, ConditionLink.LinkID, ConditionLink.LinkOperator from
+-- ( ( Grp INNER JOIN ConditionMember ON ConditionMember.GroupID = Grp.GroupID) INNER JOIN ConditionLink ON ConditionLink.LinkID = ConditionMember.LinkID);
+-- get links including objects
+-- select ConditionLink.LinkID, ConditionLink.LinkOperator, ConditionLinkMember.ChainID, ConditionObject.ConditionName, ConditionObject.ConditionOperator,
+-- ConditionObject.ConditionValue, ConditionObject.ConditionObject, ConditionObject.ConditionDescription, ConditionLinkMember.GroupID from ( ( ConditionLink
+-- INNER JOIN ConditionLinkMember ON ConditionLinkMember.LinkID = ConditionLink.LinkID) LEFT JOIN ConditionObject ON ConditionLinkMember.ConditionID = ConditionObject.ConditionID);
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
+VALUES ('condi1','>','24','sensor-dht22-temp','Air temp must be higher than 24 for an hour', '3600');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
+VALUES ('condi2','<','24','sensor-dht22-temp','Air temp must be lower than 24 for 15min', '900');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
+VALUES ('condi3','>','50','sensor-dht22-humi','Air humi must be higher than 50 for 90 sec', '90');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
+VALUES ('condi4','=','69.9','sensor-dht22-humi','Air humi must be at than 69.9 for an hour', '3600');
+
+INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('and');
+INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('or');
+INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('xor');
+
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'1','1');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'2','1');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'2','2');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES ('2',null,'2');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'3','3');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'4','3');
+
+INSERT IGNORE INTO ga.ConditionMember (GroupID, LinkID) VALUES ('9','1');
+INSERT IGNORE INTO ga.ConditionMember (GroupID, LinkID) VALUES ('9','2');
+INSERT IGNORE INTO ga.ConditionMember (GroupID, LinkID) VALUES ('10','3');

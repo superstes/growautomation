@@ -1,29 +1,26 @@
 # will check for which input scripts to start
 # basic filtering on enabled state and model grouping
 
-from core.config.object.device.input import GaInputModel
-from core.config.object.device.input import GaInputDevice
 from core.utils.debug import debugger
 
 
 class Go:
-    MODEL_OBJECT = GaInputModel
-    DEVICE_OBJECT = GaInputDevice
-
-    def __init__(self, instance):
+    def __init__(self, instance, model_obj, device_obj):
         self.instance = instance
         self.task_instance_list = []
+        self.model_obj = model_obj
+        self.device_obj = device_obj
 
     def get(self) -> list:
-        if isinstance(self.instance, self.MODEL_OBJECT):
+        if isinstance(self.instance, self.model_obj):
             self._model()
-        elif isinstance(self.instance, self.DEVICE_OBJECT):
+        elif isinstance(self.instance, self.device_obj):
             self._device(instance=self.instance)
         else:
             # log error or whatever
             pass
 
-        debugger("input-check | get | instance '%s' - instance_list to process: '%s'"
+        debugger("device-check | get | instance '%s' - instance_list to process: '%s'"
                  % (self.instance.name, self.task_instance_list))
 
         return self.task_instance_list
@@ -41,5 +38,5 @@ class Go:
 
     def _downlink(self, instance):
         # todo: need to hand over downlink instance and port from which to pull data
-        print("instance '%s' is connected over downlink '%s' port '%s'"
-              % (instance.name, instance.downlink, instance.connection))
+        debugger("device-check | _downlink | instance '%s' is connected over downlink '%s' port '%s'"
+                 % (instance.name, instance.downlink, instance.connection))

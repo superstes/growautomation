@@ -3,7 +3,6 @@
 
 from core.config.object.base import *
 from core.config.object.helper import *
-from core.device.output.output import Go as Output
 
 
 class GaOutputDevice(GaBaseDevice):
@@ -32,6 +31,7 @@ class GaOutputDevice(GaBaseDevice):
             instance=self,
             obj=GaOutputDevice
         )
+        self.active = False
 
 
 class GaOutputModel(GaBaseModel):
@@ -50,7 +50,3 @@ class GaOutputModel(GaBaseModel):
                 self.reverse_function_bin = self.setting_dict['reverse_function_bin']
         except SETTING_DICT_EXCEPTION as error_msg:
             raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaOutputModel, error_msg))
-
-    @staticmethod
-    def start(instance):
-        Output(instance=instance).start()

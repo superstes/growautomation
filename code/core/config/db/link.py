@@ -100,6 +100,8 @@ class Go:
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
+        debugger("config-db-link | get | output '%s'" % data_list)
+
         return data_list  # list of tuples
 
     def put(self, command: [str, list]) -> bool:

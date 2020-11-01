@@ -32,7 +32,7 @@ from core.config import shared as shared_vars
 from core.utils.debug import debugger
 from core.utils.debug import Log
 from core.config.object.core.controller import GaControllerDevice
-from core.device.input.input import Go as Input
+from core.service.decision import Go as Decision
 from core.config.object.data.file import GaDataFile
 
 from systemd import journal as systemd_journal
@@ -158,7 +158,7 @@ class Service:
     def _thread(self, instance):
         @self.THREAD.thread(sleep_time=int(instance.timer), thread_instance=instance)
         def thread_task(thread_instance, start=False):
-            Input(instance=thread_instance).start()
+            Decision(instance=thread_instance).start()
 
     def _wait(self, seconds: int):
         start_time = time()
@@ -182,8 +182,11 @@ class Service:
         raise SystemExit('Service exited merciless!')
 
     def _status(self):
-        debugger("service | status | threads running: '%s'" % self.THREAD.list())
-        systemd_journal.write("Status - threads running:\n%s\n" % self.THREAD.list())
+        thread_list = self.THREAD.list()
+        detailed_thread_list = [str(thread.__dict__) for thread in thread_list]
+        simple_thread_list = [thread.name for thread in thread_list]
+        debugger("service | status | threads running:\n\n\n'%s'\n\n" % "\n\n".join(detailed_thread_list))
+        systemd_journal.write("Status - threads running:\n%s\n" % simple_thread_list)
 
     def _run(self):
         try:
@@ -200,6 +203,7 @@ class Service:
                 time_sleep(self.RUN_LOOP_INTERVAL)
         except:
             if self.exit_count > 0:
+                debugger("service | _run | skipping stop -> exiting")
                 self._exit()
             else:
                 self.stop()

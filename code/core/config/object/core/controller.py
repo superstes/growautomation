@@ -13,7 +13,7 @@ class GaControllerDevice(GaBase):
         self.parent_instance = parent_instance
         self.setting_dict = setting_dict
         # vars from settings dict
-        set_inherited_attribute(
+        overwrite_inherited_attribute(
             child_setting_dict=self.setting_dict,
             setting_list=self.parent_instance.setting_list,
             child_instance=self,

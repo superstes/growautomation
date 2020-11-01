@@ -17,7 +17,7 @@ class GaInputDevice(GaBaseDevice):
             obj=GaInputDevice
         )
         inheritence_setting_list = ['timer', 'unit', 'datatype']
-        set_inherited_attribute(
+        overwrite_inherited_attribute(
             child_setting_dict=self.setting_dict,
             setting_list=inheritence_setting_list,
             child_instance=self,

@@ -1,109 +1,39 @@
 # is dynamically generating all the objects used throughout the ga-core
 # gets the prepared data from the supply module
 
-from core.config.object.factory.supply import Go as GetDataDictTuple
-from core.config.object.factory.blueprint import Go as GetBlueprint
-from core.config.object.factory.supply import SUPPLY_DICT
+from core.utils.debug import debugger
+from core.config.object.factory.supply import Go as Supply
+from core.config.object.factory.blueprint import Go as Blueprint
+from core.config.object.factory.sub.factory_default import Go as DefaultFactory
+from core.config.object.factory.sub.factory_condition import Go as ConditionFactory
 
 
 class Go:
     def __init__(self):
-        self.OBJECT_DICT, self.GROUP_DICT, self.GROUPTYPE_DICT = GetDataDictTuple().get()
-
-        self.blueprint_dict = GetBlueprint(type_dict=self.GROUPTYPE_DICT).get()
-        # print(self.blueprint_dict)
-
-        self.object_dict = {}
+        self.data_dict = Supply().get()
+        self.blueprint_dict = Blueprint(type_dict=self.data_dict['grouptype']).get()
 
     def get(self) -> tuple:
-        self._forge_instance_group()
-        print(self.object_dict)
-        return self.object_dict, {'object': self.OBJECT_DICT,
-                                  'group': self.GROUP_DICT,
-                                  'grouptype': self.GROUPTYPE_DICT}
+        debugger("config-obj-factory | get | blueprint dict '%s'" % self.blueprint_dict)
 
-    def _forge_instance_object(self, oid: int, type_id: int, parent_instance):
-        config_dict = self.OBJECT_DICT[oid]
+        default_object_dict = DefaultFactory(
+            group_dict=self.data_dict['group'],
+            object_dict=self.data_dict['object'],
+            blueprint_dict=self.blueprint_dict
+        ).get()
 
-        blueprint = self.blueprint_dict[type_id]['object']
+        condition_object_dict = ConditionFactory(
+            condition_dict=self.data_dict['condition'],
+            condition_group_dict=self.data_dict['condition_group'],
+            condition_link_dict=self.data_dict['condition_link'],
+            blueprint_dict=self.blueprint_dict,
+            object_dict=default_object_dict
+        ).get()
 
-        instance = blueprint(
-            setting_dict=config_dict['setting_dict'],
-            name=config_dict['ObjectName'],
-            description=config_dict['ObjectDescription'],
-            object_id=oid,
-            parent_instance=parent_instance
-        )
+        print(condition_object_dict)
 
-        if 'object' in self.object_dict:
-            self.object_dict['object'].append(instance)
-        else:
-            self.object_dict['object'] = [instance]
+        object_dict = {**condition_object_dict, **default_object_dict}
 
-        return instance
+        debugger("config-obj-factory | get | object dict '%s'" % object_dict)
 
-    def _forge_instance_group(self) -> None:
-        for gid, config_dict in self.GROUP_DICT.items():
-            # if gid == 7:
-            #     print("forge instance %s" % config_dict)
-            try:
-                blueprint = self.blueprint_dict[config_dict[SUPPLY_DICT['group']['type_id_key']]]['model']
-            except KeyError as error_msg:
-                # log error or whatever (typeid not found)
-                raise KeyError("No blueprint found for type '%s'. Error: '%s'" %
-                               (config_dict[SUPPLY_DICT['group']['type_id_key']], error_msg))
-
-            instance = blueprint(
-                parent=config_dict['GroupParent'],
-                type_id=int(config_dict['GroupTypeID']),
-                member_list=[],
-                setting_dict=config_dict['setting_dict'],
-                name=config_dict['GroupName'],
-                description=config_dict['GroupDescription'],
-                object_id=int(gid)
-            )
-
-            instance.member_list = self._create_member_list(config_dict=config_dict, instance=instance)
-
-            if 'group' in self.object_dict:
-                self.object_dict['group'].append(instance)
-            else:
-                self.object_dict['group'] = [instance]
-
-    def _create_member_list(self, config_dict: dict, instance) -> list:
-        # creates member list with instances of children in it
-        member_instance_list = []
-
-        def _create_object():
-            member_instance_list.append(
-                self._forge_instance_object(
-                    oid=int(member_id),
-                    type_id=int(config_dict['GroupTypeID']),
-                    parent_instance=instance
-                ))
-            # only a group knows its type-id
-            # to choose a blueprint the type-id is needed
-
-        for member_id in config_dict['member_list']:
-            if 'object' in self.object_dict:
-                instance_exists = False
-
-                # check if it already exists
-                for obj in self.object_dict['object']:
-                    if obj.object_id == member_id:
-                        instance_exists = True
-                        member_instance_list.append(obj)
-                        break
-
-                # or create it
-                if not instance_exists:
-                    _create_object()
-            # or create it
-            else:
-                _create_object()
-
-        return member_instance_list
-
-
-if __name__ == '__main__':
-    Go().get()
+        return object_dict, self.data_dict

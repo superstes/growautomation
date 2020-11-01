@@ -84,7 +84,7 @@ class Loop:
         if daemon is False:
             self._block_root_process()
 
-    def thread(self, sleep_time: int, thread_instance):
+    def thread(self, sleep_time: int, thread_instance, once: bool = False):
         debugger("utils-threader | loop-thread | adding job '%s', interval '%s' '%s'"
                  % (thread_instance.name, type(sleep_time), sleep_time))
 
@@ -106,7 +106,8 @@ class Loop:
                         sleep=timedelta(seconds=sleep_time),
                         execute=function,
                         instance=thread_instance,
-                        loop_instance=self
+                        loop_instance=self,
+                        once=once
                     )
                 )
             return function
@@ -151,4 +152,4 @@ class Loop:
 
     def list(self) -> list:
         debugger('utils-threader | loop-list | returning thread list')
-        return [job.instance.name for job in self.jobs]
+        return [job.instance for job in self.jobs]

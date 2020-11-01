@@ -1,6 +1,9 @@
 # defines which objects to create
 # returns a dict that links the objects to create to grouptype-ids
 
+from core.utils.debug import debugger
+from core.utils.debug import Log
+
 
 class Go:
     GROUPTYPE_CATEGORY_ARG = 'TypeCategory'
@@ -11,7 +14,14 @@ class Go:
         self.category_list = []
         self.object_list = []
         self.object_mapping_dict = {}
-        # { typeid: {subcategory: {model: object, object: object} } }
+        # {
+        #     typeid: {
+        #         subcategory: {model: obj, object: obj} -> default blueprints
+        #     },
+        #     typeid: {
+        #         subcategory: {model: obj, object: obj, setting: obj}   -> settings blueprints
+        #     }
+        # }
         self.output_dict = {}
 
     def get(self) -> dict:
@@ -21,20 +31,25 @@ class Go:
 
         self._blueprint_device()
         self._blueprint_core()
+        self._blueprint_setting()
 
         return self.object_mapping_dict
 
-    def _add_mapping(self, model, obj, map_value: str) -> None:
+    def _add_mapping(self, model, obj, map_value: str, setting=None) -> None:
+        map_id = None
+
         for key, value in self.type_dict.items():
             if value[self.GROUPTYPE_OBJECT_ARG] == map_value:
                 map_id = key
 
         try:
-            if map_id not in self.object_mapping_dict:
-                self.object_mapping_dict[map_id] = {}
+            if setting is not None:
+                self.object_mapping_dict[map_id] = {'model': model, 'object': obj, 'setting': setting}
+            else:
+                self.object_mapping_dict[map_id] = {'model': model, 'object': obj}
 
-            self.object_mapping_dict[map_id] = {'model': model, 'object': obj}
         except KeyError:
+            debugger("config-obj-factory-blueprint | _add_mapping | mapping value not in dict '%s'" % map_value)
             # log error or whatever -> mapping value not in type_dict (?)
             return None
 
@@ -72,8 +87,29 @@ class Go:
             if 'controller' in self.object_list:
                 self._blueprint_core_controller()
 
+            if 'timer' in self.object_list:
+                self._blueprint_core_timer()
+
     def _blueprint_core_controller(self) -> None:
         from core.config.object.core.controller import GaControllerDevice
         from core.config.object.core.controller import GaControllerModel
 
         self._add_mapping(model=GaControllerModel, obj=GaControllerDevice, map_value='controller')
+
+    def _blueprint_core_timer(self) -> None:
+        from core.config.object.core.timer import GaTimerDevice
+        from core.config.object.core.timer import GaTimerModel
+
+        self._add_mapping(model=GaTimerModel, obj=GaTimerDevice, map_value='timer')
+
+    def _blueprint_setting(self) -> None:
+        if 'setting' in self.category_list:
+            if 'condition' in self.object_list:
+                self._blueprint_setting_condition()
+
+    def _blueprint_setting_condition(self) -> None:
+        from core.config.object.setting.condition import GaCondition
+        from core.config.object.setting.condition import GaConditionGroup
+        from core.config.object.setting.condition import GaConditionLink
+
+        self._add_mapping(model=GaConditionGroup, obj=GaCondition, setting=GaConditionLink, map_value='condition')

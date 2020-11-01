@@ -8,13 +8,24 @@ from core.config.object.base import *
 
 
 class GaCondition(GaBase):
-    # need to rethink the concept
-    def __init__(self, group, parent, sequence: int, device, data, condition: str, operator: str, **kwargs):
+    def __init__(self, check_instance, value, operator: str, period: int, **kwargs):
         super().__init__(**kwargs)
-        self.group = group
+        self.check_instance = check_instance
+        self.value = value
+        self.operator = operator
+        self.period = period
+
+
+class GaConditionGroup(GaBase):
+    def __init__(self, type_id: int, parent: int, member_list: list, **kwargs):
+        super().__init__(**kwargs)
+        self.type_id = type_id
+        self.member_list = member_list
         self.parent = parent
-        self.sequence = sequence
-        self.device = device
-        self.data = data
-        self.condition = condition
+
+
+class GaConditionLink(GaBase):
+    def __init__(self, member_list: list, operator: str, **kwargs):
+        super().__init__(name='generic-link', description='Generic condition link', **kwargs)
+        self.member_list = member_list
         self.operator = operator
