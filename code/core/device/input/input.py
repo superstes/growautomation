@@ -11,7 +11,7 @@ from core.utils.debug import debugger
 
 
 class Go:
-    SQL_DATA_COMMAND = DEVICE_DICT['data']
+    SQL_DATA_COMMAND = DEVICE_DICT['input']['data']
     SQL_TASK_COMMAND = DEVICE_DICT['task']
     TASK_CATEGORY = 'input'
 

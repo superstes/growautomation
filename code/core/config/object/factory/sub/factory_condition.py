@@ -96,7 +96,8 @@ class Go:
             member_list=[],
             name=config_dict[name_key],
             description=config_dict[description_key],
-            object_id=int(gid)
+            object_id=int(gid),
+            setting_dict=config_dict['setting_dict']
         )
 
         instance.member_list = self._create_member_list(instance=instance)
@@ -169,11 +170,12 @@ class Go:
                  % instance)
         member_instance_list = []
 
-        member_instance_list.extend(
-            self._create_member_group(
-                instance=instance
-            )
-        )
+        # sub-groups are not a member of groups; they are members of links
+        # member_instance_list.extend(
+        #     self._create_member_group(
+        #         instance=instance
+        #     )
+        # )
 
         member_instance_list.extend(
             self._create_member_link()

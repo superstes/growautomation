@@ -25,28 +25,29 @@ class Go:
         self.raw_condition_link_list = self.database.get(SUPPLY_DICT['condition_link']['command'])
 
     def get(self) -> dict:
-        object_dict = self._prepare_data(
+        object_dict = self._prepare_data_default(
             raw_lot=self.raw_object_lot,
             obj_type='object'
         )
 
-        group_dict = self._prepare_data(
+        group_dict = self._prepare_data_default(
             raw_lot=self.raw_group_lot,
             obj_type='group'
         )
 
-        grouptype_dict = self._prepare_data(
+        grouptype_dict = self._prepare_data_default(
             raw_lot=self.raw_grouptype_list,
             obj_type='grouptype'
         )
 
-        condition_dict = self._prepare_data(
+        condition_dict = self._prepare_data_default(
             raw_lot=self.raw_condition_list,
             obj_type='condition'
         )
 
         condition_group_dict = self._prepare_data_condition_group(
             raw_lot=self.raw_condition_group_list,
+            raw_group_lot=self.raw_group_lot,
             obj_type='condition_group'
         )
 
@@ -70,7 +71,7 @@ class Go:
 
         return output_dict
 
-    def _prepare_data(self, raw_lot: list, obj_type: str) -> dict:
+    def _prepare_data_default(self, raw_lot: list, obj_type: str) -> dict:
         # creates config-dict for all default objects:
         #   {
         #     ObjectId :
@@ -86,12 +87,6 @@ class Go:
         id_key = SUPPLY_DICT[obj_type]['id_key']
         key_list = SUPPLY_DICT[obj_type]['obj_key_list']
 
-        # check if the type has settings
-        if 'set_key_list' in SUPPLY_DICT[obj_type]:
-            has_setting = True
-        else:
-            has_setting = False
-
         # create a data dict from the database-output-tuple-list and keywords
         raw_dict_list = helper.converter_lot_list(
             lot=raw_lot,
@@ -103,14 +98,7 @@ class Go:
         for config_dict in raw_dict_list:
             map_id = int(config_dict[id_key])
 
-            config_dict.pop(id_key)
-
-            if has_setting:
-                # formats every setting+object/group combo for the use in the factory
-                set_config_dict = helper.get_setting_dict(
-                    config_dict=config_dict,
-                    obj_type=obj_type
-                )
+            obj_config_dict = {}
 
             if map_id not in factory_dict:
                 # if the object doesn't already exist in the dict -> initialize it
@@ -125,17 +113,15 @@ class Go:
 
                     obj_config_dict['member_list'] = self._get_member_list(map_id=map_id)
 
-                if has_setting:
-                    # add settings
-                    obj_config_dict['setting_dict'] = set_config_dict
-
                 factory_dict[map_id] = obj_config_dict
 
-            elif has_setting:
-                # if the object does already exist in the dict -> only add the new settings
-
-                existing_set_data_dict = factory_dict[map_id]['setting_dict']
-                factory_dict[map_id]['setting_dict'] = {**existing_set_data_dict, **set_config_dict}
+            factory_dict = helper.add_setting(
+                obj_type=obj_type,
+                config_dict=config_dict,
+                map_id=map_id,
+                factory_dict=factory_dict,
+                obj_config_dict=obj_config_dict
+            )
 
         return factory_dict
 
@@ -199,13 +185,14 @@ class Go:
         return factory_dict
 
     @staticmethod
-    def _prepare_data_condition_group(raw_lot: list, obj_type: str):
+    def _prepare_data_condition_group(raw_lot: list, obj_type: str, raw_group_lot: list):
         # creates config-dict for condition group objects:
+        # uses raw_group_lot to create setting_dict; since it has all group-settings within
         #   {
         #     ObjectId :
         #       {
         #          member_list: list,  -> only if the type is group
-        #          setting_dict: {  -> only if the type has settings
+        #          setting_dict: {
         #              setting1: value1,
         #              setting2: value2
         #          }
@@ -215,17 +202,25 @@ class Go:
         id_key = SUPPLY_DICT[obj_type]['id_key']
         key_list = SUPPLY_DICT[obj_type]['obj_key_list']
         member_key = SUPPLY_DICT[obj_type]['member_key']
+        output_member_key = SUPPLY_DICT[obj_type]['output_member_key']
 
         # create a data dict from the database-output-tuple-list and keywords
         raw_dict_list = helper.converter_lot_list(
             lot=raw_lot,
             reference_list=helper.get_full_key_list(obj_type=obj_type)
         )
+        raw_group_dict_list = helper.converter_lot_list(
+            lot=raw_group_lot,
+            reference_list=helper.get_full_key_list(obj_type='group')  # since the settings are in the group_config_dict
+        )
+
         factory_dict = {}
 
         # formats every dataset received from the db for the use in the factory
         for config_dict in raw_dict_list:
             map_id = int(config_dict[id_key])
+
+            obj_config_dict = {}
 
             if map_id not in factory_dict:
                 # if the object doesn't already exist in the dict -> set it
@@ -239,5 +234,15 @@ class Go:
                 obj_config_dict['member_list'] = [_[member_key] for _ in raw_dict_list if _[id_key] == map_id]
 
                 factory_dict[map_id] = obj_config_dict
+
+                for group_config_dict in raw_group_dict_list:
+                    if int(group_config_dict[id_key]) == map_id:
+                        factory_dict = helper.add_setting(
+                            obj_type='group',  # since the settings are in the group_config_dict
+                            config_dict=group_config_dict,
+                            map_id=map_id,
+                            factory_dict=factory_dict,
+                            obj_config_dict=obj_config_dict
+                        )
 
         return factory_dict

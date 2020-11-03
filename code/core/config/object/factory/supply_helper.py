@@ -72,6 +72,8 @@ def get_obj_member_list(raw_object_member_lot: list, group_id: str) -> list:
 def get_setting_dict(config_dict: dict, obj_type: str) -> dict:
     # get setting and format it
     # { settingid : {setting: data, s2: d2} }
+    print("get_setting_dict: '%s'\nkeys: '%s'\nobjtype: '%s'" % (config_dict, SUPPLY_DICT[obj_type]['set_key_list'], obj_type))
+
     raw_set_dict = filter_dict(
         data_dict=config_dict,
         key_list=SUPPLY_DICT[obj_type]['set_key_list']
@@ -80,3 +82,30 @@ def get_setting_dict(config_dict: dict, obj_type: str) -> dict:
     # debugger("config-obj-factory-supply-helper | get_setting_dict | set_config_dict '%s'" % set_config_dict)
 
     return correct_types(raw_set_dict=raw_set_dict)
+
+
+def add_setting(obj_type: str, config_dict: dict, map_id: int, factory_dict: dict, obj_config_dict: dict):
+    # check if the type has settings
+    if 'set_key_list' in SUPPLY_DICT[obj_type]:
+        has_setting = True
+    else:
+        has_setting = False
+
+    if has_setting:
+        # formats every setting+object/group combo for the use in the factory
+        set_config_dict = get_setting_dict(
+            config_dict=config_dict,
+            obj_type=obj_type
+        )
+
+        if map_id not in factory_dict or 'setting_dict' not in factory_dict[map_id]:
+            # add settings
+            obj_config_dict['setting_dict'] = set_config_dict
+            factory_dict[map_id] = obj_config_dict
+
+        else:
+            # if the object does already exist in the dict -> only add the new settings
+            existing_set_data_dict = factory_dict[map_id]['setting_dict']
+            factory_dict[map_id]['setting_dict'] = {**existing_set_data_dict, **set_config_dict}
+
+    return factory_dict

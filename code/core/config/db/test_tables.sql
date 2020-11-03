@@ -229,3 +229,38 @@ create table IF NOT EXISTS ConditionMember (
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
+
+create table IF NOT EXISTS ConditionOutputMember (
+	created timestamp not null default current_timestamp,
+	updated timestamp not null default current_timestamp on update current_timestamp,
+	ChainID bigint unsigned not null auto_increment,
+	ConditionGroupID bigint unsigned not null,
+	OutputObjectID bigint unsigned default null,
+	OutputGroupID bigint unsigned default null,
+	primary key (ChainID),
+	foreign key com_fk_outputobjectid (OutputObjectID) references Object (ObjectID) on update cascade on delete cascade,
+	foreign key com_fk_outputgroupid (OutputGroupID) references Grp (GroupID) on update cascade on delete cascade,
+	foreign key com_fk_conditiongroupid (ConditionGroupID) references Grp (GroupID) on update cascade on delete cascade,
+	unique key com_uk_linkid_groupid (ConditionGroupID, OutputObjectID, OutputGroupID)
+)engine innodb,
+ character set utf8,
+ collate utf8_unicode_ci;
+
+-- check that either OutputObjectID or OutputGroupID is set
+
+DELIMITER //
+CREATE TRIGGER com_tr_update_outputobjectid_outputgroupid_notnull BEFORE INSERT ON ConditionOutputMember
+FOR EACH ROW BEGIN
+  IF (NEW.OutputObjectID IS NULL AND NEW.OutputGroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'OutputObjectID\' and \'OutputGroupID\' cannot both be null';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_outputobjectid_outputgroupid_notnull BEFORE UPDATE ON ConditionOutputMember
+FOR EACH ROW BEGIN
+  IF (NEW.OutputObjectID IS NULL AND NEW.OutputGroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'OutputObjectID\' and \'OutputGroupID\' cannot both be null';
+  END IF;
+END//
+DELIMITER ;

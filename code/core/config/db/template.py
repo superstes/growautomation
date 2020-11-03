@@ -91,6 +91,13 @@ SUPPLY_DICT = {
         'command': "select ConditionMember.LinkID, Grp.GroupID, Grp.GroupName, Grp.GroupDescription, Grp.GroupTypeID, "
                    "Grp.GroupParent from Grp INNER JOIN ConditionMember ON Grp.GroupID = ConditionMember.GroupID;"
     },
+    'condition_group_output': {  # output members of condition group
+        'id_key': 'ChainID',
+        'member_group_key': 'OutputGroupID',
+        'member_object_key': 'OutputObjectID',
+        'obj_key_list': ['ChainID', 'ConditionGroupID', 'OutputObjectID', 'OutputGroupID'],
+        'command': "select ChainID, ConditionGroupID, OutputObjectID, OutputGroupID from ConditionOutputMember;"
+    },
     'condition_link': {
         'id_key': 'LinkID',
         'operator_key': 'LinkOperator',
@@ -99,14 +106,23 @@ SUPPLY_DICT = {
         'obj_key_list': ['LinkID', 'LinkOperator', 'GroupID', 'ConditionID'],
         'command': "select ConditionLink.LinkID, ConditionLink.LinkOperator, ConditionLinkMember.GroupID, "
                    "ConditionLinkMember.ConditionID from ConditionLink INNER JOIN ConditionLinkMember ON "
-                   "ConditionLink.LinkID = ConditionLinkMember.LinkID;"
+                   "ConditionLink.LinkID = ConditionLinkMember.LinkID;",
     },
 }
 
 DEVICE_DICT = {
     'task': "INSERT INTO TaskLog (TaskResult, TaskMessage, TaskCategory, ObjectID) "
             "VALUES ('%s','%s','%s','%s');",
-    'data': "INSERT INTO InputData (ObjectID, DataValue, DataValueID) VALUES ('%s','%s','%s');",
+    'input': {
+        'data': "INSERT INTO InputData (ObjectID, DataValue, DataValueID) VALUES ('%s','%s','%s');",
+    },
+    'output': {
+        'data': {
+            'time': "select DataValue, DataValueID from InputData where ObjectID = '%s' and created BETWEEN "
+                    "TIMESTAMP('%s') and TIMESTAMP('%s') ORDER BY created DESC",
+            'range': "select DataValue, DataValueID from InputData where ObjectID = '%s' ORDER BY created DESC LIMIT %s"
+        }
+    }
 }
 
 DB_CHECK_DICT = {

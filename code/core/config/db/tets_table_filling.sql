@@ -26,7 +26,7 @@ INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('mo
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('system-controller','Controller system group', '3');
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('system-timer','System timer group', '4');
 INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('condi-grp1','Condition group 1', '5');
-INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID, GroupParent) VALUES ('condi-grp2','Condition group 2', '5', '9');
+INSERT IGNORE INTO ga.Grp (GroupName, GroupDescription, GroupTypeID) VALUES ('condi-grp2','Condition group 2', '5');
 
 -- object group member
 INSERT IGNORE INTO ga.ObjectGroupMember (GroupID, ObjectID) VALUES ('1','1');
@@ -79,6 +79,7 @@ INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System timezone','timezone','str');
 
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Input data type','datatype','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition group main flag','condition_main','bool');
 
 -- object settings
 -- select * from ObjectSetting INNER JOIN SettingType ON ObjectSetting.SettingTypeID = SettingType.TypeID;
@@ -187,6 +188,10 @@ INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES (
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','27','UTC');
 
 INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('8','4','600');
+
+-- set condition group 1 as main and grp 2 as sub
+INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('9','29','1');
+INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('10','29','0');
 
 -- conditions
 -- get groups including links:
