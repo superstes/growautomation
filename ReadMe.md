@@ -20,6 +20,8 @@ Version: 0.6
 
 ### Currently active
 - implementing object-oriented config management
+    - basic workflow: <br>
+  <img src="https://github.com/superstes/growautomation/blob/dev/img/GaBasicWorkflow.png" float="middle" border="4" alt="basic workflow">
 
 ### New features
 - v0.3 - v0.5 _(2020-02 - 2020-10)_

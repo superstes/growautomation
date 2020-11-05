@@ -2,6 +2,7 @@
 
 from core.utils.debug import debugger
 from core.config.object.factory.supply import SUPPLY_DICT
+from core.config.object.factory.helper import factory as helper
 
 
 class Go:
@@ -22,15 +23,19 @@ class Go:
         return self.object_dict
 
     def _forge_instance_object(self, oid: int, type_id: int, parent_instance):
+        # creates instances of objects defined as 'object' in the blueprint
+
+        obj_type = helper.FACTORY_OBJECT_KEY
+
         debugger("config-obj-factory | _forge_instance_object | creating oid %s for instance '%s'"
                  % (oid, parent_instance))
+
         config_dict = self.object_data_dict[oid]
+        blueprint = self.blueprint_dict[type_id][helper.BLUEPRINT_OBJECT_KEY]
 
-        blueprint = self.blueprint_dict[type_id]['object']
-
-        setting_dict_key = SUPPLY_DICT['object']['setting_dict_key']
-        name_key = SUPPLY_DICT['object']['name_key']
-        description_key = SUPPLY_DICT['object']['description_key']
+        setting_dict_key = SUPPLY_DICT[obj_type]['setting_dict_key']
+        name_key = SUPPLY_DICT[obj_type]['name_key']
+        description_key = SUPPLY_DICT[obj_type]['description_key']
 
         instance = blueprint(
             setting_dict=config_dict[setting_dict_key],
@@ -40,28 +45,33 @@ class Go:
             parent_instance=parent_instance
         )
 
-        if 'object' in self.object_dict:
-            self.object_dict['object'].append(instance)
-        else:
-            self.object_dict['object'] = [instance]
+        self.object_dict = helper.add_instance(
+            object_dict=self.object_dict,
+            obj_type=obj_type,
+            instance=instance
+        )
 
         return instance
 
     def _forge_instance_group(self) -> None:
+        # creates instances of objects defined as 'group' in the blueprint
+
+        obj_type = helper.FACTORY_GROUP_KEY
+
         for gid, config_dict in self.group_data_dict.items():
             debugger("config-obj-factory | _forge_instance_group | forging instance '%s'" % config_dict)
 
             try:
-                blueprint = self.blueprint_dict[config_dict[self.GROUP_TYPEID_KEY]]['model']
+                blueprint = self.blueprint_dict[config_dict[self.GROUP_TYPEID_KEY]][helper.BLUEPRINT_GROUP_KEY]
             except KeyError as error_msg:
                 # log error or whatever (typeid not found)
                 raise KeyError("No blueprint found for type '%s'. Error: '%s'" %
                                (config_dict[self.GROUP_TYPEID_KEY], error_msg))
 
-            setting_dict_key = SUPPLY_DICT['group']['setting_dict_key']
-            name_key = SUPPLY_DICT['group']['name_key']
-            description_key = SUPPLY_DICT['group']['description_key']
-            parent_key = SUPPLY_DICT['group']['parent_key']
+            setting_dict_key = SUPPLY_DICT[obj_type]['setting_dict_key']
+            name_key = SUPPLY_DICT[obj_type]['name_key']
+            description_key = SUPPLY_DICT[obj_type]['description_key']
+            parent_key = SUPPLY_DICT[obj_type]['parent_key']
 
             instance = blueprint(
                 parent=config_dict[parent_key],
@@ -75,10 +85,11 @@ class Go:
 
             instance.member_list = self._create_member_list(config_dict=config_dict, instance=instance)
 
-            if 'group' in self.object_dict:
-                self.object_dict['group'].append(instance)
-            else:
-                self.object_dict['group'] = [instance]
+            self.object_dict = helper.add_instance(
+                object_dict=self.object_dict,
+                obj_type=obj_type,
+                instance=instance
+            )
 
     def _create_member_list(self, config_dict: dict, instance) -> list:
         # creates member list with instances of children in it
@@ -95,12 +106,12 @@ class Go:
             # only a group knows its type-id
             # to choose a blueprint the type-id is needed
 
-        for member_id in config_dict['member_list']:
+        for member_id in config_dict[helper.FACTORY_MEMBER_KEY]:
             instance_exists = False
 
-            if 'object' in self.object_dict:
+            if helper.FACTORY_OBJECT_KEY in self.object_dict:
 
-                for obj in self.object_dict['object']:
+                for obj in self.object_dict[helper.FACTORY_OBJECT_KEY]:
                     # check if it already exists
                     if obj.object_id == int(member_id):
                         instance_exists = True

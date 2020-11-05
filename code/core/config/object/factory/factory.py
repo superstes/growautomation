@@ -4,8 +4,8 @@
 from core.utils.debug import debugger
 from core.config.object.factory.supply import Go as Supply
 from core.config.object.factory.blueprint import Go as Blueprint
-from core.config.object.factory.sub.factory_default import Go as DefaultFactory
-from core.config.object.factory.sub.factory_condition import Go as ConditionFactory
+from core.config.object.factory.subfactory.default import Go as DefaultFactory
+from core.config.object.factory.subfactory.condition import Go as ConditionFactory
 
 
 class Go:

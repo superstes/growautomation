@@ -138,6 +138,8 @@ class Go:
         raise ConnectionError(msg)
 
     def disconnect(self) -> None:
+        # todo: implement destructor and remove all manual disconnect call + make it private
+
         try:
             self.cursor.close()
             self.connection.close()

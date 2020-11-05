@@ -1,14 +1,15 @@
 # handles output processing
 
 from core.device.check import Go as Check
-from core.device.process import Go as Process
-from core.device.output.condition.condition import Go as Condition
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 from core.config import shared as shared_vars
 from core.utils.threader import Loop as Thread
 from core.utils.debug import debugger
+from core.device.output.condition.link import Go as GetGroupResult
+from core.device.process import Go as Process
 
+from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.device.output import GaOutputDevice
 from core.config.object.device.output import GaOutputModel
 
@@ -16,69 +17,52 @@ from core.config.object.device.output import GaOutputModel
 class Go:
     SQL_TASK_COMMAND = DEVICE_DICT['task']
     TASK_CATEGORY = 'output'
-    ALLOWED_OBJECT_TUPLE = (GaOutputDevice, GaOutputModel)
-    REVERSE_TYPE_TIME = 1
-    REVERSE_TYPE_CONDITION = 2
+    ALLOWED_OBJECT = GaConditionGroup
 
-    def __init__(self):
+    def __init__(self, instance):
+        self.instance = instance
         self.CONFIG = shared_vars.CONFIG
         self.database = GaDataDb()
         self.output_instance_list = []
         self.processed_list = []
 
     def start(self):
-        self._get_output_instances()
+        condition_result = GetGroupResult(group=self.instance).go()
 
-        for instance in self.output_instance_list:
-            self._output(instance=instance)
+        self._evaluate_result(condition_result=condition_result)
 
         self.database.disconnect()
 
-    def _get_output_instances(self):
-        for category, obj_list in self.CONFIG.items():
-            for obj in obj_list:
-                if isinstance(obj, self.ALLOWED_OBJECT_TUPLE) and obj.enabled:
-                    self.output_instance_list.append(obj)
+    def _evaluate_result(self, condition_result):
+        if condition_result is True:
+            debugger("device-output | start | conditions were met: '%s'" % self.instance.name)
 
-    def _output(self, instance):
-        if instance in self.processed_list:
-            return None
+            task_instance_list = Check(
+                instance=self.instance,
+                model_obj=GaOutputModel,
+                device_obj=GaOutputDevice
+            ).get()
 
-        task_instance_list = Check(instance=instance, model_obj=GaOutputModel, device_obj=GaOutputDevice).get()
+            for task_instance in task_instance_list:
+                Process(
+                    instance=task_instance,
+                    category=self.TASK_CATEGORY
+                )
 
-        for task_instance in task_instance_list:
-            debugger("device-output | start | processing output '%s'" % task_instance.name)
-            if task_instance.active and task_instance.reverse and \
-                    task_instance.reverse_type == self.REVERSE_TYPE_CONDITION:
-                reverse_condition = True
-                debugger("device-output | start | output '%s' needs a reverse condition" % task_instance.name)
-            else:
-                reverse_condition = False
+                debugger("device-output | start | processing of output '%s' succeeded" % task_instance.name)
 
-            if Condition(instance=task_instance, reverse=reverse_condition).get():
-                debugger("device-output | start | output '%s' got its conditions met" % task_instance.name)
+                if task_instance.reverse and task_instance.reverse_type == GaOutputDevice.REVERSE_TYPE_TIME:
+                    self._reverse_timer(instance=task_instance)
 
-                if Process(instance=task_instance, category=self.TASK_CATEGORY).start():
-                    debugger("device-output | start | processing of output '%s' succeeded" % task_instance.name)
+                if shared_vars.TASK_LOG:
+                    self.database.put(self.SQL_TASK_COMMAND % ('success', 'Executed', self.TASK_CATEGORY,
+                                                               task_instance.object_id))
+        else:
+            debugger("device-output | start | conditions were not met: '%s'" % self.instance.name)
 
-                    if shared_vars.TASK_LOG:
-                        self.database.put(self.SQL_TASK_COMMAND % ('failure', 'Execution stopped', self.TASK_CATEGORY,
-                                                                   task_instance.object_id))
-
-                    if task_instance.reverse and task_instance.reverse_type == self.REVERSE_TYPE_TIME and \
-                            task_instance.active:
-                        self._reverse_timer(instance=task_instance)
-                else:
-                    debugger("device-output | start | processing of output '%s' failed" % task_instance.name)
-
-                    if shared_vars.TASK_LOG:
-                        self.database.put(self.SQL_TASK_COMMAND % ('success', 'Executed', self.TASK_CATEGORY,
-                                                                   task_instance.object_id))
-                    # log error or whatever
-            else:
-                debugger("device-output | start | conditions for output '%s' not met" % task_instance.name)
-
-        self.processed_list.extend(task_instance_list)
+            if shared_vars.TASK_LOG:
+                self.database.put(self.SQL_TASK_COMMAND % ('aborted', 'Condition not met', self.TASK_CATEGORY,
+                                                           self.instance.object_id))
 
     def _reverse_timer(self, instance):
         debugger("device-output | _reverse_timer | starting reverse timer for output '%s' - '%s' secs"

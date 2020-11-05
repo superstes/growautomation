@@ -6,6 +6,9 @@ from core.config.object.helper import *
 
 
 class GaOutputDevice(GaBaseDevice):
+    REVERSE_TYPE_TIME = 1
+    REVERSE_TYPE_CONDITION = 2
+
     def __init__(self, parent_instance, **kwargs):
         # inheritance from superclasses
         super().__init__(parent_instance=parent_instance, **kwargs)
@@ -18,8 +21,14 @@ class GaOutputDevice(GaBaseDevice):
         )
         if self.reverse:  # not dynamically set because of dependencies
             self.reverse_type = parent_instance.reverse_type
-            if self.reverse_type == 1:
+            if self.reverse_type == self.REVERSE_TYPE_TIME:
                 self.reverse_timer = parent_instance.reverse_timer
+            elif self.reverse_type == self.REVERSE_TYPE_CONDITION:
+                # self.reverse_timeout = parent_instance.reverse_timeout
+                #   timeout if condition was not met -> to prevent problems caused by bad sensor data p.e.
+                #   would need to start timed thread initially; link it to the instance; and stop it when the
+                #   reverse action was processed via condition
+                pass
             self.reverse_function = parent_instance.reverse_function
             self.reverse_function_arg = parent_instance.reverse_function_arg
             self.reverse_function_bin = parent_instance.reverse_function_bin

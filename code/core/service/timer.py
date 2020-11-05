@@ -5,12 +5,14 @@
 
 
 from core.config.object.device.input import *
+from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.core.timer import GaTimerDevice
 
 
 ALLOWED_OBJECT_TUPLE = (
     GaInputDevice,
     GaInputModel,
+    GaConditionGroup,
     GaTimerDevice
 )
 

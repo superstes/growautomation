@@ -1,6 +1,7 @@
 # sql templates used throughout the core modules
 
 from core.config.object.data.file import GaDataFile
+from core.config.object.factory.helper import factory as factory_helper
 
 
 file_config_dict = GaDataFile().get()
@@ -11,7 +12,7 @@ DB_NAME = file_config_dict['sql_database']
 
 SUPPLY_DICT = {
     # configures which data to load from the db -> used for the supply module
-    'object': {
+    factory_helper.FACTORY_OBJECT_KEY: {
         'id_key': 'ObjectID',
         # which db column is used for the object_id
         'name_key': 'ObjectName',
@@ -28,7 +29,7 @@ SUPPLY_DICT = {
                    "ObjectSetting.ObjectID = Object.ObjectID);",
         # command to query raw data
     },
-    'group': {
+    factory_helper.FACTORY_GROUP_KEY: {
         'id_key': 'GroupID',
         'name_key': 'GroupName',
         'description_key': 'GroupDescription',
@@ -43,7 +44,7 @@ SUPPLY_DICT = {
                    "from ((GrpSetting INNER JOIN SettingType ON GrpSetting.SettingTypeID = "
                    "SettingType.TypeID) INNER JOIN Grp ON GrpSetting.GroupID = Grp.GroupID);"
     },
-    'member': {
+    factory_helper.SUPPLY_MEMBER_KEY: {
         'setting': {
             'key_list': ['GroupID', 'SettingID'],
             'set_command': "select GroupID, SettingID from SettingGroupMember;"
@@ -53,12 +54,12 @@ SUPPLY_DICT = {
             'command': "select GroupID, ObjectID from ObjectGroupMember;",
         }
     },
-    'grouptype': {
+    factory_helper.SUPPLY_GROUPTYPE_KEY: {
         'id_key': 'TypeID',
         'obj_key_list': ['TypeID', 'TypeName', 'TypeCategory', 'TypeDescription'],
         'command': "select TypeID, TypeName, TypeCategory, TypeDescription from GrpType;"
     },
-    'setting': {
+    factory_helper.SUPPLY_SETTING_KEY: {
         'id_key': 'SettingID',
         'key_key': 'TypeKey',
         'value_key': 'SettingValue',
@@ -66,7 +67,7 @@ SUPPLY_DICT = {
         'value_type_int': 'int',
         'valuetype_key': 'TypeValueID'
     },
-    'condition': {
+    factory_helper.FACTORY_CONDITION_SINGLE_KEY: {
         'id_key': 'ConditionID',
         'name_key': 'ConditionName',
         'description_key': 'ConditionDescription',
@@ -79,7 +80,7 @@ SUPPLY_DICT = {
         'command': "select ConditionID, ConditionName, ConditionOperator, ConditionValue, ConditionPeriod, "
                    "ConditionObject, ConditionDescription from ConditionObject;"
     },
-    'condition_group': {
+    factory_helper.FACTORY_CONDITION_GROUP_KEY: {
         'id_key': 'GroupID',
         'type_id_key': 'GroupTypeID',
         'name_key': 'GroupName',
@@ -98,7 +99,7 @@ SUPPLY_DICT = {
         'obj_key_list': ['ChainID', 'ConditionGroupID', 'OutputObjectID', 'OutputGroupID'],
         'command': "select ChainID, ConditionGroupID, OutputObjectID, OutputGroupID from ConditionOutputMember;"
     },
-    'condition_link': {
+    factory_helper.FACTORY_CONDITION_LINK_KEY: {
         'id_key': 'LinkID',
         'operator_key': 'LinkOperator',
         'member_group_key': 'GroupID',

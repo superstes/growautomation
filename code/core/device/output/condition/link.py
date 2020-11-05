@@ -1,8 +1,8 @@
 # condition link processing
 
 from core.config.object.setting.condition import GaConditionGroup
-from core.device.output.condition.process_condition import get_condition_result
-from core.device.output.condition.process_link import get_link_result
+from core.device.output.condition.process.single import Go as CondtitionResult
+from core.device.output.condition.process.link import get_link_result
 from core.utils.debug import debugger
 
 from collections import Counter
@@ -56,7 +56,7 @@ class Go:
                     result_dict[count] = condition.data
                 else:
                     # else process the condition
-                    result_dict[count] = get_condition_result(condition=condition)
+                    result_dict[count] = CondtitionResult(condition=condition).get()
 
             count += 1
 

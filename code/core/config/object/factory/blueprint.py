@@ -1,6 +1,7 @@
 # defines which objects to create
 # returns a dict that links the objects to create to grouptype-ids
 
+from core.config.object.factory.helper import factory as helper
 from core.utils.debug import debugger
 from core.utils.debug import Log
 
@@ -44,9 +45,12 @@ class Go:
 
         try:
             if setting is not None:
-                self.object_mapping_dict[map_id] = {'model': model, 'object': obj, 'setting': setting}
+                self.object_mapping_dict[map_id] = {helper.BLUEPRINT_GROUP_KEY: model,
+                                                    helper.BLUEPRINT_OBJECT_KEY: obj,
+                                                    helper.BLUEPRINT_SETTING_KEY: setting}
             else:
-                self.object_mapping_dict[map_id] = {'model': model, 'object': obj}
+                self.object_mapping_dict[map_id] = {helper.BLUEPRINT_GROUP_KEY: model,
+                                                    helper.BLUEPRINT_OBJECT_KEY: obj}
 
         except KeyError:
             debugger("config-obj-factory-blueprint | _add_mapping | mapping value not in dict '%s'" % map_value)

@@ -7,7 +7,8 @@ create table IF NOT EXISTS Object (
 	ObjectID bigint unsigned not null auto_increment,
 	ObjectName varchar(255) not null,
 	ObjectDescription varchar(255) null default null,
-	primary key (ObjectID)
+	primary key (ObjectID),
+	unique key o_uk_objectname (ObjectName)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -21,7 +22,8 @@ create table IF NOT EXISTS ValueType (
 	ValueName varchar(255) not null,
 	ValueUnit varchar(255) not null,
 	ValueDescription varchar(255) null default null,
-	primary key (ValueID)
+	primary key (ValueID),
+	unique key vt_uk_valuename (ValueName)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -34,7 +36,8 @@ create table IF NOT EXISTS SettingType (
 	TypeDescription varchar(255) null default null,
 	TypeValueID varchar(255) not null,
 	primary key (TypeID),
-	foreign key st_fk_typevalueid (TypeValueID) references ValueType (ValueID) on update cascade on delete cascade
+	foreign key st_fk_typevalueid (TypeValueID) references ValueType (ValueID) on update cascade on delete cascade,
+	unique key st_uk_typekey (TypeKey)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -63,7 +66,8 @@ create table IF NOT EXISTS GrpType (
 	TypeName varchar(255) not null,
 	TypeCategory varchar(255) not null,
 	TypeDescription varchar(255) null default null,
-	primary key (TypeID)
+	primary key (TypeID),
+	unique key gt_uk_typename_typecategory (TypeName, TypeCategory)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -77,7 +81,8 @@ create table IF NOT EXISTS Grp (
 	GroupDescription varchar(255) null default null,
 	GroupTypeID bigint unsigned null default null,
 	primary key (GroupID),
-	foreign key g_fk_grouptypeid (GroupTypeID) references GrpType (TypeID) on update cascade on delete cascade
+	foreign key g_fk_grouptypeid (GroupTypeID) references GrpType (TypeID) on update cascade on delete cascade,
+	unique key g_uk_groupname (GroupName)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -161,12 +166,14 @@ create table IF NOT EXISTS ConditionObject (
 	updated timestamp not null default current_timestamp on update current_timestamp,
 	ConditionID bigint unsigned not null auto_increment,
 	ConditionName varchar(255) not null,
-	ConditionOperator varchar(255) not null,
-	ConditionValue varchar(255) not null,
-	ConditionPeriod bigint unsigned not null default 600,
-	ConditionObject varchar(255) not null,
+--	ConditionOperator varchar(255) not null,
+--	ConditionValue varchar(255) not null,
+--	ConditionPeriod bigint unsigned not null default 600,
+	ObjectID varchar(255) not null,
 	ConditionDescription varchar(255) null default null,
-	primary key (ConditionID)
+	primary key (ConditionID),
+	foreign key co_fk_objectid (ObjectID) references Object (ObjectID) on update cascade on delete cascade,
+	unique key co_uk_conditionname (ConditionName)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
@@ -175,7 +182,7 @@ create table IF NOT EXISTS ConditionLink (
 	created timestamp not null default current_timestamp,
 	updated timestamp not null default current_timestamp on update current_timestamp,
 	LinkID bigint unsigned not null auto_increment,
-	LinkOperator varchar(255) not null,
+--	LinkOperator varchar(255) not null,
 	primary key (LinkID)
 )engine innodb,
  character set utf8,
@@ -202,12 +209,26 @@ create table IF NOT EXISTS ConditionLinkMember (
 DELIMITER //
 CREATE TRIGGER clm_tr_insert_groupid_conditionid_notnull BEFORE INSERT ON ConditionLinkMember
 FOR EACH ROW BEGIN
+  IF (NEW.GroupID IS NOT NULL AND NEW.ConditionID IS NOT NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'GroupID\' and \'ConditionID\' cannot both be filled';
+  END IF;
+END//
+CREATE TRIGGER clm_tr_update_groupid_conditionid_notnull BEFORE UPDATE ON ConditionLinkMember
+FOR EACH ROW BEGIN
+  IF (NEW.GroupID IS NOT NULL AND NEW.ConditionID IS NOT NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'GroupID\' and \'ConditionID\' cannot both be filled';
+  END IF;
+END//
+CREATE TRIGGER clm_tr_insert_groupid_conditionid_null BEFORE INSERT ON ConditionLinkMember
+FOR EACH ROW BEGIN
   IF (NEW.GroupID IS NULL AND NEW.ConditionID IS NULL) THEN
     SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = '\'GroupID\' and \'ConditionID\' cannot both be null';
   END IF;
 END//
-CREATE TRIGGER clm_tr_update_groupid_conditionid_notnull BEFORE UPDATE ON ConditionLinkMember
+CREATE TRIGGER clm_tr_update_groupid_conditionid_null BEFORE UPDATE ON ConditionLinkMember
 FOR EACH ROW BEGIN
   IF (NEW.GroupID IS NULL AND NEW.ConditionID IS NULL) THEN
     SIGNAL SQLSTATE '45000'
@@ -220,47 +241,97 @@ create table IF NOT EXISTS ConditionMember (
 	created timestamp not null default current_timestamp,
 	updated timestamp not null default current_timestamp on update current_timestamp,
 	ChainID bigint unsigned not null auto_increment,
-	GroupID bigint unsigned not null,
-	LinkID bigint unsigned not null,
+	ConditionGroupID bigint unsigned not null,
+	LinkID bigint unsigned default null,
+	GroupID bigint unsigned default null,
 	primary key (ChainID),
 	foreign key cm_fk_linkid (LinkID) references ConditionLink (LinkID) on update cascade on delete cascade,
 	foreign key cm_fk_groupid (GroupID) references Grp (GroupID) on update cascade on delete cascade,
-	unique key cm_uk_linkid_groupid (LinkID, GroupID)
+	foreign key cm_fk_conditiongroupid (ConditionGroupID) references Grp (GroupID) on update cascade on delete cascade,
+	unique key cm_uk_conditiongroupid_linkid_groupid (ConditionGroupID, LinkID, GroupID)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
+
+-- check that either LinkID or GroupID is set
+
+DELIMITER //
+CREATE TRIGGER com_tr_update_linkid_groupid_notnull BEFORE INSERT ON ConditionMember
+FOR EACH ROW BEGIN
+  IF (NEW.LinkID IS NOT NULL AND NEW.GroupID IS NOT NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'LinkID\' and \'GroupID\' cannot both be filled';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_linkid_groupid_notnull BEFORE UPDATE ON ConditionMember
+FOR EACH ROW BEGIN
+  IF (NEW.LinkID IS NOT NULL AND NEW.GroupID IS NOT NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'LinkID\' and \'GroupID\' cannot both be filled';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_linkid_groupid_not BEFORE INSERT ON ConditionMember
+FOR EACH ROW BEGIN
+  IF (NEW.LinkID IS NULL AND NEW.GroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'LinkID\' and \'GroupID\' cannot both be null';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_linkid_groupid_not BEFORE UPDATE ON ConditionMember
+FOR EACH ROW BEGIN
+  IF (NEW.LinkID IS NULL AND NEW.GroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'LinkID\' and \'GroupID\' cannot both be null';
+  END IF;
+END//
+DELIMITER ;
+
 
 create table IF NOT EXISTS ConditionOutputMember (
 	created timestamp not null default current_timestamp,
 	updated timestamp not null default current_timestamp on update current_timestamp,
 	ChainID bigint unsigned not null auto_increment,
 	ConditionGroupID bigint unsigned not null,
-	OutputObjectID bigint unsigned default null,
-	OutputGroupID bigint unsigned default null,
+	ObjectID bigint unsigned default null,
+	GroupID bigint unsigned default null,
 	primary key (ChainID),
-	foreign key com_fk_outputobjectid (OutputObjectID) references Object (ObjectID) on update cascade on delete cascade,
-	foreign key com_fk_outputgroupid (OutputGroupID) references Grp (GroupID) on update cascade on delete cascade,
+	foreign key com_fk_objectid (ObjectID) references Object (ObjectID) on update cascade on delete cascade,
+	foreign key com_fk_groupid (GroupID) references Grp (GroupID) on update cascade on delete cascade,
 	foreign key com_fk_conditiongroupid (ConditionGroupID) references Grp (GroupID) on update cascade on delete cascade,
-	unique key com_uk_linkid_groupid (ConditionGroupID, OutputObjectID, OutputGroupID)
+	unique key com_uk_conditiongroupid_objectid_groupid (ConditionGroupID, ObjectID, GroupID)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;
 
--- check that either OutputObjectID or OutputGroupID is set
+-- check that either ObjectID or GroupID is set
 
 DELIMITER //
-CREATE TRIGGER com_tr_update_outputobjectid_outputgroupid_notnull BEFORE INSERT ON ConditionOutputMember
+CREATE TRIGGER com_tr_update_objectid_groupid_notnull BEFORE INSERT ON ConditionOutputMember
 FOR EACH ROW BEGIN
-  IF (NEW.OutputObjectID IS NULL AND NEW.OutputGroupID IS NULL) THEN
+  IF (NEW.ObjectID IS NOT NULL AND NEW.GroupID IS NOT NULL) THEN
     SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = '\'OutputObjectID\' and \'OutputGroupID\' cannot both be null';
+    SET MESSAGE_TEXT = '\'ObjectID\' and \'GroupID\' cannot both be filled';
   END IF;
 END//
-CREATE TRIGGER com_tr_update_outputobjectid_outputgroupid_notnull BEFORE UPDATE ON ConditionOutputMember
+CREATE TRIGGER com_tr_update_objectid_groupid_notnull BEFORE UPDATE ON ConditionOutputMember
 FOR EACH ROW BEGIN
-  IF (NEW.OutputObjectID IS NULL AND NEW.OutputGroupID IS NULL) THEN
+  IF (NEW.ObjectID IS NOT NULL AND NEW.GroupID IS NOT NULL) THEN
     SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = '\'OutputObjectID\' and \'OutputGroupID\' cannot both be null';
+    SET MESSAGE_TEXT = '\'ObjectID\' and \'GroupID\' cannot both be filled';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_objectid_groupid_not BEFORE INSERT ON ConditionOutputMember
+FOR EACH ROW BEGIN
+  IF (NEW.ObjectID IS NULL AND NEW.GroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'ObjectID\' and \'GroupID\' cannot both be null';
+  END IF;
+END//
+CREATE TRIGGER com_tr_update_objectid_groupid_not BEFORE UPDATE ON ConditionOutputMember
+FOR EACH ROW BEGIN
+  IF (NEW.ObjectID IS NULL AND NEW.GroupID IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = '\'ObjectID\' and \'GroupID\' cannot both be null';
   END IF;
 END//
 DELIMITER ;
