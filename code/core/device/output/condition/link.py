@@ -1,7 +1,7 @@
 # condition link processing
 
 from core.config.object.setting.condition import GaConditionGroup
-from core.device.output.condition.process.single import Go as CondtitionResult
+from core.device.output.condition.single import Go as CondtitionResult
 from core.device.output.condition.process.link import get_link_result
 from core.utils.debug import debugger
 
