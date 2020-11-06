@@ -1,11 +1,14 @@
 # helper functions for factory
 
-BLUEPRINT_GROUP_KEY = 'model'  # for device-models, generic core-models and condition-groups
-BLUEPRINT_OBJECT_KEY = 'object'  # for device-, core and condition-link objects
-BLUEPRINT_SETTING_KEY = 'setting'  # for single-condition objects
 SUPPLY_MEMBER_KEY = 'member'
 SUPPLY_GROUPTYPE_KEY = 'grouptype'
 SUPPLY_SETTING_KEY = 'setting'
+SUPPLY_MEMBER_CONDITION_GROUP_SUBLIST = ['member', 'output']
+
+BLUEPRINT_GROUP_KEY = 'model'  # for device-models, generic core-models and condition-groups
+BLUEPRINT_OBJECT_KEY = 'object'  # for device-, core and condition-link objects
+BLUEPRINT_SETTING_KEY = 'setting'  # for single-condition objects
+
 FACTORY_OBJECT_KEY = 'object'
 FACTORY_GROUP_KEY = 'group'
 FACTORY_MEMBER_KEY = 'member_list'

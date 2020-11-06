@@ -5,9 +5,10 @@ from core.device.process import Go as Process
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 from core.config import shared as shared_vars
+from core.utils.debug import debugger
+
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
-from core.utils.debug import debugger
 
 
 class Go:
@@ -20,7 +21,11 @@ class Go:
         self.database = GaDataDb()
 
     def start(self):
-        task_instance_list = Check(instance=self.instance, model_obj=GaInputModel, device_obj=GaInputDevice).get()
+        task_instance_list = Check(
+            instance=self.instance,
+            model_obj=GaInputModel,
+            device_obj=GaInputDevice
+        ).get()
 
         for task_instance in task_instance_list:
             debugger("device-input | start | processing input '%s'" % task_instance.name)

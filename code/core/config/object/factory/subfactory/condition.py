@@ -7,7 +7,16 @@ from core.config.object.factory.subfactory.condition_link import Go as Condition
 
 
 class Go:
-    GROUP_TYPEID_KEY = SUPPLY_DICT[helper.FACTORY_CONDITION_GROUP_KEY]['type_id_key']
+    GROUP_KEY = helper.FACTORY_CONDITION_GROUP_KEY
+    LINK_KEY = helper.FACTORY_CONDITION_LINK_KEY
+    SINGLE_KEY = helper.FACTORY_CONDITION_SINGLE_KEY
+
+    GROUP_TYPEID_KEY = SUPPLY_DICT[GROUP_KEY]['type_id_key']
+    SETTING_KEY = helper.FACTORY_SETTING_KEY
+    MEMBER_KEY = helper.FACTORY_CONDITION_MEMBER_KEY
+
+    GROUP_MEMBER_SUBKEY = helper.SUPPLY_MEMBER_CONDITION_GROUP_SUBLIST[0]
+    GROUP_MEMBER_OUTPUT_SUBKEY = helper.SUPPLY_MEMBER_CONDITION_GROUP_SUBLIST[1]
 
     def __init__(self, condition_dict: dict, condition_group_dict: dict, condition_link_dict: dict,
                  blueprint_dict: dict, object_dict: dict):
@@ -25,14 +34,18 @@ class Go:
         #     condition_group: [instance_list],
         #     condition_link: [instance_list]
         # }
+
         self._forge_condition()
-        self._create_group_filter()
+        self._forge_condition_group()
+
+        # adding members to groups
+        self._add_members()
+
+        # adding members to links
         self.object_dict = ConditionLink(
                 object_dict=self.object_dict,
-                group_data_dict=self.condition_group_data_dict,
                 link_data_dict=self.condition_link_data_dict,
-                type_id=self.type_id,
-                blueprint_dict=self.blueprint_dict
+                blueprint_dict=self.blueprint_dict[self.type_id]
             ).add_members()
 
         return self.object_dict
@@ -40,16 +53,13 @@ class Go:
     def _forge_condition(self) -> None:
         # creates instances of objects defined as 'helper.FACTORY_CONDITION_SINGLE_KEY' in the blueprint
 
-        obj_type = helper.FACTORY_CONDITION_SINGLE_KEY
         blueprint = self.blueprint_dict[self.type_id][helper.BLUEPRINT_OBJECT_KEY]
 
-        name_key = SUPPLY_DICT[obj_type]['name_key']
-        description_key = SUPPLY_DICT[obj_type]['description_key']
-        operator_key = SUPPLY_DICT[obj_type]['operator_key']
-        value_key = SUPPLY_DICT[obj_type]['value_key']
-        period_key = SUPPLY_DICT[obj_type]['period_key']
-        object_key = SUPPLY_DICT[obj_type]['object_key']
+        name_key = SUPPLY_DICT[self.SINGLE_KEY]['name_key']
+        description_key = SUPPLY_DICT[self.SINGLE_KEY]['description_key']
+        object_key = SUPPLY_DICT[self.SINGLE_KEY]['object_key']
 
+        # get instance of object linked to
         for oid, config_dict in self.condition_data_dict.items():
             for instance in self.existing_object_dict[helper.FACTORY_OBJECT_KEY]:
                 if instance.name == config_dict[object_key]:
@@ -62,118 +72,159 @@ class Go:
             instance = blueprint(
                 name=config_dict[name_key],
                 description=config_dict[description_key],
-                operator=config_dict[operator_key],
-                value=config_dict[value_key],
-                period=config_dict[period_key],
+                config_dict=config_dict[self.SETTING_KEY],
                 check_instance=object_instance,
                 object_id=oid
             )
 
             self.object_dict = helper.add_instance(
                 object_dict=self.object_dict,
-                obj_type=obj_type,
+                obj_type=self.SINGLE_KEY,
                 instance=instance
             )
 
-    def _create_group_filter(self):
-        parent_key = SUPPLY_DICT['condition_group']['parent_key']
-
-        for gid, config_dict in self.condition_group_data_dict.items():
-            if config_dict[parent_key] is not None:
-                # groups which are children of other groups will be created via '_create_member_list'
-                continue
-            else:
-                self._forge_condition_group(gid=gid, config_dict=config_dict)
-
-    def _forge_condition_group(self, gid, config_dict: dict):
+    def _forge_condition_group(self):
         # creates instances of objects defined as 'helper.FACTORY_CONDITION_GROUP_KEY' in the blueprint
 
-        obj_type = helper.FACTORY_CONDITION_GROUP_KEY
-
-        name_key = SUPPLY_DICT[obj_type]['name_key']
-        description_key = SUPPLY_DICT[obj_type]['description_key']
-        parent_key = SUPPLY_DICT[obj_type]['parent_key']
-
-        debugger("config-obj-factory-condition | _forge_condition_group | forging instance '%s'" % config_dict)
-
-        try:
-            blueprint = self.blueprint_dict[self.type_id][helper.BLUEPRINT_GROUP_KEY]
-        except KeyError as error_msg:
-            # log error or whatever (typeid not found)
-            raise KeyError("No blueprint found for type '%s'. Error: '%s'" %
-                           (config_dict[self.GROUP_TYPEID_KEY], error_msg))
-
-        instance = blueprint(
-            parent=config_dict[parent_key],
-            type_id=int(config_dict[self.GROUP_TYPEID_KEY]),
-            member_list=[],
-            name=config_dict[name_key],
-            description=config_dict[description_key],
-            object_id=int(gid),
-            setting_dict=config_dict[helper.FACTORY_SETTING_KEY]
-        )
-
-        instance.member_list = self._create_member_list(instance=instance)
-
-        self.object_dict = helper.add_instance(
-            object_dict=self.object_dict,
-            obj_type=obj_type,
-            instance=instance
-        )
-
-        return instance
-
-    def _create_member_list(self, instance) -> list:
-        # creates member list for condition-groups with instances of those in it
-
-        debugger("config-obj-factory-condition | _create_member_list | creating member list for instance '%s'"
-                 % instance)
-        member_instance_list = []
-
-        # sub-groups are not a member of groups; they are members of links
-        # member_instance_list.extend(
-        #     self._create_member_group(
-        #         instance=instance
-        #     )
-        # )
-
-        member_instance_list.extend(
-            ConditionLink(
-                object_dict=self.object_dict,
-                group_data_dict=self.condition_group_data_dict,
-                link_data_dict=self.condition_link_data_dict,
-                type_id=self.type_id,
-                blueprint_dict=self.blueprint_dict
-            ).get()
-        )
-
-        return member_instance_list
-
-    def _create_member_group(self, instance):
-        obj_type = helper.FACTORY_CONDITION_GROUP_KEY
-        linked_key = SUPPLY_DICT[obj_type]['parent_key']
-        member_group = []
+        name_key = SUPPLY_DICT[self.GROUP_KEY]['name_key']
+        description_key = SUPPLY_DICT[self.GROUP_KEY]['description_key']
+        parent_key = SUPPLY_DICT[self.GROUP_KEY]['parent_key']
 
         for gid, config_dict in self.condition_group_data_dict.items():
-            instance_exists = False
+            debugger("config-obj-factory-condition | _forge_condition_group | forging instance '%s'" % config_dict)
 
-            parent_id = config_dict[linked_key]
-            if parent_id is None:
-                continue
+            try:
+                blueprint = self.blueprint_dict[self.type_id][helper.BLUEPRINT_GROUP_KEY]
+            except KeyError as error_msg:
+                # log error or whatever (typeid not found)
+                raise KeyError("No blueprint found for type '%s'. Error: '%s'" %
+                               (config_dict[self.GROUP_TYPEID_KEY], error_msg))
 
-            if int(parent_id) == instance.object_id:
+            instance = blueprint(
+                parent=config_dict[parent_key],
+                type_id=int(config_dict[self.GROUP_TYPEID_KEY]),
+                member_list=[],
+                output_list=[],
+                name=config_dict[name_key],
+                description=config_dict[description_key],
+                object_id=int(gid),
+                setting_dict=config_dict[self.SETTING_KEY]
+            )
 
-                if obj_type in self.object_dict:
-                    for obj in self.object_dict[obj_type]:
-                        # check if it already exists
-                        if obj.object_id == int(gid):
-                            member_group.append(obj)
-                            instance_exists = True
-                            break
+            self.object_dict = helper.add_instance(
+                object_dict=self.object_dict,
+                obj_type=self.GROUP_KEY,
+                instance=instance
+            )
 
-                if not instance_exists:
-                    # or create it
-                    new_instance = self._forge_condition_group(gid=gid, config_dict=config_dict)
-                    member_group.append(new_instance)
+    def _add_members(self):
+        # NOTE:
+        # condition_group_data_dict
+        #   {
+        #     ObjectId :
+        #       {
+        #          member_dict: {
+        #              subkey1: {
+        #                  links: [list],
+        #                  conditiongroups: [list]
+        #              },
+        #              subkey2: {
+        #                  objects: [list],
+        #                  groups: [list]
+        #              },
+        #          }
+        #          setting_dict: {  -> only if the type has settings
+        #              setting1: value1,
+        #              setting2: value2
+        #          }
+        #       }
+        #   }
 
-        return member_group
+        for gid, config_dict in self.condition_group_data_dict.items():
+            instance = [inst for inst in self.object_dict[self.GROUP_KEY] if inst.object_id == int(gid)][0]
+
+            for sub_key, sub_config_dict in config_dict[self.MEMBER_KEY].items():
+                for key, value_list in sub_config_dict.items():
+                    for value in value_list:
+                        if sub_key == self.GROUP_MEMBER_SUBKEY:
+                            # check all members in member list and link their existing instances
+                            if key == self.LINK_KEY:
+                                member = self._check_link_member(link_id=int(value))
+
+                                if member is None:
+                                    # log error or whatever
+                                    continue
+
+                                instance.member_list.append(member)
+                            elif key == self.GROUP_KEY:
+                                member = self._check_group_member(gid=int(value))
+
+                                if member is None:
+                                    # log error or whatever
+                                    continue
+
+                                instance.member_list.append(member)
+
+                            else:
+                                # log error or whatever
+                                pass
+
+                        elif sub_key == self.GROUP_MEMBER_OUTPUT_SUBKEY:
+                            # check all members in output list and link their existing instances
+                            for category, obj in self.existing_object_dict.items():
+                                found = False
+
+                                if category == key and obj.object_id == int(value):
+                                    instance.output_list.append(obj)
+                                    found = True
+
+                                if not found:
+                                    # log error or whatever
+                                    pass
+
+                        else:
+                            # log error or whatever
+                            pass
+
+            # creates member list for condition-groups with instances of those in it
+            # sub-groups are not a member of groups; they are members of links
+
+            debugger("config-obj-factory-condition | _create_member_list | creating member list for instance '%s'"
+                     % instance)
+
+    def _check_link_member(self, link_id: int):
+        member = None
+        instance_exists = False
+
+        # check if it already exists
+        if self.LINK_KEY in self.object_dict:
+            for obj in self.object_dict[self.LINK_KEY]:
+                if obj.object_id == link_id:
+                    member = obj
+                    instance_exists = True
+                    break
+
+        # or create it
+        if not instance_exists:
+            new_instance = (
+                ConditionLink(
+                    object_dict=self.object_dict,
+                    link_data_dict=self.condition_link_data_dict,
+                    blueprint_dict=self.blueprint_dict[self.type_id]
+                ).get(link_id=link_id)
+            )
+
+            member = new_instance
+
+        return member
+
+    def _check_group_member(self, gid: int):
+        member = None
+
+        # find and link it
+        for obj in self.object_dict[self.GROUP_KEY]:
+            if obj.object_id == gid:
+                member = obj
+                break
+
+        return member

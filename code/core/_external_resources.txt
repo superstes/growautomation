@@ -1,11 +1,12 @@
-usage of 3th party python modules
+usage of 3th party resources
 
+python modules
   core
-    pycryptodome (Crypto)
+    pycryptodome (Crypto) [only used when security mode is activated]
     mysql.connector
     systemd
 
-  input devices/sensors
+  input devices (sensors)
     adafruit-circuitpython-dht
 
 apt packages
@@ -14,5 +15,5 @@ apt packages
     python3-pip
     python3
 
-  input devices/sensors
+  input devices (sensors)
     libgpiod2 (adafruit dht)

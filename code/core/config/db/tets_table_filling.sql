@@ -6,7 +6,6 @@ INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-pump
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-heat','Air heater actor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('actor-win','Window opener actor');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('controller','Controller system object');
-INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('output-timer','System output timer');
 INSERT IGNORE INTO ga.Object (ObjectName, ObjectDescription) VALUES ('backup-timer','System backup timer');
 
 -- grp type
@@ -49,21 +48,21 @@ INSERT IGNORE INTO ga.ValueType (ValueID, ValueName, ValueUnit) VALUES ('float',
 -- settingtype
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('GPIO or downlink pin','connection','int');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Enabled state','enabled','bool');
--- inputdevices
+-- inputdevices 3
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Downlink','downlink','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Timer','timer','int');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Function','function','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Function argument','function_arg','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Binary path','function_bin','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Unit','unit','str');
--- outputdevices
+-- outputdevices 9
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse','reverse','bool');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse type','reverse_type','int');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse function','reverse_function','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse function argument','reverse_function_arg','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse binary path','reverse_function_bin','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Reverse timer','reverse_timer','int');
--- system
+-- system 15
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System root path','path_root','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System log path','path_log','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System backup path','path_backup','str');
@@ -77,121 +76,142 @@ INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System security mode','security','bool');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System backup','backup','bool');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('System timezone','timezone','str');
-
+-- 28
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Input data type','datatype','str');
-INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition group main flag','condition_main','bool');
+-- condition link settings 29
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition link operator','link_operator','str');
+-- condition single-object settings 30
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj operator','condition_operator','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj value','condition_value','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj period','condition_period','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj period data','condition_period_data','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj check','condition_check','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj special','condition_special','str');
 
 -- object settings
--- select * from ObjectSetting INNER JOIN SettingType ON ObjectSetting.SettingTypeID = SettingType.TypeID;
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','1','4');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','3',Null);
+-- select * from Setting INNER JOIN SettingType ON Setting.SettingTypeID = SettingType.TypeID where ObjectID is not null;
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','1','4');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','3',Null);
+-- input device instances
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','2','1');  -- enabled
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','1','4');  -- connection
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('1','3',Null);  -- downlink
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','1','12');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','3',Null);
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','4','500');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','2','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','1','4');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('2','3',Null);
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','1','7');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','3',Null);
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','2','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','1','12');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','3',Null);
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('3','4','500');
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','1','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','3','downlink-rand');
+-- output device instances
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','2','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','1','7');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('4','3',Null);
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','1','3');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','3',Null);
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','2','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','1','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('5','3','downlink-rand');
 
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','20','test');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','21','789TMP01!');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','23','3');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','24','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','25','0');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','27','MEZ');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','15','/etc/ga');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','2','1');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','1','3');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('6','3',Null);
+
+-- system controller instance -> sets custom config
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','2','1');  -- enabled
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','20','test');  -- sql user
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','21','789TMP01!');  -- sql password
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','23','3');  -- log level
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','24','1');  -- debug
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','25','0');  -- security
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','27','MEZ');  -- timezone
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('7','15','/etc/ga');  -- ga root path
 
 -- system timers
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','2','1');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','4','60');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('9','2','0');
-INSERT IGNORE INTO ga.ObjectSetting (ObjectID, SettingTypeID, SettingValue) VALUES ('9','4','86400');
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','2','1');  -- enabled
+INSERT IGNORE INTO ga.Setting (ObjectID, SettingTypeID, SettingValue) VALUES ('8','4','86400');  -- timer
 
 -- group settings
--- select * from GrpSetting INNER JOIN SettingType ON GrpSetting.SettingTypeID = SettingType.TypeID;
+-- select * from Setting INNER JOIN SettingType ON Setting.SettingTypeID = SettingType.TypeID where GroupID is not null;
 -- each group must have at least 1 setting for the supply query to catch it
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','5','dht22.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','6','temperature');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','4','60');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','8','°C');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('1','28','float');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','5','dht22.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','6','humidity');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','4','30');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','8','RH');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('2','28','float');
+-- input device modules
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','5','dht22.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','6','temperature');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','4','60');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','8','°C');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('1','28','float');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','5','wind.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','6',Null);
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','4','900');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','8','km/h');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('3','28','int');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','5','dht22.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','6','humidity');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','4','30');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','8','RH');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('2','28','float');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('4','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('4','5','pump.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('4','6',Null);
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('4','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('4','9','0');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','5','wind.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','6',Null);
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','4','900');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','8','km/h');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('3','28','int');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('5','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('5','5','heat.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('5','6',Null);
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('5','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('5','9','0');
+-- output device modules
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('4','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('4','5','pump.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('4','6',Null);
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('4','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('4','9','0');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','2','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','5','win.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','6','first');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','7','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','9','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','11','win.py');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','13','/usr/bin/python3');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','12','reverse');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','10','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('6','14','90');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('5','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('5','5','heat.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('5','6',Null);
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('5','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('5','9','0');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','15','/etc/growautomation');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','16','/var/log/growautomation');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','17','/var/backups/growautomation');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','18','127.0.0.1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','19','3306');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','20','gadmin');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','21','random');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','22','ga');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','23','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','24','0');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','25','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','26','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('7','27','UTC');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','2','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','5','win.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','6','first');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','7','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','9','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','11','win.py');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','13','/usr/bin/python3');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','12','reverse');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','10','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('6','14','90');
 
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('8','4','600');
+-- system controller group -> sets default values for controller
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','15','/etc/growautomation');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','16','/var/log/growautomation');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','17','/var/backups/growautomation');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','18','127.0.0.1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','19','3306');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','20','gadmin');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','21','random');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','22','ga');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','23','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','24','0');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','25','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','26','1');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('7','27','UTC');
 
--- set condition group 1 as main and grp 2 as sub
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('9','29','1');
-INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES ('10','29','0');
+INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('8','4','600');
+
+-- condition groups (timer and enabled)
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('9','4','60');
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('9','1','1');
+
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('10','4','90');
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('10','1','1');
+
+-- which outputs to process if condition of condition-group is met
+INSERT IGNORE INTO ga.ConditionOutputMember (ConditionGroupID, ObjectID) VALUES ('9','5');  -- device heat
+INSERT IGNORE INTO ga.ConditionOutputMember (ConditionGroupID, GroupID) VALUES ('10','4');  -- model pump
 
 -- conditions
 -- get groups including links:
@@ -201,25 +221,60 @@ INSERT IGNORE INTO ga.GrpSetting (GroupID, SettingTypeID, SettingValue) VALUES (
 -- select ConditionLink.LinkID, ConditionLink.LinkOperator, ConditionLinkMember.ChainID, ConditionObject.ConditionName, ConditionObject.ConditionOperator,
 -- ConditionObject.ConditionValue, ConditionObject.ConditionObject, ConditionObject.ConditionDescription, ConditionLinkMember.GroupID from ( ( ConditionLink
 -- INNER JOIN ConditionLinkMember ON ConditionLinkMember.LinkID = ConditionLink.LinkID) LEFT JOIN ConditionObject ON ConditionLinkMember.ConditionID = ConditionObject.ConditionID);
-INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
-VALUES ('condi1','>','24','sensor-dht22-temp','Air temp must be higher than 24 for an hour', '3600');
-INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
-VALUES ('condi2','<','24','sensor-dht22-temp','Air temp must be lower than 24 for 15min', '900');
-INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
-VALUES ('condi3','>','50','sensor-dht22-humi','Air humi must be higher than 50 for 90 sec', '90');
-INSERT IGNORE INTO ga.ConditionObject (ConditionName, ConditionOperator, ConditionValue, ConditionObject, ConditionDescription, ConditionPeriod)
-VALUES ('condi4','=','69.9','sensor-dht22-humi','Air humi must be at than 69.9 for an hour', '3600');
 
-INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('and');
-INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('or');
-INSERT IGNORE INTO ga.ConditionLink (LinkOperator) VALUES ('xor');
+-- condition single-objects
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ObjectID, ConditionDescription)
+VALUES ('condi1','1','Air temp must be higher than 24 for an hour');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ObjectID, ConditionDescription)
+VALUES ('condi2', '1','Air temp must be lower than 24 for 15min');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ObjectID, ConditionDescription)
+VALUES ('condi3','2','Air humi must be higher than 50 for 90 sec');
+INSERT IGNORE INTO ga.ConditionObject (ConditionName, ObjectID, ConditionDescription)
+VALUES ('condi4','2','Air humi must be at than 69.9 for an hour');
 
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'1','1');
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'2','1');
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'2','2');
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES ('2',null,'2');
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'3','3');
-INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, ConditionID, LinkID) VALUES (null,'4','3');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','31','>');  -- operator
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','32','24');  -- value
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','33','time');  -- period
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','34','3600');  -- period data
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','35','avg');  -- check
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','36',null);  -- special
+
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','31','<');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','32','24');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','33','time');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','34','900');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','35','avg');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','36',null);
+
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','31','>');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','32','50');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','33','range');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','34','2');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','35','avg');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','36',null);
+
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','31','=');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','32','69.9');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','33','time');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','34','3600');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','35','max');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','36',null);
+
+-- condition links
+INSERT IGNORE INTO ga.ConditionLink (LinkName) VALUES ('link1');
+INSERT IGNORE INTO ga.ConditionLink (LinkName) VALUES ('link2');
+INSERT IGNORE INTO ga.ConditionLink (LinkName) VALUES ('link3');
+
+INSERT IGNORE INTO ga.Setting (ConditionLinkID, SettingTypeID, SettingValue) VALUES ('1','30','and');  -- link operator
+INSERT IGNORE INTO ga.Setting (ConditionLinkID, SettingTypeID, SettingValue) VALUES ('2','30','or');
+INSERT IGNORE INTO ga.Setting (ConditionLinkID, SettingTypeID, SettingValue) VALUES ('3','30','xor');
+
+INSERT IGNORE INTO ga.ConditionLinkMember (ConditionID, LinkID, OrderID) VALUES ('1','1','1');
+INSERT IGNORE INTO ga.ConditionLinkMember (ConditionID, LinkID, OrderID) VALUES ('2','1','2');
+INSERT IGNORE INTO ga.ConditionLinkMember (ConditionID, LinkID, OrderID) VALUES ('2','2','1');
+INSERT IGNORE INTO ga.ConditionLinkMember (GroupID, LinkID, OrderID) VALUES ('10','2','2');
+INSERT IGNORE INTO ga.ConditionLinkMember (ConditionID, LinkID, OrderID) VALUES ('3','3','1');
+INSERT IGNORE INTO ga.ConditionLinkMember (ConditionID, LinkID, OrderID) VALUES ('4','3','2');
 
 INSERT IGNORE INTO ga.ConditionMember (GroupID, LinkID) VALUES ('9','1');
 INSERT IGNORE INTO ga.ConditionMember (GroupID, LinkID) VALUES ('9','2');

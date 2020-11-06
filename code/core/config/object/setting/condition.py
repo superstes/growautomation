@@ -31,28 +31,9 @@ class GaCondition(GaBase):
         self.data = None
 
 
-class GaConditionGroup(GaBase):
-    def __init__(self, type_id: int, member_list: list, setting_dict: dict, output_list: list, **kwargs):
-        super().__init__(**kwargs)
-        self.type_id = type_id
-        self.member_list = member_list  # links and/or subgroups that are grouped
-        self.output_list = output_list  # actors that should be triggered if the condition is met
-        self.setting_dict = setting_dict
-        # dynamic instance vars
-        setting_list = ['timer', 'enabled']
-        set_attribute(
-            setting_dict=self.setting_dict,
-            setting_list=setting_list,
-            instance=self,
-            obj=GaCondition
-        )
-        # static vars
-        self.data = None
-
-
 class GaConditionLink(GaBase):
     def __init__(self, member_dict: list, setting_dict: dict, **kwargs):
-        super().__init__(name='generic-link', description='Generic condition link', **kwargs)
+        super().__init__(description='Generic condition link', **kwargs)
         self.member_dict = member_dict
         # condition objects that are linked; must be exactly 2;
         self.setting_dict = setting_dict
@@ -66,3 +47,23 @@ class GaConditionLink(GaBase):
         )
         # static vars
         self.processed = False
+
+
+class GaConditionGroup(GaBase):
+    def __init__(self, type_id: int, member_list: list, setting_dict: dict, output_list: list, parent: int,  **kwargs):
+        super().__init__(**kwargs)
+        self.type_id = type_id
+        self.member_list = member_list  # links and/or subgroups that are grouped
+        self.output_list = output_list  # actors that should be triggered if the condition is met
+        self.parent = parent
+        self.setting_dict = setting_dict
+        # dynamic instance vars
+        setting_list = ['timer', 'enabled']
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=setting_list,
+            instance=self,
+            obj=GaCondition
+        )
+        # static vars
+        self.data = None
