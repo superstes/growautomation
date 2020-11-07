@@ -1,5 +1,9 @@
 # helper functions for factory
 
+from core.config.object.setting.condition import GaConditionGroup
+from core.config.object.setting.condition import GaConditionLink
+from core.config.object.setting.condition import GaCondition
+
 SUPPLY_MEMBER_KEY = 'member'
 SUPPLY_GROUPTYPE_KEY = 'grouptype'
 SUPPLY_SETTING_KEY = 'setting'
@@ -17,6 +21,9 @@ FACTORY_CONDITION_SINGLE_KEY = 'condition'
 FACTORY_CONDITION_GROUP_KEY = 'condition_group'
 FACTORY_CONDITION_LINK_KEY = 'condition_link'
 FACTORY_SETTING_KEY = 'setting_dict'
+
+CUSTOM_CONDITION_BLUEPRINT_LIST = GaConditionGroup, GaConditionLink, GaCondition
+CUSTOM_BLUEPRINT_LIST = CUSTOM_CONDITION_BLUEPRINT_LIST
 
 
 def add_instance(object_dict, obj_type, instance):

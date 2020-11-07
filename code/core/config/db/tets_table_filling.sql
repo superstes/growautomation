@@ -204,10 +204,10 @@ INSERT IGNORE INTO ga.Setting (GroupID, SettingTypeID, SettingValue) VALUES ('8'
 
 -- condition groups (timer and enabled)
 INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('9','4','60');
-INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('9','1','1');
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('9','2','1');
 
 INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('10','4','90');
-INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('10','1','1');
+INSERT IGNORE INTO ga.Setting (ConditionGroupID, SettingTypeID, SettingValue) VALUES ('10','2','1');
 
 -- which outputs to process if condition of condition-group is met
 INSERT IGNORE INTO ga.ConditionOutputMember (ConditionGroupID, ObjectID) VALUES ('9','5');  -- device heat
@@ -232,33 +232,33 @@ VALUES ('condi3','2','Air humi must be higher than 50 for 90 sec');
 INSERT IGNORE INTO ga.ConditionObject (ConditionName, ObjectID, ConditionDescription)
 VALUES ('condi4','2','Air humi must be at than 69.9 for an hour');
 
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','31','>');  -- operator
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','32','24');  -- value
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','33','time');  -- period
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','34','3600');  -- period data
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','35','avg');  -- check
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','36',null);  -- special
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','30','>');  -- operator
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','31','24');  -- value
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','32','time');  -- period
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','33','3600');  -- period data
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','34','avg');  -- check
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('1','35',null);  -- special
 
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','31','<');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','32','24');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','33','time');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','34','900');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','35','avg');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','36',null);
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','30','<');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','31','24');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','32','time');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','33','900');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','34','avg');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('2','35',null);
 
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','31','>');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','32','50');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','33','range');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','34','2');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','35','avg');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','36',null);
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','30','>');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','31','50');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','32','range');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','33','2');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','34','avg');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('3','35',null);
 
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','31','=');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','32','69.9');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','33','time');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','34','3600');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','35','max');
-INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','36',null);
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','30','=');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','31','69.9');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','32','time');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','33','3600');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','34','max');
+INSERT IGNORE INTO ga.Setting (ConditionObjectID, SettingTypeID, SettingValue) VALUES ('4','35',null);
 
 -- condition links
 INSERT IGNORE INTO ga.ConditionLink (LinkName) VALUES ('link1');

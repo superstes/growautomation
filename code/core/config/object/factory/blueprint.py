@@ -42,6 +42,7 @@ class Go:
         for key, value in self.type_dict.items():
             if value[self.GROUPTYPE_OBJECT_ARG] == map_value:
                 map_id = key
+                break
 
         try:
             if setting is not None:

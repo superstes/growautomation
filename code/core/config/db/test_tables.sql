@@ -136,7 +136,8 @@ create table IF NOT EXISTS ConditionLink (
 	updated timestamp not null default current_timestamp on update current_timestamp,
 	LinkID bigint unsigned not null auto_increment,
 	LinkName varchar(255) not null,
-	primary key (LinkID)
+	primary key (LinkID),
+	unique key cl_uk_linkname (LinkName)
 )engine innodb,
  character set utf8,
  collate utf8_unicode_ci;

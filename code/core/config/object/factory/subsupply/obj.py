@@ -11,6 +11,9 @@ from core.config.db.template import SUPPLY_DICT
 class Go:
     SETTING_FACTORY_KEY = factory_helper.FACTORY_SETTING_KEY
     MEMBER_FACTORY_KEY = factory_helper.FACTORY_MEMBER_KEY
+    MEMBER_DICT_FACTORY_KEY = factory_helper.FACTORY_CONDITION_MEMBER_KEY
+
+    SET_KEY = 'set_key'
 
     def __init__(self, raw_data_lot: list, obj_type: str, member_data: dict = None, setting_data: list = None):
         self.raw_data_lot = raw_data_lot
@@ -32,7 +35,6 @@ class Go:
         #       }
         #   }
 
-        setting_key = self.SUPPLY_DICT['set_key']
         id_key = self.SUPPLY_DICT['id_key']
         key_list = self.SUPPLY_DICT['key_list']
 
@@ -40,6 +42,8 @@ class Go:
         has_setting = self.SUPPLY_DICT['setting']
 
         if has_setting:
+            setting_key = self.SUPPLY_DICT['set_key']
+
             # prefilter the setting data so not every iteration needs to work the whole list
 
             new_setting_data = []
@@ -67,15 +71,21 @@ class Go:
                     data_dict=config_dict,
                     key_list=key_list
                 )
-
                 if has_member:
                     # add members to groups
 
-                    obj_config_dict[self.MEMBER_FACTORY_KEY] = SupplyMember(
+                    members = SupplyMember(
                         raw_member_dict=self.member_data,
                         obj_type=self.obj_type,
                         group_id=map_id
                     ).get()
+
+                    if type(members) == dict:
+                        member_key = self.MEMBER_DICT_FACTORY_KEY
+                    else:
+                        member_key = self.MEMBER_FACTORY_KEY
+
+                    obj_config_dict[member_key] = members
 
                 if has_setting:
                     # add settings to obj
@@ -83,127 +93,8 @@ class Go:
                     obj_config_dict[self.SETTING_FACTORY_KEY] = SupplySetting(
                         data_dict_list=self.setting_data,
                         map_id=map_id,
+                        set_key=self.SUPPLY_DICT[self.SET_KEY]
                         ).get()
-
                 factory_dict[map_id] = obj_config_dict
 
         return factory_dict
-
-    # def _condition_link(self):
-    #     # creates config-dict for condition link objects:
-    #     #   {
-    #     #     LinkId :
-    #     #       {
-    #     #          member_dict: {
-    #     #              groups: {
-    #     #                 orderid: member
-    #     #              },
-    #     #              objects: {
-    #     #                  orderid: member
-    #     #              },
-    #     #          }
-    # 
-    #     id_key = self.SUPPLY_DICT['id_key']
-    # 
-    #     raw_dict_list = helper.converter_lot_list(
-    #         lot=self.raw_data_lot,
-    #         reference_list=self.SUPPLY_DICT['obj_key_list']
-    #     )
-    # 
-    #     factory_dict = {}
-    # 
-    #     for config_dict in raw_dict_list:
-    #         map_id = int(config_dict[id_key])
-    # 
-    #         # member_group = []
-    #         # member_condition = []
-    #         #
-    #         # if config_dict[member_group_key] is not None:
-    #         #     member_group.append(int(config_dict[member_group_key]))
-    #         # else:
-    #         #     member_condition.append(int(config_dict[member_condition_key]))
-    #         #
-    #         # member_dict = {
-    #         #     member_group_key: member_group,
-    #         #     member_condition_key: member_condition
-    #         # }
-    # 
-    #         if map_id not in factory_dict:
-    #             factory_dict[map_id] = {
-    #                 operator_key: config_dict[operator_key],
-    #                 'member_dict': member_dict
-    #             }
-    #         else:
-    #             existing_member_dict = factory_dict[map_id]['member_dict']
-    #             factory_dict[map_id]['member_dict'] = {**existing_member_dict, **member_dict}
-    # 
-    #     return factory_dict
-
-    # def _condition_group(self):
-    #     # creates config-dict for condition group objects:
-    #     # uses raw_group_lot to create setting_dict; since it has all group-settings within
-    #     #   {
-    #     #     ObjectId :
-    #     #       {
-    #     #          member_dict: {
-    #     #                     subkey1: {
-    #     #                             links: [list],
-    #     #                             conditiongroups: [list]
-    #     #                         },
-    #     #                     subkey2: {
-    #     #                             objects: [list],
-    #     #                             groups: [list]
-    #     #                         },
-    #     #                 }
-    #     #          setting_dict: {
-    #     #              setting1: value1,
-    #     #              setting2: value2
-    #     #          }
-    #     #       }
-    #     #   }
-    # 
-    #     id_key = self.SUPPLY_DICT['id_key']
-    #     key_list = self.SUPPLY_DICT['obj_key_list']
-    # 
-    #     # create a data dict from the database-output-tuple-list and keywords
-    #     raw_dict_list = helper.converter_lot_list(
-    #         lot=self.raw_data_lot,
-    #         reference_list=helper.get_full_key_list(obj_type=self.obj_type)
-    #     )
-    #     raw_group_dict_list = helper.converter_lot_list(
-    #         lot=self.second_raw_data_lot,
-    #         reference_list=helper.get_full_key_list(obj_type='group')  # since the settings are in the group_config_dict
-    #     )
-    # 
-    #     factory_dict = {}
-    # 
-    #     # formats every dataset received from the db for the use in the factory
-    #     for config_dict in raw_dict_list:
-    #         map_id = int(config_dict[id_key])
-    # 
-    #         obj_config_dict = {}
-    # 
-    #         if map_id not in factory_dict:
-    #             # if the object doesn't already exist in the dict -> set it
-    # 
-    #             obj_config_dict = helper.filter_dict(
-    #                 data_dict=config_dict,
-    #                 key_list=key_list
-    #             )
-    # 
-    #             # add condition link-members
-    #             obj_config_dict['member_list'] = [_[member_key] for _ in raw_dict_list if _[id_key] == map_id]
-    # 
-    #             factory_dict[map_id] = obj_config_dict
-    # 
-    #             for group_config_dict in raw_group_dict_list:
-    #                 if int(group_config_dict[id_key]) == map_id:
-    #                     factory_dict = helper.add_setting(
-    #                         obj_type='group',  # since the settings are in the group_config_dict
-    #                         config_dict=group_config_dict,
-    #                         map_id=map_id,
-    #                         factory_dict=factory_dict,
-    #                         obj_config_dict=obj_config_dict
-    #                     )
-    # 
-    #     return factory_dict

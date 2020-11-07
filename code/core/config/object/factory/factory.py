@@ -5,7 +5,7 @@ from core.utils.debug import debugger
 from core.config.object.factory.supply import Go as Supply
 from core.config.object.factory.blueprint import Go as Blueprint
 from core.config.object.factory.subfactory.default import Go as DefaultFactory
-from core.config.object.factory.subfactory.condition import Go as ConditionFactory
+from core.config.object.factory.subfactory.condition.basic import Go as ConditionFactory
 from core.config.object.factory.helper import factory as helper
 
 
@@ -30,8 +30,6 @@ class Go:
             blueprint_dict=self.blueprint_dict,
             object_dict=default_object_dict
         ).get()
-
-        print(condition_object_dict)
 
         object_dict = {**condition_object_dict, **default_object_dict}
 

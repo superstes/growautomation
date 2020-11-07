@@ -69,9 +69,7 @@ class Go:
 
         raw_lot = self.database.get(SUPPLY_DICT[factory_helper.SUPPLY_SETTING_KEY][self.COMMAND_KEY])
 
-        for tup in raw_lot:
-            _ = helper.converter_lot_list(lot=tup, reference_list=setting_key_list)
-            self.setting_list.append(_)
+        self.setting_list = helper.converter_lot_list(lot=raw_lot, reference_list=setting_key_list)
 
     def _get_member_data(self):
         # builds member dict in form like we see it in the db-template
@@ -81,9 +79,13 @@ class Go:
             if self.COMMAND_KEY in value_dict:
                 self.raw_member_dict[key] = self.database.get(value_dict[self.COMMAND_KEY])
             else:
+                tmp_dict = {}
+
                 for sub_key, sub_value_dict in value_dict.items():
                     if self.COMMAND_KEY in sub_value_dict:
-                        self.raw_member_dict[key] = {sub_key: self.database.get(sub_value_dict[self.COMMAND_KEY])}
+                        tmp_dict[sub_key] = self.database.get(sub_value_dict[self.COMMAND_KEY])
                     else:
                         # log error or whatever
                         pass
+
+                self.raw_member_dict[key] = tmp_dict

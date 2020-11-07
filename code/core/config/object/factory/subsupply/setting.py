@@ -15,9 +15,10 @@ class Go:
     SETTING_TYPE_BOOL = SUPPLY_DICT[factory_helper.SUPPLY_SETTING_KEY]['value_type_bool']
     SETTING_TYPE_INT = SUPPLY_DICT[factory_helper.SUPPLY_SETTING_KEY]['value_type_int']
     
-    def __init__(self, data_dict_list: list, map_id: int):
+    def __init__(self, data_dict_list: list, map_id: int, set_key: str):
         self.data_dict_list = data_dict_list
         self.map_id = map_id
+        self.set_key = set_key
     
     def get(self) -> dict:
         # setting_dict: {
@@ -28,6 +29,9 @@ class Go:
         output_dict = {}
 
         for setting_dict in self.data_dict_list:
+            if int(setting_dict[self.set_key]) != self.map_id:
+                continue
+
             raw_set_dict = helper.filter_dict(
                 data_dict=setting_dict,
                 key_list=self.SETTING_KEY_LIST

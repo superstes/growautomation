@@ -38,20 +38,22 @@ SUPPLY_DICT = {
         'command': 'select GroupID, GroupName, GroupDescription, GroupParent, GroupTypeID from Grp;'
     },
     factory_helper.SUPPLY_MEMBER_KEY: {
-        factory_helper.FACTORY_OBJECT_KEY: {
+        factory_helper.FACTORY_GROUP_KEY: {
             'key_list': ['GroupID', 'ObjectID'],
             'command': "select GroupID, ObjectID from ObjectGroupMember;",
             'id_key': 'GroupID',
+            'member_key': 'ObjectID'
         },
         factory_helper.FACTORY_CONDITION_GROUP_KEY: {
             factory_helper.SUPPLY_MEMBER_CONDITION_GROUP_SUBLIST[0]: {
-                'key_list': ['GroupID', 'LinkID', 'ConditionGroupID'],
-                'command': 'select GroupID, LinkID, ConditionGroupID from ConditionMember;',
+                # member_list
+                'key_list': ['GroupID', 'LinkID'],
+                'command': 'select GroupID, LinkID from ConditionMember;',
                 'id_key': 'GroupID',
-                'member_group_key': 'ConditionGroupID',
-                'member_object_key': 'LinkID',
+                'member_key': 'LinkID'
             },
             factory_helper.SUPPLY_MEMBER_CONDITION_GROUP_SUBLIST[1]: {
+                # output_list
                 'key_list': ['ConditionGroupID', 'ObjectID', 'GroupID'],
                 'command': 'select ConditionGroupID, ObjectID, GroupID from ConditionOutputMember;',
                 'id_key': 'ConditionGroupID',
@@ -115,8 +117,10 @@ SUPPLY_DICT = {
         'setting': True,
         'member': True,
         'set_key': 'ConditionGroupID',
+        'member_key': 'ConditionGroupID',
         'key_list': ['GroupID', 'GroupName', 'GroupDescription', 'GroupParent', 'GroupTypeID'],
-        'command': 'select GroupID, GroupName, GroupDescription, GroupParent, GroupTypeID from Grp;'
+        'command': "select GroupID, GroupName, GroupDescription, GroupParent, GroupTypeID from Grp INNER "
+                   "JOIN GrpType ON Grp.GroupTypeID = GrpType.TypeID where GrpType.TypeName = 'condition';"
     },
     factory_helper.FACTORY_CONDITION_LINK_KEY: {
         'id_key': 'LinkID',
@@ -124,6 +128,7 @@ SUPPLY_DICT = {
         'setting': True,
         'member': True,
         'set_key': 'ConditionLinkID',
+        'member_key': 'LinkID',
         'key_list': ['LinkID', 'LinkName'],
         'command': 'select LinkID, LinkName from ConditionLink;',
     },
