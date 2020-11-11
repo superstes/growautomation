@@ -160,7 +160,8 @@ class Service:
         def thread_task(thread_instance, start=False):
             Decision(instance=thread_instance).start()
 
-    def _wait(self, seconds: int):
+    @staticmethod
+    def _wait(seconds: int):
         start_time = time()
         while time() < start_time + seconds:
             time_sleep(1)
@@ -190,6 +191,7 @@ class Service:
 
     def _run(self):
         try:
+            self._wait(seconds=self.WAIT_TIME)
             debugger('service | run | starting runtime')
             run_last_reload_time = time()
             run_last_status_time = time()

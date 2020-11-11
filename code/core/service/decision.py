@@ -3,6 +3,7 @@
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.core.timer import GaTimerDevice
+from core.config.object.setting.condition import GaConditionGroup
 
 
 class Go:
@@ -16,6 +17,8 @@ class Go:
             self._device_input()
         elif isinstance(self.instance, GaTimerDevice):
             self._core_timer()
+        elif isinstance(self.instance, GaConditionGroup):
+            self._device_output()
 
     def _device_input(self):
         from core.device.input.input import Go

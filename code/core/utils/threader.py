@@ -62,9 +62,9 @@ class Workload(Thread):
                 ) as error_msg:
             debugger("utils-threader | workload-run | thread '%s' ('%s') error occurred: '%s'"
                      % (self.name, self.instance.name, error_msg))
-            Log().write("Stopping thread '%s' ('%s') because the following error occurred: '%s'"
+            Log().write("Returning to runtime of thread '%s' ('%s') because the following error occurred: '%s'"
                         % (self.name, self.instance.name, error_msg))
-            self.stop()
+            self.run()
 
 
 class Loop:

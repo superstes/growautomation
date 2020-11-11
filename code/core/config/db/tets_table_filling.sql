@@ -84,7 +84,7 @@ INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj operator','condition_operator','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj value','condition_value','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj period','condition_period','str');
-INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj period data','condition_period_data','str');
+INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj period data','condition_period_data','int');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj check','condition_check','str');
 INSERT IGNORE INTO ga.SettingType (TypeDescription, TypeKey, TypeValueID) VALUES ('Condition obj special','condition_special','str');
 
