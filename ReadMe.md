@@ -5,12 +5,7 @@ Making it easier and optimizing the process.
 And provide code samples to the diy community.
 
 ## Contact information
-If you..
-- want to contribute to this project
-- have found bugs
-- miss information of how to use it
-
-<br> contact us at contact@growautomation.at
+<a href="mailto:contact@growautomation.at">contact@growautomation.at</a>
 
 ## Version information
 
@@ -19,11 +14,10 @@ __The code is currently not in a stable state !__
 Version: 0.6
 
 ### Currently active
+- creating _(django)_ web interface for easy user interactions
+    - <a href="https://test.growautomation.at/">DEMO LINK</a>
+    - updating growautomation core to work with django database schema
 - implementing object-oriented config management
-    - basic workflow: <br>
-  <img src="https://github.com/superstes/growautomation/blob/dev/img/GaBasicWorkflow.png" float="middle" border="4" alt="basic workflow">
-- factory workflow: <br>
-  <img src="https://github.com/superstes/growautomation/blob/dev/img/GaFactoryWorkflow.png" float="middle" border="4" alt="basic workflow">
 
 ### New features
 - v0.3 - v0.5 _(2020-02 - 2020-10)_
