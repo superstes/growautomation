@@ -1,0 +1,44 @@
+{% extends "./body.html" %}
+{% load util %}
+{% block content %}
+    <h1>
+        Growautomation
+    </h1>
+    <h3>
+        Management interface
+    </h3>
+    <br>
+    <hr>
+    <p>
+        We want to make an easy solution for anybody to automate everything around growing plants.<br>
+        Making it easier and optimizing the process.<br><br>
+
+        And provide code samples to the diy community.<br>
+    </p>
+<!--
+    <table class="table table-striped">
+        <tr>
+            <th>
+                TYPE
+            </th>
+            <th>
+                LINK
+            </th>
+        </tr>
+        {% for typ, data in type_dict.items %}
+            {% if data|get_item:'hidden' is False %}
+                <tr>
+                    <td>
+                        {{ data|get_item:'pretty' }}
+                    </td>
+                    <td>
+                        <form action="/config/list/{{ typ }}/">
+                            <input type="submit" value="Go to list" class="btn btn-info"/>
+                        </form>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+-->
+{% endblock %}

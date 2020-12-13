@@ -6,42 +6,47 @@ from core.config.object.helper import *
 
 
 class GaInputDevice(GaBaseDevice):
-    def __init__(self, parent_instance, **kwargs):
+    parent_setting_list = ['script', 'script_arg', 'script_bin', 'unit', 'datatype']
+    inheritence_setting_list = ['timer']
+    setting_list = ['connection']
+
+    def __init__(self, parent_instance, downlink, **kwargs):
         # inheritance from superclasses
         super().__init__(parent_instance=parent_instance, **kwargs)
+        # specific vars
+        self.downlink = downlink
         # inheritance from model instance
-        parent_setting_list = ['function', 'function_arg', 'function_bin', 'start', 'unit']
         set_parent_attribute(
             child_instance=self,
-            setting_list=parent_setting_list,
+            setting_list=self.parent_setting_list,
             obj=GaInputDevice
         )
-        inheritence_setting_list = ['timer', 'unit', 'datatype']
         overwrite_inherited_attribute(
             child_setting_dict=self.setting_dict,
-            setting_list=inheritence_setting_list,
+            setting_list=self.inheritence_setting_list,
             child_instance=self,
             obj=GaInputDevice
         )
         # device instance vars
-        setting_list = ['connection', 'downlink']
+
         set_attribute(
             setting_dict=self.setting_dict,
-            setting_list=setting_list,
+            setting_list=self.setting_list,
             instance=self,
             obj=GaInputDevice
         )
 
 
-class GaInputModel(GaBaseModel):
+class GaInputModel(GaBaseDeviceModel):
+    setting_list = ['script', 'script_arg', 'script_bin', 'unit', 'datatype', 'timer']
+
     def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # model specific vars
-        setting_list = ['timer', 'unit', 'datatype']
         set_attribute(
             setting_dict=self.setting_dict,
-            setting_list=setting_list,
+            setting_list=self.setting_list,
             instance=self,
             obj=GaInputModel
         )

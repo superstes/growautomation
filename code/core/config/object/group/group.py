@@ -6,7 +6,6 @@ from core.config.object.base import *
 
 
 class GaObjectGroup(GaBase):
-    def __init__(self, group_member_list: list, group_parent, **kwargs):
+    def __init__(self, group_member_list: list, **kwargs):
         super().__init__(**kwargs)
         self.group_member_list = group_member_list
-        self.group_parent = group_parent

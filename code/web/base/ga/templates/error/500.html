@@ -1,0 +1,22 @@
+{% extends "../body.html" %}
+{% load util %}
+{% block content %}
+    <div class="alert alert-danger">
+        <h1>Error 500</h1>
+        <h2>Oooooopppsss!</h2><br>
+        <strong>
+            {% if request|handler500_update %}
+                An unexpected error occurred while saving your configuration.<br>
+                Please check if it meets the requirements.
+            {% elif error_msg is not None %}
+                The following error occurred while loading the page:<br>
+                '{{ error_msg }}'
+            {% else %}
+                Something did go wrong while loading the page:
+            {% endif %}
+            <br><br>
+            '{{ request|get_full_uri }}'
+        </strong>
+    </div>
+    <a href='{{ request|get_return_path }}' class="btn btn-info">Back</a>
+{% endblock %}

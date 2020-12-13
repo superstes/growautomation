@@ -3,7 +3,7 @@
 #   1. list of all timers
 #   2. list of all custom timers (if a device overwrites its model inheritance)
 
-from core.config.object.factory.helper import factory as factory_helper
+from core.factory.helper import factory as factory_helper
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel

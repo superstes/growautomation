@@ -8,39 +8,40 @@ from core.config.object.base import *
 from core.config.object.helper import *
 
 
-class GaCondition(GaBase):
+class GaConditionMatch(GaBase):
+    setting_list = ['special', 'value', 'operator', 'period', 'period_data', 'check']
+    #   check -> how to process the data pulled from the period (max-/min-/avg-value)
+    #   value -> data to compare to
+    #   operator -> operator to use for data comparison
+    #   period -> the time period from which to pull the data for the comparison
+
     def __init__(self, check_instance, setting_dict: dict, **kwargs):
         super().__init__(**kwargs)
         self.check_instance = check_instance
         self.setting_dict = setting_dict
         # dynamic instance vars
-        #   check -> how to process the data pulled from the period (max-/min-/avg-value)
-        #   value -> data to compare to
-        #   operator -> operator to use for data comparison
-        #   period -> the time period from which to pull the data for the comparison
-        setting_list = ['condition_special', 'condition_value', 'condition_operator', 'condition_period',
-                        'condition_period_data', 'condition_check']
         set_attribute(
             setting_dict=self.setting_dict,
-            setting_list=setting_list,
+            setting_list=self.setting_list,
             instance=self,
-            obj=GaCondition
+            obj=GaConditionMatch
         )
         # static vars
         self.data = None
 
 
 class GaConditionLink(GaBase):
-    def __init__(self, member_dict: list, setting_dict: dict, **kwargs):
+    setting_list = ['operator']
+
+    def __init__(self, condition_match_dict: dict, condition_group_dict: dict, setting_dict: dict, **kwargs):
         super().__init__(description='Generic condition link', **kwargs)
-        self.member_dict = member_dict
-        # condition objects that are linked; must be exactly 2;
+        self.condition_match_dict = condition_match_dict  # need dict because of order
+        self.condition_group_dict = condition_group_dict  # need dict because of order
         self.setting_dict = setting_dict
         # dynamic instance vars
-        setting_list = ['condition_operator']
         set_attribute(
             setting_dict=self.setting_dict,
-            setting_list=setting_list,
+            setting_list=self.setting_list,
             instance=self,
             obj=GaConditionLink
         )
@@ -49,18 +50,18 @@ class GaConditionLink(GaBase):
 
 
 class GaConditionGroup(GaBase):
-    def __init__(self, type_id: int, member_list: list, output_list: list, setting_dict: dict,  parent: int,  **kwargs):
+    setting_list = ['timer', 'enabled']
+
+    def __init__(self, member_list: list, output_object_list: list, output_group_list: list, setting_dict: dict, **kwargs):
         super().__init__(**kwargs)
-        self.type_id = type_id
-        self.member_list = member_list  # links and/or subgroups that are grouped
-        self.output_list = output_list  # actors that should be triggered if the condition is met
-        self.parent = parent
+        self.member_list = member_list  # links that are grouped
+        self.output_object_list = output_object_list  # actors that should be triggered if the condition is met
+        self.output_group_list = output_group_list  # actors that should be triggered if the condition is met
         self.setting_dict = setting_dict
         # dynamic instance vars
-        setting_list = ['timer', 'enabled']
         set_attribute(
             setting_dict=self.setting_dict,
-            setting_list=setting_list,
+            setting_list=self.setting_list,
             instance=self,
             obj=GaConditionGroup
         )

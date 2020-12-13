@@ -1,0 +1,84 @@
+{% load util %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">
+        HOME
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
+        <ul class="navbar-nav">
+            {% for nav_key, nav_config in nav_dict.items %}
+                {% if nav_config|get_type == 'str' %}
+                    <!-- basic link -->
+                    <li class="nav-item ga-nav-main">
+                        <a class="nav-link" href="{{ nav_config }}">
+                            {{ nav_key }}
+                        </a>
+                    </li>
+                {% elif nav_config|get_type == 'dict' %}
+                    {% set_var nav_config|get_dict_depth as navi_depth %}
+                    {% if navi_depth == 1 %}
+                        <!-- dropdown link -->
+                        <li class="nav-item dropdown ga-nav-main">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              {{ nav_key }}
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
+                                {% for key, value in nav_config.items %}
+                                    <a class="dropdown-item ga-nav-main-a" href="{{ value }}">
+                                        {{ key }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    {% elif navi_depth == 2 %}
+
+                        <li class="nav-item disabled ga-nav-main">
+                            <a class="nav-link">
+                                {{ nav_key }}
+                            </a>
+                        </li>
+                        {% for key, value in nav_config.items %}
+                            {% if value|get_type == 'str' %}
+                                <!-- dropdown link -->
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ value }}">
+                                        {{ key }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <!-- nested dropdown link -->
+                                <li class="nav-item disabled dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}{{ key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      {{ key }}
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}{{ key }}">
+                                        {% for k2, v2 in value.items %}
+                                            <a class="dropdown-item" href="{{ v2 }}">
+                                                {{ k2 }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item disabled ga-nav-main ga-nav-main-hidden">
+                <a class="nav-link">
+                    Links
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://docs.growautomation.eu">Docs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/superstes/growautomation">@GitHub</a>
+            </li>
+        </ul>
+    </div>
+</nav>

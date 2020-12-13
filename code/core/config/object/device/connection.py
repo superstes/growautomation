@@ -4,28 +4,39 @@
 from core.config.object.base import *
 
 
-class GaConnectionModel(GaBaseModel):
-    def __init__(self, **kwargs):
-        # inheritance from superclasses
-        super().__init__(**kwargs)
-        # model specific vars
-        try:
-            self.port_count = self.setting_dict['port_count']
-            self.port_outtype = self.setting_dict['port_outtype']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaConnectionModel, error_msg))
-
-
 class GaConnectionDevice(GaBaseDevice):
+    parent_setting_list = ['script', 'script_arg', 'script_bin']
+    setting_list = ['connection']
+
     def __init__(self, parent_instance, **kwargs):
         # inheritance from superclasses
         super().__init__(parent_instance=parent_instance, **kwargs)
         # inheritance from model instance
-        self.port_count = parent_instance.port_count
-        self.port_count = parent_instance.port_outtype
+        set_parent_attribute(
+            child_instance=self,
+            setting_list=self.parent_setting_list,
+            obj=GaConnectionDevice
+        )
         # device instance vars
-        try:
-            self.parent_instance = parent_instance
-            self.connection = self.setting_dict['connection']
-        except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (self.name, self.object_id, GaConnectionDevice, error_msg))
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=GaConnectionDevice
+        )
+        self.active = False
+
+
+class GaConnectionModel(GaBaseDeviceModel):
+    setting_list = ['script', 'script_arg', 'script_bin']
+
+    def __init__(self, **kwargs):
+        # inheritance from superclasses
+        super().__init__(**kwargs)
+        # model specific vars
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=GaConnectionModel
+        )

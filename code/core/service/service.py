@@ -25,8 +25,8 @@
 #   is being set automatically by the systemd service
 
 from core.utils.threader import Loop as Thread
-from core.config.object.factory.factory import Go as Factory
-from core.config.object.factory.reload import Go as Reload
+from core.factory.factory import Go as Factory
+from core.factory.reload import Go as Reload
 from core.service.timer import get as Timer
 from core.config import shared as shared_vars
 from core.utils.debug import debugger
@@ -181,6 +181,27 @@ class Service:
         self.LOG.write(output='Stopping service merciless', level=1)
         systemd_journal.write('Service stopped.')
         raise SystemExit('Service exited merciless!')
+
+    def _config_dump(self):
+        self.LOG.write("\n\n#############################\nCONFIG DUMP:\n\n")
+        self.LOG.write("OBJECT CONFIG:\n")
+        typ_counter = 0
+        for typ in self.CONFIG.keys():
+            typ_counter += 1
+            obj_counter = 0
+            self.LOG.write("Config object type '%s'" % typ)
+            for obj in self.CONFIG[typ]:
+                obj_counter += 1
+                self.LOG.write("Object '%s'" % obj)
+                self.LOG.write("Config: '%s'" % obj.__dict__)
+                if obj_counter == len(self.CONFIG[typ]):
+                    self.LOG.write("\n")
+            if typ_counter == len(self.CONFIG.keys()):
+                self.LOG.write("\n")
+
+        self.LOG.write("SUPPLY CONFIG:\n")
+        self.LOG.write(self.current_config_dict)
+        self.LOG.write("\n\nCONFIG DUMP END\n#############################\n")
 
     def _status(self):
         thread_list = self.THREAD.list()

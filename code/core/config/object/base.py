@@ -19,22 +19,20 @@ class GaBase(object):
                % (self.name, self.__class__.__name__, self.description)
 
 
-class GaBaseModel(GaBase):
-    def __init__(self, parent: int, type_id: int, member_list: list, setting_dict: dict, **kwargs):
+class GaBaseDeviceModel(GaBase):
+    def __init__(self, member_list: list, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # vars for all models
-        self.parent = parent
-        self.type_id = type_id
         self.member_list = member_list
         self.setting_dict = setting_dict
         # vars from settings dict
-        self.setting_list = ['enabled', 'function', 'function_arg', 'function_bin']
+        self.setting_list = ['enabled', 'script', 'script_arg', 'script_bin']
         set_attribute(
             setting_dict=self.setting_dict,
             setting_list=self.setting_list,
             instance=self,
-            obj=GaBaseModel
+            obj=GaBaseDeviceModel
         )
 
 

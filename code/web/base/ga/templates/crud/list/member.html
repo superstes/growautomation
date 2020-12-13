@@ -1,0 +1,57 @@
+{% extends "./group.html" %}
+{% load util %}
+{% block memberview %}
+    {% if member_view_active and member_view_active == data.name %}
+        <tr class="table-active">
+            <th>
+                {% if typ == 'conditionlinkobject' %}
+                    ORDER | TYPE
+                {% else %}
+                    TYPE
+                {% endif %}
+            </th>
+            <th>
+                NAME
+            </th>
+            <th>
+                DESCRIPTION
+            </th>
+            <th>
+                ACTION
+            </th>
+        </tr>
+        {% if member_data_dict|length == 0 %}
+            {% include "../../warn/no_results.html" %}
+        {% else %}
+            {% for member_typ, member_config in member_type_dict.items %}
+                {% set_var member_config|get_item:'member_key' as member_key %}
+                {% set_var member_config|get_item:'group_key' as group_key %}
+                {% set_var member_config|get_item:'pretty' as member_pretty %}
+                {% set_var member_data_dict|get_item:member_typ as member_data %}
+                {% include "./member_data.html" %}
+            {% endfor %}
+        {% endif %}
+<!--     todo: hand over data.name so i can auto-select the chosen one -->
+         <tr class="table-active">
+             <td colspan="100%">
+                 <form method="get" action="/config/create/{{ member_type }}/">
+                     {% if member_type_dict|length > 1 %}
+                         <label>Choose member type:</label>
+                         <select name="typ" >
+                             {% for typ_name, typ_nested in member_type_dict.items %}
+                                <option value="{{ typ_name }}">{{ typ_nested|get_item:'pretty' }}</option>
+                             {% endfor %}
+                         </select>
+                     {% else %}
+                        <input type="hidden" name="typ" value="{{ member_type_dict|get_first_key }}" />
+                     {% endif %}
+                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                     <br>
+                     <input type="submit" name="action" value="Add" class="btn btn-success"/>
+                     <input type="submit" name="action" value="Create" class="btn btn-success"/>
+                     <input type="submit" name="action" value="List" class="btn btn-info"/>
+                </form>
+             </td>
+         </tr>
+    {% endif %}
+{% endblock %}

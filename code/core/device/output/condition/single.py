@@ -51,10 +51,10 @@ class Go:
             if value != data:
                 result = True
         elif operator == '>' and self.data_type in [int, float, datetime]:
-            if data > value:
+            if value > data:
                 result = True
         elif operator == '<' and self.data_type in [int, float, datetime]:
-            if data < value:
+            if value < data:
                 result = True
         else:
             # log error or whatever

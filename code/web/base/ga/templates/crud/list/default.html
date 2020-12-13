@@ -1,0 +1,47 @@
+{% extends "./base.html" %}
+{% load util %}
+{% block subview %}
+    {% include "../../info/read_only.html" %}
+    <tr>
+        <th>
+            NAME
+        </th>
+        <th>
+            DESCRIPTION
+        </th>
+        <th>
+            ACTION
+        </th>
+    </tr>
+    {% if dataset|length == 0 %}
+        {% include "../../warn/no_results.html" %}
+    {% endif %}
+    {% for data in dataset %}
+        <tr>
+            <td>
+                {{ data.name }}
+            </td>
+            <td>
+                {{ data.description }}
+            </td>
+            <td>
+                <form method="get" style="display:inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
+                    <input type="submit" value="More info" class="btn btn-info"/>
+                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                </form>
+                <form method="get" style="display:inline" action="/config/update/{{ typ }}/{{ data.id }}">
+                    <input type="submit" value="Change" class="btn btn-info"/>
+                    <input type="hidden" name="action" value="Update" />
+                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                </form>
+                {% if request.user|authorized_to_write %}
+                    <form style="display:inline" method="post" action="/config/delete/{{ typ }}/{{ data.id }}">
+                        {% csrf_token %}
+                        <input type="submit" value="Delete" class="btn btn-warning"/>
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+{% endblock %}

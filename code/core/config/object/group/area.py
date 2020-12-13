@@ -6,7 +6,6 @@ from core.config.object.base import *
 
 
 class GaAreaGroup(GaBase):
-    def __init__(self, area_member_list: list, area_parent, **kwargs):
+    def __init__(self, area_member_list: list, **kwargs):
         super().__init__(**kwargs)
         self.area_member_list = area_member_list
-        self.area_parent = area_parent

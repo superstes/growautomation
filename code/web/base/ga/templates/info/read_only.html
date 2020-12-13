@@ -1,0 +1,4 @@
+{% load util %}
+{% if not request.user|authorized_to_write %}
+    <div class="alert alert-info">INFO: Your user '{{ request.user }}' has no write privileges</div>
+{% endif %}

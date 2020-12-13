@@ -1,0 +1,93 @@
+{% extends "./base.html" %}
+{% load util %}
+{% block subview %}
+    {% include "../../info/read_only.html" %}
+    <tr>
+        <th>
+            NAME
+        </th>
+        {% if typ == 'conditionlinkobject' %}
+            <th>
+                OPERATOR
+            </th>
+        {% else %}
+            <th>
+                DESCRIPTION
+            </th>
+        {% endif %}
+        <th>
+            MEMBERS
+        </th>
+
+        {% if typ == 'conditionlinkobject' %}
+            <th colspan="2">
+        {% else %}
+            <th>
+        {% endif %}
+            ACTION
+        </th>
+    </tr>
+    {% if dataset|length == 0 %}
+        {% include "../../warn/no_results.html" %}
+    {% endif %}
+    {% for data in dataset %}
+        {% if not group_hide_list or not data.typ.name in group_hide_list %}
+            {% if not group_show_list or data.typ.name in group_show_list %}
+                <tr>
+                    <td>
+                        {{ data.name }}
+                    </td>
+                    {% if typ == 'conditionlinkobject' %}
+                        <td>
+                            {{ data.operator|to_uppercase }}
+                        </td>
+                    {% else %}
+                        <td>
+                            {{ data.description }}
+                        </td>
+                    {% endif %}
+
+                    <td>
+                        {% if member_view_active %}
+                            {% if member_view_active == data.name %}
+                                <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                                    <input type="submit" value="Hide members" class="btn btn-secondary"/>
+                                </form>
+                            {% else %}
+                                <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                                    <input type="submit" value="Show members" class="btn btn-info"/>
+                                    <input type="hidden" name="list_member" value="{{ data.name }}" />
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                                <input type="submit" value="Show members" class="btn btn-info"/>
+                                <input type="hidden" name="list_member" value="{{ data.name }}" />
+                            </form>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="get" style="display:inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
+                            <input type="submit" value="More info" class="btn btn-info"/>
+                            <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                        </form>
+                        <form method="get" style="display:inline" action="/config/update/{{ typ }}/{{ data.id }}">
+                            <input type="submit" value="Change" class="btn btn-info"/>
+                            <input type="hidden" name="action" value="Update" />
+                            <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                        </form>
+                        {% if request.user|authorized_to_write %}
+                            <form method="post" style="display:inline" action="/config/delete/{{ typ }}/{{ data.id }}">
+                                {% csrf_token %}
+                                <input type="submit" value="Delete" class="btn btn-warning" data-toggle="confirmation"/>
+                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% block memberview %}
+                {% endblock %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% load util %}
+{% for member in member_data %}
+    <tr class="table-active">
+        <td>
+            {% if typ == 'conditionlinkobject' %}
+                {{ member|get_item:'order' }} | {{ member_pretty }}
+            {% else %}
+                {{ member_pretty }}
+            {% endif %}
+        </td>
+        <td>
+            {{ member|get_item:member_key|get_item:'name' }}
+        </td>
+        <td>
+            {% if member|has_key:'description' %}
+                {{ member|get_item:member_key|get_item:'description' }}
+            {% else %}
+                ---
+            {% endif %}
+        </td>
+        <td>
+            {% if request.user|authorized_to_write %}
+                <form method="post" action="/config/delete/{{ member_type }}/{{ member.id }}">
+                    {% csrf_token %}
+                    <input type="submit" value="Remove" class="btn btn-warning"/>
+                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                </form>
+            {% else %}
+                ---
+            {% endif %}
+        </td>
+    </tr>
+{% endfor %}
