@@ -28,7 +28,6 @@ class GaInputDevice(GaBaseDevice):
             obj=GaInputDevice
         )
         # device instance vars
-
         set_attribute(
             setting_dict=self.setting_dict,
             setting_list=self.setting_list,

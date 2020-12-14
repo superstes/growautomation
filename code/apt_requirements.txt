@@ -1,0 +1,21 @@
+# usage of 3th party resources
+
+# apt packages
+#   setup
+      git
+      ufw
+      software-properties-common
+      python3
+      python3-pip
+
+#   core
+      mariadb-server
+      python3-pip
+      python3
+
+#   django
+      apache2
+      libapache2-mod-wsgi-py3
+
+#   input devices (sensors)
+      libgpiod2  # (adafruit dht)

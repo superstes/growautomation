@@ -10,14 +10,14 @@
 #   start the timers for those new instances
 #   profit
 
-from core.factory.main import Go as Factory
+from core.factory.main import get as factory
 
 
 class Go:
     def __init__(self, object_list: list, config_dict: dict):
         self.object_list = object_list
         self.config_dict = config_dict
-        self.new_object_list, self.new_config_dict = Factory().get()
+        self.new_object_list, self.new_config_dict = factory()
 
     def get(self) -> tuple:
         return self._compare(), self.new_object_list, self.new_config_dict

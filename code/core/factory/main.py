@@ -31,6 +31,3 @@ def get() -> tuple:
     debugger("config-obj-factory | get | object dict '%s'" % factory_dict)
 
     return factory_dict, supply_data
-
-
-print(get())

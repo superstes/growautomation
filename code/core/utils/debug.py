@@ -20,16 +20,16 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
     if level > 1:
         return False
     if hard_debug:
-        debug = True
+        debug = 1
     elif not hard_only:
         try:
             debug = shared_vars.SYSTEM.debug
         except AttributeError:
             debug = shared_vars.STARTUP_DEBUG
     else:
-        debug = False
+        debug = 0
 
-    if debug is True:
+    if debug == 1:
         prefix = "%s debug:" % now("%H:%M:%S")
 
         if type(command) == str:

@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8
+#!/usr/bin/python3
 # This file is part of Growautomation
 #     Copyright (C) 2020  René Pascal Rath
 #
@@ -18,22 +18,22 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.6
+# ga_version 0.7
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
 #   (export PYTHONPATH=/etc/ga)
 #   is being set automatically by the systemd service
 
 from core.utils.threader import Loop as Thread
-from core.factory.factory import Go as Factory
+from core.factory.main import get as factory
 from core.factory.reload import Go as Reload
-from core.service.timer import get as Timer
+from core.service.timer import get as get_timer
 from core.config import shared as shared_vars
 from core.utils.debug import debugger
 from core.utils.debug import Log
-from core.config.object.core.controller import GaControllerDevice
 from core.service.decision import Go as Decision
 from core.config.object.data.file import GaDataFile
+from core.factory import config as factory_config
 
 from systemd import journal as systemd_journal
 from time import sleep as time_sleep
@@ -57,14 +57,15 @@ class Service:
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
         self.THREAD = Thread()
-        self.CONFIG, self.current_config_dict = Factory().get()
-        self.timer_list, self.custom_timer_list = Timer(config_dict=self.CONFIG)
+        self.CONFIG, self.current_config_dict = factory()
+        self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
         self._init_shared_vars()
         self._update_config_file()
         self.LOG = Log()
 
     def start(self):
+        print("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
         try:
             debugger("service | start | process id %s" % os_getpid())
 
@@ -98,7 +99,7 @@ class Service:
             self._update_config_file()
             self._init_shared_vars()
             # re-create the list of possible timers
-            self.timer_list, self.custom_timer_list = Timer(config_dict=self.CONFIG)
+            self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
             # stop and reset all current threads
             self.THREAD.stop()
             self.THREAD.jobs = []
@@ -133,24 +134,8 @@ class Service:
     def _init_shared_vars(self):
         shared_vars.init()
         shared_vars.CONFIG = self.CONFIG
-        found = False
 
-        for obj in self.CONFIG['object']:
-            if isinstance(obj, GaControllerDevice):
-                try:
-                    if obj.name == self.CONFIG_FILE.get()['name']:
-                        shared_vars.SYSTEM = obj
-                        found = True
-                        break
-                except KeyError:
-                    shared_vars.SYSTEM = obj
-                    found = True
-                    break
-
-        if not found:
-            debugger("service | _init_shared_vars | no acceptable system object found in list:\n'%s'" % self.CONFIG)
-            systemd_journal.write("Init-shared-vars - no acceptable system object found:\n%s\n" % self.CONFIG)
-            self._exit()
+        shared_vars.SYSTEM = self.CONFIG[factory_config.KEY_OBJECT_CONTROLLER][0]
 
     def _update_config_file(self):
         self.CONFIG_FILE.update()

@@ -1,6 +1,6 @@
-from web.base.ga.subviews.condition import ListConditionView, ListConditionLinkView
-from web.base.ga.subviews.group import ListGroupView
-from web.base.ga.subviews.default import ListView, DetailView, CreateView, UpdateView, DeleteView
+from ..subviews.condition import ListConditionView, ListConditionLinkView
+from ..subviews.group import ListGroupView
+from ..subviews.default import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 group_type_list = ['connection', 'input', 'output', 'area']
 group_nested_type_list = ['area']

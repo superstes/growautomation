@@ -3,7 +3,7 @@
 #   1. list of all timers
 #   2. list of all custom timers (if a device overwrites its model inheritance)
 
-from core.factory.helper import factory as factory_helper
+from core.factory import config
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
@@ -23,14 +23,21 @@ def get(config_dict: dict) -> tuple:
     timer_list = []
     custom_list = []
 
+    print("TIMER GET DEBUG: got config '%s'\n\n\n" % config_dict)
+
     for category, obj_list in config_dict.items():
         for obj in obj_list:
-            if isinstance(obj, ALLOWED_OBJECT_TUPLE) and obj.enabled:
-                if category == factory_helper.FACTORY_OBJECT_KEY:
-                    if 'timer' in obj.setting_dict:
+            if isinstance(obj, ALLOWED_OBJECT_TUPLE) and obj.enabled == 1:
+                print("TIMER GET DEBUG: timer found '%s'\n\n\n" % obj)
+
+                if category == config.KEY_OBJECT_INPUT:
+                    if obj.timer != obj.parent_instance.timer:
                         custom_list.append(obj)
-                elif category in [factory_helper.FACTORY_GROUP_KEY, factory_helper.FACTORY_CONDITION_GROUP_KEY]:
+
+                elif category in [config.KEY_GROUP_INPUT, config.KEY_GROUP_CONDITION]:
                     timer_list.append(obj)
+            else:
+                print("TIMER GET DEBUG: timer not allowed or enabled '%s'\n\n\n" % obj)
 
     timer_list.extend(custom_list)
 

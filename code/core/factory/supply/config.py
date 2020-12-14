@@ -1,7 +1,7 @@
 from core.factory.config import *
 
 
-DJANGO_PROJECT = 'grow'
+DJANGO_PROJECT = 'ga'
 
 supply_sql_dict = {
     '*': {
@@ -98,6 +98,17 @@ supply_sql_dict = {
         'setting_fields': {
             'base': ['path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
                      'log_level', 'debug', 'security', 'backup', 'timezone'],
+        },
+    },
+    KEY_OBJECT_TIMER: {
+        'queries': {
+            'base': "SELECT * FROM %s_objecttimermodel;" % DJANGO_PROJECT,
+        },
+        'fields': {
+            'base': ['name', 'description', 'enabled', 'timer', 'target', 'interval'],
+        },
+        'setting_fields': {
+            'base': ['timer', 'enabled', 'target', 'interval'],
         },
     },
     # GROUPS

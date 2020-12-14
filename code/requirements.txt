@@ -1,0 +1,16 @@
+# usage of 3th party resources
+
+# python modules
+#   core
+      pycryptodome  # (Crypto)
+      mysql.connector
+      systemd
+
+#   django
+      virtualenv
+      django
+      django_mysql
+      django-forms-bootstrap
+
+#   input devices (sensors)
+      adafruit-circuitpython-dht

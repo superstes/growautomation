@@ -35,7 +35,7 @@ class BaseModel(BareModel):
 
 
 class BaseDeviceModel(BaseModel):
-    enabled = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+    enabled = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
 
     class Meta:
         abstract = True
@@ -80,6 +80,7 @@ class BaseNestedGroupModel(BareModel):
 # objects ##############################
 
 from .submodels.objects import ObjectConnectionModel, ObjectInputModel, ObjectOutputModel, ObjectConditionLinkModel, ObjectConditionModel, ObjectControllerModel
+from .submodels.objects import ObjectTimerModel
 
 # data ##############################
 

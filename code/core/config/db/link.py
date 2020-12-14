@@ -71,13 +71,12 @@ class Go:
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
-        finally:
-            try:
-                self.connection = _connection
-                self.cursor = _connection.cursor(buffered=True)
-                return True
-            except UnboundLocalError:
-                raise ConnectionError('Connection instance not created')
+        try:
+            self.connection = _connection
+            self.cursor = _connection.cursor(buffered=True)
+            return True
+        except UnboundLocalError:
+            raise ConnectionError('Connection instance not created')
 
     def get(self, query: [str, list]) -> list:
         if type(query) == str:

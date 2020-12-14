@@ -132,7 +132,7 @@ class ObjectControllerModel(BaseModel):
     sql_server = models.CharField(max_length=50, default='localhost')
     sql_port = models.PositiveSmallIntegerField(default=3306, validators=[MaxValueValidator(65535), MinValueValidator(1)])
     sql_user = models.CharField(max_length=50, default='ga_admin')
-    sql_secret = models.CharField(max_length=255, default=get_random_string(20))
+    sql_secret = models.CharField(max_length=255, default='o1Qhr6zm1INEZcKjBIVB')
     sql_database = models.CharField(max_length=50, default='ga')
 
     log_level = models.PositiveSmallIntegerField(default=1, choices=LOG_LEVEL_CHOICES)
@@ -156,11 +156,11 @@ class ObjectControllerModel(BaseModel):
 
         try:
             # test environment
-            with open('growtest/random.key') as key_file:
+            with open('base/random.key') as key_file:
                 encryption_string = _get_key(key_file.readlines())
         except FileNotFoundError:
             try:
-                with open('/var/www/django/growtest/random.key') as key_file:
+                with open('/var/www/django/base/random.key') as key_file:
                     encryption_string = _get_key(key_file.readlines())
             except FileNotFoundError:
                 pass
@@ -176,3 +176,31 @@ class ObjectControllerModel(BaseModel):
         self.sql_secret = encrypted_secret
 
         return super(BaseModel, self).save(*args, **kwargs)
+
+
+class ObjectTimerModel(BaseModel):
+    field_list = ['name', 'description', 'timer', 'enabled', 'target', 'interval']
+    TARGET_CHOICES = [
+        ('backup', 'Backup'),
+    ]
+    INTERVAL_CHOICES = [
+        ('0****', 'Hourly'),
+        ('00***', 'Daily'),
+        ('00**1-5', 'Weekdays'),
+        ('00**1-5', 'Weekends'),
+        ('000**', 'Monthly'),
+        ('0000*', 'Yearly'),
+        ('00**1', 'Monday'),
+        ('00**2', 'Tuesday'),
+        ('00**3', 'Wednesday'),
+        ('00**4', 'Thursday'),
+        ('00**5', 'Friday'),
+        ('00**6', 'Saturday'),
+        ('00**0', 'Sunday'),
+    ]
+
+    enabled = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+    # could be changed to
+    timer = models.PositiveIntegerField(default=0)
+    target = models.CharField(max_length=30, default='backup', choices=TARGET_CHOICES)
+    interval = models.CharField(max_length=15, default='00***', choices=INTERVAL_CHOICES)

@@ -5,25 +5,26 @@ from core.config.object.base import *
 
 
 class GaTimerDevice(GaBase):
-    def __init__(self, parent_instance, setting_dict: dict, **kwargs):
+    setting_list = ['timer', 'enabled', 'interval', 'target', 'interval']
+
+    def __init__(self, setting_dict: dict, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
         # specific vars
-        self.parent_instance = parent_instance
         self.setting_dict = setting_dict
-        self.timer = setting_dict['timer']
-        if 'enabled' in setting_dict:
-            self.enabled = setting_dict['enabled']
-        else:
-            self.enabled = True
+        # device instance vars
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=GaTimerDevice
+        )
 
-
-class GaTimerModel(GaBase):
-    def __init__(self, member_list: list, setting_dict: dict, parent: int, type_id: int, **kwargs):
-        # inheritance from superclasses
-        super().__init__(**kwargs)
-        # specific vars
-        self.type_id = type_id
-        self.parent = parent
-        self.member_list = member_list
-        self.setting_dict = setting_dict
+# i see currently no use for the grouping of system timers
+# class GaTimerModel(GaBase):
+#     def __init__(self, member_list: list, setting_dict: dict, **kwargs):
+#         # inheritance from superclasses
+#         super().__init__(**kwargs)
+#         # specific vars
+#         self.member_list = member_list
+#         self.setting_dict = setting_dict

@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class GrowConfig(AppConfig):
-    name = 'grow'
+class GaConfig(AppConfig):
+    name = 'ga'

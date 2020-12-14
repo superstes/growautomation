@@ -15,7 +15,7 @@ def get(current_config: dict) -> dict:
             if key in shared_var.SYSTEM.setting_dict:
                 loaded_config[key] = shared_var.SYSTEM.setting_dict[key]
             else:
-                loaded_config[key] = shared_var.SYSTEM.parent_instance.setting_dict[key]
+                loaded_config[key] = shared_var.SYSTEM.parent_instance.default_setting_dict[key]
         except KeyError:
             loaded_config[key] = current_config[key]
 

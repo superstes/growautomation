@@ -1,4 +1,4 @@
-from web.base.ga.forms import *
+from ..forms import *
 
 GA_USER_GROUP = 'ga_user'
 GA_READ_GROUP = 'ga_read'
@@ -13,6 +13,7 @@ type_dict = {
     'conditionobject': {'model': ObjectConditionModel, 'form': ObjectConditionForm, 'pretty': 'Condition match', 'hidden': False},
     'conditionlinkobject': {'model': ObjectConditionLinkModel, 'form': ObjectConditionLinkForm, 'pretty': 'Condition link', 'hidden': False},
     'controllerobject': {'model': ObjectControllerModel, 'form': ObjectControllerForm, 'pretty': 'Controller', 'hidden': False},
+    'timerobject': {'model': ObjectTimerModel, 'form': ObjectTimerForm, 'pretty': 'Timer', 'hidden': False},
     # groups
     'connectiongroup': {'model': GroupConnectionModel, 'form': GroupConnectionForm, 'pretty': 'Connection group', 'hidden': False},
     'inputgroup': {'model': GroupInputModel, 'form': GroupInputForm, 'pretty': 'Input group', 'hidden': False},

@@ -45,7 +45,7 @@ LABEL_DICT = {
     'security': 'Security mode',
     'timezone': 'Timezone',
     'debug': 'Debug mode',
-    'timer': 'Interval',
+    'timer': 'Timer',
 }
 
 HELP_DICT = {
@@ -90,7 +90,8 @@ HELP_DICT = {
     'security': 'If the advanced security mode should be enabled',
     'timezone': 'Timezone used for conditions and core [max length 50]',
     'debug': 'If the debug mode should be enabled',
-    'timer': 'Interval (in seconds) to execute the device script or system action',
+    'timer': 'Interval (in seconds) to execute the device script or system task',
+    'interval': 'Custom interval in which to execute system task',
 }
 
 
@@ -153,6 +154,14 @@ class ObjectControllerForm(BaseForm):
         widgets = {
             'sql_secret': forms.PasswordInput(),
         }
+
+
+class ObjectTimerForm(BaseForm):
+    class Meta:
+        model = ObjectTimerModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
 
 
 # data ##############################

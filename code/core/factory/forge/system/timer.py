@@ -2,10 +2,9 @@ from core.factory import config
 
 
 class Go:
-    def __init__(self, blueprint, supply_list: list, parent):
+    def __init__(self, blueprint, supply_list: list):
         self.blueprint = blueprint
         self.supply_list = supply_list
-        self.parent = parent
 
         self.key_id = config.DB_ALL_KEY_ID
         self.key_name = config.DB_ALL_KEY_NAME
@@ -21,7 +20,6 @@ class Go:
                 object_id=data_dict[self.key_id],
                 name=data_dict[self.key_name],
                 description=data_dict[self.key_desc],
-                parent_instance=self.parent,
             )
 
             output_list.append(instance)
