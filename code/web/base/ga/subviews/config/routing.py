@@ -1,9 +1,11 @@
 from django.shortcuts import Http404
 
-from ..util import get_route, redirect_if_overwritten, redirect_if_hidden
-from ..config.routing import choose_dict, choose_sub_dict
-from ..config.site import type_dict, sub_type_dict
-from .handlers import handler404
+from ...util import get_route, redirect_if_overwritten, redirect_if_hidden
+from ...config.routing import choose_dict, choose_sub_dict
+from ...config.site import type_dict, sub_type_dict
+from ..handlers import handler404
+
+config_choose_dict = choose_dict['config']
 
 
 def ChooseView(request, typ, action, uid=None):
@@ -16,17 +18,17 @@ def ChooseView(request, typ, action, uid=None):
     else:
         return handler404(request=request, msg=f"Data type '{ typ }' was not found")
 
-    if action not in choose_dict:
+    if action not in config_choose_dict:
         return handler404(request=request, msg=f"Action '{ action }' was not found")
 
     if typ in sub_type_dict and request.method == 'GET':
         return ChooseSubView(request=request, typ=typ, sub_type=request.GET['typ'], action=action, uid=uid)
 
     else:
-        route = get_route(choose_from=choose_dict, action=action, typ=typ)
+        route = get_route(choose_from=config_choose_dict, action=action, typ=typ)
 
         if route is None:
-            return choose_dict[action]['*'](request=request, model_obj=current_model, form_obj=current_form, typ=typ, uid=uid)
+            return config_choose_dict[action]['*'](request=request, model_obj=current_model, form_obj=current_form, typ=typ, uid=uid)
 
         else:
             return route(request=request, model_obj=current_model, form_obj=current_form, typ=typ, uid=uid)

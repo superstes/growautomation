@@ -16,15 +16,32 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import LoginCheck
+from ga.views import view_config, view_home, view_system, handler404
 from django.conf.urls import include
 
 urlpatterns = [
     # mgmt
     # url(r'^admin/', admin.site.urls),
     # auth
-    url('^', include('django.contrib.auth.urls')),
-    path('accounts/', include('django.contrib.auth.urls')),
+    url('^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
+    path('accounts/', include('django.contrib.auth.urls')),  # login page
     # ga
-    url(r'^', LoginCheck),
+    #   config
+    path('config/<str:action>/<str:typ>', view_config),
+    path('config/<str:action>/<str:typ>/', view_config),
+    path('config/<str:action>/<str:typ>/<int:uid>', view_config),
+    path('config/<str:action>/<str:typ>/<int:uid>/', view_config),
+    path('config/<str:action>/<str:typ>/<str:sub_type>', view_config),
+    path('config/<str:action>/<str:typ>/<str:sub_type>/', view_config),
+    path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>', view_config),
+    path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>/', view_config),
+    #   system
+    path('system/<str:typ>/', view_system),
+    #   data
+    path('data/<str:typ>/', view_system),
+    #   defaults
+    url(r'^home/?|^main/?|^/?$', view_home),
+    url(r'^$', view_home),
+    url(r'^denied/?$', view_home),
+    url(r'^', handler404),
 ]

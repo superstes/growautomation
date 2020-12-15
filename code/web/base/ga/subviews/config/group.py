@@ -2,10 +2,10 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import user_passes_test
 
 from .filter import get_filter_dict, apply_filter
-from ..user import authorized_to_read
-from ..config.site import sub_type_dict
-from ..util import member_pre_process
-from ..config.nav import nav_dict
+from ...user import authorized_to_read
+from ...config.site import sub_type_dict
+from ...util import member_pre_process
+from ...config.nav import nav_dict
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')

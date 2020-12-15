@@ -2,6 +2,7 @@ from urllib import parse
 from random import choice as random_choice
 from string import ascii_letters, digits, punctuation
 
+from django.contrib.auth.views import LoginView, logout_then_login
 from django.shortcuts import redirect
 
 
@@ -134,3 +135,18 @@ def find_one_of_list(string: str, search_list: list) -> tuple:
             found = search_string
 
     return result, found
+
+
+def login_check(request, default):
+    if request.user.is_authenticated:
+        return default
+    else:
+        return LoginView.as_view()(request)
+
+
+def logout_check(request, default):
+    if request.method == 'POST':
+        if 'logout' in request.POST and int(request.POST['logout']) == 1:
+            return logout_then_login(request)
+
+    return default

@@ -1,10 +1,10 @@
 from django.shortcuts import render, Http404, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
 
-from ..forms import LABEL_DICT, HELP_DICT
+from ...forms import LABEL_DICT, HELP_DICT
 from .filter import get_filter_dict, apply_filter
-from ..user import authorized_to_read, authorized_to_write
-from ..config.nav import nav_dict
+from ...user import authorized_to_read, authorized_to_write
+from ...config.nav import nav_dict
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')

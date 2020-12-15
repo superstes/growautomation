@@ -72,14 +72,14 @@
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
                         <form method="get" style="display:inline" action="/config/update/{{ typ }}/{{ data.id }}">
-                            <input type="submit" value="Change" class="btn btn-info"/>
+                            <input type="submit" value="Change" class="btn btn-warning"/>
                             <input type="hidden" name="action" value="Update" />
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
                         {% if request.user|authorized_to_write %}
                             <form method="post" style="display:inline" action="/config/delete/{{ typ }}/{{ data.id }}">
                                 {% csrf_token %}
-                                <input type="submit" value="Delete" class="btn btn-warning" data-toggle="confirmation"/>
+                                <input type="submit" value="Delete" class="btn btn-danger" data-toggle="confirmation"/>
                                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                             </form>
                         {% endif %}

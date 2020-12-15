@@ -28,6 +28,7 @@
                 {% set_var member_config|get_item:'group_key' as group_key %}
                 {% set_var member_config|get_item:'pretty' as member_pretty %}
                 {% set_var member_data_dict|get_item:member_typ as member_data %}
+                {% set_var member_config|get_item:'create_redirect' as member_own_type %}
                 {% include "./member_data.html" %}
             {% endfor %}
         {% endif %}

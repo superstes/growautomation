@@ -121,7 +121,7 @@ class ObjectControllerModel(BaseModel):
         (5, '5 (Unimportant warning logs)'),
         (6, '6 (Informative logs)'),
         (7, '7 (Somehow interesting info logs)'),
-        (8, '8 (Completely unnessesary logs)'),
+        (8, '8 (Completely unnecessary logs)'),
         (9, '9 (GIMMEE all you got!!)'),
     ]
 

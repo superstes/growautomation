@@ -1,75 +1,64 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import logout_then_login
-from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import user_passes_test
 
 from .config.site import type_dict
 from .user import authorized_to_access
-from .subviews.routing import ChooseView, ChooseSubView
+from .subviews.config.routing import ChooseView, ChooseSubView
 from .config.nav import nav_dict
-from .util import get_url_attribute
-from .subviews.handlers import handler500, handler403
+from .util import logout_check
+from .subviews.handlers import handler403, handler404
 
 
-def LoginCheck(request):
-    if request.user.is_authenticated:
-        return Precheck(request)
-    else:
-        return LoginView.as_view()(request)
+login_url = '/accounts/login/'
 
 
 @login_required
-@user_passes_test(authorized_to_access, login_url='/accounts/login/')
-def Precheck(request):
-    # handling of global states
-    if request.method == 'POST':
-        if 'logout' in request.POST and int(request.POST['logout']) == 1:
-            return logout_then_login(request)
+@user_passes_test(authorized_to_access, login_url=login_url)
+def view_config(request, **kwargs):
+    view = None
 
-    # processing for paths
-    path_list = request.META['PATH_INFO'].split('/')[1:]
-
-    print("Precheck | POST: %s, GET: %s, USER: %s, path_list: %s" % (request.POST, request.GET, request.user, path_list))
-    route = get_url_attribute(url_list=path_list, target_index=0)
-    action = get_url_attribute(url_list=path_list, target_index=1)
-
-    if route == 'config':
-        typ = get_url_attribute(url_list=path_list, target_index=2, target_type=str)
-        uid = get_url_attribute(url_list=path_list, target_index=3, target_type=int)
-        if type(uid) == str:
-            sub_type = get_url_attribute(url_list=path_list, target_index=3, target_type=str)
-            uid = get_url_attribute(url_list=path_list, target_index=4, target_type=int)
+    if 'action' in kwargs and 'typ' in kwargs:
+        action = kwargs['action']
+        typ = kwargs['typ']
+        if 'uid' in kwargs:
+            uid = kwargs['uid']
         else:
-            sub_type = None
+            uid = None
 
-    return_value = None
+        if 'sub_type' in kwargs:
+            sub_type = kwargs['sub_type']
+            view = ChooseSubView(request=request, action=action, typ=typ, sub_type=sub_type, uid=uid)
 
-    if route:
-        if route == 'config':
-            if sub_type and type(sub_type) == str and typ and action:
-                return_value = ChooseSubView(request=request, action=action, typ=typ, sub_type=sub_type, uid=uid)
+        else:
+            view = ChooseView(request=request, action=action, typ=typ, uid=uid)
 
-            elif typ and action:
-                return_value = ChooseView(request=request, action=action, typ=typ, uid=uid)
+    if view is None:
+        view = handler404(request)
 
-        # elif route == 'data':
-        #     return handler404(request)
-        #
-        # elif route == 'system':
-        #     return handler404(request)
+    return logout_check(request=request, default=view)
 
-        elif route in ['home', 'main', '']:
-            return_value = render(request, 'home.html', {'type_dict': type_dict, 'nav_dict': nav_dict})
 
-        elif route in ['denied', 'list', 'detailed', 'create', 'update', 'delete']:
-            return_value = handler403(request)
+@login_required
+@user_passes_test(authorized_to_access, login_url=login_url)
+def view_home(request):
+    return logout_check(request=request, default=render(request, 'home.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
-    elif route is None:
-        return_value = render(request, 'home.html', {'type_dict': type_dict, 'nav_dict': nav_dict})
 
-    if return_value is None:
-        return handler500(request, msg='Server found nothing to load.')
+@login_required
+@user_passes_test(authorized_to_access, login_url=login_url)
+def view_system(request, typ: str):
+    return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
+    # return logout_check(request=request, default=render(request, 'system/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
-    else:
-        return return_value
+
+@login_required
+@user_passes_test(authorized_to_access, login_url=login_url)
+def view_data(request, typ: str):
+    return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
+    # return logout_check(request=request, default=render(request, 'data/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
+
+
+@login_required
+def view_denied(request):
+    return logout_check(request=request, default=handler403(request))

@@ -19,7 +19,7 @@ class Go:
         output_list = []
 
         for data_dict in self.supply_list:
-            print(data_dict)
+
             instance = self.blueprint(
                 member_list=data_dict[self.key_member][self.key_member_link],
                 output_object_list=data_dict[self.key_member][self.key_member_oo],

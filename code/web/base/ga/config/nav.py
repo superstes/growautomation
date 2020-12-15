@@ -12,7 +12,7 @@ nav_dict = {
     },
     'System': {
         'Controller': '/config/list/controllerobject/',
-        'Timer': '/config/list/timerobject/',
+        'Tasks': '/config/list/timerobject/',
         'Service': '/system/service/',  # status and restart of service(s)
         'Logs': '/system/log/',  # read various log files
         'Scripts': '/system/scripts/',  # upload or delete scripts

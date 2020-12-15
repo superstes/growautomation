@@ -23,12 +23,9 @@ def get(config_dict: dict) -> tuple:
     timer_list = []
     custom_list = []
 
-    print("TIMER GET DEBUG: got config '%s'\n\n\n" % config_dict)
-
     for category, obj_list in config_dict.items():
         for obj in obj_list:
             if isinstance(obj, ALLOWED_OBJECT_TUPLE) and obj.enabled == 1:
-                print("TIMER GET DEBUG: timer found '%s'\n\n\n" % obj)
 
                 if category == config.KEY_OBJECT_INPUT:
                     if obj.timer != obj.parent_instance.timer:
@@ -36,8 +33,6 @@ def get(config_dict: dict) -> tuple:
 
                 elif category in [config.KEY_GROUP_INPUT, config.KEY_GROUP_CONDITION]:
                     timer_list.append(obj)
-            else:
-                print("TIMER GET DEBUG: timer not allowed or enabled '%s'\n\n\n" % obj)
 
     timer_list.extend(custom_list)
 

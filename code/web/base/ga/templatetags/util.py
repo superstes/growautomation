@@ -72,7 +72,10 @@ def has_key(obj, key):
 
 @register.filter
 def get_login_state(request):
-    state = request.user.is_authenticated
+    try:
+        state = request.user.is_authenticated
+    except AttributeError:
+        state = False
     return state
 
 

@@ -19,15 +19,26 @@
             {% endif %}
         </td>
         <td>
+            <!--
+            todo: member.id is the id of the 'link' between member and group; need to get object id
+            <form method="get" style="display:inline" action="/config/detailed/{{ member_own_type }}/{{ member.id }}">
+                <input type="submit" value="More info" class="btn btn-info"/>
+                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+            </form>
+            <form method="get" style="display:inline" action="/config/update/{{ member_own_type }}/{{ member.id }}">
+                <input type="submit" value="Change" class="btn btn-warning"/>
+                <input type="hidden" name="action" value="Update" />
+                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+            </form>
+            -->
             {% if request.user|authorized_to_write %}
-                <form method="post" action="/config/delete/{{ member_type }}/{{ member.id }}">
+                <form method="post" style="display:inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
                     {% csrf_token %}
                     <input type="submit" value="Remove" class="btn btn-warning"/>
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
-            {% else %}
-                ---
             {% endif %}
+
         </td>
     </tr>
 {% endfor %}
