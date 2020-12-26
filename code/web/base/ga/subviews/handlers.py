@@ -11,4 +11,7 @@ def handler404(request, msg=None):
 
 
 def handler500(request, msg=None):
+    if request is None:
+        return render(request, 'error/500_basic.html', context={'error_msg': msg})
+
     return render(request, 'error/500.html', context={'request': request, 'nav_dict': nav_dict, 'error_msg': msg})

@@ -1,4 +1,4 @@
-from ...models import BaseDeviceGroupModel
+from ..models import BaseDeviceGroupModel
 
 
 def get_filter_dict(filter_dict: dict, dataset, group_hide_list=None, group_show_list=None) -> dict:

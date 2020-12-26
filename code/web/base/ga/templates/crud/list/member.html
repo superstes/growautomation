@@ -21,7 +21,7 @@
             </th>
         </tr>
         {% if member_data_dict|length == 0 %}
-            {% include "../../warn/no_results.html" %}
+            {% include "../../warn/table_no_results.html" %}
         {% else %}
             {% for member_typ, member_config in member_type_dict.items %}
                 {% set_var member_config|get_item:'member_key' as member_key %}

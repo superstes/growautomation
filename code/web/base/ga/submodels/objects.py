@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from ..models import BaseDeviceObjectModel, BaseModel, BareModel, models, BOOLEAN_CHOICES
 from .groups import GroupInputModel
-from ..util import get_random_string
+from ..utils.main import get_random_string
 
 from ..crypto import AESCipher
 

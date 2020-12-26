@@ -1,7 +1,7 @@
 from pytz import common_timezones
 
 from ..models import BaseDeviceGroupModel, BaseModel, models, BOOLEAN_CHOICES
-from ..util import get_random_string
+from ..utils.main import get_random_string
 
 
 # todo: area group with members

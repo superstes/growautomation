@@ -43,6 +43,8 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
 
 
 class Log:
+    LOG_TIMESTAMP_FORMAT = "%Y-%m-%d | %H:%M:%S:%f"
+
     def __init__(self, typ: str = 'core'):
         from inspect import stack as inspect_stack
         from inspect import getfile as inspect_getfile
@@ -70,7 +72,7 @@ class Log:
             os_system("mkdir -p %s" % self.log_dir)
 
         with open("%s/%s_%s.log" % (self.log_dir, date_month, self.type), 'a') as logfile:
-            logfile.write("%s - %s - %s\n" % (datetime.now().strftime("%H:%M:%S:%f"), self.name, output))
+            logfile.write("%s - %s - %s\n" % (datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT), self.name, output))
 
         return True
 

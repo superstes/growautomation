@@ -14,7 +14,7 @@
         </th>
     </tr>
     {% if dataset|length == 0 %}
-        {% include "../../warn/no_results.html" %}
+        {% include "../../warn/table_no_results.html" %}
     {% endif %}
     {% for data in dataset %}
         <tr>

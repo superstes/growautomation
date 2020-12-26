@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import view_config, view_home, view_system, handler404
+from ga.views import view_config, view_home, view_system, handler404, view_logout
 from django.conf.urls import include
 
 urlpatterns = [
@@ -25,6 +25,7 @@ urlpatterns = [
     # auth
     url('^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
     path('accounts/', include('django.contrib.auth.urls')),  # login page
+    path('logout/', view_logout),  # logout page
     # ga
     #   config
     path('config/<str:action>/<str:typ>', view_config),

@@ -2,7 +2,6 @@ from django.shortcuts import render, Http404, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
 
 from ...forms import LABEL_DICT, HELP_DICT
-from .filter import get_filter_dict, apply_filter
 from ...user import authorized_to_read, authorized_to_write
 from ...config.nav import nav_dict
 
@@ -11,19 +10,8 @@ from ...config.nav import nav_dict
 def ListView(request, model_obj, typ, form_obj=None, uid=None):
     dataset = model_obj.objects.all()
 
-    try:
-        filter_dict = get_filter_dict(model_obj.filter_dict, dataset)
-        dataset, active_filter = apply_filter(request=request, dataset=dataset)
-    except AttributeError as error_msg:
-        active_filter = None
-
-        if str(error_msg).find("has no attribute 'filter_dict'") != -1:
-            filter_dict = {}
-        else:
-            filter_dict = error_msg
-
     return render(request, 'crud/list/default.html', context={
-        'dataset': dataset, 'typ': typ, 'filter_dict': filter_dict, 'request': request, 'active_filter': active_filter,  'nav_dict': nav_dict,
+        'dataset': dataset, 'typ': typ, 'request': request, 'nav_dict': nav_dict,
     })
 
 

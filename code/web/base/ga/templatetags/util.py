@@ -1,4 +1,6 @@
 from django import template
+from datetime import datetime
+
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 
 register = template.Library()

@@ -28,7 +28,7 @@
         </th>
     </tr>
     {% if dataset|length == 0 %}
-        {% include "../../warn/no_results.html" %}
+        {% include "../../warn/table_no_results.html" %}
     {% endif %}
     {% for data in dataset %}
         {% if not group_hide_list or not data.typ.name in group_hide_list %}

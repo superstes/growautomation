@@ -1,0 +1,98 @@
+{% extends "../body.html" %}
+{% load util %}
+{% block content %}
+    {% include "../info/read_only.html" %}
+    <form name="service_name" method="get" >
+        <label for="service_name"><strong>Service</strong></label>
+        <select class="form-control" id="service_name" name="service_name" >
+            {% if service_name is None %}
+                <option selected>---------</option>
+            {% endif %}
+            {% for option in service_name_options %}
+                {% if service_name is not None and option == service_name %}
+                    <option selected value="{{ option }}">{{ option }}</option>
+                {% else %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <input type="submit" value="Select" class="btn btn-info">
+    </form>
+    {% if service_name is not None %}
+    <br>
+        {% if service_status is not None %}
+        <h3>
+            Service status
+        </h3>
+        <br>
+            {% if service_status == 'active' %}
+                <div class="alert alert-success">
+                    {{ service_status }}
+                </div>
+            {% else %}
+                <div class="alert alert-danger">
+                    {{ service_status }}
+                </div>
+            {% endif %}
+<!--            {% if service_status_time is None or service_status_time == '' %}-->
+<!--                all along-->
+<!--            {% else %}-->
+<!--                for {{ service_runtime }} | since {{ service_status_time }}-->
+<!--            {% endif %}-->
+<!--            <br>-->
+        {% endif %}
+        <br><hr>
+        <h3>
+            Actions
+        </h3>
+        <br>
+        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+            {% csrf_token %}
+            {% if service_status != 'active' and request.user|authorized_to_write %}
+                <input type="submit" value="Start" class="btn btn-success"/>
+            {% else %}
+                <input type="submit" value="Start" class="btn btn-success" disabled/>
+            {% endif %}
+            <input type="hidden" name="service_start" value="1" />
+            <input type="hidden" name="service_name" value="{{ service_name }}" />
+        </form>
+        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+            {% csrf_token %}
+            {% if service_status == 'active' and request.user|authorized_to_write %}
+                <input type="submit" value="Reload" class="btn btn-warning"/>
+            {% else %}
+                <input type="submit" value="Reload" class="btn btn-warning" disabled/>
+            {% endif %}
+            <input type="hidden" name="service_reload" value="1" />
+            <input type="hidden" name="service_name" value="{{ service_name }}" />
+        </form>
+        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+            {% csrf_token %}
+            {% if service_status == 'active' and request.user|authorized_to_write %}
+                <input type="submit" value="Restart" class="btn btn-warning"/>
+            {% else %}
+                <input type="submit" value="Restart" class="btn btn-warning" disabled/>
+            {% endif %}
+            <input type="hidden" name="service_restart" value="1" />
+            <input type="hidden" name="service_name" value="{{ service_name }}" />
+        </form>
+        {% if service_name != 'Apache webserver' %}
+            <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+                {% csrf_token %}
+                {% if service_status == 'active' and request.user|authorized_to_write %}
+                    <input type="submit" value="Stop" class="btn btn-danger"/>
+                {% else %}
+                    <input type="submit" value="Stop" class="btn btn-danger" disabled/>
+                {% endif %}
+                <input type="hidden" name="service_stop" value="1" />
+                <input type="hidden" name="service_name" value="{{ service_name }}" />
+            </form>
+        {% endif %}
+        <br><br><hr>
+        <h3>
+            More information
+        </h3>
+        <a href="/system/log/?log_type=Service&log_service={{ service_name }}" class="btn btn-info">Detailed status</a>
+        <a href="/system/log/?log_type=Service+journal&log_service={{ service_name }}" class="btn btn-info">Logs</a>
+    {% endif %}
+{% endblock %}

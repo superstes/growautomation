@@ -144,9 +144,9 @@ def login_check(request, default):
         return LoginView.as_view()(request)
 
 
-def logout_check(request, default):
+def logout_check(request, default, hard_logout: bool = False):
     if request.method == 'POST':
-        if 'logout' in request.POST and int(request.POST['logout']) == 1:
+        if ('logout' in request.POST and int(request.POST['logout']) == 1) or hard_logout:
             return logout_then_login(request)
 
     return default

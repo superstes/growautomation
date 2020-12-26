@@ -1,6 +1,6 @@
 from django.shortcuts import Http404
 
-from ...util import get_route, redirect_if_overwritten, redirect_if_hidden
+from ...utils.main import get_route, redirect_if_overwritten, redirect_if_hidden
 from ...config.routing import choose_dict, choose_sub_dict
 from ...config.site import type_dict, sub_type_dict
 from ..handlers import handler404

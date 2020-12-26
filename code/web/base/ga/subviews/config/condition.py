@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 
 from ...user import authorized_to_read
 from ...config.site import sub_type_dict
-from ...util import member_pre_process
+from ...utils.main import member_pre_process
 from ...config.nav import nav_dict
 
 

@@ -6,8 +6,10 @@ from .config.site import type_dict
 from .user import authorized_to_access
 from .subviews.config.routing import ChooseView, ChooseSubView
 from .config.nav import nav_dict
-from .util import logout_check
+from .utils.main import logout_check
 from .subviews.handlers import handler403, handler404
+from .subviews.system.logs import LogView
+from .subviews.system.service import ServiceView
 
 
 login_url = '/accounts/login/'
@@ -48,6 +50,12 @@ def view_home(request):
 @login_required
 @user_passes_test(authorized_to_access, login_url=login_url)
 def view_system(request, typ: str):
+    if typ == 'log':
+        return logout_check(request=request, default=LogView(request=request))
+
+    elif typ == 'service':
+        return logout_check(request=request, default=ServiceView(request=request))
+
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
     # return logout_check(request=request, default=render(request, 'system/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
@@ -62,3 +70,8 @@ def view_data(request, typ: str):
 @login_required
 def view_denied(request):
     return logout_check(request=request, default=handler403(request))
+
+
+@login_required
+def view_logout(request):
+    return logout_check(request=request, default=handler403(request), hard_logout=True)
