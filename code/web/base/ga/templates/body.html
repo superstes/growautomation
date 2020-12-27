@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 {% load util %}
 {% load static %}
-<html>
-    <html lang="en">
+<html lang="en">
     <head>
         <title>Growautomation</title>
         <meta charset="utf-8">
@@ -21,15 +20,7 @@
         <footer class="ga-footer">
             <br>
             <hr>
-            {% if request|get_login_state %}
-                {% if request.get_full_path != '/'  %}
-                    <form action="/" style="display:inline">
-                        <input type="submit" value="Back to home" class="btn btn-info"/>
-                    </form>
-                {% endif %}
-                <a href='/logout/' class="btn btn-info">Logout</a>
-                <br><br>
-            {% else %}
+            {% if not request|get_login_state %}
                 <div class="alert alert-info ga-footer-info">
                     <strong>You can login with this demo user to get an overview:</strong><br>
                     <strong>Username:</strong> demo<br>

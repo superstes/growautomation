@@ -10,6 +10,7 @@ from .utils.main import logout_check
 from .subviews.handlers import handler403, handler404
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
+from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView
 
 
 login_url = '/accounts/login/'
@@ -49,12 +50,21 @@ def view_home(request):
 
 @login_required
 @user_passes_test(authorized_to_access, login_url=login_url)
-def view_system(request, typ: str):
+def view_system(request, typ: str, sub_type=None):
     if typ == 'log':
         return logout_check(request=request, default=LogView(request=request))
 
     elif typ == 'service':
         return logout_check(request=request, default=ServiceView(request=request))
+
+    elif typ == 'script':
+        if sub_type is not None:
+            if sub_type == 'change':
+                return logout_check(request=request, default=ScriptChangeView(request=request))
+            elif sub_type == 'delete':
+                return logout_check(request=request, default=ScriptDeleteView(request=request))
+
+        return logout_check(request=request, default=ScriptView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
     # return logout_check(request=request, default=render(request, 'system/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))

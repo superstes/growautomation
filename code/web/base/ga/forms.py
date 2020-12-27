@@ -320,3 +320,10 @@ class NestedAreaForm(BaseForm):
         fields = model.field_list
         labels = LABEL_DICT
         help_texts = HELP_DICT
+
+
+# system ##############################
+
+class SystemScriptForm(forms.Form):
+    script_name = forms.CharField(max_length=50)
+    script_file = forms.FileField()

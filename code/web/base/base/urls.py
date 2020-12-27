@@ -37,6 +37,7 @@ urlpatterns = [
     path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>', view_config),
     path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>/', view_config),
     #   system
+    path('system/<str:typ>/<str:sub_type>/', view_system),
     path('system/<str:typ>/', view_system),
     #   data
     path('data/<str:typ>/', view_system),

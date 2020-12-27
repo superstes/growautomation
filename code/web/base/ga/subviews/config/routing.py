@@ -1,5 +1,3 @@
-from django.shortcuts import Http404
-
 from ...utils.main import get_route, redirect_if_overwritten, redirect_if_hidden
 from ...config.routing import choose_dict, choose_sub_dict
 from ...config.site import type_dict, sub_type_dict
@@ -42,7 +40,7 @@ def ChooseSubView(request, typ, sub_type, action, uid=None):
         current_type_dict = None
 
     if current_type_dict is None:
-        raise Http404(f"Data sub-type '{sub_type}' was not found")
+        raise handler404(request, msg=f"Data sub-type '{sub_type}' was not found")
 
     else:
         overwritten = redirect_if_overwritten(request=request, type_dict=current_type_dict)
@@ -54,7 +52,7 @@ def ChooseSubView(request, typ, sub_type, action, uid=None):
         current_model = current_type_dict['model']
 
     if action not in choose_sub_dict:
-        raise Http404(f"Action '{action}' was not found")
+        raise handler404(request, msg=f"Action '{action}' was not found")
 
     route = get_route(choose_from=choose_sub_dict, action=action, typ=typ)
 

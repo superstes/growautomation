@@ -31,13 +31,15 @@
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
             -->
-            {% if request.user|authorized_to_write %}
-                <form method="post" style="display:inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
-                    {% csrf_token %}
-                    <input type="submit" value="Remove" class="btn btn-warning"/>
-                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                </form>
-            {% endif %}
+            <form method="post" style="display:inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
+                {% csrf_token %}
+                {% if request.user|authorized_to_write %}
+                    <input type="submit" value="Remove" class="btn btn-danger"/>
+                {% else %}
+                    <input type="submit" value="Remove" class="btn btn-danger" disabled/>
+                {% endif %}
+                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+            </form>
 
         </td>
     </tr>

@@ -40,11 +40,11 @@
                          <label>Choose member type:</label>
                          <select name="typ" >
                              {% for typ_name, typ_nested in member_type_dict.items %}
-                                <option value="{{ typ_name }}">{{ typ_nested|get_item:'pretty' }}</option>
+                                 <option value="{{ typ_name }}">{{ typ_nested|get_item:'pretty' }}</option>
                              {% endfor %}
                          </select>
                      {% else %}
-                        <input type="hidden" name="typ" value="{{ member_type_dict|get_first_key }}" />
+                         <input type="hidden" name="typ" value="{{ member_type_dict|get_first_key }}" />
                      {% endif %}
                      <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                      <br>

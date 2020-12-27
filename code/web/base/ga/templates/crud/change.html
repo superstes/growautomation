@@ -19,9 +19,10 @@
         {{ form|as_bootstrap }}
         {% if request.user|authorized_to_write %}
             <input type="hidden" name="return" value="{{ return_path }}" />
-            <input type="submit" value="{{ action }}" class="btn btn-success"> | <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
+            <input type="submit" value="{{ action }}" class="btn btn-success">
         {% else %}
-            <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
+            <input type="submit" value="{{ action }}" class="btn btn-success" disabled>
         {% endif %}
+        | <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
     </form>
 {% endblock %}

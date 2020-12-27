@@ -1,0 +1,81 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    <form style="display:inline" method="get" action="/system/script/">
+        <label><strong>Script type</strong></label><br>
+        <select class="form-control" name="script_type" >
+            {% if script_type is None %}
+                <option selected disabled hidden>---------</option>
+            {% endif %}
+            {% for option in script_type_options %}
+                {% if script_type == option %}
+                    <option value="{{ option }}" selected>{{ option }}</option>
+                {% else %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <input type="submit" value="Show" class="btn btn-info"/>
+    </form>
+    <br><br>
+    {% if script_type is not None %}
+        <strong>
+            Refreshed at {% now "Y-m-d H:i:s T" %} <br>
+        </strong>
+        <br>
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Changed at
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+            {% if script_dict|length == 0 %}
+                {% include "../../warn/table_no_results.html" %}
+            {% else %}
+                {% for script_name, script_ts in script_dict.items %}
+                    <tr>
+                        <td>
+                            {{ script_name }}
+                        </td>
+                        <td>
+                            {{ script_ts }}
+                        </td>
+                        <td>
+                            <form style="display:inline" method="post" action="/system/script/delete/">
+                                {% csrf_token %}
+                                {% if request.user|authorized_to_write %}
+                                    <input type="submit" value="Delete" class="btn btn-danger"/>
+                                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                    <input type="hidden" name="script_type" value="{{ script_type }}" />
+                                    <input type="hidden" name="script_name" value="{{ script_name }}" />
+                                {% else %}
+                                    <input type="submit" value="Delete" class="btn btn-danger" disabled/>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+            <tr>
+                <td colspan="100%">
+                    <form style="display:inline" method="get" action="/system/script/change/">
+                        <input type="submit" value="Upload" class="btn btn-primary"/>
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                        <input type="hidden" name="script_type" value="{{ script_type }}" />
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <small><i>
+            Current script directory: '{{ script_dir }}'
+        </i></small>
+    {% else %}
+        <div class="alert alert-info">Select a script type to see more</div>
+    {% endif %}
+{% endblock %}

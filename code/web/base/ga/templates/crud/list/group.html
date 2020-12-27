@@ -76,13 +76,15 @@
                             <input type="hidden" name="action" value="Update" />
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
-                        {% if request.user|authorized_to_write %}
-                            <form method="post" style="display:inline" action="/config/delete/{{ typ }}/{{ data.id }}">
-                                {% csrf_token %}
+                        <form method="post" style="display:inline" action="/config/delete/{{ typ }}/{{ data.id }}">
+                            {% csrf_token %}
+                            {% if request.user|authorized_to_write %}
                                 <input type="submit" value="Delete" class="btn btn-danger" data-toggle="confirmation"/>
-                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                            </form>
-                        {% endif %}
+                            {% else %}
+                                <input type="submit" value="Delete" class="btn btn-danger" disabled data-toggle="confirmation"/>
+                            {% endif %}
+                            <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                        </form>
                     </td>
                 </tr>
                 {% block memberview %}

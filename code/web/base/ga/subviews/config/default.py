@@ -1,9 +1,10 @@
-from django.shortcuts import render, Http404, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
 
 from ...forms import LABEL_DICT, HELP_DICT
 from ...user import authorized_to_read, authorized_to_write
 from ...config.nav import nav_dict
+from ...subviews.handlers import handler404
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -21,7 +22,7 @@ def DetailView(request, uid, model_obj, typ, form_obj=None):
     try:
         data = model_obj.objects.get(id=uid)
     except model_obj.DoesNotExist:
-        raise Http404('Data does not exist')
+        raise handler404(request, msg='Data does not exist')
 
     data_dict = {}
 
@@ -73,7 +74,7 @@ def UpdateView(request, uid, model_obj, form_obj, typ):
     try:
         old_data = get_object_or_404(model_obj, id=uid)
     except Exception:
-        raise Http404('Does Not Exist')
+        raise handler404(request, msg='Does Not Exist')
 
     if request.method == 'POST':
         form = form_obj(request.POST, instance=old_data)
@@ -93,10 +94,10 @@ def DeleteView(request, uid, model_obj, typ, form_obj=None):
     try:
         data = get_object_or_404(model_obj, id=uid)
     except Exception:
-        raise Http404('Does Not Exist')
+        raise handler404(request, msg='Does Not Exist')
 
     if request.method == 'POST':
         data.delete()
         return redirect("/config/list/%s/" % typ)
     else:
-        raise Http404('Delete only supports post method')
+        raise handler404(request, msg='Delete only supports post method')

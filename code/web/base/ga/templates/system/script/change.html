@@ -1,0 +1,23 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    {% include "../../error/form.html" %}
+    {% load bootstrap_tags %}
+
+    {% include "../../info/read_only.html" %}
+
+    {% set_var request|get_return_path as return_path %}
+    <h3><strong>{{ script_type }} script</strong></h3>
+    <div class="alert alert-warning">If the script already exists, it will be overwritten!</div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|as_bootstrap }}
+        {% if request.user|authorized_to_write %}
+            <input type="hidden" name="script_type" value="{{ script_type }}" />
+            <input type="submit" value="Upload" class="btn btn-warning">
+        {% else %}
+            <input type="submit" value="Upload" class="btn btn-warning" disabled>
+        {% endif %}
+        | <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
+    </form>
+{% endblock %}
