@@ -110,7 +110,7 @@ class ObjectConditionLinkModel(BareModel):
 class ObjectControllerModel(BaseModel):
     field_list = ['name', 'description', 'path_root', 'path_log', 'path_backup',
                   'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
-                  'log_level', 'debug', 'security', 'backup', 'timezone']
+                  'log_level', 'debug', 'security', 'backup', 'timezone', 'web_cdn']
     TIMEZONE_CHOICES = [(tz, tz) for tz in common_timezones]
     LOG_LEVEL_CHOICES = [
         (0, '0 (No logging)'),
@@ -141,6 +141,9 @@ class ObjectControllerModel(BaseModel):
     backup = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
 
     timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default='UTC')
+
+    web_cdn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+    web_warn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
 
     def save(self, *args, **kwargs):
         # encrypt secret/password for storage in db

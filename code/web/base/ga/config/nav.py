@@ -1,20 +1,28 @@
 
 nav_dict = {
-    'Data': {
-        'Main': '/data/main/',
+    'left': {
+        'Data': {
+            'Input': '/data/input/',
+            'Charts': '/data/chart/',
+        },
+        'Config': {
+            'Connection': '/config/list/connectiongroup/',
+            'Input': '/config/list/inputgroup/',
+            'Output': '/config/list/outputgroup/',
+            'Condition': '/config/list/conditiongroup/',
+            'Area': '/config/list/areagroup/',
+        },
+        'System': {
+            'Controller': '/config/list/controllerobject/',
+            'Tasks': '/config/list/timerobject/',
+            'Service': '/system/service/',  # status and restart of service(s)
+            'Logs': '/system/log/',  # read various log files
+            'Scripts': '/system/script/',  # upload or delete scripts
+        },
     },
-    'Config': {
-        'Connection': '/config/list/connectiongroup/',
-        'Input': '/config/list/inputgroup/',
-        'Output': '/config/list/outputgroup/',
-        'Condition': '/config/list/conditiongroup/',
-        'Area': '/config/list/areagroup/',
-    },
-    'System': {
-        'Controller': '/config/list/controllerobject/',
-        'Tasks': '/config/list/timerobject/',
-        'Service': '/system/service/',  # status and restart of service(s)
-        'Logs': '/system/log/',  # read various log files
-        'Scripts': '/system/script/',  # upload or delete scripts
-    },
+    'right': {
+        'Docs': 'https://docs.growautomation.eu',
+        'GitHub': 'https://github.com/superstes/growautomation',
+        'Logout': '/logout/',
+    }
 }

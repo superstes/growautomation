@@ -7,9 +7,11 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     {% if request|get_login_state %}
+        {% set_var nav_dict|get_item:'left' as nav_left %}
+        {% set_var nav_dict|get_item:'right' as nav_right %}
         <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
             <ul class="navbar-nav">
-                {% for nav_key, nav_config in nav_dict.items %}
+                {% for nav_key, nav_config in nav_left.items %}
                     {% if nav_config|get_type == 'str' %}
                         <!-- basic link -->
                         <li class="nav-item ga-nav-main">
@@ -33,51 +35,16 @@
                                     {% endfor %}
                                 </div>
                             </li>
-                        {% elif navi_depth == 2 %}
-
-                            <li class="nav-item disabled ga-nav-main">
-                                <a class="nav-link">
-                                    {{ nav_key }}
-                                </a>
-                            </li>
-                            {% for key, value in nav_config.items %}
-                                {% if value|get_type == 'str' %}
-                                    <!-- dropdown link -->
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="{{ value }}">
-                                            {{ key }}
-                                        </a>
-                                    </li>
-                                {% else %}
-                                    <!-- nested dropdown link -->
-                                    <li class="nav-item disabled dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}{{ key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                          {{ key }}
-                                        </a>
-                                        <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}{{ key }}">
-                                            {% for k2, v2 in value.items %}
-                                                <a class="dropdown-item" href="{{ v2 }}">
-                                                    {{ k2 }}
-                                                </a>
-                                            {% endfor %}
-                                        </div>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
                         {% endif %}
                     {% endif %}
                 {% endfor %}
             </ul>
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="https://docs.growautomation.eu">Docs</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://github.com/superstes/growautomation">@GitHub</a>
-                </li>
-                <li>
-                    <a class="nav-link" href="/logout/">Logout</a>
-                </li>
+                {% for nav_key, nav_href in nav_right.items %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ nav_href }}">{{ nav_key }}</a>
+                    </li>
+                {% endfor %}
             </ul>
         </div>
     {% endif %}

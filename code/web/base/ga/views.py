@@ -11,6 +11,7 @@ from .subviews.handlers import handler403, handler404
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView
+from .subviews.data.raw.input import DataRawInputView
 
 
 login_url = '/accounts/login/'
@@ -73,6 +74,9 @@ def view_system(request, typ: str, sub_type=None):
 @login_required
 @user_passes_test(authorized_to_access, login_url=login_url)
 def view_data(request, typ: str):
+    if typ == 'input':
+        return logout_check(request=request, default=DataRawInputView(request=request))
+
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
     # return logout_check(request=request, default=render(request, 'data/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 

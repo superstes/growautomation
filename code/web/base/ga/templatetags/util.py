@@ -1,7 +1,10 @@
 from django import template
+from netaddr import IPAddress
 from datetime import datetime
 
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
+from ..utils.helper import get_controller_setting, get_client_ip
+from ..config.shared import DATETIME_TS_FORMAT
 
 register = template.Library()
 
@@ -172,3 +175,26 @@ def handler500_update(request):
         return True
 
     return False
+
+
+@register.filter
+def use_cdn(request):
+    return get_controller_setting(request, setting='web_cdn')
+
+
+@register.filter
+def hide_warning(request):
+    return get_controller_setting(request, setting='web_warn')
+
+
+@register.filter
+def client_is_public(request):
+    client_ip = get_client_ip(request)
+    ip_is_public = not IPAddress(client_ip).is_reserved()
+    return ip_is_public
+
+
+@register.filter
+def format_ts(datetime_obj):
+    return datetime.strftime(datetime_obj, DATETIME_TS_FORMAT)
+

@@ -1,0 +1,17 @@
+{% load util %}
+{% if request.is_secure == False %}
+    <div class="alert alert-warning">
+        {% if request|client_is_public %}
+            <strong>
+                Your connection isn't secure! And you are accessing over a public network.<br>
+            </strong>
+            You should consider setting up encryption via LetsEncrypt: <br>
+            <a href="https://docs.growautomation.eu">Growautomation documentation</a> |
+            <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-20-04">Example tutorial</a>
+        {% else %}
+            <strong>
+                Your connection isn't secure!
+            </strong>
+        {% endif %}
+    </div>
+{% endif %}

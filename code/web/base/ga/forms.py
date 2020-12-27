@@ -1,6 +1,8 @@
 from django import forms
+from bootstrap_datepicker_plus import DateTimePickerInput
 
 from .models import *
+from .config.shared import DATETIME_TS_FORMAT
 
 
 LABEL_DICT = {
@@ -46,6 +48,8 @@ LABEL_DICT = {
     'timezone': 'Timezone',
     'debug': 'Debug mode',
     'timer': 'Timer',
+    'web_cdn': 'Use CDN',
+    'web_warn': 'Hide warnings',
 }
 
 HELP_DICT = {
@@ -92,6 +96,8 @@ HELP_DICT = {
     'debug': 'If the debug mode should be enabled',
     'timer': 'Interval (in seconds) to execute the device script or system task',
     'interval': 'Custom interval in which to execute system task',
+    'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks',
+    'web_warn': 'If the webinterface should hide warnings',
 }
 
 
@@ -166,12 +172,9 @@ class ObjectTimerForm(BaseForm):
 
 # data ##############################
 
-class InputDataForm(BaseForm):
-    class Meta:
-        model = InputDataModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
+# class DataRawListFilter(forms.Form):
+#     start_ts = forms.DateField(widget=DateTimePickerInput(format=DATETIME_TS_FORMAT), label='Start time')
+#     stop_ts = forms.DateField(widget=DateTimePickerInput(format=DATETIME_TS_FORMAT), label='Stop time')
 
 
 # class TaskLogForm(BaseForm):

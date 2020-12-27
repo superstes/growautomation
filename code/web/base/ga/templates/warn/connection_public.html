@@ -1,0 +1,10 @@
+{% load util %}
+{% if request|client_is_public %}
+    <div class="alert alert-warning">
+        You access this web interface over a public network. <br>
+        <strong>
+            This could be a security risk. <br>
+        </strong>
+        This web interface has not been tested for security vulnerabilities.
+    </div>
+{% endif %}

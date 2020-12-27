@@ -39,3 +39,15 @@ def get_script_dir(request, typ) -> str:
         output = "%s/device/%s/" % (path_root, typ.lower())
 
     return output
+
+
+def get_client_ip(request):
+    ip_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if ip_forwarded:
+        client_ip = ip_forwarded.split(',')[0]
+    else:
+        client_ip = request.META.get('REMOTE_ADDR')
+
+    censored_client_ip = "%s.0" % client_ip.rsplit('.', 1)[0]
+
+    return censored_client_ip

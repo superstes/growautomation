@@ -4,8 +4,6 @@
     {% include "../../error/form.html" %}
     {% load bootstrap_tags %}
 
-    {% include "../../info/read_only.html" %}
-
     {% set_var request|get_return_path as return_path %}
     <h3><strong>{{ script_type }} script</strong></h3>
     <div class="alert alert-warning">If the script already exists, it will be overwritten!</div>

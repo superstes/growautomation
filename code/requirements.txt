@@ -11,6 +11,9 @@
       django
       django_mysql
       django-forms-bootstrap
+      netaddr
+      django-bootstrap4
+      django-bootstrap-datepicker-plus
 
 #   input devices (sensors)
       adafruit-circuitpython-dht

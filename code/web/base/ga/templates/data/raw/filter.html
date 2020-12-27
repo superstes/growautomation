@@ -1,0 +1,47 @@
+{% load util %}
+<form method="get">
+    <div class="form-group">
+        <label for="id_start_ts"><strong>Start time</strong></label>
+        <div class="input-group date">
+            {% if start_ts is None %}
+                <input type="text" name="start_ts" class="form-control" placeholder="Start time" title="" id="id_start_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+            {% else %}
+                <input type="text" name="start_ts" class="form-control" value="{{ start_ts|format_ts }}" title="" id="id_start_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+            {% endif %}
+            <div class="input-group-addon input-group-append" data-target="#datetimepicker1" data-toggle="datetimepickerv">
+                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="id_stop_ts"><strong>Stop time</strong></label>
+        <div class="input-group date">
+            {% if stop_ts is None %}
+                <input type="text" name="stop_ts" class="form-control" placeholder="Stop time" title="" id="id_stop_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+            {% else %}
+                <input type="text" name="stop_ts" class="form-control" value="{{ stop_ts|format_ts }}" title="" id="id_stop_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+            {% endif %}
+            <div class="input-group-addon input-group-append" data-target="#datetimepicker1" data-toggle="datetimepickerv">
+                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <label for="result_count"><strong>Max results</strong></label>
+    <select class="form-control" id="result_count" name="result_count" >
+        {% for option in result_count_range %}
+            {% if option == result_count %}
+                <option selected value="{{ option }}">{{ option }}</option>
+            {% else %}
+                <option value="{{ option }}">{{ option }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+
+    {% if input_device is not None %}
+        <input type="hidden" name="input_device" value="{{ input_device }}" />
+    {% endif %}
+
+    <br>
+    <input type="submit" value="Filter" class="btn btn-primary">
+</form>

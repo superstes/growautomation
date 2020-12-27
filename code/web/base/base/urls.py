@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import view_config, view_home, view_system, handler404, view_logout
+from ga.views import view_config, view_home, view_system, handler404, view_logout, view_data
 from django.conf.urls import include
 
 urlpatterns = [
@@ -40,7 +40,7 @@ urlpatterns = [
     path('system/<str:typ>/<str:sub_type>/', view_system),
     path('system/<str:typ>/', view_system),
     #   data
-    path('data/<str:typ>/', view_system),
+    path('data/<str:typ>/', view_data),
     #   defaults
     url(r'^home/?|^main/?|^/?$', view_home),
     url(r'^$', view_home),
