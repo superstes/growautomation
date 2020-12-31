@@ -1,4 +1,9 @@
-# Growautomation
+<br>
+<p align="center">
+  <img src="https://www.growautomation.eu/img/png/ga02.png" width="65%"/>
+</p>
+<br><br>
+
 The goal is to automate activities related to the cultivation of plants.
 
 And thus to minimize the associated repetitive tasks and optimize the process.
