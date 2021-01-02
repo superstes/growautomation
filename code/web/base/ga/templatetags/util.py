@@ -141,7 +141,6 @@ def get_dict_depth(test: dict):
 @register.filter
 def get_full_uri(request):
     full_uri = request.build_absolute_uri()
-    print(full_uri)
     return full_uri
 
 
@@ -156,17 +155,23 @@ def to_uppercase(data: str) -> str:
 @register.filter
 def get_return_path(request, typ=None) -> str:
     if 'return' in request.GET:
-        return request.GET['return']
+        path = request.GET['return']
 
     elif 'return' in request.POST:
-        return request.POST['return']
+        path = request.POST['return']
+
 
     else:
         if typ is None:
-            return request.META.get('HTTP_REFERER')
+            path = request.META.get('HTTP_REFERER')
 
         else:
-            return f"/config/list/{ typ }/"
+            path = f"/config/list/{ typ }/"
+
+    if path is None:
+        path = '/'
+
+    return path
 
 
 @register.filter

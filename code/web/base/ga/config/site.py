@@ -30,12 +30,7 @@ type_dict = {
     'conditionoutputgroupmember': {'model': MemberConditionOutputGroupModel, 'form': MemberConditionOutputGroupForm, 'pretty': 'Condition Output Member Group', 'hidden': True,
                                    'redirect': 'conditiongroup'},
     'areamember': {'model': MemberAreaModel, 'form': MemberAreaForm, 'pretty': 'Area Member', 'hidden': True, 'redirect': 'areagroup'},
-    # 'connectionnestedgroup': {'model': NestedConnectionGroupModel, 'form': NestedConnectionGroupForm, 'pretty': 'Nested connection group', 'hidden': True, 'redirect': 'connectiongroup'},
-    # 'inputnestedgroup': {'model': NestedInputGroupModel, 'form': NestedInputGroupForm, 'pretty': 'Nested input group', 'hidden': True, 'redirect': 'inputgroup'},
-    # 'outputnestedgroup': {'model': NestedOutputGroupModel, 'form': NestedOutputGroupForm, 'pretty': 'Nested output group', 'hidden': True, 'redirect': 'outputgroup'},
     'areanestedgroup': {'model': NestedAreaModel, 'form': NestedAreaForm, 'pretty': 'Nested area group', 'hidden': True, 'redirect': 'areagroup'},
-    # data
-    'inputdata': {'model': InputDataModel, 'form': InputDataForm, 'pretty': 'Input Data', 'hidden': True},
 }
 
 sub_type_dict = {
@@ -64,6 +59,8 @@ sub_type_dict = {
                                     'pretty': 'Output object', 'member_key': 'obj', 'group_key': 'condition_group', 'create_redirect': 'outputobject'},
         'condition_member_output_group': {'model': MemberConditionOutputGroupModel, 'form': MemberConditionOutputGroupForm,
                                           'pretty': 'Output group', 'member_key': 'group', 'group_key': 'condition_group', 'create_redirect': 'outputgroup'},
+        'condition_member_area_group': {'model': MemberConditionAreaGroupModel, 'form': MemberConditionAreaGroupForm,
+                                        'pretty': 'Area', 'member_key': 'group', 'group_key': 'condition_group', 'create_redirect': 'areagroup'},
     },
     'conditionlinkmember': {
         'condition_link_member': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditionobject',

@@ -212,3 +212,16 @@ class MemberAreaModel(BaseMemberModel):
             raise ValueError("Must choose exactly one owner for the setting")
 
         super().save(*args, **kwargs)
+
+
+class MemberConditionAreaGroupModel(BareModel):
+    field_list = ['condition_group', 'group']
+
+    condition_group = models.ForeignKey(GroupConditionModel, on_delete=models.CASCADE, related_name='cag_fk_condition_group')
+
+    group = models.ForeignKey(GroupAreaModel, on_delete=models.CASCADE, related_name='cag_fk_group')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['condition_group', 'group'], name="cag_uc_condition_group"),
+        ]

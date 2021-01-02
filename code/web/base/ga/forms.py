@@ -291,31 +291,15 @@ class MemberAreaForm(BaseForm):
         help_texts = HELP_DICT
 
 
+class MemberConditionAreaGroupForm(BaseForm):
+    class Meta:
+        model = MemberConditionAreaGroupModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
 # nested groups ##############################
-
-class NestedConnectionGroupForm(BaseForm):
-    class Meta:
-        model = NestedConnectionGroupModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class NestedInputGroupForm(BaseForm):
-    class Meta:
-        model = NestedInputGroupModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class NestedOutputGroupForm(BaseForm):
-    class Meta:
-        model = NestedOutputGroupModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
 
 class NestedAreaForm(BaseForm):
     class Meta:

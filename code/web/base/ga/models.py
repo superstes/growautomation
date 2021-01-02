@@ -96,11 +96,11 @@ from .submodels.groups import GroupConnectionModel, GroupInputModel, GroupOutput
 # member ##############################
 
 from .submodels.members import MemberConnectionModel, MemberInputModel, MemberOutputModel, MemberConditionLinkModel, MemberConditionModel
-from .submodels.members import MemberConditionOutputGroupModel, MemberConditionOutputModel, MemberAreaModel
+from .submodels.members import MemberConditionOutputGroupModel, MemberConditionOutputModel, MemberAreaModel, MemberConditionAreaGroupModel
 
 # nested member ##############################
 
-from .submodels.nestedmembers import NestedConnectionGroupModel, NestedInputGroupModel, NestedOutputGroupModel, NestedAreaModel
+from .submodels.nestedmembers import NestedAreaModel
 
 
 # settings ##############################
