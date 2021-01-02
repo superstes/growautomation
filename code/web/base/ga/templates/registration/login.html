@@ -1,5 +1,11 @@
 {% extends "../body.html" %}
+{% load static %}
 {% block content %}
+    <br>
+    <div align="center" style="display: block;">
+        <img src="{% static 'img/ga02c.svg' %}" width="30%" alt="" onerror="this.style.display='none'"/>
+    </div>
+    <br><br>
     {% if form.errors %}
         {% for field in form %}
             {% for error in field.errors %}

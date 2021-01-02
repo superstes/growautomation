@@ -18,10 +18,9 @@ def DataRawInputView(request):
     stop_ts = None
     input_device = None
     data_list = None
+    data_unit = None
     input_device_dict = {instance.name: instance.id for instance in ObjectInputModel.objects.all()}
     result_count = 100
-
-    print("GET: %s" % request.GET)
 
     if 'start_ts' in request.GET:
         _ = request.GET['start_ts']
@@ -41,6 +40,8 @@ def DataRawInputView(request):
 
     if 'input_device' in request.GET:
         input_device = int(request.GET['input_device'])
+        # data_unit = ObjectInputModel.objects.filter(name=input_device)
+        # todo: get unit from input group -> will go from object over members to group
 
         if start_ts is None and stop_ts is None:
             data_list = InputDataModel.objects.filter(obj=input_device).order_by('created')[:result_count]
@@ -51,9 +52,8 @@ def DataRawInputView(request):
         else:
             data_list = InputDataModel.objects.filter(created__range=[start_ts, stop_ts], obj=input_device).order_by('created')[:result_count]
 
-    print("device: %s" % input_device)
-
     return render(request, 'data/raw/input.html', context={
-        'request': request, 'nav_dict': nav_dict, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict, 'input_device': input_device,
-        'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
+        'request': request, 'nav_dict': nav_dict, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
+        'input_device': input_device, 'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
+        'data_unit': data_unit,
     })

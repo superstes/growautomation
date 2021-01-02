@@ -7,7 +7,8 @@ from ...config.nav import nav_dict
 from ...utils.process import subprocess
 from ...utils.helper import check_develop, get_time_difference
 
-SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
+SHELL_SERVICE_STATUS = "/bin/systemctl is-active %s"
+SHELL_SERVICE_ENABLED = "/bin/systemctl is-enabled %s"
 SHELL_SERVICE_STATUS_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --value %s"
 
 # need to allow www-data to start/stop/restart/reload services
@@ -33,6 +34,7 @@ def ServiceView(request):
     service_runtime = None
     service_runtime_clean = None
     service_status_time = None
+    service_enabled = None
 
     # todo clean up and fix service time counter
 
@@ -65,10 +67,11 @@ def ServiceView(request):
             service_value = service_name_options[service_name]
 
             service_status = custom_subprocess(SHELL_SERVICE_STATUS % service_value, 'active')
+            service_enabled = custom_subprocess(SHELL_SERVICE_ENABLED % service_name, 'enabled')
 
     return render(request, 'system/service.html', context={
         'request': request, 'nav_dict': nav_dict, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
-        'service_name_options': service_name_options, 'service_status_time': service_status_time,
+        'service_name_options': service_name_options, 'service_status_time': service_status_time, 'service_enabled': service_enabled,
         'service_runtime': service_runtime_clean,
     })
 

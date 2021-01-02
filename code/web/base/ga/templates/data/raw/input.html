@@ -40,14 +40,20 @@
                     <th>
                         Data
                     </th>
+                    <th>
+                        Unit
+                    </th>
                 </tr>
                 {% for data in data_list %}
                     <tr>
                         <td>
-                            data.changed
+                            {{ data.created }}
                         </td>
                         <td>
-                            data.data
+                            {{ data.data }}
+                        </td>
+                        <td>
+                            {{ data_unit }}
                         </td>
                     </tr>
                 {% endfor %}

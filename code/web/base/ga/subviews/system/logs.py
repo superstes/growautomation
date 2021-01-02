@@ -5,7 +5,7 @@ from datetime import datetime
 from ...user import authorized_to_read
 from ...config.nav import nav_dict
 from ...utils.process import subprocess
-from ...utils.helper import check_develop
+from ...utils.helper import check_develop, get_controller_setting
 from ..handlers import handler404
 
 SHELL_MAX_LOG_LINES = 100
@@ -26,6 +26,8 @@ def LogView(request):
         'Growautomation': 'ga.service',
         'Apache webserver': 'apache2.service'
     }
+    path_log = get_controller_setting(request, 'path_log')
+    log_file = None
 
     if 'log_entry_count' in request.GET and \
             int(request.GET['log_entry_count']) in SHELL_MAX_LOG_LINES_RANGE:
@@ -59,32 +61,24 @@ def LogView(request):
         if log_type == 'Growautomation':
             date_year = datetime.now().strftime('%Y')
             date_month = datetime.now().strftime('%m')
-            # ObjectControllerModel.objects.all()
-            # must get path to logfile
+            log_file = "%s/core/%s/%s_core.log" % (path_log, date_year, date_month)
             # option to view older (truncated) logs?
             if develop:
-                log_data = 'test data\ndata ga'
+                log_data = "log from file '%s' -> test data\ndata ga" % path_log
             else:
-                log_data = subprocess("tail -n %s /var/log/growautomation/demo/%s/%s_core.log" % (log_entry_count, date_year, date_month))
-
-    # try:
-    #     filter_dict = get_filter_dict(model_obj.filter_dict, dataset)
-    #     dataset, active_filter = apply_filter(request=request, dataset=dataset)
-    # except AttributeError as error_msg:
-    #     active_filter = None
-    #
-    #     if str(error_msg).find("has no attribute 'filter_dict'") != -1:
-    #         filter_dict = {}
-    #     else:
-    #         filter_dict = error_msg
+                log_data = subprocess("tail -n %s %s" % (log_entry_count, log_file))
 
     if type(log_data) == str:
-        log_data = log_data.split('\n')
+        if len(log_data) == 0:
+            log_data = None
+        else:
+            log_data = log_data.split('\n')
 
     handler404(request=request, msg='test')
 
     return render(request, 'system/log.html', context={
         'request': request, 'nav_dict': nav_dict, 'log_data': log_data, 'log_type_options': log_type_options, 'log_service_options': log_service_options,
         'log_type': log_type, 'log_service': log_service, 'log_entry_count': log_entry_count, 'log_entry_range': SHELL_MAX_LOG_LINES_RANGE,
+        'log_file': log_file,
     })
 

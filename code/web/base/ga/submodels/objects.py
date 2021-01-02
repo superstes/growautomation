@@ -110,7 +110,7 @@ class ObjectConditionLinkModel(BareModel):
 class ObjectControllerModel(BaseModel):
     field_list = ['name', 'description', 'path_root', 'path_log', 'path_backup',
                   'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
-                  'log_level', 'debug', 'security', 'backup', 'timezone', 'web_cdn']
+                  'log_level', 'debug', 'security', 'backup', 'timezone', 'web_cdn', 'web_warn']
     TIMEZONE_CHOICES = [(tz, tz) for tz in common_timezones]
     LOG_LEVEL_CHOICES = [
         (0, '0 (No logging)'),

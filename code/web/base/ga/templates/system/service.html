@@ -29,11 +29,20 @@
             <br>
             {% if service_status == 'active' %}
                 <div class="alert alert-success">
-                    {{ service_status }}
+                    Running
                 </div>
             {% else %}
                 <div class="alert alert-danger">
-                    {{ service_status }}
+                    Stopped or failed
+                </div>
+            {% endif %}
+            {% if service_enabled == 'enabled' %}
+                <div class="alert alert-success">
+                    Service will start on system boot
+                </div>
+            {% else %}
+                <div class="alert alert-danger">
+                    Service will NOT start on system boot
                 </div>
             {% endif %}
 <!--            {% if service_status_time is None or service_status_time == '' %}-->

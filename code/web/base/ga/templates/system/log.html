@@ -32,7 +32,7 @@
             </select>
         {% endif %}
 
-        {% if log_type != 'Service' %}
+        {% if log_type == 'Service journal' or log_type == 'Growautomation' %}
             <label for="log_entry_count"><strong>Max entries</strong></label>
             <select class="form-control" id="log_entry_count" name="log_entry_count" >
                 {% for option in log_entry_range %}
@@ -65,7 +65,7 @@
         <strong>
             Refreshed at {% now "Y-m-d H:i:s T" %} <br>
         </strong>
-        {% if log_data is None or log_data|length == 0 %}
+        {% if log_data is None %}
             {% include "../warn/no_results.html" %}
         {% else %}
             <div class="ga-log-text">
@@ -74,5 +74,12 @@
                 {% endfor %}
             </div>
         {% endif %}
+    {% endif %}
+    {% if log_type == 'Growautomation' %}
+        <small>
+            <i>
+                Current log file: '{{ log_file }}'
+            </i>
+        </small>
     {% endif %}
 {% endblock %}
