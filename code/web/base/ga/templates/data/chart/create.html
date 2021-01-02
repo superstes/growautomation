@@ -1,0 +1,16 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% load tz %}
+{% block extrahead %}
+    {% include "./head.html" %}
+{% endblock %}
+{% block content %}
+    <h1>Create graph</h1><br>
+    {% include "../raw/select.html" %}
+    {% include "../raw/filter.html" %}
+    <br><hr>
+    <div>
+        <canvas id="myChart" width="300" height="100"></canvas>
+    </div>
+    {% include "./js.html" %}
+{% endblock %}

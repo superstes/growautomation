@@ -11,7 +11,8 @@ from .subviews.handlers import handler403, handler404, handler403_api, handler40
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
-from .subviews.data.raw.input import DataRawInputView
+from .subviews.data.raw.input import DataListView
+from .subviews.data.chart.main import DataChartView, DataChartCreateView
 from .subviews.api.data.main import ApiData
 
 
@@ -71,17 +72,21 @@ def view_system(request, typ: str, sub_type=None):
         return logout_check(request=request, default=ScriptView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
-    # return logout_check(request=request, default=render(request, 'system/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
 
 @login_required
 @user_passes_test(authorized_to_access, login_url=login_url)
-def view_data(request, typ: str):
+def view_data(request, typ: str, sub_type: str = None):
     if typ == 'input':
-        return logout_check(request=request, default=DataRawInputView(request=request))
+        return logout_check(request=request, default=DataListView(request=request))
+
+    elif typ == 'chart':
+        if sub_type == 'create':
+            return logout_check(request=request, default=DataChartCreateView(request=request))
+
+        return logout_check(request=request, default=DataChartView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
-    # return logout_check(request=request, default=render(request, 'data/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
 
 def view_denied(request):

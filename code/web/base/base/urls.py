@@ -47,7 +47,10 @@ urlpatterns = [
     path('system/<str:typ>/<str:sub_type>/', view_system),
     path('system/<str:typ>/', view_system),
     #   data
+    path('data/<str:typ>', view_data),
     path('data/<str:typ>/', view_data),
+    path('data/<str:typ>/<str:sub_type>', view_data),
+    path('data/<str:typ>/<str:sub_type>/', view_data),
     #   fallback
     url(r'^', handler404),
 ]

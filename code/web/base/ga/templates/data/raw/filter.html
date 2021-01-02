@@ -28,16 +28,18 @@
                 <div class="input-group-text"><i class="fa fa-calendar"></i></div>
             </div>
         </div>
-        <label for="result_count"><strong>Max results</strong></label>
-        <select class="form-control" id="result_count" name="result_count" >
-            {% for option in result_count_range %}
-                {% if option == result_count %}
-                    <option selected value="{{ option }}">{{ option }}</option>
-                {% else %}
-                    <option value="{{ option }}">{{ option }}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
+        {% if request.path not in '/data/chart/create/' %}
+            <label for="result_count"><strong>Max results</strong></label>
+            <select class="form-control" id="result_count" name="result_count" >
+                {% for option in result_count_range %}
+                    {% if option == result_count %}
+                        <option selected value="{{ option }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        {% endif %}
     </div>
     {% if input_device is not None %}
         <input type="hidden" name="input_device" value="{{ input_device }}" />

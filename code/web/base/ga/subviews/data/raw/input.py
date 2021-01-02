@@ -14,7 +14,7 @@ DATA_MAX_ENTRY_RANGE = range(25, 1025, 25)
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
-def DataRawInputView(request):
+def DataListView(request):
     start_ts = None
     stop_ts = None
     input_device = None

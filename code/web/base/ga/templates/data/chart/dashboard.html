@@ -1,0 +1,9 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% load tz %}
+{% load bootstrap4 %}
+{% include "./head.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+<a href='/data/chart/create/' class="btn btn-success">Create graph</a>
+{% endblock %}
