@@ -66,7 +66,8 @@ class Service:
 
     def start(self):
         debugger("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
-        self._config_dump()
+        if shared_vars.SYSTEM.debug == 1:
+            self._config_dump()
         try:
             debugger("service | start | process id %s" % os_getpid())
 

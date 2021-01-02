@@ -44,7 +44,7 @@ def get_script_dir(request, typ) -> str:
     if platform == 'win32':
         output = "C:/Users/rene/Documents/code/ga/growautomation/code/device/%s" % typ.lower()
     else:
-        output = "%s/device/%s/" % (path_root, typ.lower())
+        output = "%s/device/%s" % (path_root, typ.lower())
 
     return output
 

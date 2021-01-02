@@ -10,7 +10,6 @@ from ....models import InputDataModel, ObjectInputModel
 from ....utils.helper import add_timezone, get_device_parent_setting
 
 
-DATA_MAX_ENTRIES = 100
 DATA_MAX_ENTRY_RANGE = range(25, 1025, 25)
 
 

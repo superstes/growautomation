@@ -7,11 +7,12 @@ from .user import authorized_to_access
 from .subviews.config.routing import ChooseView, ChooseSubView
 from .config.nav import nav_dict
 from .utils.main import logout_check
-from .subviews.handlers import handler403, handler404
+from .subviews.handlers import handler403, handler404, handler403_api, handler404_api
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataRawInputView
+from .subviews.api.data.main import ApiData
 
 
 login_url = '/accounts/login/'
@@ -83,7 +84,6 @@ def view_data(request, typ: str):
     # return logout_check(request=request, default=render(request, 'data/main.html', {'type_dict': type_dict, 'nav_dict': nav_dict}))
 
 
-@login_required
 def view_denied(request):
     return logout_check(request=request, default=handler403(request))
 
@@ -91,3 +91,16 @@ def view_denied(request):
 @login_required
 def view_logout(request):
     return logout_check(request=request, default=handler403(request), hard_logout=True)
+
+
+@user_passes_test(authorized_to_access, login_url='/api/denied/', redirect_field_name=None)
+def view_api(request, typ: str):
+    # no logout check needed since there is no logout button at this route
+    if typ == 'data':
+        return ApiData(request=request)
+
+    return handler404_api()
+
+
+def view_api_denied(request):
+    return handler403_api()

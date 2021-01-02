@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import view_config, view_home, view_system, handler404, view_logout, view_data
+from ga.views import view_config, view_home, view_system, handler404, view_logout, view_data, view_api, view_api_denied, view_denied
 from django.conf.urls import include
 
 urlpatterns = [
@@ -27,6 +27,13 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),  # login page
     path('logout/', view_logout),  # logout page
     # ga
+    #   api
+    url(r'^api/denied/?$', view_api_denied),
+    path('api/<str:typ>', view_api),
+    path('api/<str:typ>/', view_api),
+    #   defaults
+    url(r'^$|^home/?|^main/?|^/?$', view_home),
+    url(r'^denied/?$', view_denied),
     #   config
     path('config/<str:action>/<str:typ>', view_config),
     path('config/<str:action>/<str:typ>/', view_config),
@@ -41,9 +48,6 @@ urlpatterns = [
     path('system/<str:typ>/', view_system),
     #   data
     path('data/<str:typ>/', view_data),
-    #   defaults
-    url(r'^home/?|^main/?|^/?$', view_home),
-    url(r'^$', view_home),
-    url(r'^denied/?$', view_home),
+    #   fallback
     url(r'^', handler404),
 ]
