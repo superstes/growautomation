@@ -1,9 +1,16 @@
 from sys import platform
 from datetime import datetime
+from pytz import timezone as pytz_timezone
+from django.utils import timezone as django_timezone
 
 from ..models import ObjectControllerModel
+from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupInputModel, GroupOutputModel, GroupConnectionModel
+from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import handler404
 from .process import subprocess
+
+
+DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 
 
 def check_develop() -> bool:
@@ -59,3 +66,50 @@ def develop_subprocess(command, develop: str = None) -> str:
         return develop
 
     return subprocess(command)
+
+
+def add_timezone(request, datetime_obj):
+    dt_w_tz = django_timezone.make_aware(datetime_obj, timezone=pytz_timezone(get_controller_setting(request, setting='timezone')))
+    return dt_w_tz
+
+
+def get_device_parent(child_obj):
+    parent = None
+    member_link_list = None
+
+    if isinstance(child_obj, ObjectInputModel):
+        member_link_list = MemberInputModel.objects.all()
+
+    elif isinstance(child_obj, ObjectOutputModel):
+        member_link_list = MemberOutputModel.objects.all()
+
+    elif isinstance(child_obj, ObjectConnectionModel):
+        member_link_list = MemberConnectionModel.objects.all()
+
+    if member_link_list is not None:
+        for link in member_link_list:
+            if link.obj == child_obj:
+                parent = link.group
+                break
+
+    return parent
+
+
+def get_device_instance(obj: (str, int)):
+    for typ in DEVICE_TYPES:
+        for check_obj in typ.objects.all():
+            if type(obj) == str:
+                if check_obj.name == obj:
+                    return check_obj
+            else:
+                if check_obj.id == obj:
+                    return check_obj
+
+
+def get_device_parent_setting(child_obj, setting: str):
+    if type(child_obj) in [str, int]:
+        child_obj = get_device_instance(obj=child_obj)
+
+    parent = get_device_parent(child_obj)
+
+    return getattr(parent, setting)

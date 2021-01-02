@@ -1,5 +1,10 @@
 {% load util %}
 <form method="get">
+    {% if stop_ts_ok is False %}
+        <div class="alert alert-warning">
+            <strong>You must not select an end time that is earlier than the start time.</strong>
+        </div>
+    {% endif %}
     <div class="form-group">
         <label for="id_start_ts"><strong>Start time</strong></label>
         <div class="input-group date">
@@ -12,8 +17,6 @@
                 <div class="input-group-text"><i class="fa fa-calendar"></i></div>
             </div>
         </div>
-    </div>
-    <div class="form-group">
         <label for="id_stop_ts"><strong>Stop time</strong></label>
         <div class="input-group date">
             {% if stop_ts is None %}
@@ -25,23 +28,20 @@
                 <div class="input-group-text"><i class="fa fa-calendar"></i></div>
             </div>
         </div>
+        <label for="result_count"><strong>Max results</strong></label>
+        <select class="form-control" id="result_count" name="result_count" >
+            {% for option in result_count_range %}
+                {% if option == result_count %}
+                    <option selected value="{{ option }}">{{ option }}</option>
+                {% else %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
     </div>
-
-    <label for="result_count"><strong>Max results</strong></label>
-    <select class="form-control" id="result_count" name="result_count" >
-        {% for option in result_count_range %}
-            {% if option == result_count %}
-                <option selected value="{{ option }}">{{ option }}</option>
-            {% else %}
-                <option value="{{ option }}">{{ option }}</option>
-            {% endif %}
-        {% endfor %}
-    </select>
-
     {% if input_device is not None %}
         <input type="hidden" name="input_device" value="{{ input_device }}" />
     {% endif %}
-
     <br>
     <input type="submit" value="Filter" class="btn btn-primary">
 </form>

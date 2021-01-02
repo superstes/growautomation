@@ -1,0 +1,11 @@
+# django service management: /system/service/
+Cmnd_Alias GA_SERVICE_ACTIONS = \
+  /bin/systemctl start apache2.service, \
+  /bin/systemctl reload apache2.service, \
+  /bin/systemctl restart apache2.service, \
+  /bin/systemctl start ga.service, \
+  /bin/systemctl reload ga.service, \
+  /bin/systemctl restart ga.service, \
+  /bin/systemctl stop ga.service
+
+www-data ALL=(ALL) NOPASSWD: GA_SERVICE_ACTIONS

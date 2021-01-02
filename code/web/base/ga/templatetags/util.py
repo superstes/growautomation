@@ -1,6 +1,6 @@
 from django import template
 from netaddr import IPAddress
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
@@ -207,3 +207,8 @@ def format_ts(datetime_obj):
 @register.filter
 def remove_newline(text: str) -> str:
     return text.replace('\n', '')
+
+
+@register.filter
+def format_seconds(secs: int) -> str:
+    return "{}".format(str(timedelta(seconds=secs)))

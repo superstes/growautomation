@@ -43,3 +43,7 @@
     overflow: auto;
     margin: 0 0;
 }
+
+.ga-nav-icon {
+    border-radius: 50%;
+}

@@ -7,6 +7,7 @@ TIMEOUT = 10
 
 
 def subprocess(command, out_error=False, debug=False):
+    print("Subprocess command: '%s'" % command)
     if type(command) != list:
         command = [command]
     try:
@@ -21,10 +22,11 @@ def subprocess(command, out_error=False, debug=False):
 
     output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
 
-    if error is not None:  # might not be None since i decoded it
+    if error is not None and error != '':  # might not be None since it was decoded
+        print("Subprocess error: '%s'" % error)
         pass
         # log error or whatever
-
+    print("Subprocess output: '%s'" % output)
     if out_error is False:
         return output
     else:

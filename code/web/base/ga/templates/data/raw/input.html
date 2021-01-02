@@ -1,6 +1,7 @@
 {% extends "../../body.html" %}
 {% load util %}
 {% load static %}
+{% load tz %}
 {% load bootstrap4 %}
 {% block extrahead %}
     {% if request|use_cdn %}
@@ -47,13 +48,20 @@
                 {% for data in data_list %}
                     <tr>
                         <td>
-                            {{ data.created }}
+                            {{ data.created|localtime|format_ts }}
                         </td>
                         <td>
-                            {{ data.data }} {{ data_unit }}
+                            {{ data.data }}
+                            {% if data_unit is not None %}
+                                {{ data_unit }}
+                            {% endif %}
                         </td>
                         <td>
-                            {{ data_type }}
+                            {% if data_type is None %}
+                                ---
+                            {% else %}
+                                {{ data_type }}
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

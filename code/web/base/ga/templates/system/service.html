@@ -31,12 +31,17 @@
             {% if service_status == 'active' %}
                 <div class="alert alert-success">
                     Running
-                </div>
             {% else %}
                 <div class="alert alert-danger">
                     Stopped or failed
-                </div>
             {% endif %}
+                    {% if service_status_time is not None %}
+                        since {{ service_status_time }}
+                        {% if service_runtime is not None %}
+                            (for {{ service_runtime|format_seconds }})
+                        {% endif %}
+                    {% endif %}
+                    </div>
             {% if service_enabled == 'enabled' %}
                 <div class="alert alert-success">
                     Service will start on system boot
@@ -46,12 +51,8 @@
                     Service will NOT start on system boot
                 </div>
             {% endif %}
-<!--            {% if service_status_time is None or service_status_time == '' %}-->
-<!--                all along-->
-<!--            {% else %}-->
-<!--                for {{ service_runtime }} | since {{ service_status_time }}-->
-<!--            {% endif %}-->
-<!--            <br>-->
+            <br>
+            <a href='/system/service/?service_name={{ service_name }}' class="btn btn-info">Refresh</a>
         {% endif %}
         <br><hr>
         <h3>

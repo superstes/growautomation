@@ -1,5 +1,3 @@
-from pytz import common_timezones
-
 from ..models import BaseDeviceGroupModel, BaseModel, models, BOOLEAN_CHOICES
 
 
