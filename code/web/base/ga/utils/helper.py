@@ -3,6 +3,7 @@ from datetime import datetime
 
 from ..models import ObjectControllerModel
 from ..subviews.handlers import handler404
+from .process import subprocess
 
 
 def check_develop() -> bool:
@@ -51,3 +52,10 @@ def get_client_ip(request):
     censored_client_ip = "%s.0" % client_ip.rsplit('.', 1)[0]
 
     return censored_client_ip
+
+
+def develop_subprocess(command, develop: str = None) -> str:
+    if check_develop():
+        return develop
+
+    return subprocess(command)

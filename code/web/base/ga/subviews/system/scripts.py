@@ -79,11 +79,12 @@ def ScriptChangeView(request):
     else:
         if 'script_type' in request.GET and request.GET['script_type'] in script_type_options:
             script_type = request.GET['script_type']
+            script_dir = get_script_dir(request, typ=script_type)
         else:
             return handler404(request, msg='A script type must be defined.')
 
         return render(request, 'system/script/change.html', context={
-            'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'form': form,
+            'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'form': form, 'script_dir': script_dir,
         })
 
 
@@ -101,3 +102,30 @@ def ScriptDeleteView(request):
                 os_remove("%s/%s" % (get_script_dir(request, typ=script_type), script_name))
 
         return redirect("/system/script/?script_type=%s" % script_type)
+
+
+@user_passes_test(authorized_to_read, login_url='/denied/')
+def ScriptShow(request):
+    if 'script_type' in request.GET and 'script_name' in request.GET:
+        script_type = request.GET['script_type']
+        script_name = request.GET['script_name']
+        script_content = None
+
+        script_dir = get_script_dir(request, typ=script_type)
+
+        script_path = "%s/%s" % (script_dir, script_name)
+
+        if os_path.exists(script_path):
+            with open(script_path, 'r') as script:
+                script_content = script.read()
+
+    elif 'script_type' in request.GET:
+        script_type = request.GET['script_type']
+        return redirect("/system/script/?script_type=%s" % script_type)
+
+    else:
+        return redirect("/system/script/")
+
+    return render(request, 'system/script/show.html', context={
+        'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'script_content': script_content, 'script_path': script_path,
+    })

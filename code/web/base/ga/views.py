@@ -10,7 +10,7 @@ from .utils.main import logout_check
 from .subviews.handlers import handler403, handler404
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
-from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView
+from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataRawInputView
 
 
@@ -64,6 +64,8 @@ def view_system(request, typ: str, sub_type=None):
                 return logout_check(request=request, default=ScriptChangeView(request=request))
             elif sub_type == 'delete':
                 return logout_check(request=request, default=ScriptDeleteView(request=request))
+            elif sub_type == 'show':
+                return logout_check(request=request, default=ScriptShow(request=request))
 
         return logout_check(request=request, default=ScriptView(request=request))
 

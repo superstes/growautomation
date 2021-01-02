@@ -44,6 +44,7 @@
                 {% endfor %}
             </select>
         {% endif %}
+        <br>
         <input type="submit" value="Show" class="btn btn-info">
     </form>
 
@@ -68,11 +69,9 @@
         {% if log_data is None %}
             {% include "../warn/no_results.html" %}
         {% else %}
-            <div class="ga-log-text">
-                {% for data in log_data %}
-                    {{ data }} <br>
-                {% endfor %}
-            </div>
+            <pre class="ga-file-content">
+{{ log_data }}
+            </pre>
         {% endif %}
     {% endif %}
     {% if log_type == 'Growautomation' %}

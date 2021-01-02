@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 {% load util %}
 <html lang="en">
-    {% include "./head.html" %}
+    <head>
+        {% include "./head.html" %}
+        <!-- START custom header additions -->
+            {% block extrahead %}
+            {% endblock %}
+        <!-- END custom header additions -->
+    </head>
     <body>
         {% include "./nav.html" %}
         {% if request|hide_warning == False %}

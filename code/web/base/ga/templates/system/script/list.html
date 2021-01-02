@@ -15,6 +15,7 @@
                 {% endif %}
             {% endfor %}
         </select>
+        <br>
         <input type="submit" value="Show" class="btn btn-info"/>
     </form>
     <br><br>
@@ -57,6 +58,12 @@
                                 {% else %}
                                     <input type="submit" value="Delete" class="btn btn-danger" disabled/>
                                 {% endif %}
+                            </form>
+                            <form style="display:inline" method="get" action="/system/script/show/">
+                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                <input type="hidden" name="script_type" value="{{ script_type }}" />
+                                <input type="hidden" name="script_name" value="{{ script_name }}" />
+                                <input type="submit" value="Show content" class="btn btn-info"/>
                             </form>
                         </td>
                     </tr>

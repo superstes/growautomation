@@ -35,8 +35,11 @@
     border-radius: 5px;
 }
 
-.ga-log-text {
+.ga-file-content {
+    white-space: break-spaces;
     background: #d9e0d7;
     padding: 1% 2%;
     border-radius: 5px;
+    overflow: auto;
+    margin: 0 0;
 }

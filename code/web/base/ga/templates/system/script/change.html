@@ -7,6 +7,12 @@
     {% set_var request|get_return_path as return_path %}
     <h3><strong>{{ script_type }} script</strong></h3>
     <div class="alert alert-warning">If the script already exists, it will be overwritten!</div>
+    <small>
+        <i>
+            Current script directory: '{{ script_dir }}'
+        </i>
+    </small>
+    <br><br>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|as_bootstrap }}

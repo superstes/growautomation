@@ -1,0 +1,22 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    <strong>
+        Refreshed at {% now "Y-m-d H:i:s T" %} <br>
+    </strong>
+    <br>
+    {% if script_content is None %}
+        {% include "../../warn/no_results.html" %}
+    {% else %}
+        <pre class="ga-file-content">
+{{ script_content }}
+        </pre>
+    {% endif %}
+    <small>
+        <i>
+            Current script: '{{ script_path }}'
+        </i>
+    </small>
+    <br><br>
+    <a href="{{ request|get_return_path }}" class="btn btn-info">Return</a>
+{% endblock %}

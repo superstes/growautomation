@@ -68,11 +68,8 @@ def LogView(request):
             else:
                 log_data = subprocess("tail -n %s %s" % (log_entry_count, log_file))
 
-    if type(log_data) == str:
-        if len(log_data) == 0:
-            log_data = None
-        else:
-            log_data = log_data.split('\n')
+    if type(log_data) == str and len(log_data) == 0:
+        log_data = None
 
     handler404(request=request, msg='test')
 

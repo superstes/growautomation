@@ -41,7 +41,7 @@
                         Data
                     </th>
                     <th>
-                        Unit
+                        Data type
                     </th>
                 </tr>
                 {% for data in data_list %}
@@ -50,10 +50,10 @@
                             {{ data.created }}
                         </td>
                         <td>
-                            {{ data.data }}
+                            {{ data.data }} {{ data_unit }}
                         </td>
                         <td>
-                            {{ data_unit }}
+                            {{ data_type }}
                         </td>
                     </tr>
                 {% endfor %}

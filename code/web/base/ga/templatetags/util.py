@@ -203,3 +203,7 @@ def client_is_public(request):
 def format_ts(datetime_obj):
     return datetime.strftime(datetime_obj, DATETIME_TS_FORMAT)
 
+
+@register.filter
+def remove_newline(text: str) -> str:
+    return text.replace('\n', '')

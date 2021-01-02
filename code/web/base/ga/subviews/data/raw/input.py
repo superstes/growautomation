@@ -19,6 +19,8 @@ def DataRawInputView(request):
     input_device = None
     data_list = None
     data_unit = None
+    data_type = None
+
     input_device_dict = {instance.name: instance.id for instance in ObjectInputModel.objects.all()}
     result_count = 100
 
@@ -55,5 +57,5 @@ def DataRawInputView(request):
     return render(request, 'data/raw/input.html', context={
         'request': request, 'nav_dict': nav_dict, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
         'input_device': input_device, 'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
-        'data_unit': data_unit,
+        'data_unit': data_unit, 'data_type': data_type,
     })
