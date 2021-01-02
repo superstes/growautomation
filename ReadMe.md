@@ -1,6 +1,6 @@
 <br>
 <p align="center">
-  <img src="https://www.growautomation.eu/img/png/ga02.png" width="65%"/>
+  <img src="https://www.growautomation.eu/img/svg/ga02c.svg" width="65%"/>
 </p>
 <br><br>
 
@@ -29,7 +29,7 @@ It's simple. And should also remain so if you have little time for it.
   - Just check the stats on the website - comfortably from your smartphone.
 
 ## Contact
-<a href="mailto:contact@growautomation.at">contact@growautomation.at</a>
+<a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
 ## Version
 
@@ -53,6 +53,12 @@ Version: 0.7
   
 - v0.1 - v0.2 _(2019-05 - 2020-01)_
   - creating basic code structure _(functional programming)_
+
+- v0.1 - v0.2 _(2019-05 - 2020-01)_
+  - creating basic code structure _(functional programming)_
+
+- v0.0 _(2018-� - 2019-04)_
+  - dark age _(connected scripts)_
 
 ### Planned features
 - implementing unit and integration tests
