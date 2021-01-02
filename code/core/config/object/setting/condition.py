@@ -52,11 +52,12 @@ class GaConditionLink(GaBase):
 class GaConditionGroup(GaBase):
     setting_list = ['timer', 'enabled']
 
-    def __init__(self, member_list: list, output_object_list: list, output_group_list: list, setting_dict: dict, **kwargs):
+    def __init__(self, member_list: list, output_object_list: list, output_group_list: list, area_group_list: list, setting_dict: dict, **kwargs):
         super().__init__(**kwargs)
         self.member_list = member_list  # links that are grouped
         self.output_object_list = output_object_list  # actors that should be triggered if the condition is met
         self.output_group_list = output_group_list  # actors that should be triggered if the condition is met
+        self.area_group_list = area_group_list  # to limit the physical area in which the actors will be triggered
         self.setting_dict = setting_dict
         # dynamic instance vars
         set_attribute(

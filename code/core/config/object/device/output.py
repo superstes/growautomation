@@ -38,14 +38,10 @@ class GaOutputDevice(GaBaseDevice):
 
 
 class GaOutputModel(GaBaseDeviceModel):
-    setting_list = [
-        'script', 'script_arg', 'script_bin', 'reverse', 'reverse_type', 'reverse_type_data', 'reverse_script', 'reverse_script_arg',
-        'reverse_script_bin',
-    ]
-
     def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
+        self.setting_list.extend(['reverse', 'reverse_type', 'reverse_type_data', 'reverse_script', 'reverse_script_arg', 'reverse_script_bin',])
         # model specific vars
         set_attribute(
             setting_dict=self.setting_dict,

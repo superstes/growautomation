@@ -52,24 +52,24 @@ class Go:
             'connection': self.instance.connection,
         }
 
-        function = self.instance.function
-        function_arg = self.instance.function_arg
-        function_bin = self.instance.function_bin
+        script = self.instance.script
+        script_arg = self.instance.script_arg
+        script_bin = self.instance.script_bin
 
         if self.category == self.OUTPUT_CATEGORY:
             reverse = False
             if self.instance.reverse and self.instance.active and self.reverse:
                 reverse = True
-                function = self.instance.reverse_function
-                function_arg = self.instance.reverse_function_arg
-                function_bin = self.instance.reverse_function_bin
+                script = self.instance.reverse_script
+                script_arg = self.instance.reverse_script_arg
+                script_bin = self.instance.reverse_script_bin
 
         command = "%s %s/%s/%s \"%s\" \"%s\"" % (
-            function_bin,
+            script_bin,
             shared_vars.SYSTEM.path_root,
             self.SCRIPT_SUBPATH % self.category,
-            function,
-            function_arg,
+            script,
+            script_arg,
             str(json_dumps(config_dict)).replace("\"", "\\\"")
         )
 

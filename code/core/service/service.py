@@ -65,7 +65,8 @@ class Service:
         self.LOG = Log()
 
     def start(self):
-        print("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
+        debugger("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
+        self._config_dump()
         try:
             debugger("service | start | process id %s" % os_getpid())
 
@@ -155,7 +156,7 @@ class Service:
         if self.exit_count == 0:
             self.exit_count += 1
             # ShellOutput(font='line', symbol='#')
-            print("\n\nGrowautomation service: Farewell!\n")
+            debugger("\n\nGrowautomation service: Farewell!\n")
             systemd_journal.write('Growautomation service: Farewell!')
             # ShellOutput(font='line', symbol='#')
         raise SystemExit('Service exited gracefully.')

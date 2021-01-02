@@ -13,6 +13,7 @@ from core.config.object.core.timer import GaTimerDevice
 from core.config.object.setting.condition import GaConditionMatch
 from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.setting.condition import GaConditionLink
+from core.config.object.group.main import GaAreaGroup
 
 blueprint_dict = {
     config.KEY_OBJECT_INPUT: GaInputDevice,
@@ -27,4 +28,5 @@ blueprint_dict = {
     config.KEY_GROUP_OUTPUT: GaOutputModel,
     config.KEY_GROUP_CONNECTION: GaConnectionModel,
     config.KEY_GROUP_CONDITION: GaConditionGroup,
+    config.KEY_GROUP_AREA: GaAreaGroup,
 }

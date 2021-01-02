@@ -60,9 +60,9 @@ class Go:
     @staticmethod
     def _add_settings(config: dict, query_typ: str, data_list: list) -> list:
         if 'setting_fields' in config and query_typ in config['setting_fields']:
-            setting_dict = {}
-    
             for data_dict in data_list:
+                setting_dict = {}
+
                 for field in config['setting_fields'][query_typ]:
                     setting_dict[field] = data_dict.pop(field)
     
@@ -85,12 +85,16 @@ class Go:
                 for data_dict in data_list:
                     _list = []
 
-                    for member_dict in member_list:
-                        if member_dict[member_key] is None:
-                            continue
+                    if len(data_list) == 0:
+                        _list.append(None)
 
-                        if data_dict[id_key] == member_dict[group_key]:
-                            _list.append(member_dict[member_key])
+                    else:
+                        for member_dict in member_list:
+                            if member_dict[member_key] is None:
+                                continue
+
+                            if data_dict[id_key] == member_dict[group_key]:
+                                _list.append(member_dict[member_key])
 
                     if supply_member_key in data_dict:
                         data_dict[supply_member_key].update({query_key: _list})

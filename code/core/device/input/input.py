@@ -10,6 +10,8 @@ from core.utils.debug import debugger
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 
+from datetime import datetime
+
 
 class Go:
     SQL_DATA_COMMAND = DEVICE_DICT['input']['data']
@@ -39,8 +41,7 @@ class Go:
                                       % ('failure', 'No data received', self.TASK_CATEGORY,
                                          task_instance.object_id))
             else:
-                self.database.put(command=self.SQL_DATA_COMMAND % (task_instance.object_id, data,
-                                                                   task_instance.datatype))
+                self.database.put(command=self.SQL_DATA_COMMAND % (datetime.now(), data, task_instance.object_id))
 
                 debugger("device-input | start | processing of input '%s' succeeded" % task_instance.name)
 

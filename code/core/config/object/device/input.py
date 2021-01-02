@@ -7,7 +7,7 @@ from core.config.object.helper import *
 
 class GaInputDevice(GaBaseDevice):
     parent_setting_list = ['script', 'script_arg', 'script_bin', 'unit', 'datatype']
-    inheritence_setting_list = ['timer']
+    inheritance_setting_list = ['timer']
     setting_list = ['connection']
 
     def __init__(self, parent_instance, downlink, **kwargs):
@@ -23,7 +23,7 @@ class GaInputDevice(GaBaseDevice):
         )
         overwrite_inherited_attribute(
             child_setting_dict=self.setting_dict,
-            setting_list=self.inheritence_setting_list,
+            setting_list=self.inheritance_setting_list,
             child_instance=self,
             obj=GaInputDevice
         )
@@ -37,11 +37,10 @@ class GaInputDevice(GaBaseDevice):
 
 
 class GaInputModel(GaBaseDeviceModel):
-    setting_list = ['script', 'script_arg', 'script_bin', 'unit', 'datatype', 'timer']
-
     def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)
+        self.setting_list.extend(['unit', 'datatype', 'timer'])
         # model specific vars
         set_attribute(
             setting_dict=self.setting_dict,

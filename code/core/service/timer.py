@@ -9,6 +9,7 @@ from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.core.timer import GaTimerDevice
+from core.utils.debug import debugger
 
 
 ALLOWED_OBJECT_TUPLE = (
@@ -25,14 +26,19 @@ def get(config_dict: dict) -> tuple:
 
     for category, obj_list in config_dict.items():
         for obj in obj_list:
-            if isinstance(obj, ALLOWED_OBJECT_TUPLE) and obj.enabled == 1:
+            if isinstance(obj, ALLOWED_OBJECT_TUPLE):
+                if obj.enabled == 1:
 
-                if category == config.KEY_OBJECT_INPUT:
-                    if obj.timer != obj.parent_instance.timer:
-                        custom_list.append(obj)
+                    if isinstance(obj, GaInputDevice):
+                        if obj.timer is not None and obj.timer != obj.parent_instance.timer:
+                            custom_list.append(obj)
 
-                elif category in [config.KEY_GROUP_INPUT, config.KEY_GROUP_CONDITION]:
-                    timer_list.append(obj)
+                    elif isinstance(obj, (GaInputModel, GaConditionGroup)):
+                        timer_list.append(obj)
+
+                else:
+                    # log error or whatever
+                    debugger("service-timer | get | instance '%s' is disabled" % obj)
 
     timer_list.extend(custom_list)
 

@@ -1,4 +1,4 @@
-# creates default object instances
+# creates condition group/object instances
 
 from core.factory import config
 from core.factory.forge.blueprint import blueprint_dict
@@ -79,8 +79,13 @@ class Go:
             member_attribute=self.member_attribute,
         ).add()
 
+        condition_group_list = Member(
+            object_list=condition_group_list,
+            member_list=self.supply_dict[config.KEY_GROUP_AREA],
+            member_attribute='area_group_list',
+        ).add()
+
         output_dict[self.key_condition_group] = condition_group_list
         output_dict[self.key_condition_link] = condition_link_list
 
         return output_dict
-

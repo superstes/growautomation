@@ -28,8 +28,6 @@ class GaConnectionDevice(GaBaseDevice):
 
 
 class GaConnectionModel(GaBaseDeviceModel):
-    setting_list = ['script', 'script_arg', 'script_bin']
-
     def __init__(self, **kwargs):
         # inheritance from superclasses
         super().__init__(**kwargs)

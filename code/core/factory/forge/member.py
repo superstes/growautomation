@@ -21,20 +21,20 @@ class Go:
                             break
 
             else:
-                # p.e. condition link
+                # numbered members -> p.e. condition link
 
-                if len(raw_member_data) > 1 and self.member_typ is None:
-                    # log error or whatever -> member_typ must be set so we can know which list to process
-                    continue
-
-                elif len(raw_member_data) == 1:
-                    member_data = list(raw_member_data.values())[0]
-
-                else:
-                    member_data = raw_member_data[self.member_typ]
+                # if len(raw_member_data) > 1 and self.member_typ is None:
+                #     # log error or whatever -> member_typ must be set so we can know which list to process
+                #     continue
+                #
+                # elif len(raw_member_data) == 1:
+                #     member_data = list(raw_member_data.values())[0]
+                #
+                # else:
+                #     member_data = raw_member_data[self.member_typ]
 
                 group_member_data = {}
-                for numbered_data, member in member_data.items():
+                for numbered_data, member in raw_member_data.items():
                     for possible_member in self.member_list:
                         if possible_member.object_id == member:
                             group_member_data[numbered_data] = possible_member

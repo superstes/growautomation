@@ -45,6 +45,13 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
 class Log:
     LOG_TIMESTAMP_FORMAT = "%Y-%m-%d | %H:%M:%S:%f"
 
+    CENSOR_OUTPUT = '●●●●●●●●●'
+    SECRET_SETTINGS = ['sql_secret']
+    try:
+        SECRET_DATA = [shared_vars.SYSTEM.sql_secret]
+    except AttributeError:
+        SECRET_DATA = []
+
     def __init__(self, typ: str = 'core'):
         from inspect import stack as inspect_stack
         from inspect import getfile as inspect_getfile
@@ -53,10 +60,6 @@ class Log:
         self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM.path_log, self.type, date_year)
         self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
         self.log_level = shared_vars.SYSTEM.log_level
-
-    def _censor(self):
-        return False
-        # censor passwords -> check for strings in output ('IDENTIFIED by', 'pwd', 'password')
 
     def write(self, output: str, level: int = 1) -> bool:
         if self.type == 'core':
@@ -68,19 +71,45 @@ class Log:
         else:
             if level > self.log_level:
                 return False
-        if os_path.exists(self.log_dir) is False:
-            os_system("mkdir -p %s" % self.log_dir)
+
+        self._file()
+        output = self._censor(str(output))
 
         with open("%s/%s_%s.log" % (self.log_dir, date_month, self.type), 'a') as logfile:
             logfile.write("%s - %s - %s\n" % (datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT), self.name, output))
 
         return True
 
-    def file(self) -> str:
+    def _file(self) -> None:
         if os_path.exists(self.log_dir) is False:
             os_system("mkdir -p %s" % self.log_dir)
 
         if os_path.exists(self.log_file) is False:
             os_system("touch %s" % self.log_file)
 
-        return self.log_file
+    def _censor(self, output: str) -> str:
+        for setting in self.SECRET_SETTINGS:
+            if output.find(setting) != -1:
+                split_output = output.split(setting)
+                updated_list = [split_output[0]]
+
+                for data in split_output[1:]:
+                    try:
+                        updated_list.append("%s': '%s',%s" % (
+                                setting,
+                                self.CENSOR_OUTPUT,
+                                data.split(',', 1)[1]
+                            )
+                        )
+                    except IndexError:
+                        output = "LOG ERROR: 'Output has sensitive data ('%s') in it that must be censored. " \
+                                 "But we were not able to safely censor it. " \
+                                 "Output was completely replaced.'" % setting
+
+                if output.find('LOG ERROR') == -1:
+                    output = ''.join(updated_list)
+
+        for data in self.SECRET_DATA:
+            output.replace(data, self.CENSOR_OUTPUT)
+
+        return output

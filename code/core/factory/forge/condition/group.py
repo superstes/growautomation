@@ -14,6 +14,7 @@ class Go:
         self.key_member_link = config.SUPPLY_CG_KEY_MEMBER_CL
         self.key_member_og = config.SUPPLY_CG_KEY_MEMBER_OG
         self.key_member_oo = config.SUPPLY_CG_KEY_MEMBER_OO
+        self.key_member_ag = config.SUPPLY_CG_KEY_MEMBER_AG
 
     def get(self):
         output_list = []
@@ -24,6 +25,7 @@ class Go:
                 member_list=data_dict[self.key_member][self.key_member_link],
                 output_object_list=data_dict[self.key_member][self.key_member_oo],
                 output_group_list=data_dict[self.key_member][self.key_member_og],
+                area_group_list=data_dict[self.key_member][self.key_member_ag],
                 setting_dict=data_dict[self.key_setting],
                 object_id=data_dict[self.key_id],
                 name=data_dict[self.key_name],

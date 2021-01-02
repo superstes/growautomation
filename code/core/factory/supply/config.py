@@ -177,12 +177,14 @@ supply_sql_dict = {
             SUPPLY_CG_KEY_MEMBER_CL: "SELECT * FROM %s_memberconditionmodel;" % DJANGO_PROJECT,
             SUPPLY_CG_KEY_MEMBER_OO: "SELECT * FROM %s_memberconditionoutputmodel;" % DJANGO_PROJECT,
             SUPPLY_CG_KEY_MEMBER_OG: "SELECT * FROM %s_memberconditionoutputgroupmodel;" % DJANGO_PROJECT,
+            SUPPLY_CG_KEY_MEMBER_AG: "SELECT * FROM %s_memberconditionareagroupmodel;" % DJANGO_PROJECT,
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'timer'],
             SUPPLY_CG_KEY_MEMBER_CL: ['group_id', 'link_id'],
             SUPPLY_CG_KEY_MEMBER_OO: ['condition_group_id', 'obj_id'],
             SUPPLY_CG_KEY_MEMBER_OG: ['condition_group_id', 'group_id'],
+            SUPPLY_CG_KEY_MEMBER_AG: ['condition_group_id', 'group_id'],
         },
         'setting_fields': {
             'base': ['enabled', 'timer'],
@@ -199,6 +201,63 @@ supply_sql_dict = {
             SUPPLY_CG_KEY_MEMBER_OG: {
                 'group': 'condition_group_id',
                 'member': 'group_id'
+            },
+            SUPPLY_CG_KEY_MEMBER_AG: {
+                'group': 'condition_group_id',
+                'member': 'group_id'
+            },
+        },
+    },
+    KEY_GROUP_AREA: {
+        'queries': {
+            'base': "SELECT * FROM %s_groupareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_CG: "SELECT id, created, updated, area_id, connection_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_CO: "SELECT id, created, updated, area_id, connection_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_IG: "SELECT id, created, updated, area_id, input_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_IO: "SELECT id, created, updated, area_id, input_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_OG: "SELECT id, created, updated, area_id, output_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_AR_KEY_MEMBER_OO: "SELECT id, created, updated, area_id, output_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
+            SUPPLY_GENERIC_KEY_MEMBER_NESTED: "SELECT * FROM %s_nestedareamodel;" % DJANGO_PROJECT,
+        },
+        'fields': {
+            'base': ['name', 'description'],
+            SUPPLY_AR_KEY_MEMBER_CG: ['area_id', 'connection_group_id'],
+            SUPPLY_AR_KEY_MEMBER_CO: ['area_id', 'connection_obj_id'],
+            SUPPLY_AR_KEY_MEMBER_IG: ['area_id', 'input_group_id'],
+            SUPPLY_AR_KEY_MEMBER_IO: ['area_id', 'input_obj_id'],
+            SUPPLY_AR_KEY_MEMBER_OG: ['area_id', 'output_group_id'],
+            SUPPLY_AR_KEY_MEMBER_OO: ['area_id', 'output_obj_id'],
+            SUPPLY_GENERIC_KEY_MEMBER_NESTED: ['group_id', 'nested_group_id'],
+        },
+        'setting_fields': {},
+        'member': {
+            SUPPLY_AR_KEY_MEMBER_CG: {
+                'group': 'area_id',
+                'member': 'connection_group_id'
+            },
+            SUPPLY_AR_KEY_MEMBER_CO: {
+                'group': 'area_id',
+                'member': 'connection_obj_id'
+            },
+            SUPPLY_AR_KEY_MEMBER_IG: {
+                'group': 'area_id',
+                'member': 'input_group_id'
+            },
+            SUPPLY_AR_KEY_MEMBER_IO: {
+                'group': 'area_id',
+                'member': 'input_obj_id'
+            },
+            SUPPLY_AR_KEY_MEMBER_OG: {
+                'group': 'area_id',
+                'member': 'output_group_id'
+            },
+            SUPPLY_AR_KEY_MEMBER_OO: {
+                'group': 'area_id',
+                'member': 'output_obj_id'
+            },
+            SUPPLY_GENERIC_KEY_MEMBER_NESTED: {
+                'group': 'group_id',
+                'member': 'nested_group_id'
             },
         },
     },

@@ -1,16 +1,21 @@
 from core.utils.debug import debugger
 from core.factory.supply.main import Go as Supply
 from core.factory.forge.condition.main import Go as ConditionFactory
+from core.factory.forge.group.main import Go as GroupFactory
 from core.factory.forge.device.main import Go as DeviceFactory
 from core.factory.forge.system.main import Go as SystemFactory
 
 
 def get() -> tuple:
     supply_data = Supply().get()
-    factory_dict = {}
+
+    factory_dict = DeviceFactory(
+        supply_dict=supply_data,
+    ).get()
 
     factory_dict.update(
-        DeviceFactory(
+        GroupFactory(
+            factory_dict=factory_dict,
             supply_dict=supply_data,
         ).get()
     )

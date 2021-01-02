@@ -3,14 +3,14 @@ Description=Growautomation Service
 After=mariadb.service
 
 [Service]
-Environment="PYTHONPATH=/etc/growautomation"
+Environment="PYTHONPATH=/etc/ga"
 Type=simple
-ExecStartPre=/usr/bin/python3.8 /etc/growautomation/service/earlybird.py
-ExecStart=/usr/bin/python3.8 /etc/growautomation/service/service.py
+#ExecStartPre=
+ExecStart=/usr/bin/python3.8 /etc/ga/service/service.py
 ExecReload=/bin/kill -10 $MAINPID
 TimeoutStopSec=30
-User=growautomation
-Group=growautomation
+User=ga
+Group=ga
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=120s
