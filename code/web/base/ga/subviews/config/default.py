@@ -11,7 +11,7 @@ from ...subviews.handlers import handler404
 def ListView(request, model_obj, typ, form_obj=None, uid=None):
     dataset = model_obj.objects.all()
 
-    return render(request, 'crud/list/default.html', context={
+    return render(request, 'config/list/default.html', context={
         'dataset': dataset, 'typ': typ, 'request': request, 'nav_dict': nav_dict,
     })
 
@@ -45,7 +45,7 @@ def DetailView(request, uid, model_obj, typ, form_obj=None):
 
         data_dict[name] = {'value': value, 'info': info}
 
-    return render(request, 'crud/detailed.html',
+    return render(request, 'config/detailed.html',
                   context={'data': data, 'data_dict': data_dict, 'typ': typ, 'nav_dict': nav_dict})
 
 
@@ -60,13 +60,13 @@ def CreateView(request, form_obj, typ, model_obj=None, uid=None):
                 return redirect("/config/list/%s/" % typ)
 
             except ValueError as error_msg:
-                return render(request, 'crud/change.html', context={'form': form, 'typ': typ, 'form_error': error_msg, 'nav_dict': nav_dict})
+                return render(request, 'config/change.html', context={'form': form, 'typ': typ, 'form_error': error_msg, 'nav_dict': nav_dict})
 
         else:
-            return render(request, 'crud/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
+            return render(request, 'config/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
     else:
         form = form_obj()
-        return render(request, 'crud/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
+        return render(request, 'config/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -86,7 +86,7 @@ def UpdateView(request, uid, model_obj, form_obj, typ):
     else:
 
         form = form_obj(instance=old_data)
-        return render(request, 'crud/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
+        return render(request, 'config/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
 
 
 @user_passes_test(authorized_to_write, login_url='/denied/')

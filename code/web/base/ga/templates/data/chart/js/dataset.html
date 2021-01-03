@@ -1,0 +1,119 @@
+<script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    var period = urlParams.get('period');
+    var input_device = urlParams.get('input_device');
+    var input_model = urlParams.get('input_model');
+    var period_data = urlParams.get('period_data');
+    var start_ts = urlParams.get('start_ts');
+    var stop_ts = urlParams.get('stop_ts');
+
+    var chart_fill = (urlParams.get('chart_fill') == 'True');
+    var chart_fill_color = urlParams.get('chart_fill_color');
+    var chart_border_color = urlParams.get('chart_border_color');
+    var chart_border_width = urlParams.get('chart_border_width');
+    var chart_type = urlParams.get('chart_type');
+    var chart_point_radius = urlParams.get('chart_point_radius');
+    var chart_point_color = urlParams.get('chart_point_color');
+    var chart_point_type = urlParams.get('chart_point_type');
+    var chart_point_hover_radius = urlParams.get('chart_point_hover_radius');
+    var chart_point_hit_radius = urlParams.get('chart_point_hit_radius');
+
+    console.log(`/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`);
+    console.log(`/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`);
+
+    
+    if (!(input_device) && !(input_model)) {
+        console.log(`error: neither input device nor input model is set`);
+        document.getElementById("errorNoResult").style.display = "block";
+    } else {
+        async function fetchData() {
+            if (period && period_data) {
+                var url = `/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`;
+            } else if (start_ts && stop_ts) {
+                var url= `/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`;
+            } else {
+                var url = `/api/data/?start_ts=${start_ts}&input_device=${input_device}`;
+            }
+
+            const response = await fetch(url);
+
+            const data = await response.json();
+            return data;
+        }
+        try {
+            fetchData().then(ga_config => {
+                console.log(ga_config);
+                if (ga_config.data_list.length == 0) {
+                    console.log('warning: no results found');
+                    document.getElementById("warnNoResult").style.display = "block";
+                } else if (ga_config.error != null) {
+                    console.log(`error: ${ga_config.error}`);
+                    document.getElementById("errorNoResult").style.display = "block";
+                } else {
+                    let testChart = document.getElementById('myChart').getContext('2d');
+                    let realTestChart = new Chart(testChart, {
+                        type: 'line',
+                        data: {
+                            labels: ga_config.time_list,
+                            datasets: [{
+                                type: chart_type,
+                                label: `Input object '${ga_config.device_name}'`,
+                                data: ga_config.data_list,
+                                borderWidth: chart_border_width,
+                                borderColor: chart_border_color,
+                                fill: chart_fill,
+                                backgroundColor: chart_fill_color,
+                                pointStyle: chart_point_type,
+                                pointRadius: chart_point_radius,
+                                pointHoverRadius: chart_point_hover_radius,
+                                pointHitRadius: chart_point_hit_radius,
+                                pointBorderColor: chart_point_color,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            parsing: false,
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    ticks: {
+                                        autoSkip: true,
+                                        maxTicksLimit: 15,
+                                    },
+                                    time: {
+                                        displayFormats: {
+                                            'millisecond': 'HH:mm',
+                                            'second': 'HH:mm',
+                                            'minute': 'HH:mm',
+                                            'hour': 'HH:mm | DD-MM-YYYY',
+                                            'day': 'DD-MM-YYYY',
+                                            'week': 'DD-MM-YYYY',
+                                            'month': 'MM-YYYY',
+                                            'quarter': 'MM-YYYY',
+                                            'year': 'MM-YYYY',
+                                            }
+                                    },
+                                }],
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true,
+                                        callback: function(tick) {
+                                            return `${tick.toString()} ${ga_config.data_unit}`;
+                                        },
+        //                                suggestedMax: 50,
+                                    }
+                                }]
+                            }
+                        }
+                    });
+                }
+            })
+        } catch(error) {
+            console.log(`error: ${ga_config.error}`);
+            document.getElementById("errorNoResult").style.display = "block";
+        }
+    }
+</script>

@@ -8,6 +8,7 @@ from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel,
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import handler404
 from .process import subprocess
+from ..config.shared import DATETIME_TS_FORMAT
 
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
@@ -113,3 +114,21 @@ def get_device_parent_setting(child_obj, setting: str):
     parent = get_device_parent(child_obj)
 
     return getattr(parent, setting)
+
+
+def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
+    if type(dt_str) != str or dt_str in ['', "['']"]:
+        return None
+
+    _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
+    return add_timezone(request, datetime_obj=_ts_wo_tz)
+
+
+def get_form_prefill(request):
+    form_prefill = {}
+
+    for key, value in request.GET.items():
+        if value is not None:
+            form_prefill[key] = value
+
+    return form_prefill

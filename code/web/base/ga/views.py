@@ -12,8 +12,8 @@ from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataListView
-from .subviews.data.chart.main import DataChartView, DataChartCreateView
-from .subviews.api.data.main import ApiData
+from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView
+from .subviews.api.data.main import ApiData, ApiTestData
 
 
 login_url = '/accounts/login/'
@@ -81,8 +81,11 @@ def view_data(request, typ: str, sub_type: str = None):
         return logout_check(request=request, default=DataListView(request=request))
 
     elif typ == 'chart':
-        if sub_type == 'create':
-            return logout_check(request=request, default=DataChartCreateView(request=request))
+        if sub_type == 'dataset':
+            return logout_check(request=request, default=DataChartDatasetView(request=request))
+
+        elif sub_type == 'graph':
+            return logout_check(request=request, default=DataChartGraphView(request=request))
 
         return logout_check(request=request, default=DataChartView(request=request))
 
@@ -99,7 +102,7 @@ def view_logout(request):
 
 
 @user_passes_test(authorized_to_access, login_url='/api/denied/', redirect_field_name=None)
-def view_api(request, typ: str):
+def view_api(request, typ: str, sub_type: str = None):
     # no logout check needed since there is no logout button at this route
     if typ == 'data':
         return ApiData(request=request)

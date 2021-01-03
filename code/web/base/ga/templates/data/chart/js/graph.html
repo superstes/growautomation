@@ -1,0 +1,275 @@
+<script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    var input_device = urlParams.get('input_device');
+
+    var ga_config = {
+  "device_id": 1,
+  "device_name": "dht22_01_humi",
+  "data_unit": "RH",
+  "data_type": "float",
+  "time_list": [
+    "2021-01-03 20:19:58",
+    "2021-01-03 20:18:33",
+    "2021-01-03 20:17:07",
+    "2021-01-03 20:15:41",
+    "2021-01-03 20:14:16",
+    "2021-01-03 20:12:50",
+    "2021-01-03 20:11:25",
+    "2021-01-03 20:09:59",
+    "2021-01-03 20:08:34",
+    "2021-01-03 20:07:08",
+    "2021-01-03 20:05:42",
+    "2021-01-03 20:04:17",
+    "2021-01-03 20:02:51",
+    "2021-01-03 20:01:26",
+    "2021-01-03 20:00:00",
+    "2021-01-03 19:58:35",
+    "2021-01-03 19:57:09",
+    "2021-01-03 19:55:43",
+    "2021-01-03 19:54:18",
+    "2021-01-03 19:52:52",
+    "2021-01-03 19:51:27",
+    "2021-01-03 19:50:01",
+    "2021-01-03 19:48:36",
+    "2021-01-03 19:47:10",
+    "2021-01-03 19:45:45",
+    "2021-01-03 19:44:19",
+    "2021-01-03 19:42:53",
+    "2021-01-03 19:41:28",
+    "2021-01-03 19:40:02",
+    "2021-01-03 19:38:37",
+    "2021-01-03 19:37:11",
+    "2021-01-03 19:35:46",
+    "2021-01-03 19:34:20",
+    "2021-01-03 19:32:54",
+    "2021-01-03 19:31:29",
+    "2021-01-03 19:30:03",
+    "2021-01-03 19:28:38",
+    "2021-01-03 19:27:12",
+    "2021-01-03 19:25:47",
+    "2021-01-03 19:24:21",
+    "2021-01-03 19:22:55",
+    "2021-01-03 19:21:30",
+    "2021-01-03 19:20:04",
+    "2021-01-03 19:18:39",
+    "2021-01-03 19:17:13",
+    "2021-01-03 19:15:48",
+    "2021-01-03 19:14:22",
+    "2021-01-03 19:12:56",
+    "2021-01-03 19:11:31",
+    "2021-01-03 19:10:05",
+    "2021-01-03 19:08:40",
+    "2021-01-03 19:07:14",
+    "2021-01-03 19:05:49",
+    "2021-01-03 19:04:23",
+    "2021-01-03 19:02:57",
+    "2021-01-03 19:01:32",
+    "2021-01-03 19:00:06",
+    "2021-01-03 18:58:41",
+    "2021-01-03 18:57:12",
+    "2021-01-03 18:55:46",
+    "2021-01-03 18:54:21",
+    "2021-01-03 18:52:55",
+    "2021-01-03 18:51:29",
+    "2021-01-03 18:50:04",
+    "2021-01-03 18:48:38",
+    "2021-01-03 18:47:13",
+    "2021-01-03 18:45:47",
+    "2021-01-03 18:44:22",
+    "2021-01-03 18:42:56",
+    "2021-01-03 18:41:31",
+    "2021-01-03 18:40:05",
+    "2021-01-03 18:38:39",
+    "2021-01-03 18:37:14",
+    "2021-01-03 18:35:48",
+    "2021-01-03 18:34:23",
+    "2021-01-03 18:32:57",
+    "2021-01-03 18:31:28",
+    "2021-01-03 18:30:03",
+    "2021-01-03 18:28:37"
+  ],
+  "data_list": [
+    40.9,
+    40.7,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    41,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.9,
+    40.9,
+    40.9,
+    40.9,
+    40.9,
+    40.8,
+    40.9,
+    40.9,
+    40.8,
+    40.9,
+    40.8,
+    40.9,
+    41.1,
+    40.9,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.9,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    41,
+    40.9,
+    41.4,
+    40.9,
+    40.9,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.8,
+    40.8,
+    40.9,
+    40.8,
+    40.8,
+    40.8
+  ],
+  "error": null
+}
+
+    var chart_type = urlParams.get('chart_type');
+    var time_format_min = urlParams.get('time_format_min');
+    var time_format_hour = urlParams.get('time_format_hour');
+    var time_format_day = urlParams.get('time_format_day');
+    var time_format_month = urlParams.get('time_format_month');
+    var chart_x_max_ticks = urlParams.get('chart_x_max_ticks');
+    var chart_y_max_suggest = urlParams.get('chart_y_max_suggest');
+    var options_json = urlParams.get('options_json');
+
+    console.log(chart_type);
+    console.log(time_format_min);
+    console.log(time_format_hour);
+    console.log(time_format_day);
+    console.log(time_format_month);
+    console.log(chart_x_max_ticks);
+    console.log(chart_y_max_suggest);
+    console.log(options_json);
+
+    if (options_json && options_json != 'None') {
+        var option_array = options_json
+    } else {
+        var option_array = {
+            responsive: true,
+            maintainAspectRatio: false,
+            parsing: false,
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: chart_x_max_ticks,
+                    },
+                    time: {
+                        displayFormats: {
+                            'millisecond': time_format_min,
+                            'second': time_format_min,
+                            'minute': time_format_min,
+                            'hour': time_format_hour,
+                            'day': time_format_day,
+                            'week': time_format_day,
+                            'month': time_format_month,
+                            'quarter': time_format_month,
+                            'year': time_format_month,
+                            }
+                    },
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(tick) {
+                            return `${tick.toString()} ${ga_config.data_unit}`;
+                        },
+                        suggestedMax: chart_y_max_suggest,
+                        }
+                    }]
+                }
+            }
+    }
+    console.log(option_array);
+
+    var cart_type = null;
+    var chart_fill = true;
+    var chart_fill_color = 'rgba(100, 185, 215, 0.6)';
+    var chart_border_color = 'black';
+    var chart_border_width = 1;
+    var chart_point_radius = 0;
+    var chart_point_color = 'blue';
+    var chart_point_type = 'rectRounded';
+    var chart_point_hover_radius = 7;
+    var chart_point_hit_radius = 7;
+
+    try {
+            console.log(ga_config);
+            let testChart = document.getElementById('myChart').getContext('2d');
+            let realTestChart = new Chart(testChart, {
+                type: chart_type,
+                data: {
+                    labels: ga_config.time_list,
+                    datasets: [{
+                        label: `Input object '${ga_config.device_name}'`,
+                        data: ga_config.data_list,
+                        borderWidth: chart_border_width,
+                        borderColor: chart_border_color,
+                        fill: chart_fill,
+                        backgroundColor: chart_fill_color,
+                        pointStyle: chart_point_type,
+                        pointRadius: chart_point_radius,
+                        pointHoverRadius: chart_point_hover_radius,
+                        pointHitRadius: chart_point_hit_radius,
+                        pointBorderColor: chart_point_color,
+                    }],
+                },
+                options: option_array
+                });
+    } catch(err) {
+        console.log(`error: ${err}`);
+        document.getElementById("errorNoResult").style.display = "block";
+}
+</script>

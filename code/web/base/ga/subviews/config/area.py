@@ -16,7 +16,7 @@ def ListAreaView(request, model_obj, typ):
 
     dataset = model_obj.objects.all()
 
-    return render(request, 'crud/list/member.html', context={
+    return render(request, 'config/list/member.html', context={
         'dataset': dataset, 'typ': typ, 'request': request, 'member_data_dict': member_data_dict, 'member_type_dict': objectmember_type_dict,
         'group_show_list': group_show_list, 'group_key': group_key, 'nav_dict': nav_dict,
     })

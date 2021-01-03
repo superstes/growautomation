@@ -33,7 +33,7 @@ def _get_script_dict(request, typ) -> dict:
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def _handle_uploaded_file(request, typ: str, upload, name: str):
     script_path = get_script_dir(request, typ=typ)
-    print("%s/%s" % (script_path, name))
+
     with open("%s/%s" % (script_path, name), 'wb+') as destination:
         for chunk in upload.chunks():
             destination.write(chunk)

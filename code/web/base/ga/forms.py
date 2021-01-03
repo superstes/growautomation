@@ -1,8 +1,7 @@
 from django import forms
-from bootstrap_datepicker_plus import DateTimePickerInput
+from django.core.exceptions import ValidationError
 
 from .models import *
-from .config.shared import DATETIME_TS_FORMAT
 
 
 LABEL_DICT = {
@@ -50,6 +49,26 @@ LABEL_DICT = {
     'timer': 'Timer',
     'web_cdn': 'Use CDN',
     'web_warn': 'Hide warnings',
+    'chart_type': 'Chart type',
+    'time_format_min': 'Time minute format',
+    'time_format_hour': 'Time hour format',
+    'time_format_day': 'Time day format',
+    'time_format_month': 'Time month format',
+    'chart_x_max_ticks': 'x-Axis max ticks',
+    'chart_y_max_suggest': 'y-Axis max suggest',
+    'options_json': 'Chart.js options in json format',
+    'input_device': 'Input device',
+    'input_model': 'Input model',
+    'area': 'Area',
+    'start_ts': 'Start timestamp',
+    'stop_ts': 'Stop timestamp',
+    'chart_fill': 'Fill chart',
+    'chart_fill_color': 'Chart fill color',
+    'chart_border_color': 'Chart border color',
+    'chart_border_width': 'Chart border width',
+    'chart_point_radius': 'Chart point radius',
+    'chart_point_color': 'Chart point color',
+    'chart_point_type': 'Chart point type',
 }
 
 HELP_DICT = {
@@ -98,6 +117,21 @@ HELP_DICT = {
     'interval': 'Custom interval in which to execute system task',
     'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks',
     'web_warn': 'If the webinterface should hide warnings',
+    'chart_type': 'Chart.js chart-type',
+    'time_format_min': 'Time format if the range is shown in minutes [must be valid moment.js format]',
+    'time_format_hour': 'Time format if the range is shown in hours [must be valid moment.js format]',
+    'time_format_day': 'Time format if the range is shown in days [must be valid moment.js format]',
+    'time_format_month': 'Time format if the range is shown in months [must be valid moment.js format]',
+    'chart_x_max_ticks': 'Maximum labels shown on x-Axis',
+    'chart_y_max_suggest': 'y-Axis upper limit should start with this value (else dynamic) [can be empty]',
+    'options_json': 'Chart.js options in json format (will replace all others) [max length 4096, can be empty]',
+    'chart_fill': 'If the chart should be filled [can be empty]',
+    'chart_fill_color': 'Color to fill the chart with [max length 50, can be empty]',
+    'chart_border_color': 'Color of the chart border [max length 50, can be empty]',
+    'chart_border_width': 'Width of the chart border [can be empty]',
+    'chart_point_radius': 'Radius of chart data points [can be empty]',
+    'chart_point_color': 'Color of chart data points [max length 50, can be empty]',
+    'chart_point_type': 'Type of chart data points [can be empty]',
 }
 
 
@@ -172,15 +206,45 @@ class ObjectTimerForm(BaseForm):
 
 # data ##############################
 
-# class DataRawListFilter(forms.Form):
-#     start_ts = forms.DateField(widget=DateTimePickerInput(format=DATETIME_TS_FORMAT), label='Start time')
-#     stop_ts = forms.DateField(widget=DateTimePickerInput(format=DATETIME_TS_FORMAT), label='Stop time')
+class ChartForm(BaseForm):
+    class Meta:
+        model = ChartModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
 
 
-# class TaskLogForm(BaseForm):
-#     class Meta:
-#         model = TaskLogModel
-#         fields = model.field_list
+class ChartDatasetForm(BaseForm):
+    class Meta:
+        model = ChartDatasetModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+
+    def clean(self):
+        data = super().clean()
+        input_device = data.get("input_device")
+        input_model = data.get("input_model")
+        start_ts = data.get("start_ts")
+        period = data.get("period")
+        period_data = data.get("period_data")
+
+        if input_device and input_model:
+            raise ValidationError("One one of the two can be chosen: 'input_device', 'input_model'")
+
+        if start_ts and period:
+            raise ValidationError("One one of the two can be chosen: 'start_ts', 'period'")
+
+        if period and not period_data:
+            raise ValidationError("Period data must be defined when period is chosen!")
+
+
+class ChartLinkForm(BaseForm):
+    class Meta:
+        model = ChartLinkModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
 
 
 # groups ##############################

@@ -1,0 +1,14 @@
+{% load util %}
+<label for="input_device"><strong>Input device</strong></label>
+<select class="form-control" id="input_device" name="input_device" >
+    {% if input_device is None %}
+        <option selected>---------</option>
+    {% endif %}
+    {% for option, option_id in input_device_dict.items %}
+        {% if input_device is not None and option_id == input_device %}
+            <option selected value="{{ option_id }}">{{ option }}</option>
+        {% else %}
+            <option value="{{ option_id }}">{{ option }}</option>
+        {% endif %}
+    {% endfor %}
+</select>

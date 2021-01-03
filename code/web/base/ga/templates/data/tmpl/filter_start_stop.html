@@ -1,0 +1,30 @@
+{% load util %}
+{% if stop_ts_ok is False %}
+    <div class="alert alert-warning">
+        <strong>You must not select an end time that is earlier than the start time.</strong>
+    </div>
+{% endif %}
+<br>
+<label for="id_start_ts">Start time</label>
+<div class="input-group date">
+    {% if start_ts is None %}
+        <input type="text" name="start_ts" class="form-control" placeholder="Start time" title="" id="id_start_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+    {% else %}
+        <input type="text" name="start_ts" class="form-control" value="{{ start_ts|format_ts }}" title="" id="id_start_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+    {% endif %}
+    <div class="input-group-addon input-group-append" data-target="#datetimepicker1" data-toggle="datetimepickerv">
+        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+    </div>
+</div>
+<br>
+<label for="id_stop_ts">Stop time</label>
+<div class="input-group date">
+    {% if stop_ts is None %}
+        <input type="text" name="stop_ts" class="form-control" placeholder="Stop time" title="" id="id_stop_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+    {% else %}
+        <input type="text" name="stop_ts" class="form-control" value="{{ stop_ts|format_ts }}" title="" id="id_stop_ts" dp_config="{&quot;id&quot;: &quot;dp_1&quot;, &quot;picker_type&quot;: &quot;DATETIME&quot;, &quot;linked_to&quot;: null, &quot;options&quot;: {&quot;showClose&quot;: true, &quot;showClear&quot;: true, &quot;showTodayButton&quot;: true, &quot;format&quot;: &quot;YYYY-MM-DD HH:mm:ss&quot;}}"/>
+    {% endif %}
+    <div class="input-group-addon input-group-append" data-target="#datetimepicker1" data-toggle="datetimepickerv">
+        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+    </div>
+</div>

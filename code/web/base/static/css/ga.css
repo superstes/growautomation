@@ -47,3 +47,19 @@
 .ga-nav-icon {
     border-radius: 50%;
 }
+
+.ga-chart {
+    position: relative;
+}
+
+.ga-chart-main {
+    height: 45vh;
+    width: 90vw;
+}
+
+@media only screen and (max-width: 600px) {
+    .ga-chart-main {
+    height: 35vh;
+    width: 90vw;
+    }
+}

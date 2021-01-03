@@ -31,6 +31,8 @@ urlpatterns = [
     url(r'^api/denied/?$', view_api_denied),
     path('api/<str:typ>', view_api),
     path('api/<str:typ>/', view_api),
+    path('api/<str:typ>/<str:sub_type>', view_api),
+    path('api/<str:typ>/<str:sub_type>/', view_api),
     #   defaults
     url(r'^$|^home/?|^main/?|^/?$', view_home),
     url(r'^denied/?$', view_denied),

@@ -25,7 +25,7 @@ class BareModel(SuperBareModel):
 
 class BaseModel(BareModel):
     name = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=255, null=True)
+    description = models.CharField(max_length=255, blank=True, null=True, default=None)
 
     def __str__(self):
         return f"{self.name} | {self.description}"
@@ -85,7 +85,7 @@ from .submodels.objects import ObjectTimerModel
 # data ##############################
 
 
-from .submodels.data import InputDataModel
+from .submodels.data import InputDataModel, ChartModel, ChartDatasetModel, ChartLinkModel
 
 
 # groups ##############################

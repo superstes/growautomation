@@ -1,13 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import user_passes_test
 from django.utils import timezone
-from datetime import datetime
 
 from ....user import authorized_to_read
 from ....config.nav import nav_dict
-from ....config.shared import DATETIME_TS_FORMAT
 from ....models import InputDataModel, ObjectInputModel
-from ....utils.helper import add_timezone, get_device_parent_setting
+from ....utils.helper import get_device_parent_setting, get_datetime_w_tz
 
 
 DATA_MAX_ENTRY_RANGE = range(25, 1025, 25)
@@ -27,17 +25,12 @@ def DataListView(request):
     result_count = 100
 
     if 'start_ts' in request.GET:
-        _ = request.GET['start_ts']
-        if _ not in [None, '']:
-            start_ts_wo_tz = datetime.strptime(_, DATETIME_TS_FORMAT)
-            start_ts = add_timezone(request, datetime_obj=start_ts_wo_tz)
+        start_ts = get_datetime_w_tz(request, dt_str=request.GET['start_ts'])
 
         if 'stop_ts' in request.GET:
-            _ = request.GET['stop_ts']
-            if _ not in [None, '']:
-                stop_ts_wo_tz = datetime.strptime(_, DATETIME_TS_FORMAT)
-                _stop_ts = add_timezone(request, datetime_obj=stop_ts_wo_tz)
+            _stop_ts = get_datetime_w_tz(request, dt_str=request.GET['stop_ts'])
 
+            if _stop_ts is not None:
                 if _stop_ts > start_ts:
                     stop_ts = _stop_ts
 

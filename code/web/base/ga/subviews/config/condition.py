@@ -23,7 +23,7 @@ def ListConditionView(request, model_obj, typ, form_obj=None, uid=None):
 
     dataset = model_obj.objects.all()
 
-    return render(request, 'crud/list/member.html', context={
+    return render(request, 'config/list/member.html', context={
         'dataset': dataset, 'typ': typ, 'request': request, 'member_data_dict': member_data_dict, 'member_type_dict': cm_type_dict,
         'group_key': group_key, 'member_type': member_type, 'member_view_active': member_view_active, 'nav_dict': nav_dict,
     })
@@ -44,7 +44,7 @@ def ListConditionLinkView(request, model_obj, typ, form_obj=None, uid=None):
 
     dataset = model_obj.objects.all()
 
-    return render(request, 'crud/list/member.html', context={
+    return render(request, 'config/list/member.html', context={
         'dataset': dataset, 'typ': typ, 'request': request, 'member_data_dict': member_data_dict, 'member_type_dict': clm_type_dict,
         'group_key': group_key, 'member_type': member_type, 'member_view_active': member_view_active, 'nav_dict': nav_dict,
     })

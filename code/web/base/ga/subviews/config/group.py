@@ -24,7 +24,7 @@ def ListGroupView(request, model_obj, typ, form_obj=None, uid=None):
 
     dataset = model_obj.objects.all()
 
-    return render(request, 'crud/list/member.html', context={
+    return render(request, 'config/list/member.html', context={
         'dataset': dataset, 'typ': typ, 'request': request, 'nav_dict': nav_dict, 'member_type': member_type, 'member_view_active': member_view_active,
         'member_data_dict': member_data_dict, 'member_type_dict': m_type_dict,
     })

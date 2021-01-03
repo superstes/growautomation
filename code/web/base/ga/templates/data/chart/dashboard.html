@@ -2,8 +2,9 @@
 {% load util %}
 {% load tz %}
 {% load bootstrap4 %}
-{% include "./head.html" %}
+{% include "./tmpl/head.html" %}
 {% block content %}
-<h1>Dashboard</h1>
-<a href='/data/chart/create/' class="btn btn-success">Create graph</a>
+    <h1>Dashboard</h1><br>
+    <a href='/data/chart/graph/' class="btn btn-primary">Graph prototype</a><br><br>
+    <a href='/data/chart/dataset/' class="btn btn-primary">Dataset</a>
 {% endblock %}

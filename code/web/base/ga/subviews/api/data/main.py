@@ -6,12 +6,14 @@ from math import ceil
 
 from ....models import InputDataModel
 from ...handlers import handler400_api
-from ....utils.helper import get_device_parent_setting, add_timezone, get_device_instance
+from ....utils.helper import get_device_parent_setting, add_timezone, get_device_instance, get_datetime_w_tz
 from ....user import authorized_to_read
 from ....config.shared import DATETIME_TS_FORMAT
 
 
-MAX_DATA_POINTS = 150
+MAX_DATA_POINTS_SHORT = 150
+MAX_DATA_POINTS_MEDIUM = 500
+MAX_DATA_POINTS_LONG = 1000
 
 
 @user_passes_test(authorized_to_read, login_url='/api/denied/')
@@ -21,6 +23,8 @@ def ApiData(request):
     # chart.js settings
     #   array of unimportant chart.js settings
     #   form fields for important ones
+
+    error = None
 
     if request.method == 'GET':
         if 'input_device' not in request.GET:
@@ -38,6 +42,16 @@ def ApiData(request):
 
         start_ts, stop_ts = _time
 
+        time_span = stop_ts - start_ts
+        if time_span > timedelta(days=30):
+            max_data_points = MAX_DATA_POINTS_LONG
+
+        elif time_span > timedelta(days=7):
+            max_data_points = MAX_DATA_POINTS_MEDIUM
+
+        else:
+            max_data_points = MAX_DATA_POINTS_SHORT
+
         data_list = InputDataModel.objects.filter(
             created__gte=start_ts,
             created__lte=stop_ts,
@@ -46,8 +60,8 @@ def ApiData(request):
 
         data_dict = _prepare_data(data_list, data_type)
 
-        if len(data_dict) > MAX_DATA_POINTS:
-            data_dict = _thin_out_data_points(data_dict)
+        if len(data_dict) > max_data_points:
+            data_dict = _thin_out_data_points(data_dict, count=max_data_points)
 
         time_list, data_list = [], []
 
@@ -57,17 +71,17 @@ def ApiData(request):
 
         return JsonResponse(data={
             'device_id': int(input_device), 'device_name': input_device_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'time_list': time_list,
-            'data_list': data_list,
+            'data_list': data_list, 'error': error,
         })
 
     else:
         return handler400_api(msg='Only GET method supported')
 
 
-def _thin_out_data_points(data_dict: dict) -> dict:
+def _thin_out_data_points(data_dict: dict, count: int) -> dict:
     data_point_count = len(data_dict)
 
-    interval = ceil(data_point_count / MAX_DATA_POINTS)
+    interval = ceil(data_point_count / count)
 
     # if a dict will be needed again
     _winners = dict(islice(enumerate(data_dict), None, None, interval))
@@ -101,19 +115,19 @@ def _prepare_data(data_list, data_type: str) -> dict:
 
 def _get_time(request):
     if 'start_ts' in request.GET:
-        start_ts = request.GET['start_ts']
+        start_ts = get_datetime_w_tz(request, dt_str=request.GET['start_ts'])
 
         if 'stop_ts' in request.GET:
-            stop_ts = request.GET['stop_ts']
+            stop_ts = get_datetime_w_tz(request, dt_str=request.GET['stop_ts'])
 
         else:
-            stop_ts = add_timezone(request, datetime.now())
+            stop_ts = add_timezone(request, datetime_obj=datetime.now())
 
     elif 'period' in request.GET and 'period_data' in request.GET:
         period = request.GET['period']
         period_data = int(request.GET['period_data'])
 
-        stop_ts = add_timezone(request, datetime.now())
+        stop_ts = add_timezone(request, datetime_obj=datetime.now())
 
         if period == 'y':
             start_ts = stop_ts - timedelta(days=(period_data * 365))

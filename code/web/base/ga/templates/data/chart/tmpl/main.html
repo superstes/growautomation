@@ -1,0 +1,33 @@
+{% extends "../../../body.html" %}
+{% block extrahead %}
+    {% include "./head.html" %}
+{% endblock %}
+{% block content %}
+    {% block title %}
+    {% endblock %}
+    <br><hr><br>
+    <h2>
+        Preview:
+    </h2>
+    <div class="ga-chart ga-chart-main" align="center">
+        <canvas id="myChart"></canvas>
+    </div>
+    <div id="warnNoResult" style="display: none;">
+        {% include "../../../warn/no_results.html" %}
+    </div>
+    <div id="errorNoResult" style="display: none;">
+        {% include "../../../error/no_results.html" %}
+    </div>
+    <br><hr><br>
+    <h2>
+        Options
+    </h2>
+    {% block options %}
+    {% endblock %}
+    <br>
+    <small>
+        For detailed information look into the external documentation:
+        <a href="https://www.chartjs.org/docs/latest/configuration/">chartjs</a> |
+        <a href="https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/">momentjs</a>
+    </small>
+{% endblock %}
