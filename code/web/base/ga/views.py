@@ -12,8 +12,10 @@ from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataListView
-from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView
-from .subviews.api.data.main import ApiData, ApiTestData
+from .subviews.data.chart.dashboard import DataChartDashboardView
+from .subviews.data.chart.dataset import DataChartDatasetView
+from .subviews.data.chart.graph import DataChartGraphView
+from .subviews.api.data.main import ApiData
 
 
 login_url = '/accounts/login/'
@@ -87,7 +89,7 @@ def view_data(request, typ: str, sub_type: str = None):
         elif sub_type == 'graph':
             return logout_check(request=request, default=DataChartGraphView(request=request))
 
-        return logout_check(request=request, default=DataChartView(request=request))
+        return logout_check(request=request, default=DataChartDashboardView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 

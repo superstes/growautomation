@@ -52,8 +52,8 @@
                     console.log(`error: ${ga_config.error}`);
                     document.getElementById("errorNoResult").style.display = "block";
                 } else {
-                    let testChart = document.getElementById('myChart').getContext('2d');
-                    let realTestChart = new Chart(testChart, {
+                    let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
+                    let chartObject = new Chart(chartCanvas, {
                         type: 'line',
                         data: {
                             labels: ga_config.time_list,

@@ -206,9 +206,9 @@ class ObjectTimerForm(BaseForm):
 
 # data ##############################
 
-class ChartForm(BaseForm):
+class ChartGraphForm(BaseForm):
     class Meta:
-        model = ChartModel
+        model = ChartGraphModel
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT

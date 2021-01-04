@@ -19,7 +19,7 @@ class InputDataModel(SuperBareModel):
         return f"Input data of device {self.obj.name}: {self.data}"
 
 
-class ChartModel(BaseModel):
+class ChartGraphModel(BaseModel):
     field_list = [
         'name', 'description', 'chart_type', 'time_format_min', 'time_format_hour', 'time_format_day', 'time_format_month', 'chart_x_max_ticks', 'chart_y_max_suggest',
         'options_json',
@@ -27,10 +27,10 @@ class ChartModel(BaseModel):
 
     chart_type = models.CharField(choices=CHART_TYPE_CHOICES, max_length=10)
 
-    time_format_min = models.CharField(max_length=15, default='HH:mm')
-    time_format_hour = models.CharField(max_length=15, default='HH:mm | DD-MM-YYYY')
-    time_format_day = models.CharField(max_length=15, default='DD-MM-YYYY')
-    time_format_month = models.CharField(max_length=15, default='MM-YYYY')
+    time_format_min = models.CharField(max_length=50, default='HH:mm')
+    time_format_hour = models.CharField(max_length=50, default='HH:mm | DD-MM-YYYY')
+    time_format_day = models.CharField(max_length=50, default='DD-MM-YYYY')
+    time_format_month = models.CharField(max_length=50, default='MM-YYYY')
 
     chart_x_max_ticks = models.PositiveSmallIntegerField(default=15)
     chart_y_max_suggest = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
@@ -71,7 +71,7 @@ class ChartDatasetModel(BaseModel):
 
 
 class ChartLinkModel(BaseMemberModel):
-    grp_model = ChartModel
+    grp_model = ChartGraphModel
     obj_model = ChartDatasetModel
     initials = 'cl'
 

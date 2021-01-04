@@ -85,7 +85,7 @@ from .submodels.objects import ObjectTimerModel
 # data ##############################
 
 
-from .submodels.data import InputDataModel, ChartModel, ChartDatasetModel, ChartLinkModel
+from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartLinkModel
 
 
 # groups ##############################

@@ -1,17 +1,11 @@
 {% extends "./tmpl/main.html" %}
-{% load util %}
-{% load tz %}
-{% load bootstrap_tags %}
 {% block title %}
-    <h1>Create dataset</h1>
+    <h1>{{ action|title }} dataset</h1>
 {% endblock %}
 {% block options %}
-    <form method="post">
         {% include "../tmpl/filter_start_stop.html" %}
         <br>
-        {{ form|as_bootstrap }}
-        <br>
-        <input type="submit" value="Select" class="btn btn-primary" formmethod='GET'> | <input type="submit" value="Save" class="btn btn-success" disabled>
-    </form>
+{% endblock %}
+{% block js %}
     {% include "./js/dataset.html" %}
 {% endblock %}

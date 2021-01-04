@@ -1,0 +1,19 @@
+{% load util %}
+<input type="submit" value="Refresh" class="btn btn-primary" formmethod='GET'>
+{% if request.user|authorized_to_write %}
+    {% if action == 'create' %}
+        <input type="submit" value="Save" class="btn btn-success">
+    {% elif action == 'update' %}
+        <input type="submit" value="Save" class="btn btn-warning">
+    {% elif action == 'delete' %}
+        <input type="submit" value="Delete" class="btn btn-danger">
+    {% endif %}
+{% else %}
+    {% if action == 'create' %}
+        <input type="submit" value="Save" class="btn btn-success" disabled>
+    {% elif action == 'update' %}
+        <input type="submit" value="Save" class="btn btn-warning" disabled>
+    {% elif action == 'delete' %}
+        <input type="submit" value="Delete" class="btn btn-danger" disabled>
+    {% endif %}
+{% endif %}

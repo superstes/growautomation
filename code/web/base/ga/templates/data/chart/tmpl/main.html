@@ -1,4 +1,5 @@
 {% extends "../../../body.html" %}
+{% load bootstrap_tags %}
 {% block extrahead %}
     {% include "./head.html" %}
 {% endblock %}
@@ -6,28 +7,75 @@
     {% block title %}
     {% endblock %}
     <br><hr><br>
-    <h2>
-        Preview:
-    </h2>
-    <div class="ga-chart ga-chart-main" align="center">
-        <canvas id="myChart"></canvas>
-    </div>
-    <div id="warnNoResult" style="display: none;">
-        {% include "../../../warn/no_results.html" %}
-    </div>
-    <div id="errorNoResult" style="display: none;">
-        {% include "../../../error/no_results.html" %}
-    </div>
-    <br><hr><br>
-    <h2>
-        Options
-    </h2>
-    {% block options %}
-    {% endblock %}
-    <br>
-    <small>
-        For detailed information look into the external documentation:
-        <a href="https://www.chartjs.org/docs/latest/configuration/">chartjs</a> |
-        <a href="https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/">momentjs</a>
-    </small>
+    {% include "../../../error/form.html" %}
+    {% if action != 'create' and object_list|length != 0 %}
+        <form method="get">
+            <label for="selected"><strong>Existing chart object</strong></label>
+            <select class="form-control" id="selected" name="selected" >
+                {% if action == 'show' %}
+                    <option value="---------">---------</option>
+                {% endif %}
+                {% for option in object_list %}
+                    {% if option.id == selected %}
+                        <option selected value="{{ option.id }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option.id }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <br>
+            <input type="hidden" name="do" value="{{ action }}" />
+            <input type="submit" value="Select" class="btn btn-primary">
+        </form>
+        <br><hr><br>
+    {% endif %}
+    {% if action in 'delete, update' and selected is None %}
+        {% if object_list|length != 0 %}
+            <br>
+            <div class="alert alert-info">
+                <strong>Choose a chart object to {{ action }}</strong>
+            </div>
+        {% endif %}
+    {% else %}
+        <h2>
+            Preview:
+        </h2>
+        <div class="ga-chart ga-chart-main" align="center">
+            <canvas id="ga_chart_canvas"></canvas>
+        </div>
+        <div id="warnNoResult" style="display: none;">
+            {% include "../../../warn/no_results.html" %}
+        </div>
+        <div id="errorNoResult" style="display: none;">
+            {% include "../../../error/no_results.html" %}
+        </div>
+        <form method="post">
+            <br>
+            <div align="center">
+                {% include "./actions.html" %}
+            </div>
+            <br><hr><br>
+            <h2>
+                Options
+            </h2>
+            {% block options %}
+            {% endblock %}
+            {{ form|as_bootstrap }}
+            <br>
+            <input type="hidden" name="do" value="{{ action }}" />
+            <input type="hidden" name="selected" value="{{ selected }}" />
+            {% include "./actions.html" %}
+            {% csrf_token %}
+        </form>
+        <br>
+        <small>
+            For detailed information look into the external documentation:
+            <a href="https://www.chartjs.org/docs/latest/configuration/">chartjs</a> |
+            <a href="https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/">momentjs</a>
+        </small>
+        {% block js %}
+        {% endblock %}
+    {% endif %}
+    <hr>
+    <a href="/data/chart/" class="btn btn-primary">Back to dashboard</a>
 {% endblock %}

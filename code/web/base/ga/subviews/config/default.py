@@ -72,12 +72,12 @@ def CreateView(request, form_obj, typ, model_obj=None, uid=None):
 @user_passes_test(authorized_to_read, login_url='/denied/')
 def UpdateView(request, uid, model_obj, form_obj, typ):
     try:
-        old_data = get_object_or_404(model_obj, id=uid)
+        existing_instance = get_object_or_404(model_obj, id=uid)
     except Exception:
         raise handler404(request, msg='Does Not Exist')
 
     if request.method == 'POST':
-        form = form_obj(request.POST, instance=old_data)
+        form = form_obj(request.POST, instance=existing_instance)
 
         if form.is_valid():
             form.save()
@@ -85,7 +85,7 @@ def UpdateView(request, uid, model_obj, form_obj, typ):
 
     else:
 
-        form = form_obj(instance=old_data)
+        form = form_obj(instance=existing_instance)
         return render(request, 'config/change.html', context={'form': form, 'typ': typ, 'nav_dict': nav_dict})
 
 
