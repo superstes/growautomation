@@ -1,0 +1,47 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% load tz %}
+{% load bootstrap4 %}
+{% include "./tmpl/head.html" %}
+{% block content %}
+    <h1>Charts</h1>
+    <br><hr><br>
+    {% if status is not None and what is not None %}
+        <div class="alert alert-success">
+            <strong>{{ status|title }} {{ what }}</strong>
+        </div>
+        <br><hr><br>
+    {% endif %}
+    <h2>Graph prototype</h2><br>
+    <a href='/data/chart/graph/?do=show' class="btn btn-primary">View</a>
+    <a href='/data/chart/graph/?do=create' class="btn btn-primary">Create</a>
+    {% if graph_list|length != 0 %}
+        <a href='/data/chart/graph/?do=update' class="btn btn-primary">Update</a>
+        <a href='/data/chart/graph/?do=delete' class="btn btn-primary">Delete</a>
+    {% else %}
+        <button class="btn btn-primary" disabled>Update</button>
+        <button class="btn btn-primary" disabled>Delete</button>
+    {% endif %}
+    <br><hr><br>
+    <h2>Dataset</h2><br>
+    <a href='/data/chart/dataset/?do=show' class="btn btn-primary">View</a>
+    <a href='/data/chart/dataset/?do=create' class="btn btn-primary">Create</a>
+    {% if dataset_list|length != 0 %}
+        <a href='/data/chart/dataset/?do=update' class="btn btn-primary">Update</a>
+        <a href='/data/chart/dataset/?do=delete' class="btn btn-primary">Delete</a>
+    {% else %}
+        <button class="btn btn-primary" disabled>Update</button>
+        <button class="btn btn-primary" disabled>Delete</button>
+    {% endif %}
+    <br><hr><br>
+    <h2>Dashboard elements</h2><br>
+    <a href='/data/chart/dashboard/?do=show' class="btn btn-primary">View</a>
+    <a href='/data/chart/dashboard/?do=create' class="btn btn-primary">Create</a>
+    {% if dashboard_list|length != 0 %}
+        <a href='/data/chart/dashboard/?do=update' class="btn btn-primary">Update</a>
+        <a href='/data/chart/dashboard/?do=delete' class="btn btn-primary">Delete</a>
+    {% else %}
+        <button class="btn btn-primary" disabled>Update</button>
+        <button class="btn btn-primary" disabled>Delete</button>
+    {% endif %}
+{% endblock %}

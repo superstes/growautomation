@@ -1,0 +1,27 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    {% include "../../error/form.html" %}
+    {% load bootstrap_tags %}
+
+    {% if request.GET|has_key:'action' %}
+        {% set_var request.GET|get_item:'action' as action %}
+    {% else %}
+        {% set_var request.POST|get_item:'action' as action %}
+    {% endif %}
+
+    {% set_var request|get_return_path as return_path %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form|as_bootstrap }}
+        {% if request.user|authorized_to_write %}
+            <input type="hidden" name="return" value="{{ return_path }}" />
+            <input type="hidden" name="action" value="create" />
+            <input type="submit" value="{{ action }}" class="btn btn-success">
+        {% else %}
+            <input type="submit" value="{{ action }}" class="btn btn-success" disabled>
+        {% endif %}
+        | <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
+    </form>
+{% endblock %}

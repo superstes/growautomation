@@ -22,8 +22,9 @@ class InputDataModel(SuperBareModel):
 class ChartGraphModel(BaseModel):
     field_list = [
         'name', 'description', 'chart_type', 'time_format_min', 'time_format_hour', 'time_format_day', 'time_format_month', 'chart_x_max_ticks', 'chart_y_max_suggest',
-        'options_json',
+        'options_json', 'unit',
     ]
+    data_fields = field_list
 
     chart_type = models.CharField(choices=CHART_TYPE_CHOICES, max_length=10)
 
@@ -36,13 +37,16 @@ class ChartGraphModel(BaseModel):
     chart_y_max_suggest = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
 
     options_json = models.CharField(max_length=4096, blank=True, null=True, default=None)
+    unit = models.CharField(max_length=15, blank=True, null=True, default=None)
 
 
 class ChartDatasetModel(BaseModel):
     field_list = [
-        'name', 'description', 'input_device', 'area', 'period', 'period_data',  # 'start_ts', 'stop_ts', 'input_model'  -> removed from form view
+        'name', 'description', 'input_device', 'area', 'period', 'period_data',  'start_ts', 'stop_ts',  # 'input_model'  -> removed from form view
         'chart_fill', 'chart_fill_color', 'chart_border_color', 'chart_border_width', 'chart_type', 'chart_point_radius', 'chart_point_color', 'chart_point_type',
+        'dataset_json',
     ]
+
     PERIOD_CHOICES = [('y', 'Years'), ('m', 'Months'), ('d', 'Days'), ('H', 'Hours'), ('M', 'Minutes')]
     CHART_POINT_TYPE_CHOICES = [
         ('circle', 'Circle'), ('cross', 'Cross'), ('crossRot', 'Cross rot'), ('dash', 'Dash'), ('line', 'Line'), ('rect', 'Rect'), ('rectRounded', 'Rect rounded'),
@@ -69,16 +73,38 @@ class ChartDatasetModel(BaseModel):
     chart_point_color = models.CharField(max_length=50, blank=True, null=True, default=None)
     chart_point_type = models.CharField(choices=CHART_POINT_TYPE_CHOICES, max_length=15, blank=True, null=True, default=None)
 
+    dataset_json = models.CharField(max_length=4096, blank=True, null=True, default=None)
 
-class ChartLinkModel(BaseMemberModel):
-    grp_model = ChartGraphModel
+
+class ChartDashboardModel(BaseModel):
+    field_list = [
+        'name', 'description',
+    ]
+
+
+class ChartGraphLinkModel(BaseMemberModel):
+    grp_model = ChartDashboardModel
+    obj_model = ChartGraphModel
+    initials = 'cglm'
+
+    group = models.OneToOneField(grp_model, on_delete=models.CASCADE, related_name="%s_fk_group" % initials)
+    obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['group', 'obj'], name='cglm_uc_group_obj')
+        ]
+
+
+class ChartDatasetLinkModel(BaseMemberModel):
+    grp_model = ChartDashboardModel
     obj_model = ChartDatasetModel
-    initials = 'cl'
+    initials = 'cdlm'
 
     group = models.ForeignKey(grp_model, on_delete=models.CASCADE, related_name="%s_fk_group" % initials)
     obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['group', 'obj'], name='cl_uc_group_obj')
+            models.UniqueConstraint(fields=['group', 'obj'], name='cdlm_uc_group_obj')
         ]

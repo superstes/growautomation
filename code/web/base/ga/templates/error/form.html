@@ -1,5 +1,5 @@
 {% load util %}
-{% if request|get_item:'method' == 'POST' %}
+{% if request|get_item:'method' == 'POST' or form_error is not None %}
     {% if form_error %}
         <div class="alert alert-danger">
             <strong>{{ form_error }}</strong>

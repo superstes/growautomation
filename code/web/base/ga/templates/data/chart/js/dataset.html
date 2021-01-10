@@ -26,7 +26,8 @@
     
     if (!(input_device) && !(input_model)) {
         console.log(`error: neither input device nor input model is set`);
-        document.getElementById("errorNoResult").style.display = "block";
+        document.getElementById("ga_error_noresult").style.display = "block";
+        document.getElementById("ga_chart_div").style.display = "none";
     } else {
         async function fetchData() {
             if (period && period_data) {
@@ -45,22 +46,23 @@
         try {
             fetchData().then(ga_config => {
                 console.log(ga_config);
-                if (ga_config.data_list.length == 0) {
+                if (ga_config.xy_data.length == 0) {
                     console.log('warning: no results found');
-                    document.getElementById("warnNoResult").style.display = "block";
+                    document.getElementById("ga_warn_noresult").style.display = "block";
+                    document.getElementById("ga_chart_div").style.display = "none";
                 } else if (ga_config.error != null) {
                     console.log(`error: ${ga_config.error}`);
-                    document.getElementById("errorNoResult").style.display = "block";
+                    document.getElementById("ga_error_noresult").style.display = "block";
+                    document.getElementById("ga_chart_div").style.display = "none";
                 } else {
                     let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
                     let chartObject = new Chart(chartCanvas, {
                         type: 'line',
                         data: {
-                            labels: ga_config.time_list,
                             datasets: [{
                                 type: chart_type,
-                                label: `Input object '${ga_config.device_name}'`,
-                                data: ga_config.data_list,
+                                label: ga_config.device_name,
+                                data: ga_config.xy_data,
                                 borderWidth: chart_border_width,
                                 borderColor: chart_border_color,
                                 fill: chart_fill,
@@ -113,7 +115,8 @@
             })
         } catch(error) {
             console.log(`error: ${ga_config.error}`);
-            document.getElementById("errorNoResult").style.display = "block";
+            document.getElementById("ga_error_noresult").style.display = "block";
+            document.getElementById("ga_chart_div").style.display = "none";
         }
     }
 </script>

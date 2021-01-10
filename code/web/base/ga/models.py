@@ -84,14 +84,11 @@ from .submodels.objects import ObjectTimerModel
 
 # data ##############################
 
-
-from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartLinkModel
-
+from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ChartDatasetLinkModel, ChartGraphLinkModel
 
 # groups ##############################
 
 from .submodels.groups import GroupConnectionModel, GroupInputModel, GroupOutputModel, GroupConditionModel, GroupAreaModel
-
 
 # member ##############################
 
@@ -101,7 +98,6 @@ from .submodels.members import MemberConditionOutputGroupModel, MemberConditionO
 # nested member ##############################
 
 from .submodels.nestedmembers import NestedAreaModel
-
 
 # settings ##############################
 

@@ -1,0 +1,29 @@
+{% extends "../../body.html" %}
+{% load bootstrap_tags %}
+{% block extrahead %}
+    {% include "./tmpl/head.html" %}
+{% endblock %}
+{% block content %}
+    <h1>{{ action|title }} dashboard</h1>
+    Link chart graph to datasets
+    <h2>
+        Preview:
+    </h2>
+    <div class="ga-chart ga-chart-main" align="center">
+        <canvas id="ga_chart_canvas"></canvas>
+    </div>
+    <div id="warnNoResult" style="display: none;">
+        {% include "../../warn/no_results.html" %}
+    </div>
+    <div id="errorNoResult" style="display: none;">
+        {% include "../../error/no_results.html" %}
+    </div>
+    <small>
+        For detailed information look into the external documentation:
+        <a href="https://www.chartjs.org/docs/latest/configuration/">chartjs</a> |
+        <a href="https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/">momentjs</a>
+    </small>
+    {% include "./js/dashboard.html" %}
+{% endblock %}
+<hr>
+<a href="/data/chart/" class="btn btn-primary">Back to the Overview</a>

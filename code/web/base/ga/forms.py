@@ -57,6 +57,7 @@ LABEL_DICT = {
     'chart_x_max_ticks': 'x-Axis max ticks',
     'chart_y_max_suggest': 'y-Axis max suggest',
     'options_json': 'Chart.js options in json format',
+    'dataset_json': 'Chart.js dataset options in json format',
     'input_device': 'Input device',
     'input_model': 'Input model',
     'area': 'Area',
@@ -125,6 +126,7 @@ HELP_DICT = {
     'chart_x_max_ticks': 'Maximum labels shown on x-Axis',
     'chart_y_max_suggest': 'y-Axis upper limit should start with this value (else dynamic) [can be empty]',
     'options_json': 'Chart.js options in json format (will replace all others) [max length 4096, can be empty]',
+    'dataset_json': 'Chart.js dataset options in json format (will replace all others except the data itself) [max length 4096, can be empty]',
     'chart_fill': 'If the chart should be filled [can be empty]',
     'chart_fill_color': 'Color to fill the chart with [max length 50, can be empty]',
     'chart_border_color': 'Color of the chart border [max length 50, can be empty]',
@@ -214,12 +216,24 @@ class ChartGraphForm(BaseForm):
         labels = LABEL_DICT
 
 
+class ChartDashboardForm(BaseForm):
+    class Meta:
+        model = ChartDashboardModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+
+
 class ChartDatasetForm(BaseForm):
     class Meta:
         model = ChartDatasetModel
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT
+        widgets = {
+            'start_ts': forms.HiddenInput(),
+            'stop_ts': forms.HiddenInput(),
+        }
 
     def clean(self):
         data = super().clean()
@@ -239,9 +253,20 @@ class ChartDatasetForm(BaseForm):
             raise ValidationError("Period data must be defined when period is chosen!")
 
 
-class ChartLinkForm(BaseForm):
+class ChartGraphLinkForm(BaseForm):
     class Meta:
-        model = ChartLinkModel
+        model = ChartGraphLinkModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+        widgets = {
+            'group': forms.HiddenInput(),
+        }
+
+
+class ChartDatasetLinkForm(BaseForm):
+    class Meta:
+        model = ChartDatasetLinkModel
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT

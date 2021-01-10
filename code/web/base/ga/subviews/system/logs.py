@@ -5,7 +5,7 @@ from datetime import datetime
 from ...user import authorized_to_read
 from ...config.nav import nav_dict
 from ...utils.process import subprocess
-from ...utils.helper import check_develop, get_controller_setting
+from ...utils.helper import check_develop, get_controller_setting, add_line_numbers
 from ..handlers import handler404
 
 SHELL_MAX_LOG_LINES = 100
@@ -51,12 +51,12 @@ def LogView(request):
                 if develop:
                     log_data = 'test data\ndata service'
                 else:
-                    log_data = subprocess(SHELL_SERVICE_LOG_STATUS % log_service_value)
+                    log_data = add_line_numbers(subprocess(SHELL_SERVICE_LOG_STATUS % log_service_value))
             elif log_type == 'Service journal':
                 if develop:
                     log_data = 'test data\ndata journal'
                 else:
-                    log_data = subprocess(SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count))
+                    log_data = add_line_numbers(subprocess(SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count)))
 
         if log_type == 'Growautomation':
             date_year = datetime.now().strftime('%Y')
@@ -66,7 +66,7 @@ def LogView(request):
             if develop:
                 log_data = "log from file '%s' -> test data\ndata ga" % path_log
             else:
-                log_data = subprocess("tail -n %s %s" % (log_entry_count, log_file))
+                log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)))
 
     if type(log_data) == str and len(log_data) == 0:
         log_data = None

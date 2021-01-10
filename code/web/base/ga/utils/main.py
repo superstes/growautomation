@@ -6,7 +6,7 @@ from django.contrib.auth.views import LoginView, logout_then_login
 from django.shortcuts import redirect
 
 
-def get_as_string(get_params):
+def get_as_string(get_params: dict) -> str:
     return "?%s" % parse.urlencode(get_params)
 
 

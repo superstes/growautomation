@@ -53,6 +53,8 @@ urlpatterns = [
     path('data/<str:typ>/', view_data),
     path('data/<str:typ>/<str:sub_type>', view_data),
     path('data/<str:typ>/<str:sub_type>/', view_data),
+    path('data/<str:typ>/<str:sub_type>/<str:third_type>', view_data),
+    path('data/<str:typ>/<str:sub_type>/<str:third_type>/', view_data),
     #   fallback
     url(r'^', handler404),
 ]

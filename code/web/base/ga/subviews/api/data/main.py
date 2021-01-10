@@ -17,25 +17,21 @@ MAX_DATA_POINTS_LONG = 1000
 
 
 @user_passes_test(authorized_to_read, login_url='/api/denied/')
-def ApiData(request):
-    # time -> start/stop/last X min/h/d/m/y
-    # every chart gets a maximum of X datapoints (because of performance etc)
-    # chart.js settings
-    #   array of unimportant chart.js settings
-    #   form fields for important ones
-
+def ApiData(request, input_device: int = None, period: str = None, period_data: int = None, start_ts: str = None, stop_ts: str = None, out_dict: bool = False):
     error = None
 
     if request.method == 'GET':
-        if 'input_device' not in request.GET:
-            return handler400_api(msg='Need to specify input_device')
+        if input_device is None:
+            if 'input_device' not in request.GET:
+                return handler400_api(msg='Need to specify input_device')
 
-        input_device = int(request.GET['input_device'])
+            input_device = int(request.GET['input_device'])
+
         input_device_obj = get_device_instance(input_device)
         data_unit = get_device_parent_setting(child_obj=input_device, setting='unit')
         data_type = get_device_parent_setting(child_obj=input_device, setting='datatype')
 
-        _time = _get_time(request)
+        _time = _get_time(request, _period=period, _period_data=period_data, _start_ts=start_ts, _stop_ts=stop_ts)
 
         if type(_time) != tuple:
             return _time
@@ -63,16 +59,20 @@ def ApiData(request):
         if len(data_dict) > max_data_points:
             data_dict = _thin_out_data_points(data_dict, count=max_data_points)
 
-        time_list, data_list = [], []
+        xy_data_list = []
 
         for time, data in data_dict.items():
-            time_list.append(time)
-            data_list.append(data)
+            xy_data_list.append({'x': time, 'y': data})
 
-        return JsonResponse(data={
-            'device_id': int(input_device), 'device_name': input_device_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'time_list': time_list,
-            'data_list': data_list, 'error': error,
-        })
+        json_dict = {
+            'device_id': int(input_device), 'device_name': input_device_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'error': error,
+            'xy_data': xy_data_list,
+        }
+
+        if out_dict:
+            return json_dict
+        else:
+            return JsonResponse(data=json_dict)
 
     else:
         return handler400_api(msg='Only GET method supported')
@@ -113,41 +113,51 @@ def _prepare_data(data_list, data_type: str) -> dict:
     return out_dict
 
 
-def _get_time(request):
-    if 'start_ts' in request.GET:
-        start_ts = get_datetime_w_tz(request, dt_str=request.GET['start_ts'])
+def _get_time(request, _period, _period_data, _start_ts, _stop_ts):
+    start_ts = None
+    stop_ts = None
 
-        if 'stop_ts' in request.GET:
-            stop_ts = get_datetime_w_tz(request, dt_str=request.GET['stop_ts'])
+    if 'start_ts' in request.GET:
+        _start_ts = request.GET['start_ts']
+
+    if 'stop_ts' in request.GET:
+        _stop_ts = request.GET['stop_ts']
+
+    if _start_ts is not None:
+        start_ts = get_datetime_w_tz(request, dt_str=_start_ts)
+
+        if _stop_ts is not None:
+            stop_ts = get_datetime_w_tz(request, dt_str=_stop_ts)
 
         else:
             stop_ts = add_timezone(request, datetime_obj=datetime.now())
 
-    elif 'period' in request.GET and 'period_data' in request.GET:
-        period = request.GET['period']
-        period_data = int(request.GET['period_data'])
+    if 'period' in request.GET and 'period_data' in request.GET:
+        _period = request.GET['period']
+        _period_data = int(request.GET['period_data'])
 
+    if _period is not None and _period_data is not None:
         stop_ts = add_timezone(request, datetime_obj=datetime.now())
 
-        if period == 'y':
-            start_ts = stop_ts - timedelta(days=(period_data * 365))
+        if _period == 'y':
+            start_ts = stop_ts - timedelta(days=(_period_data * 365))
 
-        elif period == 'm':
-            start_ts = stop_ts - timedelta(days=(period_data * 31))  # todo: should be exact
+        elif _period == 'm':
+            start_ts = stop_ts - timedelta(days=(_period_data * 31))  # todo: should be exact
 
-        elif period == 'd':
-            start_ts = stop_ts - timedelta(days=period_data)
+        elif _period == 'd':
+            start_ts = stop_ts - timedelta(days=_period_data)
 
-        elif period == 'H':
-            start_ts = stop_ts - timedelta(hours=period_data)
+        elif _period == 'H':
+            start_ts = stop_ts - timedelta(hours=_period_data)
 
-        elif period == 'M':
-            start_ts = stop_ts - timedelta(minutes=period_data)
+        elif _period == 'M':
+            start_ts = stop_ts - timedelta(minutes=_period_data)
 
         else:
             return handler400_api(msg='Unsupported time period type')
 
-    else:
+    if start_ts is None:
         return handler400_api(msg='No supported filter provided')
-
-    return start_ts, stop_ts
+    else:
+        return start_ts, stop_ts

@@ -1,36 +1,96 @@
-{% extends "../../body.html" %}
+{% extends "./tmpl/main.html" %}
+{% load bootstrap_tags %}
 {% load util %}
-{% load tz %}
-{% load bootstrap4 %}
-{% include "./tmpl/head.html" %}
-{% block content %}
-    <h1>Dashboard</h1><br>
+{% block title %}
+    <h1>{{ action|title }} dashboard element</h1>
+{% endblock %}
+{% block extraoptions %}
     <br><hr><br>
-    {% if status is not None and what is not None %}
-        <div class="alert alert-success">
-            <strong>{{ status|title }} {{ what }}</strong>
-        </div>
+    <h2>
+        Links
+    </h2>
+    <br>
+    {% if selected is not None %}
+        <h3>
+            Graph prototype
+        </h3>
+        <!-- link graph start -->
+        <form method="post">
+            {% csrf_token %}
+            {{ graph_form|as_bootstrap }}
+            <input type="hidden" name="group" value="{{ selected }}">
+            <input type="hidden" name="do" value="{{ action }}" />
+            {% for dataset in request|request_getlist:'dataset' %}
+                <input type="hidden" name="dataset" value="{{ dataset }}" />
+            {% endfor %}
+            <input type="hidden" name="form" value="graph" />
+            {% if request.user|authorized_to_write %}
+                <input type="submit" value="Save" class="btn btn-warning">
+            {% else %}
+                <input type="submit" value="Save" class="btn btn-warning" disabled/>
+            {% endif %}
+        </form>
+        <br><br>
+        <!-- link graph stop -->
+        <h3>
+            Datasets
+        </h3>
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    NAME
+                </th>
+                <th>
+                    DESCRIPTION
+                </th>
+                <th>
+                    ACTION
+                </th>
+            </tr>
+            {% if dataset_link_list|length == 0 %}
+                {% include "../../warn/table_no_results.html" %}
+            {% else %}
+                {% for dataset_link in dataset_link_list %}
+                    <tr>
+                        <td>
+                            {{ dataset_link.obj.name }}
+                        </td>
+                        <td>
+                            {{ dataset_link.obj.description }}
+                        </td>
+                        <td>
+                            <form style="display:inline" method="post" action="/data/chart/dashboard/dataset/">
+                                {% csrf_token %}
+                                {% if request.user|authorized_to_write %}
+                                    <input type="submit" value="Delete" class="btn btn-danger"/>
+                                {% else %}
+                                    <input type="submit" value="Delete" class="btn btn-danger" disabled/>
+                                {% endif %}
+                                <input type="hidden" name="id" value="{{ dataset_link.id }}" />
+                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                <input type="hidden" name="action" value="Delete" />
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+            <tr>
+                <td colspan="100%">
+                    <form style="display:inline" method="get" action="/data/chart/dashboard/dataset/">
+                        <input type="submit" value="Create" class="btn btn-success"/>
+                        <input type="hidden" name="action" value="Create" />
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                    </form>
+                </td>
+            </tr>
+        </table>
         <br><hr><br>
-    {% endif %}
-    <h2>Graph prototype</h2><br>
-    <a href='/data/chart/graph/?do=show' class="btn btn-primary">View</a>
-    <a href='/data/chart/graph/?do=create' class="btn btn-primary">Create</a>
-    {% if graph_list|length != 0 %}
-        <a href='/data/chart/graph/?do=update' class="btn btn-primary">Update</a>
-        <a href='/data/chart/graph/?do=delete' class="btn btn-primary">Delete</a>
     {% else %}
-        <button class="btn btn-primary" disabled>Update</button>
-        <button class="btn btn-primary" disabled>Delete</button>
+        <div class="alert alert-info">
+            <strong>Choose a dashboard element to see more.</strong>
+        </div>
     {% endif %}
-    <br><hr><br>
-    <h2>Dataset</h2><br>
-    <a href='/data/chart/dataset/?do=show' class="btn btn-primary">View</a>
-    <a href='/data/chart/dataset/?do=create' class="btn btn-primary">Create</a>
-    {% if dataset_list|length != 0 %}
-        <a href='/data/chart/dataset/?do=update' class="btn btn-primary">Update</a>
-        <a href='/data/chart/dataset/?do=delete' class="btn btn-primary">Delete</a>
-    {% else %}
-        <button class="btn btn-primary" disabled>Update</button>
-        <button class="btn btn-primary" disabled>Delete</button>
-    {% endif %}
+{% endblock %}
+{% block js %}
+    {% include "./js/dashboard.html" %}
 {% endblock %}

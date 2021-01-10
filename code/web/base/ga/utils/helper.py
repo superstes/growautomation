@@ -96,15 +96,23 @@ def get_device_parent(child_obj):
     return parent
 
 
+def get_instance_from_id(typ, obj: (str, int)):
+    for check_obj in typ.objects.all():
+        if type(obj) == str:
+            if check_obj.name == obj:
+                return check_obj
+        else:
+            if check_obj.id == obj:
+                return check_obj
+
+    return None
+
+
 def get_device_instance(obj: (str, int)):
     for typ in DEVICE_TYPES:
-        for check_obj in typ.objects.all():
-            if type(obj) == str:
-                if check_obj.name == obj:
-                    return check_obj
-            else:
-                if check_obj.id == obj:
-                    return check_obj
+        result = get_instance_from_id(typ=typ, obj=obj)
+        if result is not None:
+            return result
 
 
 def get_device_parent_setting(child_obj, setting: str):
@@ -132,3 +140,23 @@ def get_form_prefill(request):
             form_prefill[key] = value
 
     return form_prefill
+
+
+def add_line_numbers(data: (list, str)) -> str:
+    if type(data) == str:
+        data = data.split('\n')
+        join_str = '\n'
+
+    else:
+        join_str = ''
+
+    output = []
+
+    count = 1
+    _zfill_count = len(str(len(data)))
+
+    for line in data:
+        output.append("%s | %s" % (str(count).zfill(_zfill_count), line))
+        count += 1
+
+    return join_str.join(output)

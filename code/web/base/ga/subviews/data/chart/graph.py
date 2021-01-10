@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import user_passes_test
 from ....user import authorized_to_read, authorized_to_write
 from ....config.nav import nav_dict
 from ....models import ObjectInputModel, GroupInputModel
-from ....utils.helper import get_form_prefill
+from ....utils.helper import get_form_prefill, get_instance_from_id
 from ....forms import ChartGraphForm, ChartGraphModel
 from ...handlers import handler404
-from .helper import add_ds_chart_options, get_param_if_ok
+from .helper import add_ds_chart_options, get_param_if_ok, get_obj_dict
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -28,31 +28,19 @@ def DataChartGraphView(request):
             if key not in request.GET:
                 return add_ds_chart_options(request, defaults=chart_option_defaults, redirect_path='/data/chart/graph')
 
-        action = get_param_if_ok(request.GET, search='do', choices=['show', 'create', 'update', 'delete'])
+        action = get_param_if_ok(request.GET, search='do', choices=['show', 'create', 'update', 'delete'], fallback='show')
 
-        graph = get_param_if_ok(request.GET, search='selected', no_choices=['---------'], format_as=int)
-        graph_obj = None
-        graph_list = None
-
-        if action in ['update', 'show', 'delete']:
-            graph_list = ChartGraphModel.objects.all()
-            if graph:
-                graph_obj = [obj for obj in graph_list if obj.id == graph][0]
-
-        if graph_obj:
-            form = ChartGraphForm(instance=graph_obj)
-        else:
-            form = ChartGraphForm(request.GET, initial=get_form_prefill(request))
+        graph_dict = get_obj_dict(request=request, typ_model=ChartGraphModel, typ_form=ChartGraphForm, action=action, selected='selected')
 
         return render(request, 'data/chart/graph.html', context={
-            'request': request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'form': form, 'action': action,
-            'selected': graph, 'object_list': graph_list,
+            'request': request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
+            'form': graph_dict['form'], 'selected': graph_dict['id'], 'object_list': graph_dict['list'],
         })
 
 
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def _write(request):
-    action = get_param_if_ok(request.POST, search='do', choices=['show', 'create', 'update', 'delete'])
+    action = get_param_if_ok(request.POST, search='do', choices=['show', 'create', 'update', 'delete'], fallback='show')
     graph_list = ChartGraphModel.objects.all()
     graph = get_param_if_ok(request.GET, search='selected', no_choices=['---------'], format_as=int)
     if action in ['delete', 'update']:

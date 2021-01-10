@@ -28,6 +28,10 @@
             <input type="submit" value="Select" class="btn btn-primary">
         </form>
         <br><hr><br>
+    {% elif action != 'create' %}
+        <div class="alert alert-info">
+            <strong>No existing chart object found</strong>
+        </div>
     {% endif %}
     {% if action in 'delete, update' and selected is None %}
         {% if object_list|length != 0 %}
@@ -40,13 +44,13 @@
         <h2>
             Preview:
         </h2>
-        <div class="ga-chart ga-chart-main" align="center">
+        <div class="ga-chart ga-chart-main" id="ga_chart_div" align="center">
             <canvas id="ga_chart_canvas"></canvas>
         </div>
-        <div id="warnNoResult" style="display: none;">
+        <div id="ga_warn_noresult" style="display: none;">
             {% include "../../../warn/no_results.html" %}
         </div>
-        <div id="errorNoResult" style="display: none;">
+        <div id="ga_error_noresult" style="display: none;">
             {% include "../../../error/no_results.html" %}
         </div>
         <form method="post">
@@ -67,15 +71,21 @@
             {% include "./actions.html" %}
             {% csrf_token %}
         </form>
+        {% if action != 'create' %}
+            {% block extraoptions %}
+            {% endblock %}
+        {% endif %}
         <br>
         <small>
             For detailed information look into the external documentation:
             <a href="https://www.chartjs.org/docs/latest/configuration/">chartjs</a> |
             <a href="https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/">momentjs</a>
         </small>
+        <!-- start chart javascript -->
         {% block js %}
         {% endblock %}
+        <!-- stop chart javascript -->
     {% endif %}
     <hr>
-    <a href="/data/chart/" class="btn btn-primary">Back to dashboard</a>
+    <a href="/data/chart/" class="btn btn-primary">Back to the Overview</a>
 {% endblock %}

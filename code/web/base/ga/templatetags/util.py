@@ -212,3 +212,11 @@ def remove_newline(text: str) -> str:
 @register.filter
 def format_seconds(secs: int) -> str:
     return "{}".format(str(timedelta(seconds=secs)))
+
+
+@register.filter
+def request_getlist(request, parameter: str) -> list:
+    if parameter in request.GET:
+        return request.GET.getlist(parameter)
+    else:
+        return []

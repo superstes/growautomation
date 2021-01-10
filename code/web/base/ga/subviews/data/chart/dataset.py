@@ -7,7 +7,7 @@ from ....models import ObjectInputModel, GroupInputModel
 from ....utils.helper import get_datetime_w_tz, get_form_prefill
 from ....forms import ChartDatasetForm, ChartDatasetModel
 from ...handlers import handler404
-from .helper import add_ds_chart_options, get_param_if_ok
+from .helper import add_ds_chart_options, get_param_if_ok, get_obj_dict
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -28,21 +28,9 @@ def DataChartDatasetView(request):
             if key not in request.GET:
                 return add_ds_chart_options(request, defaults=chart_option_defaults, redirect_path='/data/chart/dataset')
 
-        action = get_param_if_ok(request.GET, search='do', choices=['show', 'create', 'update', 'delete'])
+        action = get_param_if_ok(request.GET, search='do', choices=['show', 'create', 'update', 'delete'], fallback='show')
 
-        dataset = get_param_if_ok(request.GET, search='selected', no_choices=['---------'], format_as=int)
-        dataset_obj = None
-        dataset_list = None
-
-        if action in ['update', 'show', 'delete']:
-            dataset_list = ChartDatasetModel.objects.all()
-            if dataset:
-                dataset_obj = [obj for obj in dataset_list if obj.id == dataset][0]
-
-        if dataset_obj:
-            form = ChartDatasetForm(instance=dataset_obj)
-        else:
-            form = ChartDatasetForm(request.GET, initial=get_form_prefill(request))
+        graph_dict = get_obj_dict(request=request, typ_model=ChartDatasetModel, typ_form=ChartDatasetForm, action=action, selected='selected')
 
         stop_ts = None
         start_ts = None
@@ -65,13 +53,13 @@ def DataChartDatasetView(request):
 
         return render(request, 'data/chart/dataset.html', context={
             'request': request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device': input_device,
-            'form': form, 'input_model_dict': input_model_dict, 'action': action, 'selected': dataset, 'object_list': dataset_list,
+            'input_model_dict': input_model_dict, 'action': action, 'selected': graph_dict['id'], 'form': graph_dict['form'], 'object_list': graph_dict['list'],
         })
 
 
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def _write(request):
-    action = get_param_if_ok(request.POST, search='do', choices=['show', 'create', 'update', 'delete'])
+    action = get_param_if_ok(request.POST, search='do', choices=['show', 'create', 'update', 'delete'], fallback='show')
     dataset_list = ChartDatasetModel.objects.all()
     dataset = get_param_if_ok(request.GET, search='selected', no_choices=['---------'], format_as=int)
     if action in ['delete', 'update']:

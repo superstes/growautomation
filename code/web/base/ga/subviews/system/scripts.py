@@ -7,7 +7,7 @@ from datetime import datetime
 
 from ...user import authorized_to_read, authorized_to_write
 from ...config.nav import nav_dict
-from ...utils.helper import get_script_dir
+from ...utils.helper import get_script_dir, add_line_numbers
 from ...forms import SystemScriptForm
 from ..handlers import handler404
 
@@ -117,7 +117,7 @@ def ScriptShow(request):
 
         if os_path.exists(script_path):
             with open(script_path, 'r') as script:
-                script_content = script.read()
+                script_content = add_line_numbers(data=script.readlines())
 
     elif 'script_type' in request.GET:
         script_type = request.GET['script_type']
