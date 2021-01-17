@@ -6,6 +6,7 @@ from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 from core.config import shared as shared_vars
 from core.utils.debug import debugger
+from core.utils.debug import Log
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
@@ -21,6 +22,7 @@ class Go:
     def __init__(self, instance):
         self.instance = instance
         self.database = GaDataDb()
+        self.logger = Log()
 
     def start(self):
         task_instance_list = Check(
@@ -30,11 +32,14 @@ class Go:
         ).get()
 
         for task_instance in task_instance_list:
+            self.logger.write("Processing device instance: '%s'" % task_instance.__dict__)
+
             debugger("device-input | start | processing input '%s'" % task_instance.name)
             data = Process(instance=task_instance, category=self.TASK_CATEGORY).start()
 
             if data is None:
                 debugger("device-input | start | no data received for input '%s'" % task_instance.name)
+                self.logger.write("No data received for device '%s'" % task_instance.name)
 
                 if shared_vars.TASK_LOG:
                     self.database.put(command=self.SQL_TASK_COMMAND

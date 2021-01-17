@@ -1,10 +1,11 @@
 # function to get and remove lock from instance
 
+from core.utils.debug import debugger
+from core.utils.debug import Log
+from core.config.shared import LOCK_MAX_WAIT, LOCK_CHECK_INTERVAL
+
 from time import time
 from time import sleep
-
-LOCK_MAX_WAIT = 120
-LOCK_CHECK_INTERVAL = 15
 
 
 def get(instance) -> bool:
@@ -16,6 +17,9 @@ def get(instance) -> bool:
             return True
         else:
             sleep(LOCK_CHECK_INTERVAL)
+
+    debugger("device-lock | get | instance '%s' gave up to get lock after '%s' sec" % (instance.name, LOCK_MAX_WAIT))
+    Log().write("Gave up to get lock for device '%s' after '%s' sec" % (instance.name, LOCK_MAX_WAIT))
 
     return False
 

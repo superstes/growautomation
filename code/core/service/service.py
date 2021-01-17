@@ -62,7 +62,7 @@ class Service:
         self.CONFIG_FILE = GaDataFile()
         self._init_shared_vars()
         self._update_config_file()
-        self.LOG = Log()
+        self.logger = Log()
 
     def start(self):
         debugger("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
@@ -80,7 +80,7 @@ class Service:
 
         except TypeError as error_msg:
             debugger("service | start | encountered error '%s'" % error_msg)
-            self.LOG.write(output="Service encountered an error while starting:\n'%s'" % error_msg)
+            self.logger.write(output="Service encountered an error while starting:\n'%s'" % error_msg)
             self.stop()
         self._run()
 
@@ -118,15 +118,15 @@ class Service:
             self._hard_exit()
         self.stop_count += 1
         debugger('service | stop | stopping')
-        self.LOG.write(output='Stopping service', level=1)
+        self.logger.write(output='Stopping service', level=1)
         systemd_journal.write('Stopping service.')
         if signum is not None:
             try:
                 debugger("service | stop | got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-                self.LOG.write(output="Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+                self.logger.write(output="Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
             except AttributeError:
                 debugger("service | stop | got signal %s" % signum)
-                self.LOG.write(output="Service received signal %s" % signum)
+                self.logger.write(output="Service received signal %s" % signum)
         debugger('service | stop | stopping threads')
         self.THREAD.stop()
         self._wait(seconds=self.WAIT_TIME)
@@ -165,37 +165,37 @@ class Service:
     def _hard_exit(self):
         debugger("service | _hard_exit | hard exiting service sice it was stopped more than %s times"
                  % self.MAX_STOP_COUNT)
-        self.LOG.write(output='Stopping service merciless', level=1)
+        self.logger.write(output='Stopping service merciless', level=1)
         systemd_journal.write('Service stopped.')
         raise SystemExit('Service exited merciless!')
 
     def _config_dump(self):
-        self.LOG.write("\n\n#############################\nCONFIG DUMP:\n\n")
-        self.LOG.write("OBJECT CONFIG:\n")
+        self.logger.write("\n\n#############################\nCONFIG DUMP:\n\n")
+        self.logger.write("OBJECT CONFIG:\n")
         typ_counter = 0
         for typ in self.CONFIG.keys():
             typ_counter += 1
             obj_counter = 0
-            self.LOG.write("Config object type '%s'" % typ)
+            self.logger.write("Config object type '%s'" % typ)
             for obj in self.CONFIG[typ]:
                 obj_counter += 1
-                self.LOG.write("Object '%s'" % obj)
-                self.LOG.write("Config: '%s'" % obj.__dict__)
+                self.logger.write("Object '%s'" % obj)
+                self.logger.write("Config: '%s'" % obj.__dict__)
                 if obj_counter == len(self.CONFIG[typ]):
-                    self.LOG.write("\n")
+                    self.logger.write("\n")
             if typ_counter == len(self.CONFIG.keys()):
-                self.LOG.write("\n")
+                self.logger.write("\n")
 
-        self.LOG.write("SUPPLY CONFIG:\n")
-        self.LOG.write(self.current_config_dict)
-        self.LOG.write("\n\nCONFIG DUMP END\n#############################\n")
+        self.logger.write("SUPPLY CONFIG:\n")
+        self.logger.write(self.current_config_dict)
+        self.logger.write("\n\nCONFIG DUMP END\n#############################\n")
 
     def _status(self):
         thread_list = self.THREAD.list()
         detailed_thread_list = [str(thread.__dict__) for thread in thread_list]
         simple_thread_list = [thread.name for thread in thread_list]
         debugger("service | status | threads running:\n\n\n'%s'\n\n" % "\n\n".join(detailed_thread_list))
-        systemd_journal.write("Status - threads running:\n%s\n" % simple_thread_list)
+        systemd_journal.write("Status - threads running: %s" % simple_thread_list)
 
     def _run(self):
         try:

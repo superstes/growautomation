@@ -7,10 +7,12 @@
 from core.utils.process import subprocess
 from core.config import shared as shared_vars
 from core.utils.debug import debugger
+from core.utils.debug import Log
 from core.device import lock
 
 from json import dumps as json_dumps
 from json import loads as json_loads
+from json import JSONDecodeError
 
 
 class Go:
@@ -24,6 +26,7 @@ class Go:
         self.category = category
         self.data = None
         self.reverse = reverse
+        self.logger = Log()
 
     def start(self) -> (str, None):
         if lock.get(instance=self.instance):
@@ -37,14 +40,13 @@ class Go:
                 try:
                     data = json_loads(self.data)
                     return data[self.INPUT_DATA_KEY]
-                except KeyError:
-                    return False
+                except (KeyError, JSONDecodeError) as error:
+                    self.logger.write("Unable decode received data; error: '%s'" % error)
+                    return None
             else:
                 return success
 
         else:
-            debugger("device-process | _get_lock | instance '%s' gave up to get lock after '%s' sec"
-                     % (self.instance.name, lock.LOCK_MAX_WAIT))
             return None
 
     def _execute(self):
