@@ -56,13 +56,13 @@ class Service:
         signal.signal(signal.SIGUSR1, self.reload)
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
-        self.THREAD = Thread()
         self.CONFIG, self.current_config_dict = factory()
+        self._init_shared_vars()
+        self.logger = Log()
         self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
-        self._init_shared_vars()
         self._update_config_file()
-        self.logger = Log()
+        self.THREAD = Thread()
 
     def start(self):
         debugger("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
