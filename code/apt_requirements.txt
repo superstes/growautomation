@@ -19,3 +19,5 @@
 
 #   input devices (sensors)
       libgpiod2  # (adafruit dht)
+      python3-smbus  # (adafruit ads1115)
+      i2c-tools  # (adafruit ads1115)
