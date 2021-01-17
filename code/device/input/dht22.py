@@ -7,14 +7,23 @@
 #     adafruit-circuitpython-dht
 #   privileges
 #     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
+#
+# for detailed information see the external documentation:
+#   adafruit dht22: https://learn.adafruit.com/dht/dht-circuitpython-code
+#
+# call:
+#   python3 dht22.py $DATA_TYPE "{\"connection\": $GPIO_PIN}"
+#  p.e.
+#   python3 dht22.py temperature "{\"connection\": 4}"
+#   python3 dht22.py humidity "{\"connection\": 8}"
 
 from sys import argv as sys_argv
 from time import sleep as time_sleep
-
-import board
-import adafruit_dht
 from json import loads as json_loads
 from json import dumps as json_dumps
+
+import board
+from adafruit_dht import DHT22
 
 
 class Device:
@@ -25,7 +34,7 @@ class Device:
     PULL_INTERVAL = 3
 
     def __init__(self):
-        self.sensor = adafruit_dht.DHT22(getattr(board, "D%s" % self.CONFIG['connection']), use_pulseio=False)
+        self.sensor = DHT22(getattr(board, "D%s" % self.CONFIG['connection']), use_pulseio=False)
         self.data = self._get_data()
 
     def start(self):

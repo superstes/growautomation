@@ -11,10 +11,22 @@
 #   system config
 #     enable i2c and reboot:
 #       sudo sed -i 's/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/g' /boot/config.txt
+#
+# for detailed information see the external documentation:
+#   adafruit i2c: https://learn.adafruit.com/circuitpython-basics-i2c-and-spi/i2c-devices
+#   adafruit ads1x15: https://learn.adafruit.com/adafruit-4-channel-adc-breakouts/python-circuitpython
+#
+# call:
+#    python3 ads1115.py $I2C_CONFIG "{\"connection\": $GPIO_PIN_TO_ADC, \"downlink_pin\": $ANALOG_PIN_TO_SENSOR}"
+#   p.e.
+#    python3 ads1115.py None "{\"connection\": 4, \"downlink_pin\": 0}"
+#    python3 ads1115.py "{\"scl\": \"6\", \"sda\": \"7\"}" "{\"connection\": 8, \"downlink_pin\": 7}"
 
 from sys import argv as sys_argv
 from json import loads as json_loads
 from json import dumps as json_dumps
+from json import JSONDecodeError
+from time import sleep
 
 import board
 from busio import I2C
@@ -26,70 +38,44 @@ class Device:
     ARG = sys_argv[1]
     CONFIG = json_loads(sys_argv[2])
     MAX_VALUE = 32767
+    DATAPOINTS = 10
+    DATAPOINT_INTERVAL = 0.1
 
     def __init__(self):
-        i2c = I2C(board.SCL, board.SDA)
+        self.connection = self.CONFIG['connection']
+        self.pin = self.CONFIG['downlink_pin']
+
+        try:
+            i2c_config = json_loads(self.ARG)
+            i2c = I2C(getattr(board, "D%s" % i2c_config['scl']), getattr(board, "D%s" % i2c_config['sda']))
+
+        except JSONDecodeError:
+            i2c = I2C(board.SCL, board.SDA)
+
         self.adc = ads1115.ADS1115(i2c)
-
-        if 'input' in self.CONFIG:
-            self.input_type = self.CONFIG['input']
-        else:
-            self.input_type = None
-
         self.data = self._get_data()
 
     def start(self):
         print(json_dumps({'data': self.data}))
 
     def _get_data(self):
-        try:
-            self.adc.gain = 1  # could be increased if the data signals are too weak
+        self.adc.gain = 1  # could be increased if the data signals are too weak
+        device = AnalogIn(self.adc, getattr(ads1115, "P%s" % self.pin))
 
-            data = AnalogIn(self.adc, getattr(ads1115, "P%s" % self.CONFIG['connection']))
+        return "%.2f" % self._correct_data(device)
 
-            refactored_data = self._percentage(data=data.value)
-        except RuntimeError as error:
-            if str(error).find('Not running on a RPi') != -1:
-                self._error('Executing user is not member of gpio group!')
+    def _correct_data(self, device):
+        # corrects output since some data readings might be faulty
+        data_list = []
+        for _ in range(self.DATAPOINTS):
+            data_list.append((100 / self.MAX_VALUE) * device.value)
+            sleep(self.DATAPOINT_INTERVAL)
 
-            return None
-
-        return "%.2f" % refactored_data
+        return sum(data_list) / len(data_list)
 
     @staticmethod
     def _error(msg):
         raise SystemExit(msg)
-
-    def _percentage(self, data: int) -> float:
-        if self.input_type == 'csmsv1.2':
-            # todo: how to set the hardcoded input_type when naming is free
-            return self._fix_value_capacitive_moisture(data)
-        else:
-            _ = (100 / self.MAX_VALUE) * data
-            return _
-
-    def _fix_value_capacitive_moisture(self, value: int) -> float:
-        # capacitive moisture sensor v1.2
-        #   the sensor does not use the full value range
-        #   if 3.3V is used it will set between ~2.8V and ~1.5V
-        #   for more info see: https://thecavepearlproject.org/2020/10/27/hacking-a-capacitive-soil-moisture-sensor-for-frequency-output/
-        #   should be: 100% = soaking wet; 0% = desert dry
-        soaking_percent = 50
-        desert_percent = 85
-
-        value_range_min = (self.MAX_VALUE / 100) * soaking_percent
-        value_range_max = (self.MAX_VALUE / 100) * desert_percent
-        value_range = value_range_max - value_range_min
-
-        if value > value_range_max:
-            _value = value_range
-        else:
-            _value = value - value_range_min
-
-        _ = 100 / value_range
-        percentage = 100 - (_ * _value)
-
-        return percentage
 
 
 Device().start()
