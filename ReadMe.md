@@ -41,7 +41,7 @@ Version: 0.7
 - creating _(django)_ web interface for easy user interactions
     - <a href="https://test.growautomation.at/">DEMO LINK</a>
     - updating growautomation core to work with django database schema
-
+- testing and fixing input-condition-output workflow
 
 ### History
 - v0.6 _(2020-11 - 2020-12)_
@@ -51,9 +51,6 @@ Version: 0.7
   - optimized code via implementing classes
   - created a systemd service to run the core
   
-- v0.1 - v0.2 _(2019-05 - 2020-01)_
-  - creating basic code structure _(functional programming)_
-
 - v0.1 - v0.2 _(2019-05 - 2020-01)_
   - creating basic code structure _(functional programming)_
 
@@ -69,6 +66,7 @@ Version: 0.7
 - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
 - builtin notification tasks
   - *get notified if the temperature is not optimal for growing*
+- creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
  
 ### Maybe future features
 - agent/server installation
