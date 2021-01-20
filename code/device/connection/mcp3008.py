@@ -9,7 +9,7 @@
 #     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
 #   system config
 #     enable spi and reboot:
-#       sudo sed -i 's/#dtparam=spi=on/dtparam=spi=on/g' /boot/config.txt
+#       sudo raspi-config nonint do_spi 0
 #
 # for detailed information see the external documentation:
 #   adafruit spi: https://learn.adafruit.com/circuitpython-basics-i2c-and-spi/spi-devices

@@ -45,7 +45,7 @@ import signal
 
 class Service:
     RUN_RELOAD_INTERVAL = 86400
-    RUN_STATUS_INTERVAL = 1200
+    RUN_STATUS_INTERVAL = 3600
     RUN_LOOP_INTERVAL = 60
     MAX_STOP_COUNT = 3
     WAIT_TIME = 5
@@ -204,10 +204,10 @@ class Service:
             run_last_reload_time = time()
             run_last_status_time = time()
             while True:
-                if time() > run_last_reload_time + self.RUN_RELOAD_INTERVAL:
+                if time() > (run_last_reload_time + self.RUN_RELOAD_INTERVAL):
                     self.reload()
                     break
-                if time() > run_last_status_time + self.RUN_STATUS_INTERVAL:
+                if time() > (run_last_status_time + self.RUN_STATUS_INTERVAL):
                     self._status()
                     run_last_status_time = time()
                 time_sleep(self.RUN_LOOP_INTERVAL)

@@ -10,22 +10,21 @@
 #     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
 #   system config
 #     enable i2c and reboot:
-#       sudo sed -i 's/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/g' /boot/config.txt
+#       sudo raspi-config nonint do_i2c 0
 #
 # for detailed information see the external documentation:
 #   adafruit i2c: https://learn.adafruit.com/circuitpython-basics-i2c-and-spi/i2c-devices
 #   adafruit ads1x15: https://learn.adafruit.com/adafruit-4-channel-adc-breakouts/python-circuitpython
 #
 # call:
-#    python3 ads1115.py $I2C_CONFIG "{\"connection\": $GPIO_PIN_TO_ADC, \"downlink_pin\": $ANALOG_PIN_TO_SENSOR}"
+#    python3 ads1115.py None "{\"connection\": $I2C_CONFIG, \"downlink_pin\": $ANALOG_PIN_TO_SENSOR}"
 #   p.e.
-#    python3 ads1115.py None "{\"connection\": 4, \"downlink_pin\": 0}"
-#    python3 ads1115.py "{\"scl\": \"6\", \"sda\": \"7\"}" "{\"connection\": 8, \"downlink_pin\": 7}"
+#    python3 ads1115.py None "{\"connection\": None, \"downlink_pin\": 0}"
+#    python3 ads1115.py None "{\"connection\": {\"scl\": \"6\", \"sda\": \"7\"}, \"downlink_pin\": 7}"
 
 from sys import argv as sys_argv
 from json import loads as json_loads
 from json import dumps as json_dumps
-from json import JSONDecodeError
 from time import sleep
 
 import board
@@ -42,14 +41,15 @@ class Device:
     DATAPOINT_INTERVAL = 0.1
 
     def __init__(self):
-        self.connection = self.CONFIG['connection']
         self.pin = self.CONFIG['downlink_pin']
 
         try:
-            i2c_config = json_loads(self.ARG)
-            i2c = I2C(getattr(board, "D%s" % i2c_config['scl']), getattr(board, "D%s" % i2c_config['sda']))
+            i2c = I2C(
+                getattr(board, "D%s" % self.CONFIG['connection']['scl']),
+                getattr(board, "D%s" % self.CONFIG['connection']['sda'])
+            )
 
-        except JSONDecodeError:
+        except (TypeError, KeyError):
             i2c = I2C(board.SCL, board.SDA)
 
         self.adc = ads1115.ADS1115(i2c)
