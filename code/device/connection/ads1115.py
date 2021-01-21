@@ -7,7 +7,9 @@
 #   pip
 #     adafruit-circuitpython-ads1x15
 #   privileges
-#     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
+#     executing user must be a member of groups:
+#       gpio (usermod -a -G gpio USERNAME)
+#       i2c (usermod -a -G i2c USERNAME)
 #   system config
 #     enable i2c and reboot:
 #       sudo raspi-config nonint do_i2c 0

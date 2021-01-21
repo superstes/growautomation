@@ -6,7 +6,9 @@
 #   pip
 #     adafruit-circuitpython-mcp3xxx
 #   privileges
-#     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
+#     executing user must be a member of groups:
+#       gpio (usermod -a -G gpio USERNAME)
+#       spi (usermod -a -G spi USERNAME)
 #   system config
 #     enable spi and reboot:
 #       sudo raspi-config nonint do_spi 0
