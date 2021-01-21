@@ -48,15 +48,6 @@ class BaseDeviceObjectModel(BaseDeviceModel):
         abstract = True
 
 
-class BaseDeviceGroupModel(BaseDeviceModel):
-    script = models.CharField(max_length=50)  # label Script
-    script_bin = models.CharField(max_length=100, default='/usr/bin/python3')  # label Script binary
-    script_arg = models.CharField(max_length=255, blank=True, null=True, default=None)  # label Script argument
-
-    class Meta:
-        abstract = True
-
-
 class BaseMemberModel(BareModel):
     field_list = ['group', 'obj']
 
@@ -85,6 +76,7 @@ from .submodels.objects import ObjectTimerModel
 # data ##############################
 
 from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ChartDatasetLinkModel, ChartGraphLinkModel
+from .submodels.data import DashboardModel, DashboardPositionModel
 
 # groups ##############################
 

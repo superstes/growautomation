@@ -81,9 +81,9 @@ HELP_DICT = {
     'link': 'Condition link to link to',
     'nested_group': 'Nested group to link',
     'condition_group': 'Condition to link',
-    'script': 'Script to run for object [max length 50]',
+    'script': 'Script to run for object [max length 50, can be empty if a downlink is used]',
     'script_arg': 'Script argument to pass when started [can be empty, max length 255]',
-    'script_bin': 'Script binary to use to run the script [max length 100]',
+    'script_bin': 'Script binary to use to run the script [max length 100, can be empty if a downlink is used]',
     'reverse': 'If the action needs to be reversed actively',
     'reverse_type': 'How to reverse the action [can be empty]',
     'reverse_type_data': 'When to reverse the action [can be empty]',
@@ -267,6 +267,22 @@ class ChartGraphLinkForm(BaseForm):
 class ChartDatasetLinkForm(BaseForm):
     class Meta:
         model = ChartDatasetLinkModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+
+
+class DashboardForm(BaseForm):
+    class Meta:
+        model = DashboardModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+
+
+class DashboardPositionForm(BaseForm):
+    class Meta:
+        model = DashboardPositionModel
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT

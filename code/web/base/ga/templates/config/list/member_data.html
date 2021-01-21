@@ -1,6 +1,7 @@
 {% load util %}
 {% for member in member_data %}
     <tr class="table-active">
+        {% set_var member|get_item:member_key as member_obj %}
         <td>
             {% if typ == 'conditionlinkobject' %}
                 {{ member|get_item:'order' }} | {{ member_pretty }}
@@ -9,28 +10,24 @@
             {% endif %}
         </td>
         <td>
-            {{ member|get_item:member_key|get_item:'name' }}
+            {{ member_obj|get_item:'name,---' }}
         </td>
         <td>
-            {% if member|has_key:'description' %}
-                {{ member|get_item:member_key|get_item:'description' }}
-            {% else %}
-                ---
-            {% endif %}
+            {{ member_obj|get_item:'description,---' }}
         </td>
         <td>
-            <!--
-            todo: member.id is the id of the 'link' between member and group; need to get object id
-            <form method="get" style="display:inline" action="/config/detailed/{{ member_own_type }}/{{ member.id }}">
-                <input type="submit" value="More info" class="btn btn-info"/>
+            {{ member_obj|get_item:'enabled,---' }}
+        </td>
+        <td>
+            <form method="get" style="display:inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
+                <input type="submit" value="Detailed" class="btn btn-info"/>
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form method="get" style="display:inline" action="/config/update/{{ member_own_type }}/{{ member.id }}">
+            <form method="get" style="display:inline" action="/config/update/{{ member_own_type }}/{{ member_obj.id }}">
                 <input type="submit" value="Change" class="btn btn-warning"/>
                 <input type="hidden" name="action" value="Update" />
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            -->
             <form method="post" style="display:inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
                 {% csrf_token %}
                 {% if request.user|authorized_to_write %}
@@ -40,7 +37,15 @@
                 {% endif %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-
+                        <form style="display:inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
+                {% csrf_token %}
+                {% if request.user|authorized_to_write %}
+                    <input type="submit" value="Delete" class="btn btn-dark"/>
+                {% else %}
+                    <input type="submit" value="Delete" class="btn btn-dark" disabled/>
+                {% endif %}
+                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+            </form>
         </td>
     </tr>
 {% endfor %}

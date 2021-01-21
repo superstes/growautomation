@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime, timedelta
+from time import sleep
 
 from ...user import authorized_to_read, authorized_to_write
 from ...config.nav import nav_dict
@@ -60,8 +61,9 @@ def ServiceView(request):
         if 'service_name' in request.POST:
             if service_runtime is not None and service_runtime > 60:
                 service_action(request, service=service_value)
-            else:
-                return redirect("/system/service/?service_name=%s" % service_name.replace(' ', '+'))
+                sleep(1)
+
+            return redirect("/system/service/?service_name=%s" % service_name.replace(' ', '+'))
 
     return render(request, 'system/service.html', context={
         'request': request, 'nav_dict': nav_dict, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,

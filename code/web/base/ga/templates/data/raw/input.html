@@ -1,7 +1,6 @@
 {% extends "../../body.html" %}
 {% load util %}
 {% load static %}
-{% load tz %}
 {% load bootstrap4 %}
 {% block extrahead %}
     {% if request|use_cdn %}
@@ -51,7 +50,7 @@
                 {% for data in data_list %}
                     <tr>
                         <td>
-                            {{ data.created|localtime|format_ts }}
+                            {{ data.created|format_ts }}
                         </td>
                         <td>
                             {{ data.data }}

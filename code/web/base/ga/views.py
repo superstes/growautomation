@@ -18,6 +18,7 @@ from .subviews.data.chart.dataset import DataChartDatasetView
 from .subviews.data.chart.graph import DataChartGraphView
 from .subviews.api.data.main import ApiData
 from .subviews.api.chart.main import ApiChart
+from .subviews.data.dashboard.main import DashboardView
 
 
 login_url = '/accounts/login/'
@@ -81,7 +82,7 @@ def view_system(request, typ: str, sub_type=None):
 @login_required
 @user_passes_test(authorized_to_access, login_url=login_url)
 def view_data(request, typ: str, sub_type: str = None, third_type: str = None):
-    if typ == 'input':
+    if typ == 'table':
         return logout_check(request=request, default=DataListView(request=request))
 
     elif typ == 'chart':
@@ -98,6 +99,9 @@ def view_data(request, typ: str, sub_type: str = None, third_type: str = None):
             return logout_check(request=request, default=DataChartDashboardView(request=request))
 
         return logout_check(request=request, default=DataChartView(request=request))
+
+    elif typ == 'dashboard':
+        return logout_check(request=request, default=DashboardView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 

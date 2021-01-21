@@ -2,7 +2,8 @@
 nav_dict = {
     'left': {
         'Data': {
-            'Input': '/data/input/',
+            'Dashboard': '/data/dashboard/',
+            'Table': '/data/table/',
             'Charts': '/data/chart/',
         },
         'Config': {

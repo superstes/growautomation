@@ -18,19 +18,24 @@ def get_type(value):
 
 @register.filter
 def get_item(dictionary, key):
+    if key.find(',') != -1:
+        key, fallback = key.split(',')
+    else:
+        fallback = None
+
     try:
         if key in dictionary:
             return dictionary.get(key)
         else:
-            return None
+            return fallback
 
     except TypeError:  # if object not iterable
-        value = getattr(dictionary, key)
 
-        if value:
-            return value
+        if hasattr(dictionary, key):
+            return getattr(dictionary, key)
+
         else:
-            return None
+            return fallback
 
 
 @register.filter

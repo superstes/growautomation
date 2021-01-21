@@ -15,6 +15,9 @@
             </th>
         {% endif %}
         <th>
+            ENABLED
+        </th>
+        <th>
             MEMBERS
         </th>
 
@@ -45,7 +48,9 @@
                             {{ data.description }}
                         </td>
                     {% endif %}
-
+                    <td>
+                        {{ data.enabled }}
+                    </td>
                     <td>
                         {% if member_view_active %}
                             {% if member_view_active == data.name %}

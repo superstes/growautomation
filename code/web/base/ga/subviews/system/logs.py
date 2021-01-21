@@ -21,6 +21,11 @@ SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
 def LogView(request):
+    # todo: if refresh is true
+    #   window.setTimeout(function () {
+    #     location.href = "$SAME_PAGE";
+    #   }, $TIME_IN_MS);
+
     log_type_options = ['Service', 'Service journal', 'Growautomation']
     log_service_options = {
         'Growautomation': 'ga.service',
@@ -66,7 +71,7 @@ def LogView(request):
             if develop:
                 log_data = "log from file '%s' -> test data\ndata ga" % path_log
             else:
-                log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)))
+                log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)), reverse=True)
 
     if type(log_data) == str and len(log_data) == 0:
         log_data = None

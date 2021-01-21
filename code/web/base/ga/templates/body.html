@@ -10,6 +10,7 @@
     </head>
     <body>
         {% include "./nav.html" %}
+        {% include "./error/js_disabled.html" %}
         {% if request|hide_warning == False %}
             {% include "./warn/connection_insecure.html" %}
             {% include "./warn/connection_public.html" %}

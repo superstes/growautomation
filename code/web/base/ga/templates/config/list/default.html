@@ -9,6 +9,9 @@
             DESCRIPTION
         </th>
         <th>
+            ENABLED
+        </th>
+        <th>
             ACTION
         </th>
     </tr>
@@ -22,6 +25,9 @@
             </td>
             <td>
                 {{ data.description }}
+            </td>
+            <td>
+                {{ data.enabled }}
             </td>
             <td>
                 <form method="get" style="display:inline" action="/config/detailed/{{ typ }}/{{ data.id }}">

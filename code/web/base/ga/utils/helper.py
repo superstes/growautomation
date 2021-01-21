@@ -142,13 +142,16 @@ def get_form_prefill(request):
     return form_prefill
 
 
-def add_line_numbers(data: (list, str)) -> str:
+def add_line_numbers(data: (list, str), reverse: bool = False) -> str:
     if type(data) == str:
         data = data.split('\n')
         join_str = '\n'
 
     else:
         join_str = ''
+
+    if reverse:
+        data.reverse()
 
     output = []
 
