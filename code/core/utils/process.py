@@ -10,7 +10,7 @@ from subprocess import TimeoutExpired
 
 
 def subprocess(command, out_error=False):
-    debugger("utils-process | subprocess | executing command '%s'" % command)
+    debugger("utils-process | subprocess | executing command \"%s\"" % command)
 
     if type(command) != list:
         command = [command]
@@ -29,9 +29,9 @@ def subprocess(command, out_error=False):
     if error in [None, '']:
         error = None
     else:
-        Log().write("Subprocess execution error: '%s'" % error)
+        Log().write("Subprocess execution error: \"%s\"" % error)
 
-    debugger("utils-process | subprocess | output '%s'; error '%s'" % (output, error))
+    debugger("utils-process | subprocess | output \"%s\"; error \"%s\"" % (output, error))
 
     if out_error is False:
         return output

@@ -19,17 +19,17 @@ class Go:
         elif isinstance(self.instance, self.device_obj):
             self._device(instance=self.instance)
         else:
-            debugger("device-check | get | instance '%s' - matches neither provided objects '%s | %s'" % (self.instance.name, self.model_obj, self.device_obj))
-            self.logger.write("instance '%s' matches neither provided objects" % self.instance.name)
+            debugger("device-check | get | instance \"%s\" - matches neither provided objects '%s | %s'" % (self.instance.name, self.model_obj, self.device_obj))
+            self.logger.write("instance \"%s\" matches neither provided objects" % self.instance.name)
 
-        debugger("device-check | get | instance '%s' - instance_list to process: '%s'"
+        debugger("device-check | get | instance \"%s\" - instance_list to process: \"%s\""
                  % (self.instance.name, self.task_instance_list))
 
         return self.task_instance_list
 
     def _model(self):
         for device_instance in self.instance.member_list:
-            if device_instance.enabled:
+            if device_instance.enabled == 1:
                 self._device(instance=device_instance)
 
     def _device(self, instance):
@@ -39,7 +39,15 @@ class Go:
             self.task_instance_list.append(instance)
 
     def _downlink(self, instance):
-        # todo: need to hand over downlink instance and port from which to pull data
-        self.logger.write("NOT YET IMPLEMENTED: 'connection devices'; instance '%s' is connected via downlink" % self.instance.name)
-        debugger("device-check | _downlink | instance '%s' is connected over downlink '%s' port '%s'"
+        downlink = instance.downlink
+
+        if downlink.enabled == 0:
+            debugger("device-check | _downlink | downlink \"%s\" of device \"%s\" is disabled" % (downlink.name, instance.name))
+            self.logger.write("downlink \"%s\" of device \"%s\" is disabled" % (downlink.name, instance.name))
+            return None
+
+        self.logger.write("'connection devices'; instance \"%s\" is connected via downlink \"%s\"" % (instance.name, downlink.name), level=6)
+        debugger("device-check | _downlink | instance \"%s\" is connected over downlink \"%s\" port \"%s\""
                  % (instance.name, instance.downlink, instance.connection))
+
+        self.task_instance_list.append({'downlink': downlink, 'device': instance})

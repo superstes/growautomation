@@ -35,7 +35,7 @@ class Go:
 
     def _evaluate(self, condition_result):
         if condition_result is True:
-            debugger("device-output | _evaluate | conditions were met: '%s'" % self.instance.name)
+            debugger("device-output | _evaluate | conditions were met: \"%s\"" % self.instance.name)
 
             task_instance_list = Check(
                 instance=self.instance,
@@ -49,7 +49,7 @@ class Go:
                     category=self.TASK_CATEGORY
                 )
 
-                debugger("device-output | _evaluate | processing of output '%s' succeeded" % task_instance.name)
+                debugger("device-output | _evaluate | processing of output \"%s\" succeeded" % task_instance.name)
 
                 if task_instance.reverse and task_instance.reverse_type == GaOutputDevice.REVERSE_TYPE_TIME:
                     self._reverse_timer(instance=task_instance)
@@ -58,14 +58,14 @@ class Go:
                     self.database.put(self.SQL_TASK_COMMAND % ('success', 'Executed', self.TASK_CATEGORY,
                                                                task_instance.object_id))
         else:
-            debugger("device-output | _evaluate | conditions were not met: '%s'" % self.instance.name)
+            debugger("device-output | _evaluate | conditions were not met: \"%s\"" % self.instance.name)
 
             if shared_vars.TASK_LOG:
                 self.database.put(self.SQL_TASK_COMMAND % ('aborted', 'Condition not met', self.TASK_CATEGORY,
                                                            self.instance.object_id))
 
     def _reverse_timer(self, instance):
-        debugger("device-output | _reverse_timer | starting reverse timer for output '%s' - '%s' secs"
+        debugger("device-output | _reverse_timer | starting reverse timer for output \"%s\" - \"%s\" secs"
                  % (instance.name, instance.reverse_timer))
 
         thread = Thread()

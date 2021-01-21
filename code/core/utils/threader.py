@@ -24,34 +24,34 @@ class Workload(Thread):
         self.logger = Log()
 
     def stop(self) -> bool:
-        debugger("utils-threader | workload-stop | thread stopping '%s' ('%s')" % (self.name, self.instance.name))
+        debugger("utils-threader | workload-stop | thread stopping \"%s\" (\"%s\")" % (self.name, self.instance.name))
         self.state_stop.set()
         try:
             self.join(self.JOIN_TIMEOUT)
             if self.is_alive():
-                debugger("utils-threader | workload-stop | unable to join thread '%s' ('%s')"
+                debugger("utils-threader | workload-stop | unable to join thread \"%s\" (\"%s\")"
                          % (self.name, self.instance.name))
         except RuntimeError:
             pass
-        self.logger.write("Stopped thread '%s'" % self.instance.name, level=3)
+        self.logger.write("Stopped thread \"%s\"" % self.instance.name, level=3)
         return True
 
     def run(self) -> None:
         try:
-            self.logger.write("Starting thread '%s'" % self.instance.name, level=4)
-            debugger("utils-threader | workload-run | thread runtime '%s' ('%s')" % (self.name, self.instance.name))
+            self.logger.write("Starting thread \"%s\"" % self.instance.name, level=4)
+            debugger("utils-threader | workload-run | thread runtime \"%s\" (\"%s\")" % (self.name, self.instance.name))
             if self.once:
                 self.execute()
                 Loop.stop_thread(self.loop_instance, thread_instance=self.instance)
             else:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
                     if self.state_stop.isSet():
-                        debugger("utils-threader | workload-run | thread exiting '%s' ('%s')"
+                        debugger("utils-threader | workload-run | thread exiting \"%s\" (\"%s\")"
                                  % (self.name, self.instance.name))
-                        self.logger.write("Exiting thread '%s'" % self.instance.name, level=4)
+                        self.logger.write("Exiting thread \"%s\"" % self.instance.name, level=4)
                         break
                     else:
-                        debugger("utils-threader | workload-run | thread starting '%s' ('%s')"
+                        debugger("utils-threader | workload-run | thread starting \"%s\" (\"%s\")"
                                  % (self.name, self.instance.name))
                         self.execute(thread_instance=self.instance, start=True)
         except (RuntimeError,
@@ -61,9 +61,9 @@ class Workload(Thread):
                 AttributeError,
                 TypeError
                 ) as error_msg:
-            debugger("utils-threader | workload-run | thread '%s' ('%s') error occurred: '%s'"
+            debugger("utils-threader | workload-run | thread \"%s\" (\"%s\") error occurred: \"%s\""
                      % (self.name, self.instance.name, error_msg))
-            self.logger.write("Returning to runtime of thread '%s' ('%s') because the following error occurred: '%s'"
+            self.logger.write("Returning to runtime of thread \"%s\" (\"%s\") because the following error occurred: \"%s\""
                         % (self.name, self.instance.name, error_msg))
             self.run()
 
@@ -87,7 +87,7 @@ class Loop:
             self._block_root_process()
 
     def thread(self, sleep_time: int, thread_instance, once: bool = False):
-        debugger("utils-threader | loop-thread | adding job '%s', interval '%s' '%s'"
+        debugger("utils-threader | loop-thread | adding job \"%s\", interval \"%s\" \"%s\""
                  % (thread_instance.name, type(sleep_time), sleep_time))
 
         def decorator(function):
@@ -132,7 +132,7 @@ class Loop:
         return True
 
     def stop_thread(self, thread_instance):
-        debugger("utils-threader | loop-stop_thread | '%s'" % thread_instance.name)
+        debugger("utils-threader | loop-stop_thread | \"%s\"" % thread_instance.name)
         to_process_list = self.jobs
         for job in to_process_list:
             if job.name == thread_instance:
@@ -141,13 +141,13 @@ class Loop:
                 self.logger.write("Thread %s stopped." % job.name, level=2)
 
     def start_thread(self, sleep_time: int, thread_instance) -> None:
-        debugger("utils-threader | loop-start_thread | '%s', interval '%s' '%s'"
+        debugger("utils-threader | loop-start_thread | \"%s\", interval \"%s\" \"%s\""
                  % (thread_instance.name, type(sleep_time), sleep_time))
         self.thread(sleep_time, thread_instance)
         self.start(single_thread=thread_instance)
 
     def reload_thread(self, sleep_time: int, thread_instance) -> None:
-        debugger("utils-threader | loop-reload_thread | '%s', interval '%s' '%s'"
+        debugger("utils-threader | loop-reload_thread | \"%s\", interval \"%s\" \"%s\""
                  % (thread_instance.name, type(sleep_time), sleep_time))
         self.stop_thread(thread_instance)
         self.start_thread(sleep_time, thread_instance)

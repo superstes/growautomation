@@ -33,7 +33,7 @@ class Go:
             output = self.link.get(self.TEST_READ_COMMAND)
 
         except ConnectionError as error_msg:
-            return self._error(msg="Error while executing command '%s':\n'%s'"
+            return self._error(msg="Error while executing command \"%s\":\n\"%s\""
                                    % (self.TEST_READ_COMMAND, error_msg))
 
         if type(output) is list and len(output) > 0:
@@ -47,12 +47,12 @@ class Go:
             random_table = ''.join(random_choice('0123456789') for _ in range(5))
             for c in self.TEST_WRITE_COMMAND_LIST:
                 if not self.link.put(c % random_table):
-                    return self._error(msg="Error while executing command '%s'" % c)
+                    return self._error(msg="Error while executing command \"%s\"" % c)
 
             return True
 
         except ConnectionError as error_msg:
-            return self._error(msg="Error while testing write:\n'%s'" % error_msg)
+            return self._error(msg="Error while testing write:\n\"%s\"" % error_msg)
 
     def _test_network(self) -> bool:
         # check <L5 connectivity
@@ -65,7 +65,7 @@ class Go:
 
             connection.close()
         except socket.error as error_msg:
-            return self._error(msg="Error while testing network connection:\n'%s'" % error_msg)
+            return self._error(msg="Error while testing network connection:\n\"%s\"" % error_msg)
 
         if result == 0:
             return True
@@ -74,6 +74,6 @@ class Go:
 
     @staticmethod
     def _error(msg):
-        debugger("config-db-check | _error | received error '%s'" % msg)
+        debugger("config-db-check | _error | received error \"%s\"" % msg)
         # log error or whatever
         return False

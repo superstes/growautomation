@@ -57,8 +57,8 @@ class Prepare:
     def _stop(self, signum=None, stack=None):
         if signum is not None:
             try:
-                debugger("earlybird - stop |got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-                Log("Service initiation received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__), level=2).write()
+                debugger("earlybird - stop |got signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__))
+                Log("Service initiation received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__), level=2).write()
             except AttributeError:
                 debugger("earlybird - stop |got signal %s" % signum)
                 Log("Service initiation received signal %s" % signum, level=2).write()
@@ -85,10 +85,10 @@ class Prepare:
                 if db_data is not False:
                     if db_data != file_data:
                         os_system("sed -i 's$%s$%s$g' %s" % ("%s=%s" % (setting, file_data), "%s=%s" % (setting, db_data), file))
-                        debugger("earlybird - config_update |updated setting '%s' in file '%s'" % (setting, file))
-                        Log("Updated setting '%s' data in config file '%s'" % (setting, file))
+                        debugger("earlybird - config_update |updated setting \"%s\" in file \"%s\"" % (setting, file))
+                        Log("Updated setting \"%s\" data in config file \"%s\"" % (setting, file))
                 else:
-                    debugger("earlybird - config_update |setting '%s' not found in db" % setting)
+                    debugger("earlybird - config_update |setting \"%s\" not found in db" % setting)
                     continue
         update(file="%s/core/core.conf" % Config(setting='path_root').get())
         update(file='/etc/growautomation.version')

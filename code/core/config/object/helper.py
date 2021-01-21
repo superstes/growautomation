@@ -1,7 +1,7 @@
 # helper functions for object initialization
 
-SETTING_DICT_ERROR = "The required setting %s for instance '%s' (id '%s') of the object '%s' was not defined " \
-                     "in its settings: '%s'"
+SETTING_DICT_ERROR = "The required setting %s for instance \"%s\" (id \"%s\") of the object \"%s\" was not defined " \
+                     "in its settings: \"%s\""
 SETTING_DICT_EXCEPTION = KeyError
 
 
@@ -25,7 +25,7 @@ def set_attribute(setting_dict: dict, setting_list: list, instance, obj):
     try:
         for key in setting_list:
             if key not in setting_list:
-                raise SETTING_DICT_EXCEPTION("Setting '%s' was not provided" % key)
+                raise SETTING_DICT_EXCEPTION("Setting \"%s\" was not provided" % key)
             else:
                 setattr(instance, key, setting_dict[key])
 
@@ -46,7 +46,7 @@ def overwrite_inherited_attribute(child_setting_dict: dict, setting_list: list, 
                         pass
                     else:
                         raise AttributeError("Unable to set attribute since it already exists: "
-                                             "current value '%s', new value '%s'"
+                                             "current value \"%s\", new value \"%s\""
                                              % (getattr(child_instance, key), child_setting_dict[key]))
                 except NameError:  # if it already exists as property and should be overwritten
                     setattr(child_instance, key, child_setting_dict[key])
@@ -71,7 +71,7 @@ def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_
                     pass
                 else:
                     raise AttributeError("Unable to set attribute since it already exists: "
-                                         "current value '%s', new value '%s'"
+                                         "current value \"%s\", new value \"%s\""
                                          % (getattr(child_instance, key), child_setting_dict[key]))
             else:
                 raise AttributeError("Unable to set attribute since it doesn't exist on neither child nor parent!")

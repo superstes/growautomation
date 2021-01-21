@@ -29,7 +29,7 @@ class Go:
 
     def _connect(self) -> bool:
         try:
-            debugger("config-db-link | _connect | user '%s', database '%s', ip '%s', port '%s'"
+            debugger("config-db-link | _connect | user \"%s\", database \"%s\", ip \"%s\", port \"%s\""
                      % (self.connection_data_dict['user'], self.connection_data_dict['database'],
                         self.connection_data_dict['server'], self.connection_data_dict['port']))
 
@@ -84,7 +84,7 @@ class Go:
         else:
             query_list = query
 
-        debugger("config-db-link | get | query to process '%s'" % query_list)
+        debugger("config-db-link | get | query to process \"%s\"" % query_list)
 
         data_list = []
 
@@ -99,7 +99,7 @@ class Go:
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
-        debugger("config-db-link | get | output '%s'" % data_list)
+        debugger("config-db-link | get | output \"%s\"" % data_list)
 
         return data_list  # list of tuples
 
@@ -109,7 +109,7 @@ class Go:
         else:
             command_list = command
 
-        debugger("config-db-link | put | command to process '%s'" % command_list)
+        debugger("config-db-link | put | command to process \"%s\"" % command_list)
 
         try:
             for c in command_list:
@@ -123,7 +123,7 @@ class Go:
         return True
 
     def _error(self, msg: str):
-        debugger("config-db-link | _error | received error '%s'" % msg)
+        debugger("config-db-link | _error | received error \"%s\"" % msg)
         # log error or whatever
 
         try:

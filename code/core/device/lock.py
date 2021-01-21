@@ -18,8 +18,8 @@ def get(instance) -> bool:
         else:
             sleep(LOCK_CHECK_INTERVAL)
 
-    debugger("device-lock | get | instance '%s' gave up to get lock after '%s' sec" % (instance.name, LOCK_MAX_WAIT))
-    Log().write("Gave up to get lock for device '%s' after '%s' sec" % (instance.name, LOCK_MAX_WAIT))
+    debugger("device-lock | get | instance \"%s\" gave up to get lock after \"%s\" sec" % (instance.name, LOCK_MAX_WAIT))
+    Log().write("Gave up to get lock for device \"%s\" after \"%s\" sec" % (instance.name, LOCK_MAX_WAIT))
 
     return False
 

@@ -79,8 +79,8 @@ class Service:
             self._status()
 
         except TypeError as error_msg:
-            debugger("service | start | encountered error '%s'" % error_msg)
-            self.logger.write(output="Service encountered an error while starting:\n'%s'" % error_msg)
+            debugger("service | start | encountered error \"%s\"" % error_msg)
+            self.logger.write(output="Service encountered an error while starting:\n\"%s\"" % error_msg)
             self.stop()
         self._run()
 
@@ -122,8 +122,8 @@ class Service:
         systemd_journal.write('Stopping service.')
         if signum is not None:
             try:
-                debugger("service | stop | got signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
-                self.logger.write(output="Service received signal %s - '%s'" % (signum, sys_exc_info()[0].__name__))
+                debugger("service | stop | got signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__))
+                self.logger.write(output="Service received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__))
             except AttributeError:
                 debugger("service | stop | got signal %s" % signum)
                 self.logger.write(output="Service received signal %s" % signum)
@@ -176,11 +176,11 @@ class Service:
         for typ in self.CONFIG.keys():
             typ_counter += 1
             obj_counter = 0
-            self.logger.write("Config object type '%s'" % typ)
+            self.logger.write("Config object type \"%s\"" % typ)
             for obj in self.CONFIG[typ]:
                 obj_counter += 1
-                self.logger.write("Object '%s'" % obj)
-                self.logger.write("Config: '%s'" % obj.__dict__)
+                self.logger.write("Object \"%s\"" % obj)
+                self.logger.write("Config: \"%s\"" % obj.__dict__)
                 if obj_counter == len(self.CONFIG[typ]):
                     self.logger.write("\n")
             if typ_counter == len(self.CONFIG.keys()):
@@ -194,7 +194,7 @@ class Service:
         thread_list = self.THREAD.list()
         detailed_thread_list = [str(thread.__dict__) for thread in thread_list]
         simple_thread_list = [thread.name for thread in thread_list]
-        debugger("service | status | threads running:\n\n\n'%s'\n\n" % "\n\n".join(detailed_thread_list))
+        debugger("service | status | threads running:\n\n\n\"%s\"\n\n" % "\n\n".join(detailed_thread_list))
         systemd_journal.write("Status - threads running: %s" % simple_thread_list)
 
     def _run(self):

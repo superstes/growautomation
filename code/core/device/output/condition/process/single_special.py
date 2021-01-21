@@ -11,7 +11,7 @@ SPECIAL_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 def special(condition) -> tuple:
     speci = condition.special
 
-    debugger("device-output-condition-proc-singlespecial | _special | condition '%s', specialtype '%s'"
+    debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\", specialtype \"%s\""
              % (condition.name, speci))
 
     if speci in ['time', 'datetime']:
@@ -21,12 +21,12 @@ def special(condition) -> tuple:
 
     if error:
         # log error or whatever
-        debugger("device-output-condition-proc-singlespecial | _special | condition '%s' has an unsupported "
-                 "special type '%s'" % (condition.name, speci))
-        raise KeyError("Condition '%s' has an unsupported special type '%s" % (condition.name, speci))
+        debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\" has an unsupported "
+                 "special type \"%s\"" % (condition.name, speci))
+        raise KeyError("Condition \"%s\" has an unsupported special type '%s" % (condition.name, speci))
 
-    debugger("device-output-condition-proc-singlespecial | _special | condition '%s', specialtype '%s', "
-             "data '%s', value '%s'" % (condition.name, speci, data, value))
+    debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\", specialtype \"%s\", "
+             "data \"%s\", value \"%s\"" % (condition.name, speci, data, value))
 
     return data, value
 

@@ -14,7 +14,7 @@ class Go:
         self.data_type = None
 
     def get(self) -> bool:
-        debugger("device-output-condition-single | get | getting data for condition '%s'" % self.condition.name)
+        debugger("device-output-condition-single | get | getting data for condition \"%s\"" % self.condition.name)
 
         if self.condition.condition_special is None:
             self.data_list, self.data_type = DefaultData(condition=self.condition).get()
@@ -39,7 +39,7 @@ class Go:
         else:
             value = self.data_type(self.condition.condition_value)
 
-        debugger("device-output-condition-single | _compare_data | condition '%s', data '%s %s', operator '%s'"
+        debugger("device-output-condition-single | _compare_data | condition \"%s\", data '%s %s', operator \"%s\""
                  % (self.condition.name, type(data), data, operator))
 
         result = False
@@ -58,12 +58,12 @@ class Go:
                 result = True
         else:
             # log error or whatever
-            debugger("device-output-condition-single | _compare_data | condition '%s' has an unsupported "
-                     "operator '%s' with value_type '%s'" % (self.condition.name, operator, self.data_type))
-            raise KeyError("Condition '%s' has an unsupported operator '%s'" % (self.condition.name, operator))
+            debugger("device-output-condition-single | _compare_data | condition \"%s\" has an unsupported "
+                     "operator \"%s\" with value_type \"%s\"" % (self.condition.name, operator, self.data_type))
+            raise KeyError("Condition \"%s\" has an unsupported operator \"%s\"" % (self.condition.name, operator))
 
-        debugger("device-output-condition-single | _compare_data | condition '%s', data '%s' '%s', operator '%s', "
-                 "value '%s %s', result '%s'"
+        debugger("device-output-condition-single | _compare_data | condition \"%s\", data \"%s\" \"%s\", operator \"%s\", "
+                 "value '%s %s', result \"%s\""
                  % (self.condition.name, type(data), data, operator, type(value), value, result))
 
         return result
@@ -71,7 +71,7 @@ class Go:
     def _get_data(self) -> (float, int):
         value_check = self.condition.condition_check
 
-        debugger("device-output-condition-single | _get_data | condition '%s', value_check '%s'"
+        debugger("device-output-condition-single | _get_data | condition \"%s\", value_check \"%s\""
                  % (self.condition.name, value_check))
 
         if value_check == 'min':
@@ -82,9 +82,9 @@ class Go:
             data = self._data_avg(data_list=self.data_list)
         else:
             # log error or whatever
-            debugger("device-output-condition-single | _get_data | condition '%s' has an unsupported "
-                     "value_check '%s'" % (self.condition.name, value_check))
-            raise KeyError("Condition '%s' has an unsupported value_check '%s'" % (self.condition.name, value_check))
+            debugger("device-output-condition-single | _get_data | condition \"%s\" has an unsupported "
+                     "value_check \"%s\"" % (self.condition.name, value_check))
+            raise KeyError("Condition \"%s\" has an unsupported value_check \"%s\"" % (self.condition.name, value_check))
 
         return data
 

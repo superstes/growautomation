@@ -32,26 +32,36 @@ class Go:
         ).get()
 
         for task_instance in task_instance_list:
-            self.logger.write("Processing device instance: '%s'" % task_instance.__dict__)
+            if type(task_instance) == dict:
+                task_name = task_instance['device'].name
+                task_id = task_instance['device'].object_id
 
-            debugger("device-input | start | processing input '%s'" % task_instance.name)
-            data = Process(instance=task_instance, category=self.TASK_CATEGORY).start()
+                self.logger.write("Processing device instance: \"%s\"" % task_instance['device'].__dict__, level=6)
+                debugger("device-input | start | processing connection \"%s\"" % task_name)
+
+                data = Process(instance=task_instance['downlink'], category='connection', nested_instance=task_instance['device']).start()
+
+            else:
+                task_name = task_instance.name
+                task_id = task_instance.object_id
+
+                self.logger.write("Processing device instance: \"%s\"" % task_instance.__dict__, level=6)
+                debugger("device-input | start | processing input \"%s\"" % task_name)
+
+                data = Process(instance=task_instance, category=self.TASK_CATEGORY).start()
 
             if data is None:
-                debugger("device-input | start | no data received for input '%s'" % task_instance.name)
-                self.logger.write("No data received for device '%s'" % task_instance.name)
+                debugger("device-input | start | no data received for input \"%s\"" % task_name)
+                self.logger.write("No data received for device \"%s\"" % task_name)
 
                 if shared_vars.TASK_LOG:
-                    self.database.put(command=self.SQL_TASK_COMMAND
-                                      % ('failure', 'No data received', self.TASK_CATEGORY,
-                                         task_instance.object_id))
+                    self.database.put(command=self.SQL_TASK_COMMAND % ('failure', 'No data received', self.TASK_CATEGORY, task_id))
             else:
-                self.database.put(command=self.SQL_DATA_COMMAND % (datetime.now(), data, task_instance.object_id))
+                self.database.put(command=self.SQL_DATA_COMMAND % (datetime.now(), data, task_id))
 
-                debugger("device-input | start | processing of input '%s' succeeded" % task_instance.name)
+                debugger("device-input | start | processing of input \"%s\" succeeded" % task_name)
 
                 if shared_vars.TASK_LOG:
-                    self.database.put(command=self.SQL_TASK_COMMAND % ('success', 'Data received', self.TASK_CATEGORY,
-                                                                       task_instance.object_id))
+                    self.database.put(command=self.SQL_TASK_COMMAND % ('success', 'Data received', self.TASK_CATEGORY, task_id))
 
         self.database.disconnect()

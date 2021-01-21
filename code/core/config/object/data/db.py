@@ -45,7 +45,7 @@ class GaDataDb:
         return self.link.put(command)
 
     def _error(self, msg):
-        debugger("config-object-data-db | _error | received error '%s'" % msg)
+        debugger("config-object-data-db | _error | received error \"%s\"" % msg)
         # log error or whatever
         raise ConnectionError(msg)
 

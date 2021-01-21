@@ -62,6 +62,9 @@ class Log:
         self.log_level = shared_vars.SYSTEM.log_level
 
     def write(self, output: str, level: int = 1) -> bool:
+        # log levels:
+        #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
+        #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
         if self.type == 'core':
             try:
                 if level > self.log_level:
@@ -95,14 +98,14 @@ class Log:
 
                 for data in split_output[1:]:
                     try:
-                        updated_list.append("%s': '%s',%s" % (
+                        updated_list.append("%s': \"%s\",%s" % (
                                 setting,
                                 self.CENSOR_OUTPUT,
                                 data.split(',', 1)[1]
                             )
                         )
                     except IndexError:
-                        output = "LOG ERROR: 'Output has sensitive data ('%s') in it that must be censored. " \
+                        output = "LOG ERROR: 'Output has sensitive data (\"%s\") in it that must be censored. " \
                                  "But we were not able to safely censor it. " \
                                  "Output was completely replaced.'" % setting
 

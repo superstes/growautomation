@@ -12,10 +12,10 @@ class GaBase(object):
         self.object_id = object_id
 
     def __repr__(self):
-        return "%s(id: '%s', name: '%s')" % (self.__class__.__name__, self.object_id, self.name)
+        return "%s(id: \"%s\", name: \"%s\")" % (self.__class__.__name__, self.object_id, self.name)
 
     def __str__(self):
-        return "Object '%s' as an Instance of '%s'; Description: '%s'" \
+        return "Object \"%s\" as an Instance of \"%s\"; Description: \"%s\"" \
                % (self.name, self.__class__.__name__, self.description)
 
 

@@ -20,7 +20,7 @@ class Go:
     def get(self):
         self._get_data_list()
 
-        debugger("device-output-condition-proc-single | get | condition '%s', data '%s', type '%s'"
+        debugger("device-output-condition-proc-single | get | condition \"%s\", data \"%s\", type \"%s\""
                  % (self.condition.name, self.data_list, self.data_type))
 
         return self.data_list, self.data_type
@@ -28,7 +28,7 @@ class Go:
     def _get_data_list(self):
         period_type = self.condition.condition_period
 
-        debugger("device-output-condition-proc-single | _get_data_type | condition '%s', period type '%s', period '%s'"
+        debugger("device-output-condition-proc-single | _get_data_type | condition \"%s\", period type \"%s\", period \"%s\""
                  % (self.condition.name, period_type, self.condition.condition_period_data))
 
         if period_type == 'time':
@@ -37,12 +37,12 @@ class Go:
             data = self._get_data_by_range()
         else:
             # log error or whatever
-            debugger("device-output-condition-proc-single | _get_data_list | condition '%s' has an unsupported "
+            debugger("device-output-condition-proc-single | _get_data_list | condition \"%s\" has an unsupported "
                      "period_type '%s" % (self.condition.name, period_type))
-            raise KeyError("Condition '%s' has an unsupported period_type '%s'" % (self.condition.name, period_type))
+            raise KeyError("Condition \"%s\" has an unsupported period_type \"%s\"" % (self.condition.name, period_type))
 
         if data is None:
-            raise ValueError("No data received for single condition '%s' (id '%s')"
+            raise ValueError("No data received for single condition \"%s\" (id \"%s\")"
                              % (self.condition.name, self.condition.object_id))
         # maybe we should let the user decide which data to use if none is found
 
@@ -63,10 +63,10 @@ class Go:
         elif self.data_type == 'str':
             typ = str
         else:
-            raise KeyError("Condition '%s' has an unsupported data value_type '%s'"
+            raise KeyError("Condition \"%s\" has an unsupported data value_type \"%s\""
                            % (self.condition.name, self.data_type))
 
-        debugger("device-output-condition-proc-single | _get_data_type | condition '%s', data '%s', type '%s'"
+        debugger("device-output-condition-proc-single | _get_data_type | condition \"%s\", data \"%s\", type \"%s\""
                  % (self.condition.name, data, typ))
 
         return typ

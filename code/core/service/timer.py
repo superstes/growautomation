@@ -38,7 +38,7 @@ def get(config_dict: dict) -> tuple:
 
                 else:
                     # log error or whatever
-                    debugger("service-timer | get | instance '%s' is disabled" % obj)
+                    debugger("service-timer | get | instance \"%s\" is disabled" % obj)
 
     timer_list.extend(custom_list)
 
