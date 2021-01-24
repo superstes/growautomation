@@ -1,6 +1,6 @@
 <br>
 <p align="center">
-  <img src="https://www.growautomation.eu/img/svg/ga02c.svg" width="65%"/>
+  <img src="https://demo.growautomation.at/static/img/ga02c.svg" width="65%"/>
 </p>
 <br><br>
 
