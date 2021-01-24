@@ -39,7 +39,7 @@ Version: 0.7
 
 ### Work in progress
 - creating _(django)_ web interface for easy user interactions
-    - <a href="https://test.growautomation.at/">DEMO LINK</a>
+    - <a href="https://demo.growautomation.at/">DEMO LINK</a>
     - updating growautomation core to work with django database schema
 - testing and fixing input-condition-output workflow
 

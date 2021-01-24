@@ -10,6 +10,7 @@
       virtualenv
       django
       django_mysql
+      mysqlclient
       django-forms-bootstrap
       netaddr
       django-bootstrap4

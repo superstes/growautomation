@@ -26,7 +26,7 @@ SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['test.growautomation.at', 'localhost']
+ALLOWED_HOSTS = ['demo.growautomation.at', 'localhost']
 
 
 # Application definition
