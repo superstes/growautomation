@@ -20,9 +20,9 @@ DEVICE_DICT = {
 }
 
 DB_CHECK_DICT = {
-    'read': 'SELECT * FROM ga.test LIMIT 10;',
+    'read': 'SELECT * FROM ga.ga_test LIMIT 10;',
     'write': [
-        'CREATE TABLE ga.test_%s;',
-        'DROP TABLE ga.test_%s;'
+        'CREATE TABLE ga.ga_test_%s (`stringi` varchar(10) NOT NULL, `booli` tinyint(1) NOT NULL);',
+        'DROP TABLE ga.ga_test_%s;'
     ]
 }

@@ -94,3 +94,7 @@ from .submodels.nestedmembers import NestedAreaModel
 # settings ##############################
 
 # from .submodels.settings import *
+
+# test ##############################
+
+from .submodels.test import *

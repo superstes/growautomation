@@ -81,7 +81,7 @@ class Log:
         debugger(command=output_formatted)
 
         with open(self.log_file, 'a') as logfile:
-            logfile.write("lvl %s - %s\n" % (level, output_formatted))
+            logfile.write("%s - %s\n" % (level, output_formatted))
 
         return True
 
