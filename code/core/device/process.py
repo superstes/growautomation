@@ -7,7 +7,7 @@
 from core.utils.process import subprocess
 from core.config import shared as shared_vars
 from core.utils.debug import debugger
-from core.utils.debug import Log
+from core.utils.debug import MultiLog, Log
 from core.device import lock
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.connection import GaConnectionDevice
@@ -15,6 +15,7 @@ from core.config.object.device.connection import GaConnectionDevice
 from json import dumps as json_dumps
 from json import loads as json_loads
 from json import JSONDecodeError
+from datetime import datetime, timedelta
 
 
 class Go:
@@ -29,29 +30,43 @@ class Go:
         self.category = category
         self.reverse = reverse
         self.nested_instance = nested_instance
-        self.logger = Log()
+
+        if shared_vars.SYSTEM.device_log == 1:
+            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
+        else:
+            self.logger = Log()
 
     def start(self) -> (str, None):
-        if lock.get(instance=self.instance):
-            result = self._execute()
+        if self._fail_check():
+            if lock.get(instance=self.instance):
+                result = self._execute()
 
-            lock.remove(instance=self.instance)
-            debugger("device-process | start | instance \"%s\" result \"%s\"" % (self.instance.name, result))
+                lock.remove(instance=self.instance)
+                debugger("device-process | start | instance \"%s\" result \"%s\"" % (self.instance.name, result))
 
-            if self.category in [self.INPUT_CATEGORY, self.CONNECTION_CATEGORY]:
-                try:
-                    data = json_loads(result)
-                    return data[self.INPUT_DATA_KEY]
+                if self.category in [self.INPUT_CATEGORY, self.CONNECTION_CATEGORY]:
+                    try:
+                        data = json_loads(result)
+                        return data[self.INPUT_DATA_KEY]
 
-                except (KeyError, JSONDecodeError) as error:
-                    self.logger.write("Unable decode received data; error: \"%s\"" % error)
-                    return None
+                    except (KeyError, JSONDecodeError) as error:
+                        self.logger.write("Unable decode received data; error: \"%s\"" % error)
+                        return None
 
-            else:
-                return result
+                else:
+                    return result
 
-        else:
-            return None
+        return None
+
+    def _fail_check(self):
+        if self.instance.fail_sleep is not None:
+            if datetime.now() < self.instance.fail_sleep:
+                self.logger.write("Skipping execution of device \"%s\" since it has reached the max error threshold" % self.instance.name, level=4)
+                self.logger.write("Device \"%s\" will sleep until \"%s\""
+                                  % (self.instance.name, self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')), level=6)
+                return False
+
+        return True
 
     def _execute(self):
         if isinstance(self.instance, GaInputDevice):
@@ -109,6 +124,15 @@ class Go:
 
         if error not in [None, '']:
             self.logger.write("An error occurred while processing device \"%s\": \"%s\"" % (self.instance.name, error))
+            self.instance.fail_count += 1
+
+            if self.instance.fail_count > shared_vars.SYSTEM.device_fail_count:
+                self.instance.fail_sleep = datetime.now() + timedelta(shared_vars.SYSTEM.device_fail_sleep)
+                self.logger.write("Device \"%s\" has reached its fail threshold -> will skip execution until \"%s\""
+                                  % (self.instance.name, self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')), level=2)
+
+        else:
+            self.instance.fail_count = 0
 
         if self.category == self.OUTPUT_CATEGORY:
             if error is None:

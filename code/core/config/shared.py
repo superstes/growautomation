@@ -13,7 +13,7 @@ def init():
 # hardcoded config
 # todo: integrate as controller settings with hardcoded fallback values
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
-STARTUP_DEBUG = True
+# STARTUP_DEBUG = True  # may not be needed any more -> since the startup_shared_vars were created
 TASK_LOG = False
 TEST = False
 SUBPROCESS_TIMEOUT = 15

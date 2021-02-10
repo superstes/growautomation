@@ -3,13 +3,13 @@
 #   1. list of all timers
 #   2. list of all custom timers (if a device overwrites its model inheritance)
 
-from core.factory import config
-
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.core.timer import GaTimerDevice
-from core.utils.debug import debugger
+from core.utils.debug import Log
+
+logger = Log()
 
 
 ALLOWED_OBJECT_TUPLE = (
@@ -37,8 +37,10 @@ def get(config_dict: dict) -> tuple:
                         timer_list.append(obj)
 
                 else:
-                    # log error or whatever
-                    debugger("service-timer | get | instance \"%s\" is disabled" % obj)
+                    logger.write("Instance \"%s\" is disabled" % obj, level=4)
+
+            else:
+                logger.write("Object \"%s\" is not allowed" % obj, level=6)
 
     timer_list.extend(custom_list)
 

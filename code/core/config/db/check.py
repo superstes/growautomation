@@ -2,11 +2,11 @@
 
 from core.config.db.link import Go as Link
 from core.config.db.template import DB_CHECK_DICT
-from core.utils.debug import debugger
+from core.utils.debug import Log
+from core.utils.connectivity import test_tcp_stream
 
 import mysql.connector
 from random import choice as random_choice
-import socket
 
 
 class Go:
@@ -16,6 +16,7 @@ class Go:
     def __init__(self, connection_data_dict):
         self.connection_data_dict = connection_data_dict
         self.link = Link(connection_data_dict)
+        self.logger = Log()
 
     def get(self) -> bool:
         try:
@@ -55,25 +56,9 @@ class Go:
             return self._error(msg="Error while testing write:\n\"%s\"" % error_msg)
 
     def _test_network(self) -> bool:
-        # check <L5 connectivity
-        try:
-            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = connection.connect_ex(
-                    (self.connection_data_dict['server'],
-                     self.connection_data_dict['port'])
-            )
+        # check connectivity up to L4
+        return test_tcp_stream(host=self.connection_data_dict['server'], port=self.connection_data_dict['port'])
 
-            connection.close()
-        except socket.error as error_msg:
-            return self._error(msg="Error while testing network connection:\n\"%s\"" % error_msg)
-
-        if result == 0:
-            return True
-
-        return False
-
-    @staticmethod
-    def _error(msg):
-        debugger("config-db-check | _error | received error \"%s\"" % msg)
-        # log error or whatever
+    def _error(self, msg):
+        self.logger.write("Database connection test failed with error: \"%s\"" % msg)
         return False

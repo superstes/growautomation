@@ -7,6 +7,7 @@ from core.config import shared as shared_vars
 from datetime import datetime
 from os import system as os_system
 from os import path as os_path
+from systemd import journal as systemd_journal
 
 
 def now(time_format: str):
@@ -16,18 +17,8 @@ def now(time_format: str):
 date_year, date_month = now("%Y"), now("%m")
 
 
-def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: int = 1) -> bool:
-    if level > 1:
-        return False
-    if hard_debug:
-        debug = 1
-    elif not hard_only:
-        try:
-            debug = shared_vars.SYSTEM.debug
-        except AttributeError:
-            debug = shared_vars.STARTUP_DEBUG
-    else:
-        debug = 0
+def debugger(command) -> bool:
+    debug = shared_vars.SYSTEM.debug
 
     if debug == 1:
         prefix = "%s debug:" % now("%H:%M:%S")
@@ -43,7 +34,7 @@ def debugger(command, hard_debug: bool = False, hard_only: bool = False, level: 
 
 
 class Log:
-    LOG_TIMESTAMP_FORMAT = "%Y-%m-%d | %H:%M:%S:%f"
+    LOG_TIMESTAMP_FORMAT = '%Y-%m-%d | %H:%M:%S:%f'
 
     CENSOR_OUTPUT = '●●●●●●●●●'
     SECRET_SETTINGS = ['sql_secret']
@@ -52,19 +43,27 @@ class Log:
     except AttributeError:
         SECRET_DATA = []
 
-    def __init__(self, typ: str = 'core'):
+    def __init__(self, typ: str = 'core', addition: str = None):
         from inspect import stack as inspect_stack
         from inspect import getfile as inspect_getfile
         self.type = typ
         self.name = inspect_getfile((inspect_stack()[1])[0])
         self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM.path_log, self.type, date_year)
-        self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
+        if addition is None:
+            self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
+        else:
+            self.log_file = "%s/%s_%s_%s.log" % (self.log_dir, date_month, self.type, addition)
         self.log_level = shared_vars.SYSTEM.log_level
+        self._file()
 
     def write(self, output: str, level: int = 1) -> bool:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
+
+        if shared_vars.SYSTEM.debug == 1:
+            level = 9
+
         if self.type == 'core':
             try:
                 if level > self.log_level:
@@ -75,11 +74,14 @@ class Log:
             if level > self.log_level:
                 return False
 
-        self._file()
         output = self._censor(str(output))
 
-        with open("%s/%s_%s.log" % (self.log_dir, date_month, self.type), 'a') as logfile:
-            logfile.write("%s - %s - %s\n" % (datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT), self.name, output))
+        output_formatted = "%s - %s - %s" % (datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT), self.name, output)
+
+        debugger(command=output_formatted)
+
+        with open(self.log_file, 'a') as logfile:
+            logfile.write("lvl %s - %s\n" % (level, output_formatted))
 
         return True
 
@@ -116,3 +118,30 @@ class Log:
             output.replace(data, self.CENSOR_OUTPUT)
 
         return output
+
+
+class MultiLog:
+    def __init__(self, log_instances: list):
+        self.log_instances = log_instances
+
+    def write(self, output: str, level: int = 1) -> bool:
+        result_list = []
+
+        for log in self.log_instances:
+            result_list.append(log.write(output=output, level=level))
+
+        if all(result_list):
+            return True
+
+        return False
+
+
+class FileAndSystemd:
+    def __init__(self, log_instance):
+        self.log = log_instance
+
+    def write(self, output: str, level: int = 1) -> bool:
+        if level == 1:
+            systemd_journal.write(output)
+
+        return self.log.write(output=output, level=level)

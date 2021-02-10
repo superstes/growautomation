@@ -1,8 +1,8 @@
 # will check for which input scripts to start
 # basic filtering on enabled state and model grouping
 
-from core.utils.debug import debugger
-from core.utils.debug import Log
+from core.config import shared as shared_vars
+from core.utils.debug import MultiLog, Log, debugger
 
 
 class Go:
@@ -11,7 +11,11 @@ class Go:
         self.task_instance_list = []
         self.model_obj = model_obj
         self.device_obj = device_obj
-        self.logger = Log()
+
+        if shared_vars.SYSTEM.device_log == 1:
+            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
+        else:
+            self.logger = Log()
 
     def get(self) -> list:
         if isinstance(self.instance, self.model_obj):

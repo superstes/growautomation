@@ -7,9 +7,9 @@ SETTING_DICT_EXCEPTION = KeyError
 
 # dynamic creation of class properties
 # used to update child_instance attributes so they are up-to-date to their parent_instance
-def set_property(obj, key):
+def set_property(obj, key, instance):
     getter = lambda self: (self.setting_dict[key] if key in self.setting_dict else getattr(self.parent_instance, key))
-    setter = lambda self, data: set_property_setter(instance=self, key=key, data=data)
+    setter = lambda self, data: set_property_setter(instance=instance, key=key, data=data)
 
     prop = property(fget=getter, fset=setter)
 
@@ -51,7 +51,7 @@ def overwrite_inherited_attribute(child_setting_dict: dict, setting_list: list, 
                 except NameError:  # if it already exists as property and should be overwritten
                     setattr(child_instance, key, child_setting_dict[key])
             else:
-                set_property(obj=obj, key=key)
+                set_property(obj=obj, key=key, instance=child_instance)
 
     except SETTING_DICT_EXCEPTION as error_msg:
         raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id,
@@ -63,7 +63,7 @@ def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_
     try:
         for key in setting_list:
             if hasattr(child_instance.parent_instance, key):
-                set_property(obj=obj, key=key)
+                set_property(obj=obj, key=key, instance=child_instance)
             elif key in child_setting_dict:
                 if not hasattr(child_instance, key):
                     setattr(child_instance, key, child_setting_dict[key])
@@ -85,7 +85,7 @@ def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_
 def set_parent_attribute(child_instance, setting_list: list, obj):
     try:
         for key in setting_list:
-            set_property(obj=obj, key=key)
+            set_property(obj=obj, key=key, instance=child_instance)
 
     except SETTING_DICT_EXCEPTION as error_msg:
         raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id,

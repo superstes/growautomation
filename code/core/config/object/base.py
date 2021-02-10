@@ -43,6 +43,8 @@ class GaBaseDevice(GaBase):
         # vars for all devices
         self.parent_instance = parent_instance
         self.locked = False
+        self.fail_count = 0
+        self.fail_sleep = None
         self.setting_dict = setting_dict
         # vars from settings dict
         try:

@@ -5,8 +5,7 @@ from core.device.process import Go as Process
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 from core.config import shared as shared_vars
-from core.utils.debug import debugger
-from core.utils.debug import Log
+from core.utils.debug import MultiLog, Log, debugger
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
@@ -22,7 +21,11 @@ class Go:
     def __init__(self, instance):
         self.instance = instance
         self.database = GaDataDb()
-        self.logger = Log()
+
+        if shared_vars.SYSTEM.device_log == 1:
+            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
+        else:
+            self.logger = Log()
 
     def start(self):
         task_instance_list = Check(

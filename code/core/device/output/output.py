@@ -5,7 +5,7 @@ from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
 from core.config import shared as shared_vars
 from core.utils.threader import Loop as Thread
-from core.utils.debug import debugger
+from core.utils.debug import MultiLog, Log, debugger
 from core.device.output.condition.link import Go as GetGroupResult
 from core.device.process import Go as Process
 
@@ -25,6 +25,11 @@ class Go:
         self.database = GaDataDb()
         self.output_instance_list = []
         self.processed_list = []
+
+        if shared_vars.SYSTEM.device_log == 1:
+            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
+        else:
+            self.logger = Log()
 
     def start(self):
         condition_result = GetGroupResult(group=self.instance).go()

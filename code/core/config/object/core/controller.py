@@ -4,11 +4,13 @@
 from core.config.object.base import *
 from core.config.object.helper import *
 
+from systemd import journal as systemd_journal
+
 
 class GaControllerDevice(GaBase):
     setting_list = [
         'path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database', 'log_level', 'debug', 'security',
-        'backup', 'timezone'
+        'backup', 'timezone', 'device_fail_count', 'device_fail_sleep', 'device_log',
     ]
 
     def __init__(self, parent_instance, setting_dict: dict, **kwargs):
@@ -17,6 +19,7 @@ class GaControllerDevice(GaBase):
         # specific vars
         self.parent_instance = parent_instance
         self.setting_dict = setting_dict
+
         # vars from settings dict
         overwrite_inherited_attribute(
             child_setting_dict=self.setting_dict,
@@ -35,7 +38,8 @@ class GaControllerModel(GaBase):
     default_setting_dict = {
         'name': 'gacon', 'description': 'Growautomation controller', 'path_root': '/etc/ga', 'path_log': '/var/log/ga', 'path_backup': '/mnt/backup/ga',
         'sql_server': 'localhost', 'sql_port': 3306, 'sql_user': 'ga_admin', 'sql_secret': '4t/GdVV9Yd13IJqNbUC/cydeIU+aEO2kkyNIJ8+4Qd2pN2stAq/BrCT27RIgvwYk',
-        'sql_database': 'ga', 'log_level': 1, 'debug': False, 'security': False, 'backup': True, 'timezone': 'MEZ',
+        'sql_database': 'ga', 'log_level': 2, 'debug': False, 'security': False, 'backup': True, 'timezone': 'MEZ', 'device_fail_count': 3,
+        'device_fail_sleep': 3600, 'device_log': True,
     }
     setting_list = list(default_setting_dict.keys())
 

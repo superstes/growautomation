@@ -5,21 +5,20 @@
 from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
 from core.config.db.validate import Go as Validate
-from core.config.object.data.file import GaDataFile
+from core.config import shared as shared_vars
 from core.utils.debug import debugger
 
 
 class GaDataDb:
     def __init__(self):
-        file_config_dict = GaDataFile().get()
         try:
             # debug input
             self.connection_data_dict = {
-                'server': file_config_dict['sql_server'],
-                'port': file_config_dict['sql_port'],
-                'user': file_config_dict['sql_user'],
-                'secret': file_config_dict['sql_secret'],
-                'database': file_config_dict['sql_database']
+                'server': shared_vars.SYSTEM.sql_server,
+                'port': shared_vars.SYSTEM.sql_port,
+                'user': shared_vars.SYSTEM.sql_user,
+                'secret': shared_vars.SYSTEM.sql_secret,
+                'database': shared_vars.SYSTEM.sql_database
             }
         except IndexError as error_msg:
             self._error(error_msg)

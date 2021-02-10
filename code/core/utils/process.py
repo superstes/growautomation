@@ -1,6 +1,5 @@
 # process handler
 
-from core.utils.debug import debugger
 from core.utils.debug import Log
 from core.config.shared import SUBPROCESS_TIMEOUT
 
@@ -8,9 +7,11 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from subprocess import TimeoutExpired
 
+logger = Log()
+
 
 def subprocess(command, out_error=False):
-    debugger("utils-process | subprocess | executing command \"%s\"" % command)
+    logger.write("Executing command \"%s\"" % command, level=6)
 
     if type(command) != list:
         command = [command]
@@ -28,15 +29,15 @@ def subprocess(command, out_error=False):
 
     if error in [None, '']:
         error = None
-    else:
-        Log().write("Subprocess execution error: \"%s\"" % error)
+        logger.write("Process output: \"%s\"" % output, level=6)
 
-    debugger("utils-process | subprocess | output \"%s\"; error \"%s\"" % (output, error))
-
-    if out_error is False:
-        return output
     else:
+        logger.write("Process error: \"%s\" | output: \"%s\"" % (error, output), level=2)
+
+    if out_error:
         return output, error
+
+    return output
 
 
 def _filter():

@@ -24,18 +24,19 @@
 #   (export PYTHONPATH=/etc/ga)
 #   is being set automatically by the systemd service
 
+from core.config import startup_shared as startup_shared_vars
+startup_shared_vars.init()
+
 from core.utils.threader import Loop as Thread
 from core.factory.main import get as factory
 from core.factory.reload import Go as Reload
 from core.service.timer import get as get_timer
 from core.config import shared as shared_vars
-from core.utils.debug import debugger
-from core.utils.debug import Log
+from core.utils.debug import FileAndSystemd, Log
 from core.service.decision import Go as Decision
 from core.config.object.data.file import GaDataFile
 from core.factory import config as factory_config
 
-from systemd import journal as systemd_journal
 from time import sleep as time_sleep
 from time import time
 from os import getpid as os_getpid
@@ -58,34 +59,33 @@ class Service:
         signal.signal(signal.SIGINT, self.stop)
         self.CONFIG, self.current_config_dict = factory()
         self._init_shared_vars()
-        self.logger = Log()
+        self.logger = FileAndSystemd(Log())
         self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
         self._update_config_file()
         self.THREAD = Thread()
 
     def start(self):
-        debugger("TIMER LIST '%s | %s'" % (type(self.timer_list), self.timer_list))
-        if shared_vars.SYSTEM.debug == 1:
-            self._config_dump()
+        self._config_dump()
+
         try:
-            debugger("service | start | process id %s" % os_getpid())
+            self.logger.write("Service has process id %s" % os_getpid(), level=7)
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
 
             self.THREAD.start()
-            systemd_journal.write('Start - finished starting threads.')
+            self.logger.write('Start - finished starting threads.')
             self._status()
 
         except TypeError as error_msg:
-            debugger("service | start | encountered error \"%s\"" % error_msg)
-            self.logger.write(output="Service encountered an error while starting:\n\"%s\"" % error_msg)
+            self.logger.write("Service encountered an error while starting:\n\"%s\"" % error_msg)
             self.stop()
         self._run()
 
+    # todo: I think the service currently dies on reload
     def reload(self, signum=None, stack=None):
-        debugger('service | reload | checking for config changes')
+        self.logger.write('Service reload -> checking for config changes', level=6)
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
             object_list=self.CONFIG,
@@ -95,8 +95,7 @@ class Service:
         shared_vars.CONFIG = self.CONFIG
 
         if reload:
-            debugger('service | reload | reloading threads tue to config changes')
-            systemd_journal.write('Reload - config changed. Restarting threads.')
+            self.logger.write('Reload - config has changed. Restarting threads.')
             # update shared config
             self._update_config_file()
             self._init_shared_vars()
@@ -109,28 +108,24 @@ class Service:
             # re-create all the threads
             self.start()
         else:
-            debugger('service | reload | no config changes')
-            systemd_journal.write('Reload - config is up-to-date.')
+            self.logger.write('Reload - config is up-to-date.')
             self._run()
 
     def stop(self, signum=None, stack=None):
         if self.stop_count >= self.MAX_STOP_COUNT:
             self._hard_exit()
         self.stop_count += 1
-        debugger('service | stop | stopping')
-        self.logger.write(output='Stopping service', level=1)
-        systemd_journal.write('Stopping service.')
+        self.logger.write('Service is stopping', level=6)
+        self.logger.write('Stopping service.')
         if signum is not None:
             try:
-                debugger("service | stop | got signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__))
-                self.logger.write(output="Service received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__))
+                self.logger.write("Service received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__), level=3)
             except AttributeError:
-                debugger("service | stop | got signal %s" % signum)
-                self.logger.write(output="Service received signal %s" % signum)
-        debugger('service | stop | stopping threads')
+                self.logger.write("Service received signal %s" % signum, level=3)
+        self.logger.write('Stopping timer threads', level=6)
         self.THREAD.stop()
         self._wait(seconds=self.WAIT_TIME)
-        systemd_journal.write('Service stopped.')
+        self.logger.write('Service stopped.')
         self._exit()
 
     def _init_shared_vars(self):
@@ -157,50 +152,48 @@ class Service:
         if self.exit_count == 0:
             self.exit_count += 1
             # ShellOutput(font='line', symbol='#')
-            debugger("\n\nGrowautomation service: Farewell!\n")
-            systemd_journal.write('Growautomation service: Farewell!')
+            self.logger.write('Growautomation service: Farewell!')
             # ShellOutput(font='line', symbol='#')
         raise SystemExit('Service exited gracefully.')
 
     def _hard_exit(self):
-        debugger("service | _hard_exit | hard exiting service sice it was stopped more than %s times"
-                 % self.MAX_STOP_COUNT)
-        self.logger.write(output='Stopping service merciless', level=1)
-        systemd_journal.write('Service stopped.')
+        self.logger.write("Hard exiting service since it was stopped more than %s times" % self.MAX_STOP_COUNT, level=6)
+        self.logger.write('Stopping service merciless', level=3)
+        self.logger.write('Service stopped.')
         raise SystemExit('Service exited merciless!')
 
     def _config_dump(self):
-        self.logger.write("\n\n#############################\nCONFIG DUMP:\n\n")
-        self.logger.write("OBJECT CONFIG:\n")
+        self.logger.write("\n\n#############################\nCONFIG DUMP:\n\n", level=7)
+        self.logger.write("OBJECT CONFIG:\n", level=7)
         typ_counter = 0
         for typ in self.CONFIG.keys():
             typ_counter += 1
             obj_counter = 0
-            self.logger.write("Config object type \"%s\"" % typ)
+            self.logger.write("Config object type \"%s\"" % typ, level=7)
             for obj in self.CONFIG[typ]:
                 obj_counter += 1
-                self.logger.write("Object \"%s\"" % obj)
-                self.logger.write("Config: \"%s\"" % obj.__dict__)
+                self.logger.write("Object \"%s\"" % obj, level=7)
+                self.logger.write("Config: \"%s\"" % obj.__dict__, level=7)
                 if obj_counter == len(self.CONFIG[typ]):
-                    self.logger.write("\n")
+                    self.logger.write("\n", level=7)
             if typ_counter == len(self.CONFIG.keys()):
-                self.logger.write("\n")
+                self.logger.write("\n", level=7)
 
-        self.logger.write("SUPPLY CONFIG:\n")
-        self.logger.write(self.current_config_dict)
-        self.logger.write("\n\nCONFIG DUMP END\n#############################\n")
+        self.logger.write("SUPPLY CONFIG:\n", level=7)
+        self.logger.write(self.current_config_dict, level=7)
+        self.logger.write("\n\nCONFIG DUMP END\n#############################\n", level=7)
 
     def _status(self):
         thread_list = self.THREAD.list()
         detailed_thread_list = [str(thread.__dict__) for thread in thread_list]
         simple_thread_list = [thread.name for thread in thread_list]
-        debugger("service | status | threads running:\n\n\n\"%s\"\n\n" % "\n\n".join(detailed_thread_list))
-        systemd_journal.write("Status - threads running: %s" % simple_thread_list)
+        self.logger.write("Status - threads running: %s" % simple_thread_list)
+        self.logger.write("Detailed info on running threads:\n\n\n\"%s\"\n\n" % "\n\n".join(detailed_thread_list), level=7)
 
     def _run(self):
         try:
             self._wait(seconds=self.WAIT_TIME)
-            debugger('service | run | starting runtime')
+            self.logger.write('Entering service runtime', level=7)
             run_last_reload_time = time()
             run_last_status_time = time()
             while True:
@@ -212,9 +205,19 @@ class Service:
                     run_last_status_time = time()
                 time_sleep(self.RUN_LOOP_INTERVAL)
         except:
+            try:
+                error = sys_exc_info()[1]
+
+                if str(error).find('Service exited') == -1:
+                    self.logger.write("A fatal error occurred: \"%s\"" % error)
+
+            except IndexError:
+                pass
+
             if self.exit_count > 0:
-                debugger("service | _run | skipping stop -> exiting")
+                self.logger.write('Skipping service stop (gracefully) -> exiting (hard)', level=5)
                 self._exit()
+
             else:
                 self.stop()
 

@@ -1,10 +1,8 @@
 # sql templates used throughout the core modules
 
-from core.config.object.data.file import GaDataFile
+from core.config import shared as shared_vars
 
-file_config_dict = GaDataFile().get()
-
-DB_NAME = file_config_dict['sql_database']
+DB_NAME = shared_vars.SYSTEM.sql_database
 
 # templates
 

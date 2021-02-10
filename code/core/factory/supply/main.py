@@ -1,4 +1,3 @@
-# from core.utils.debug import debugger
 from core.config.object.data.db import GaDataDb
 from core.factory.supply import config as supply_config
 from core.factory import config as factory_config
