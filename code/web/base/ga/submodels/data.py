@@ -1,4 +1,4 @@
-from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMemberModel
+from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMemberModel, BareModel
 from .objects import ObjectInputModel
 from .groups import GroupAreaModel, GroupInputModel
 
@@ -24,7 +24,6 @@ class ChartGraphModel(BaseModel):
         'name', 'description', 'chart_type', 'time_format_min', 'time_format_hour', 'time_format_day', 'time_format_month', 'chart_x_max_ticks', 'chart_y_max_suggest',
         'options_json', 'unit',
     ]
-    data_fields = field_list
 
     chart_type = models.CharField(choices=CHART_TYPE_CHOICES, max_length=10)
 
@@ -107,4 +106,30 @@ class ChartDatasetLinkModel(BaseMemberModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['group', 'obj'], name='cdlm_uc_group_obj')
+        ]
+
+
+class DashboardModel(BaseModel):
+    field_list = [
+        'name', 'description', 'rows', 'columns', 'default',
+    ]
+
+    rows = models.PositiveSmallIntegerField(default=4)
+    columns = models.PositiveSmallIntegerField(default=2)
+    default = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+
+
+class DashboardPositionModel(BareModel):
+    field_list = [
+        'row', 'column', 'dashboard', 'chart',
+    ]
+
+    dashboard = models.ForeignKey(DashboardModel, on_delete=models.CASCADE, related_name="dpm_fk_dashboard")
+    chart = models.ForeignKey(ChartDashboardModel, on_delete=models.CASCADE, related_name="dpm_fk_chart")
+    row = models.PositiveSmallIntegerField()
+    column = models.PositiveSmallIntegerField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['dashboard', 'row', 'column'], name='dpm_uc_dashboard_row_column')
         ]

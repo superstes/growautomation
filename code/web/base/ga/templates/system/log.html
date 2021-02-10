@@ -16,21 +16,19 @@
             {% endfor %}
         </select>
 
-        {% if log_type in 'Service, Service journal' %}
-            <label for="log_service"><strong>Service</strong></label>
-            <select class="form-control" id="log_service" name="log_service" >
-                {% if log_service is None or log_service not in log_service_options.keys %}
-                    <option selected>---------</option>
+        <label for="log_subtype"><strong>Sub type</strong></label>
+        <select class="form-control" id="log_subtype" name="log_subtype" >
+            {% if log_subtype is None or log_subtype not in log_subtype_option_list %}
+                <option selected>---------</option>
+            {% endif %}
+            {% for option in log_subtype_option_list %}
+                {% if log_subtype is not None and option == log_subtype %}
+                    <option selected value="{{ option }}">{{ option }}</option>
+                {% else %}
+                    <option value="{{ option }}">{{ option }}</option>
                 {% endif %}
-                {% for option in log_service_options.keys %}
-                    {% if log_service is not None and option == log_service %}
-                        <option selected value="{{ option }}">{{ option }}</option>
-                    {% else %}
-                        <option value="{{ option }}">{{ option }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        {% endif %}
+            {% endfor %}
+        </select>
 
         {% if log_type == 'Service journal' or log_type == 'Growautomation' %}
             <label for="log_entry_count"><strong>Max entries</strong></label>
@@ -48,18 +46,10 @@
         <input type="submit" value="Show" class="btn btn-info">
     </form>
 
-    {% if log_type in 'Service, Service journal' %}
-        {% if log_service is not None %}
-            {% set_var 1 as service_chosen %}
-        {% else %}
-            {% set_var 0 as service_chosen %}
-        {% endif %}
+    {% if log_subtype is not None %}
+        {% set_var 1 as service_chosen %}
     {% else %}
-        {% if log_type is not None %}
-            {% set_var 1 as service_chosen %}
-        {% else %}
-            {% set_var 0 as service_chosen %}
-        {% endif %}
+        {% set_var 0 as service_chosen %}
     {% endif %}
     {% if service_chosen == 1 %}
         <br>
@@ -75,11 +65,21 @@
             </pre>
         {% endif %}
     {% endif %}
-    {% if log_type == 'Growautomation' %}
+    {% if log_type == 'Growautomation' and log_file is not None %}
         <small>
             <i>
                 Current log file: '{{ log_file }}'
             </i>
         </small>
     {% endif %}
+
+    <br>
+    {% if log_type not in log_type_options %}
+        <div class="alert alert-info">Select a log type to see more</div>
+    {% else %}
+        {% if log_subtype not in log_subtype_option_list %}
+            <div class="alert alert-info">Select a log sub-type to see more</div>
+        {% endif %}
+    {% endif %}
+
 {% endblock %}

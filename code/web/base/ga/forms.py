@@ -70,6 +70,9 @@ LABEL_DICT = {
     'chart_point_radius': 'Chart point radius',
     'chart_point_color': 'Chart point color',
     'chart_point_type': 'Chart point type',
+    'device_fail_count': 'Device fail threshold',
+    'device_fail_sleep': 'Device fail sleep time',
+    'device_log': 'Device logs',
 }
 
 HELP_DICT = {
@@ -134,6 +137,9 @@ HELP_DICT = {
     'chart_point_radius': 'Radius of chart data points [can be empty]',
     'chart_point_color': 'Color of chart data points [max length 50, can be empty]',
     'chart_point_type': 'Type of chart data points [can be empty]',
+    'device_fail_count': 'How often a device can fail (in a row) until it enters the fail-sleep time',
+    'device_fail_sleep': 'How long a device should be ignored by the core after a recurring error was recognized',
+    'device_log': 'If a per-device logfile should be created',
 }
 
 

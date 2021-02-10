@@ -43,8 +43,8 @@ def ServiceView(request):
 
         service_value = service_name_options[service_name]
 
-        service_status = develop_subprocess(SHELL_SERVICE_STATUS % service_value, 'active')
-        service_enabled = develop_subprocess(SHELL_SERVICE_ENABLED % service_value, 'enabled')
+        service_status = develop_subprocess(request, command=SHELL_SERVICE_STATUS % service_value, develop='active')
+        service_enabled = develop_subprocess(request, command=SHELL_SERVICE_ENABLED % service_value, develop='enabled')
 
         if service_status == 'active':
             status_command = SHELL_SERVICE_ACTIVE_TIMESTAMP
@@ -52,7 +52,7 @@ def ServiceView(request):
             status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
 
         dev_time = str((datetime.now() - timedelta(minutes=5)).strftime('%a %Y-%m-%d %H:%M:%S')) + ' GMT'
-        service_status_time = develop_subprocess(status_command % service_value, dev_time)
+        service_status_time = develop_subprocess(request, command=status_command % service_value, develop=dev_time)
 
         if service_status_time is not None and service_status_time != '':
             service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], '%a %Y-%m-%d %H:%M:%S')
@@ -77,13 +77,13 @@ def service_action(request, service: str):
     # todo: log commands
     systemctl = 'sudo /bin/systemctl'
     if 'service_start' in request.POST:
-        develop_subprocess("%s start %s" % (systemctl, service), 'ok')
+        develop_subprocess(request, command="%s start %s" % (systemctl, service), develop='ok')
 
     elif 'service_reload' in request.POST:
-        develop_subprocess("%s reload %s" % (systemctl, service), 'ok')
+        develop_subprocess(request, command="%s reload %s" % (systemctl, service), develop='ok')
 
     elif 'service_restart' in request.POST:
-        develop_subprocess("%s restart %s" % (systemctl, service), 'ok')
+        develop_subprocess(request, command="%s restart %s" % (systemctl, service), develop='ok')
 
     elif 'service_stop' in request.POST:
-        develop_subprocess("%s stop %s" % (systemctl, service), 'ok')
+        develop_subprocess(request, command="%s stop %s" % (systemctl, service), develop='ok')

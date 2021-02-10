@@ -14,12 +14,12 @@ from ..config.shared import DATETIME_TS_FORMAT
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 
 
-def check_develop() -> bool:
-    if platform == 'win32':
+def check_develop(request) -> bool:
+    server = request.META.get('wsgi.file_wrapper', None)
+    if server is not None and server.__module__ == 'django.core.servers.basehttp':
         return True
 
-    else:
-        return False
+    return False
 
 
 def get_time_difference(time_data: str, time_format: str) -> int:
@@ -62,8 +62,8 @@ def get_client_ip(request):
     return censored_client_ip
 
 
-def develop_subprocess(command, develop: str = None) -> str:
-    if check_develop():
+def develop_subprocess(request, command: str, develop: str = None) -> str:
+    if check_develop(request):
         return develop
 
     return subprocess(command)
@@ -96,13 +96,34 @@ def get_device_parent(child_obj):
     return parent
 
 
-def get_instance_from_id(typ, obj: (str, int)):
+def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):
+    if obj in [None, '', 'None']:
+        return None
+
     for check_obj in typ.objects.all():
         if type(obj) == str:
-            if check_obj.name == obj:
-                return check_obj
+            if force_id:
+                if check_obj.id == int(obj):
+                    return check_obj
+
+            else:
+                if check_obj.name == obj:
+                    return check_obj
+
         else:
             if check_obj.id == obj:
+                return check_obj
+
+    return None
+
+
+def get_instance_from_field(typ, field: str, data, target_type):
+    for check_obj in typ.objects.all():
+        if not hasattr(check_obj, field):
+            return None
+
+        else:
+            if getattr(check_obj, field) == target_type(data):
                 return check_obj
 
     return None

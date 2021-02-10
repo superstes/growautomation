@@ -109,7 +109,8 @@ class ObjectConditionLinkModel(BareModel):
 class ObjectControllerModel(BaseModel):
     field_list = ['name', 'description', 'path_root', 'path_log', 'path_backup',
                   'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
-                  'log_level', 'debug', 'security', 'backup', 'timezone', 'web_cdn', 'web_warn']
+                  'log_level', 'debug', 'security', 'backup', 'timezone', 'web_cdn', 'web_warn',
+                  'device_fail_count', 'device_fail_sleep', 'device_log']
     TIMEZONE_CHOICES = [(tz, tz) for tz in common_timezones]
     LOG_LEVEL_CHOICES = [
         (0, '0 (No logging)'),
@@ -134,12 +135,15 @@ class ObjectControllerModel(BaseModel):
     sql_secret = models.CharField(max_length=255, default='o1Qhr6zm1INEZcKjBIVB')
     sql_database = models.CharField(max_length=50, default='ga')
 
-    log_level = models.PositiveSmallIntegerField(default=1, choices=LOG_LEVEL_CHOICES)
+    log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     security = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     backup = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
-
     timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default='UTC')
+
+    device_fail_count = models.PositiveSmallIntegerField(default=3)
+    device_fail_sleep = models.PositiveSmallIntegerField(default=3600)
+    device_log = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
 
     web_cdn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     web_warn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
