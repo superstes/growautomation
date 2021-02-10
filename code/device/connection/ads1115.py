@@ -44,6 +44,7 @@ class Device:
 
     def __init__(self):
         self.pin = self.CONFIG['downlink_pin']
+        custom_i2c = False
 
         try:
             i2c = I2C(
@@ -51,10 +52,21 @@ class Device:
                 getattr(board, "D%s" % self.CONFIG['connection']['sda'])
             )
 
+            custom_i2c = True
+
         except (TypeError, KeyError):
             i2c = I2C(board.SCL, board.SDA)
 
-        self.adc = ads1115.ADS1115(i2c)
+        try:
+            self.adc = ads1115.ADS1115(i2c)
+        except (ValueError, TimeoutError) as error:
+            if str(error).find('No I2C device at address') != -1:
+                if custom_i2c:
+                    self._error("Connection to ads1115 failed, using custom ports: \"scl=>%s, sda=>%s\", check the wiring and configuration"
+                                % (self.CONFIG['connection']['scl'], self.CONFIG['connection']['sda']))
+                else:
+                    self._error("Connection to ads1115 failed, check the wiring")
+
         self.data = self._get_data()
 
     def start(self):
