@@ -1,18 +1,21 @@
 [Unit]
 Description=Growautomation Service
+Documentation=https://docs.growautomation.eu
+Documentation=https://github.com/superstes/growautomation
 After=mariadb.service
+StartLimitBurst=10
+StartLimitIntervalSec=630
 
 [Service]
-Environment="PYTHONPATH=/etc/ga"
 Type=simple
-#ExecStartPre=
-ExecStart=/usr/bin/python3.8 /etc/ga/service/service.py
+Environment="PYTHONPATH=/etc/ga"
+ExecStartPre=/usr/bin/python3 /etc/ga/core/service/prestart.py
+ExecStart=/usr/bin/python3 /etc/ga/core/service/service.py
 ExecReload=/bin/kill -10 $MAINPID
-TimeoutStopSec=30
 User=ga
 Group=ga
 Restart=on-failure
-RestartSec=5s
+RestartSec=60s
 TimeoutStopSec=120s
 
 [Install]

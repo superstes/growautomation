@@ -15,7 +15,7 @@ from core.config.object.device.connection import GaConnectionDevice
 from json import dumps as json_dumps
 from json import loads as json_loads
 from json import JSONDecodeError
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class Go:
@@ -127,7 +127,7 @@ class Go:
             self.instance.fail_count += 1
 
             if self.instance.fail_count > shared_vars.SYSTEM.device_fail_count:
-                self.instance.fail_sleep = datetime.now() + timedelta(shared_vars.SYSTEM.device_fail_sleep)
+                self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + shared_vars.SYSTEM.device_fail_sleep)
                 self.logger.write("Device \"%s\" has reached its fail threshold -> will skip execution until \"%s\""
                                   % (self.instance.name, self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')), level=2)
 
