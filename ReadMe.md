@@ -37,13 +37,23 @@ __The code is currently not in a stable state !__
 
 Version: 0.7
 
+=> <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
+
 ### Work in progress
 - creating _(django)_ web interface for easy user interactions
-    - <a href="https://demo.growautomation.at/">DEMO LINK</a>
     - updating growautomation core to work with django database schema
+    - customizable statistics/graphs for data visualization
 - testing and fixing input-condition-output workflow
 
 ### History
+- v0.7 _(2020-12 - 2021-02)_
+  - created basic _(django)_ web interface => <a href="https://demo.growautomation.at/">DEMO</a>
+    - functionality:
+      - config management
+      - system management _(systemd / logs)_
+      - help users test and debug their setup
+  - updated core to use django mysql schema
+
 - v0.6 _(2020-11 - 2020-12)_
   - object-oriented config management
   
@@ -60,13 +70,12 @@ Version: 0.7
 ### Planned features
 - implementing unit and integration tests
 - documentation via sphinx _(read the docs)_
-- web interface for easy user interactions
-  - customizable statistics/graphs for data visualization
 - documenting clean hardware setup _(easy wiring via patchpanel)_
 - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
 - builtin notification tasks
   - *get notified if the temperature is not optimal for growing*
 - creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
+-  
  
 ### Maybe future features
 - agent/server installation
