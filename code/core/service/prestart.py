@@ -41,6 +41,7 @@ class Prepare:
         signal.signal(signal.SIGUSR1, self._stop)
         self.debug = False
         self.logger = None
+        self.log_cache = []
 
     def start(self):
         self._log('Starting service initialization.')
@@ -221,9 +222,17 @@ class Prepare:
 
     def _log(self, output, level: int = 1):
         if self.logger is not None:
+            if len(self.log_cache) > 0:
+                for _log in self.log_cache:
+                    self.logger.write(output=_log['output'], level=_log['level'])
+
+                self.log_cache = []
+
             self.logger.write(output, level=level)
 
         else:
+            self.log_cache.append({'level': level, 'output': output})
+
             if level == 1:
                 systemd_journal.write(output)
 

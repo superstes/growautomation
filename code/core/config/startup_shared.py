@@ -12,22 +12,19 @@ def init():
         shared_vars.init()
         config_file = GaDataFile().get()
 
-        remove_key_list = ['name', 'description', 'object_id']
+        construction_dict = {}
 
-        for key in remove_key_list:
-            if key in config_file:
-                config_file.pop(key)
+        for setting in GaControllerDevice.setting_list:
+            if setting in config_file:
+                try:
+                    _ = int(config_file[setting])
+                    construction_dict[setting] = _
 
-        for key, value in config_file.items():
-            try:
-                _ = int(value)
-                config_file[key] = _
-
-            except ValueError:
-                continue
+                except ValueError:
+                    construction_dict[setting] = config_file[setting]
 
         shared_vars.SYSTEM = GaControllerDevice(
-            setting_dict=config_file,
+            setting_dict=construction_dict,
             object_id=0,
             name='TMP Controller',
             description='TMP Startup Controller Object',

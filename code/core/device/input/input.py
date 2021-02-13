@@ -4,8 +4,7 @@ from core.device.check import Go as Check
 from core.device.process import Go as Process
 from core.config.object.data.db import GaDataDb
 from core.config.db.template import DEVICE_DICT
-from core.config import shared as shared_vars
-from core.utils.debug import MultiLog, Log, debugger
+from core.device.log import device_logger
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
@@ -21,11 +20,7 @@ class Go:
     def __init__(self, instance):
         self.instance = instance
         self.database = GaDataDb()
-
-        if shared_vars.SYSTEM.device_log == 1:
-            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
-        else:
-            self.logger = Log()
+        self.logger = device_logger(addition=instance.name)
 
     def start(self):
         task_instance_list = Check(
@@ -40,8 +35,6 @@ class Go:
                 task_id = task_instance['device'].object_id
 
                 self.logger.write("Processing device instance: \"%s\"" % task_instance['device'].__dict__, level=6)
-                debugger("device-input | start | processing connection \"%s\"" % task_name)
-
                 data = Process(instance=task_instance['downlink'], category='connection', nested_instance=task_instance['device']).start()
 
             else:
@@ -49,22 +42,24 @@ class Go:
                 task_id = task_instance.object_id
 
                 self.logger.write("Processing device instance: \"%s\"" % task_instance.__dict__, level=6)
-                debugger("device-input | start | processing input \"%s\"" % task_name)
-
                 data = Process(instance=task_instance, category=self.TASK_CATEGORY).start()
 
             if data is None:
-                debugger("device-input | start | no data received for input \"%s\"" % task_name)
-                self.logger.write("No data received for device \"%s\"" % task_name)
+                self.logger.write("No data received for device \"%s\"" % task_name, level=3)
+                # self._task_log(result='failure', msg='No data received', task_id=task_id)
 
-                if shared_vars.TASK_LOG:
-                    self.database.put(command=self.SQL_TASK_COMMAND % ('failure', 'No data received', self.TASK_CATEGORY, task_id))
+            elif data is False:
+                self.logger.write("Device \"%s\" is in fail-sleep" % task_name, level=4)
+                # self._task_log(result='failure', msg='In fail-sleep', task_id=task_id)
+
             else:
                 self.database.put(command=self.SQL_DATA_COMMAND % (datetime.now(), data, task_id))
+                self.logger.write("Processing of %s-device \"%s\" succeeded" % (self.TASK_CATEGORY, task_name), level=7)
+                # self._task_log(result='success', msg='Data received', task_id=task_id)
 
-                debugger("device-input | start | processing of input \"%s\" succeeded" % task_name)
+    # def _task_log(self, result: str, msg: str, task_id: int):
+    #     if shared_vars.TASK_LOG:
+    #         self.database.put(command=self.SQL_TASK_COMMAND % (result, msg, self.TASK_CATEGORY, task_id))
 
-                if shared_vars.TASK_LOG:
-                    self.database.put(command=self.SQL_TASK_COMMAND % ('success', 'Data received', self.TASK_CATEGORY, task_id))
-
+    def __del__(self):
         self.database.disconnect()

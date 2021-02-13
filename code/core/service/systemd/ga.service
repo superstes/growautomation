@@ -17,6 +17,8 @@ Group=ga
 Restart=on-failure
 RestartSec=60s
 TimeoutStopSec=120s
+StandardOutput=append:/var/log/ga/service_output.log
+StandardError=append:/var/log/ga/service_error.log
 
 [Install]
 WantedBy=multi-user.target

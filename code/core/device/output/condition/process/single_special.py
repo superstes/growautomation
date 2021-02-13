@@ -1,6 +1,6 @@
 # special processing of single-conditions
 
-from core.utils.debug import debugger
+from core.device.log import device_logger
 
 from datetime import datetime
 
@@ -8,27 +8,22 @@ SPECIAL_TIME_FORMAT = '%H:%M:%S'
 SPECIAL_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
-def special(condition) -> tuple:
+def special(condition, device: str) -> tuple:
+    logger = device_logger(addition=device)
     speci = condition.special
 
-    debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\", specialtype \"%s\""
-             % (condition.name, speci))
+    logger.write("Condition \"%s\" has a special-type set: \"%s\"" % (condition.name, speci), level=9)
 
     if speci in ['time', 'datetime']:
         error, data, value = _time(condition=condition)
-    else:
-        error = True
 
-    if error:
-        # log error or whatever
-        debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\" has an unsupported "
-                 "special type \"%s\"" % (condition.name, speci))
-        raise KeyError("Condition \"%s\" has an unsupported special type '%s" % (condition.name, speci))
+        if not error:
+            logger.write("Condition \"%s\" with specialtype \"%s\" got data \"%s\", value \"%s\"" % (condition.name, speci, data, value))
 
-    debugger("device-output-condition-proc-singlespecial | _special | condition \"%s\", specialtype \"%s\", "
-             "data \"%s\", value \"%s\"" % (condition.name, speci, data, value))
+            return data, value
 
-    return data, value
+    logger.write("Condition \"%s\" has an unsupported special-type set: \"%s\"" % (condition.name, speci), level=5)
+    raise KeyError("Condition \"%s\" has an unsupported special-type set \"%s\"" % (condition.name, speci))
 
 
 def _time(condition) -> tuple:

@@ -4,8 +4,6 @@
 from core.config.object.base import *
 from core.config.object.helper import *
 
-from systemd import journal as systemd_journal
-
 
 class GaControllerDevice(GaBase):
     setting_list = [

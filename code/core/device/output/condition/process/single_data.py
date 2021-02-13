@@ -1,7 +1,7 @@
 # get data for single-condition processing
 
 from core.config.object.data.db import GaDataDb
-from core.utils.debug import debugger
+from core.device.log import device_logger
 from core.config.db.template import DEVICE_DICT
 
 from datetime import timedelta
@@ -12,62 +12,60 @@ class Go:
     SQL_QUERY_TIME = DEVICE_DICT['output']['data']['time']
     SQL_QUERY_RANGE = DEVICE_DICT['output']['data']['range']
 
-    def __init__(self, condition):
+    def __init__(self, condition, device):
         self.condition = condition
         self.database = GaDataDb()
         self.data_list = []
+        self.logger = device_logger(addition=device)
 
     def get(self):
         self._get_data_list()
 
-        debugger("device-output-condition-proc-single | get | condition \"%s\", data \"%s\", type \"%s\""
-                 % (self.condition.name, self.data_list, self.data_type))
+        self.logger.write("Condition item \"%s\" got data \"%s\" of type \"%s\"" % (self.condition.name, self.data_list, self.data_type), level=9)
 
         return self.data_list, self.data_type
 
     def _get_data_list(self):
         period_type = self.condition.condition_period
 
-        debugger("device-output-condition-proc-single | _get_data_type | condition \"%s\", period type \"%s\", period \"%s\""
-                 % (self.condition.name, period_type, self.condition.condition_period_data))
+        self.logger.write("Condition item \"%s\", period type \"%s\", period \"%s\"" % (self.condition.name, period_type, self.condition.condition_period_data))
 
         if period_type == 'time':
             data = self._get_data_by_time()
         elif period_type == 'range':
             data = self._get_data_by_range()
         else:
-            # log error or whatever
-            debugger("device-output-condition-proc-single | _get_data_list | condition \"%s\" has an unsupported "
-                     "period_type '%s" % (self.condition.name, period_type))
+            self.logger.write("Condition item \"%s\" has an unsupported period_type \"%s\"" % (self.condition.name, period_type), level=4)
             raise KeyError("Condition \"%s\" has an unsupported period_type \"%s\"" % (self.condition.name, period_type))
 
         if data is None:
-            raise ValueError("No data received for single condition \"%s\" (id \"%s\")"
+            self.logger.write("No data received for condition item \"%s\"" % self.condition.name, level=5)
+            raise ValueError("No data received for condition item \"%s\" (id \"%s\")"
                              % (self.condition.name, self.condition.object_id))
-        # maybe we should let the user decide which data to use if none is found
+            # maybe we should let the user decide which data to use if none is found
 
         self.data_type = self._get_data_type(data=data)
 
         for tup in data:
             self.data_list.append(self.data_type(tup[0]))
 
-    def _get_data_type(self, data: list):
-        self.data_type = data[0][1]
+    def _get_data_type(self, data: list) -> (bool, float, int, str):
+        data_type = self.condition.check_instance.datatype
 
-        if self.data_type == 'bool':
+        if data_type == 'bool':
             typ = bool
-        elif self.data_type == 'float':
+        elif data_type == 'float':
             typ = float
-        elif self.data_type == 'int':
+        elif data_type == 'int':
             typ = int
-        elif self.data_type == 'str':
+        elif data_type == 'str':
             typ = str
         else:
-            raise KeyError("Condition \"%s\" has an unsupported data value_type \"%s\""
-                           % (self.condition.name, self.data_type))
+            self.logger.write("Input device/model \"%s\" has an unsupported data data_type set \"%s\""
+                              % (self.condition.check_instance.name, data_type), level=4)
+            raise KeyError("Input device/model \"%s\" has an unsupported data data_type set \"%s\"" % (self.condition.check_instance.name, data_type))
 
-        debugger("device-output-condition-proc-single | _get_data_type | condition \"%s\", data \"%s\", type \"%s\""
-                 % (self.condition.name, data, typ))
+        self.logger.write("Condition item \"%s\", data \"%s\", type \"%s\"" % (self.condition.name, data, typ), level=9)
 
         return typ
 

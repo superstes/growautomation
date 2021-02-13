@@ -1,8 +1,7 @@
 # will check for which input scripts to start
 # basic filtering on enabled state and model grouping
 
-from core.config import shared as shared_vars
-from core.utils.debug import MultiLog, Log, debugger
+from core.device.log import device_logger
 
 
 class Go:
@@ -11,11 +10,7 @@ class Go:
         self.task_instance_list = []
         self.model_obj = model_obj
         self.device_obj = device_obj
-
-        if shared_vars.SYSTEM.device_log == 1:
-            self.logger = MultiLog([Log(), Log(typ='device', addition=self.instance.name)])
-        else:
-            self.logger = Log()
+        self.logger = device_logger(addition=instance.name)
 
     def get(self) -> list:
         if isinstance(self.instance, self.model_obj):
@@ -23,11 +18,9 @@ class Go:
         elif isinstance(self.instance, self.device_obj):
             self._device(instance=self.instance)
         else:
-            debugger("device-check | get | instance \"%s\" - matches neither provided objects '%s | %s'" % (self.instance.name, self.model_obj, self.device_obj))
-            self.logger.write("instance \"%s\" matches neither provided objects" % self.instance.name)
+            self.logger.write("Instance \"%s\" matches neither provided objects" % self.instance.name, level=6)
 
-        debugger("device-check | get | instance \"%s\" - instance_list to process: \"%s\""
-                 % (self.instance.name, self.task_instance_list))
+        self.logger.write("Instance \"%s\" - device list to process: \"%s\"" % (self.instance.name, self.task_instance_list), level=7)
 
         return self.task_instance_list
 
@@ -46,12 +39,9 @@ class Go:
         downlink = instance.downlink
 
         if downlink.enabled == 0:
-            debugger("device-check | _downlink | downlink \"%s\" of device \"%s\" is disabled" % (downlink.name, instance.name))
-            self.logger.write("downlink \"%s\" of device \"%s\" is disabled" % (downlink.name, instance.name))
+            self.logger.write("Downlink \"%s\" of device \"%s\" is disabled" % (downlink.name, instance.name), level=6)
             return None
 
-        self.logger.write("'connection devices'; instance \"%s\" is connected via downlink \"%s\"" % (instance.name, downlink.name), level=6)
-        debugger("device-check | _downlink | instance \"%s\" is connected over downlink \"%s\" port \"%s\""
-                 % (instance.name, instance.downlink, instance.connection))
+        self.logger.write("Device \"%s\" is connected via downlink \"%s\"" % (instance.name, downlink.name), level=7)
 
         self.task_instance_list.append({'downlink': downlink, 'device': instance})
