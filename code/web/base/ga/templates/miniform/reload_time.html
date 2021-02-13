@@ -1,0 +1,7 @@
+<label for="reload_time">Auto refresh seconds</label>
+{% if reload_time is not None %}
+    <input name="reload_time" id="reload_time" class="form-control" type="number" min="0" step="1" max="3600" value="{{ reload_time }}"/>
+{% else %}
+    <input name="reload_time" id="reload_time" class="form-control" type="number" min="0" step="1" max="3600" value="30"/>
+{% endif %}
+<p class="help-block">0 = disable refresh</p>

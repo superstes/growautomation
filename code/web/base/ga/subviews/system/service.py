@@ -8,12 +8,13 @@ from ...config.nav import nav_dict
 from ...utils.helper import get_time_difference, develop_subprocess
 from ..handlers import handler404
 
+# need to allow www-data to start/stop/restart/reload services
+
 SHELL_SERVICE_STATUS = "/bin/systemctl is-active %s"
 SHELL_SERVICE_ENABLED = "/bin/systemctl is-enabled %s"
 SHELL_SERVICE_ACTIVE_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --value %s"
 SHELL_SERVICE_INACTIVE_TIMESTAMP = "/bin/systemctl show -p InactiveEnterTimestamp --value %s"
-
-# need to allow www-data to start/stop/restart/reload services
+DEFAULT_REFRESH_SECS = 120
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -29,6 +30,10 @@ def ServiceView(request):
     service_runtime = None
     service_status_time = None
     service_enabled = None
+    reload_time = None
+
+    if 'reload_time' in request.GET:
+        reload_time = request.GET['reload_time']
 
     # todo clean up and fix service time counter
 
@@ -57,6 +62,9 @@ def ServiceView(request):
         if service_status_time is not None and service_status_time != '':
             service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], '%a %Y-%m-%d %H:%M:%S')
 
+        if reload_time is None:
+            reload_time = DEFAULT_REFRESH_SECS
+
     if request.method == 'POST':
         if 'service_name' in request.POST:
             if service_runtime is not None and service_runtime > 60:
@@ -68,7 +76,7 @@ def ServiceView(request):
     return render(request, 'system/service.html', context={
         'request': request, 'nav_dict': nav_dict, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
         'service_name_options': service_name_options, 'service_status_time': service_status_time, 'service_enabled': service_enabled,
-        'service_runtime': service_runtime,
+        'service_runtime': service_runtime, 'reload_time': reload_time,
     })
 
 

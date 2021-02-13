@@ -9,24 +9,18 @@ from ...utils.process import subprocess
 from ...utils.helper import check_develop, get_controller_setting, add_line_numbers
 from ..handlers import handler404
 
-SHELL_MAX_LOG_LINES = 100
-SHELL_MAX_LOG_LINES_RANGE = range(25, 1025, 25)
-
-SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
-SHELL_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
-
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
 
+SHELL_MAX_LOG_LINES = 25
+SHELL_MAX_LOG_LINES_RANGE = range(25, 1025, 25)
+SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
+SHELL_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
 SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
+DEFAULT_REFRESH_SECS = 30
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
 def LogView(request):
-    # todo: if refresh is true
-    #   window.setTimeout(function () {
-    #     location.href = "$SAME_PAGE";
-    #   }, $TIME_IN_MS);
-
     develop = check_develop(request)
     date_year = datetime.now().strftime('%Y')
     date_month = datetime.now().strftime('%m')
@@ -66,6 +60,10 @@ def LogView(request):
     log_subtype = None
     log_subtype_options = None
     log_subtype_option_list = None
+    reload_time = None
+
+    if 'reload_time' in request.GET:
+        reload_time = request.GET['reload_time']
 
     if 'log_type' in request.GET and request.GET['log_type'] in log_type_options:
         log_type = request.GET['log_type']
@@ -98,6 +96,10 @@ def LogView(request):
                 else:
                     log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)), reverse=True)
 
+        if 'log_subtype' in request.GET:
+            if reload_time is None:
+                reload_time = DEFAULT_REFRESH_SECS
+
         else:
             log_subtype_options = log_service_options
 
@@ -112,6 +114,5 @@ def LogView(request):
     return render(request, 'system/log.html', context={
         'request': request, 'nav_dict': nav_dict, 'log_data': log_data, 'log_type_options': log_type_options, 'log_type': log_type,
         'log_subtype': log_subtype, 'log_entry_count': log_entry_count, 'log_entry_range': SHELL_MAX_LOG_LINES_RANGE, 'log_file': log_file,
-        'log_subtype_option_list': log_subtype_option_list
+        'log_subtype_option_list': log_subtype_option_list, 'reload_time': reload_time,
     })
-

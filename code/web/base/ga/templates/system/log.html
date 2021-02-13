@@ -2,7 +2,7 @@
 {% load util %}
 {% block content %}
     <form name="log_type" method="get" >
-        <label for="log_type"><strong>Log type</strong></label>
+        <label for="log_type">Log type</label>
         <select class="form-control" id="log_type" name="log_type" >
             {% if log_type is None or log_type not in log_type_options %}
                 <option selected>---------</option>
@@ -16,22 +16,24 @@
             {% endfor %}
         </select>
 
-        <label for="log_subtype"><strong>Sub type</strong></label>
-        <select class="form-control" id="log_subtype" name="log_subtype" >
-            {% if log_subtype is None or log_subtype not in log_subtype_option_list %}
-                <option selected>---------</option>
-            {% endif %}
-            {% for option in log_subtype_option_list %}
-                {% if log_subtype is not None and option == log_subtype %}
-                    <option selected value="{{ option }}">{{ option }}</option>
-                {% else %}
-                    <option value="{{ option }}">{{ option }}</option>
+        {% if log_type in log_type_options %}
+            <label for="log_subtype">Sub type</label>
+            <select class="form-control" id="log_subtype" name="log_subtype" >
+                {% if log_subtype is None or log_subtype not in log_subtype_option_list %}
+                    <option selected>---------</option>
                 {% endif %}
-            {% endfor %}
-        </select>
+                {% for option in log_subtype_option_list %}
+                    {% if log_subtype is not None and option == log_subtype %}
+                        <option selected value="{{ option }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        {% endif %}
 
         {% if log_type == 'Service journal' or log_type == 'Growautomation' %}
-            <label for="log_entry_count"><strong>Max entries</strong></label>
+            <label for="log_entry_count">Max entries</label>
             <select class="form-control" id="log_entry_count" name="log_entry_count" >
                 {% for option in log_entry_range %}
                     {% if option == log_entry_count %}
@@ -41,6 +43,9 @@
                     {% endif %}
                 {% endfor %}
             </select>
+        {% endif %}
+        {% if log_type is not None and log_subtype is not None %}
+            {% include "../miniform/reload_time.html" %}
         {% endif %}
         <br>
         <input type="submit" value="Show" class="btn btn-info">
@@ -81,5 +86,9 @@
             <div class="alert alert-info">Select a log sub-type to see more</div>
         {% endif %}
     {% endif %}
-
+    {% if log_type is not None and log_subtype is not None %}
+        <script>
+            {% include "../js/auto_reload.html" %}
+        </script>
+    {% endif %}
 {% endblock %}

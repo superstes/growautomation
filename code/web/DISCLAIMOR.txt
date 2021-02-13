@@ -1,0 +1,15 @@
+
+### DISCLAIMOR ###
+
+I have little experience with the django framework, the mvc software design and web-development itself.
+
+This webinterface is currently NOT:
+* object-oriented
+  * and therefore not optimized to use as little code as possible
+* secure
+  * I used the basic security config and some common sense -> nothing special
+* using good html/css/js
+
+######
+IF you have more experience in those domains and have some spare time => contact me/us at contact@growautomation.eu to join the project!
+######

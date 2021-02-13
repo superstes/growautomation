@@ -2,7 +2,7 @@
 {% load util %}
 {% block content %}
     <form name="service_name" method="get" >
-        <label for="service_name"><strong>Service</strong></label>
+        <label for="service_name">Service</label>
         <select class="form-control" id="service_name" name="service_name" >
             {% if service_name is None %}
                 <option selected>---------</option>
@@ -15,6 +15,9 @@
                 {% endif %}
             {% endfor %}
         </select>
+        {% if service_name is not None %}
+            {% include "../miniform/reload_time.html" %}
+        {% endif %}
         <br>
         <input type="submit" value="Select" class="btn btn-info">
     </form>
@@ -109,5 +112,10 @@
         <a href="/system/log/?log_type=Service+journal&log_service={{ service_name }}" class="btn btn-info">Logs</a>
     {% else %}
         <div class="alert alert-info">Select a service to see more</div>
+    {% endif %}
+    {% if service_name is not None %}
+        <script>
+            {% include "../js/auto_reload.html" %}
+        </script>
     {% endif %}
 {% endblock %}

@@ -63,3 +63,12 @@
     width: 90vw;
     }
 }
+
+.help-block {
+    font-style: italic;
+    font-size: small;
+}
+
+form label {
+    font-weight: bold;
+}
