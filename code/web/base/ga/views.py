@@ -12,10 +12,8 @@ from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataListView
-from .subviews.data.chart.main import DataChartView
+from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView
 from .subviews.data.chart.dashboard import DataChartDashboardView, DataChartDatasetLinkView
-from .subviews.data.chart.dataset import DataChartDatasetView
-from .subviews.data.chart.graph import DataChartGraphView
 from .subviews.api.data.main import ApiData
 from .subviews.api.chart.main import ApiChart
 from .subviews.data.dashboard.main import DashboardView
@@ -92,16 +90,16 @@ def view_data(request, typ: str, sub_type: str = None, third_type: str = None):
         elif sub_type == 'graph':
             return logout_check(request=request, default=DataChartGraphView(request=request))
 
-        elif sub_type == 'dashboard':
-            if third_type == 'dataset':
-                return logout_check(request=request, default=DataChartDatasetLinkView(request=request))
-
-            return logout_check(request=request, default=DataChartDashboardView(request=request))
+        # elif sub_type == 'dashboard':
+        #     if third_type == 'dataset':
+        #         return logout_check(request=request, default=DataChartDatasetLinkView(request=request))
+        #
+        #     return logout_check(request=request, default=DataChartDashboardView(request=request))
 
         return logout_check(request=request, default=DataChartView(request=request))
 
-    elif typ == 'dashboard':
-        return logout_check(request=request, default=DashboardView(request=request))
+    # elif typ == 'dashboard':
+    #     return logout_check(request=request, default=DashboardView(request=request))
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 

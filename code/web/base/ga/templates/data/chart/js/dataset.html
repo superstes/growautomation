@@ -9,26 +9,26 @@
     var start_ts = urlParams.get('start_ts');
     var stop_ts = urlParams.get('stop_ts');
 
-    var chart_fill = (urlParams.get('chart_fill') == 'True');
-    var chart_fill_color = urlParams.get('chart_fill_color');
-    var chart_border_color = urlParams.get('chart_border_color');
-    var chart_border_width = urlParams.get('chart_border_width');
-    var chart_type = urlParams.get('chart_type');
-    var chart_point_radius = urlParams.get('chart_point_radius');
-    var chart_point_color = urlParams.get('chart_point_color');
-    var chart_point_type = urlParams.get('chart_point_type');
-    var chart_point_hover_radius = urlParams.get('chart_point_hover_radius');
-    var chart_point_hit_radius = urlParams.get('chart_point_hit_radius');
-
     console.log(`/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`);
     console.log(`/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`);
 
-    
-    if (!(input_device) && !(input_model)) {
+    if ( (input_device === null || input_device == '' ) && (input_model === null || input_model == '' ) {
         console.log(`error: neither input device nor input model is set`);
         document.getElementById("ga_error_noresult").style.display = "block";
         document.getElementById("ga_chart_div").style.display = "none";
+
     } else {
+        var chart_fill = (urlParams.get('chart_fill') == 'True');
+        var chart_fill_color = urlParams.get('chart_fill_color');
+        var chart_border_color = urlParams.get('chart_border_color');
+        var chart_border_width = urlParams.get('chart_border_width');
+        var chart_type = urlParams.get('chart_type');
+        var chart_point_radius = urlParams.get('chart_point_radius');
+        var chart_point_color = urlParams.get('chart_point_color');
+        var chart_point_type = urlParams.get('chart_point_type');
+        var chart_point_hover_radius = urlParams.get('chart_point_hover_radius');
+        var chart_point_hit_radius = urlParams.get('chart_point_hit_radius');
+
         async function fetchData() {
             if (period && period_data) {
                 var url = `/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`;
@@ -45,15 +45,17 @@
         }
         try {
             fetchData().then(ga_config => {
-                console.log(ga_config);
+                console.log(`data received: ${ga_config}`);
                 if (ga_config.xy_data.length == 0) {
                     console.log('warning: no results found');
                     document.getElementById("ga_warn_noresult").style.display = "block";
                     document.getElementById("ga_chart_div").style.display = "none";
+
                 } else if (ga_config.error != null) {
                     console.log(`error: ${ga_config.error}`);
                     document.getElementById("ga_error_noresult").style.display = "block";
                     document.getElementById("ga_chart_div").style.display = "none";
+
                 } else {
                     let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
                     let chartObject = new Chart(chartCanvas, {
@@ -105,7 +107,7 @@
                                         callback: function(tick) {
                                             return `${tick.toString()} ${ga_config.data_unit}`;
                                         },
-        //                                suggestedMax: 50,
+                                        suggestedMax: 50,
                                     }
                                 }]
                             }
@@ -113,6 +115,7 @@
                     });
                 }
             })
+
         } catch(error) {
             console.log(`error: ${ga_config.error}`);
             document.getElementById("ga_error_noresult").style.display = "block";

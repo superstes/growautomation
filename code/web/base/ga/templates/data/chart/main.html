@@ -1,6 +1,7 @@
 {% extends "../../body.html" %}
 {% load util %}
 {% load tz %}
+{% load static %}
 {% load bootstrap4 %}
 {% include "./tmpl/head.html" %}
 {% block content %}
@@ -12,36 +13,35 @@
         </div>
         <br><hr><br>
     {% endif %}
-    <h2>Graph prototype</h2><br>
-    <a href='/data/chart/graph/?do=show' class="btn btn-primary">View</a>
-    <a href='/data/chart/graph/?do=create' class="btn btn-primary">Create</a>
-    {% if graph_list|length != 0 %}
-        <a href='/data/chart/graph/?do=update' class="btn btn-primary">Update</a>
-        <a href='/data/chart/graph/?do=delete' class="btn btn-primary">Delete</a>
-    {% else %}
-        <button class="btn btn-primary" disabled>Update</button>
-        <button class="btn btn-primary" disabled>Delete</button>
-    {% endif %}
+    <h2>Logic</h2><br>
+    <div align="center" style="display: block;">
+        <img src="{% static 'img/chart.svg' %}" width="85%" alt="" onerror="this.style.display='none'" style="max-width: 400px;"/>
+    </div>
     <br><hr><br>
-    <h2>Dataset</h2><br>
-    <a href='/data/chart/dataset/?do=show' class="btn btn-primary">View</a>
+    <h2>Dataset</h2>
+    <p class="help-block">What data to visualize</p><br>
     <a href='/data/chart/dataset/?do=create' class="btn btn-primary">Create</a>
     {% if dataset_list|length != 0 %}
-        <a href='/data/chart/dataset/?do=update' class="btn btn-primary">Update</a>
-        <a href='/data/chart/dataset/?do=delete' class="btn btn-primary">Delete</a>
+        <a href='/data/chart/dataset/?do=show' class="btn btn-primary">View / Edit</a>
     {% else %}
-        <button class="btn btn-primary" disabled>Update</button>
-        <button class="btn btn-primary" disabled>Delete</button>
+        <button class="btn btn-primary" disabled>View / Edit</button>
     {% endif %}
     <br><hr><br>
-    <h2>Dashboard elements</h2><br>
-    <a href='/data/chart/dashboard/?do=show' class="btn btn-primary">View</a>
+    <h2>Graph prototype</h2>
+    <p class="help-block">Optical adjustments to the graph used to join datasets</p><br>
+    <a href='/data/chart/graph/?do=create' class="btn btn-primary">Create</a>
+    {% if graph_list|length != 0 %}
+        <a href='/data/chart/graph/?do=show' class="btn btn-primary">View / Edit</a>
+    {% else %}
+        <button class="btn btn-primary" disabled>View / Edit</button>
+    {% endif %}
+    <br><hr><br>
+    <h2>Dashboard elements</h2>
+    <p class="help-block">Joins graph prototype and datasets => can be integrated in dashboards</p><br>
     <a href='/data/chart/dashboard/?do=create' class="btn btn-primary">Create</a>
     {% if dashboard_list|length != 0 %}
-        <a href='/data/chart/dashboard/?do=update' class="btn btn-primary">Update</a>
-        <a href='/data/chart/dashboard/?do=delete' class="btn btn-primary">Delete</a>
+        <a href='/data/chart/dashboard/?do=show' class="btn btn-primary">View / Edit</a>
     {% else %}
-        <button class="btn btn-primary" disabled>Update</button>
-        <button class="btn btn-primary" disabled>Delete</button>
+        <button class="btn btn-primary" disabled>View / Edit</button>
     {% endif %}
 {% endblock %}

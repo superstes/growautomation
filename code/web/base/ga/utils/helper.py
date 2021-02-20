@@ -4,7 +4,7 @@ from pytz import timezone as pytz_timezone
 from django.utils import timezone as django_timezone
 
 from ..models import ObjectControllerModel
-from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupInputModel, GroupOutputModel, GroupConnectionModel
+from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import handler404
 from .process import subprocess
@@ -146,7 +146,7 @@ def get_device_parent_setting(child_obj, setting: str):
 
 
 def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
-    if type(dt_str) != str or dt_str in ['', "['']"]:
+    if type(dt_str) != str:
         return None
 
     _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
@@ -184,3 +184,21 @@ def add_line_numbers(data: (list, str), reverse: bool = False) -> str:
         count += 1
 
     return join_str.join(output)
+
+
+def empty_key(search, param: str) -> bool:
+    if param in search and search[param] not in [None, '', "['']", 'None']:
+        return False
+
+    return True
+
+
+def set_key(search, param: str) -> bool:
+    return not empty_key(search=search, param=param)
+
+
+def get_url_divider(url: str):
+    if url.endswith('/'):
+        return ''
+    else:
+        return '/'

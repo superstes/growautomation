@@ -37,7 +37,7 @@
                 {% endif %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-                        <form style="display:inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
+            <form style="display:inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
                 {% csrf_token %}
                 {% if request.user|authorized_to_write %}
                     <input type="submit" value="Delete" class="btn btn-dark"/>

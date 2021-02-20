@@ -95,13 +95,12 @@ def LogView(request):
                     log_data = "log from file '%s' -> test data\ndata ga" % path_log
                 else:
                     log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)), reverse=True)
+        else:
+            log_subtype_options = log_service_options
 
         if 'log_subtype' in request.GET:
             if reload_time is None:
                 reload_time = DEFAULT_REFRESH_SECS
-
-        else:
-            log_subtype_options = log_service_options
 
     if type(log_data) == str and len(log_data) == 0:
         log_data = None

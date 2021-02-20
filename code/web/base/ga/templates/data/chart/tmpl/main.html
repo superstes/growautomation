@@ -10,7 +10,7 @@
     {% include "../../../error/form.html" %}
     {% if action != 'create' and object_list|length != 0 %}
         <form method="get">
-            <label for="selected"><strong>Existing chart object</strong></label>
+            <label for="selected">Existing chart object</label>
             <select class="form-control" id="selected" name="selected" >
                 {% if action == 'show' %}
                     <option value="---------">---------</option>
@@ -33,13 +33,11 @@
             <strong>No existing chart object found</strong>
         </div>
     {% endif %}
-    {% if action in 'delete, update' and selected is None %}
-        {% if object_list|length != 0 %}
-            <br>
-            <div class="alert alert-info">
-                <strong>Choose a chart object to {{ action }}</strong>
-            </div>
-        {% endif %}
+    {% if selected is None and action != 'create' %}
+        <br>
+        <div class="alert alert-info">
+            <strong>Choose a chart object</strong>
+        </div>
     {% else %}
         <h2>
             Preview:
@@ -50,9 +48,13 @@
         <div id="ga_warn_noresult" style="display: none;">
             {% include "../../../warn/no_results.html" %}
         </div>
-        <div id="ga_error_noresult" style="display: none;">
-            {% include "../../../error/no_results.html" %}
-        </div>
+        {% if form_error is None and form.erros is None %}
+            <div id="ga_error_noresult" class="alert alert-info" style="display: none;">Check chart options</div>
+        {% else %}
+            <div id="ga_error_noresult" style="display: none;">
+                {% include "../../../error/no_results.html" %}
+            </div>
+        {% endif %}
         <form method="post">
             <br>
             <div align="center">
@@ -66,7 +68,6 @@
             {% endblock %}
             {{ form|as_bootstrap }}
             <br>
-            <input type="hidden" name="do" value="{{ action }}" />
             <input type="hidden" name="selected" value="{{ selected }}" />
             {% include "./actions.html" %}
             {% csrf_token %}

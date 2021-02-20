@@ -3,6 +3,15 @@
     const urlParams = new URLSearchParams(queryString);
 
     var input_device = urlParams.get('input_device');
+    var chart_type = urlParams.get('chart_type');
+    var time_format_min = urlParams.get('time_format_min');
+    var time_format_hour = urlParams.get('time_format_hour');
+    var time_format_day = urlParams.get('time_format_day');
+    var time_format_month = urlParams.get('time_format_month');
+    var chart_x_max_ticks = urlParams.get('chart_x_max_ticks');
+    var chart_y_max_suggest = urlParams.get('chart_y_max_suggest');
+    var options_json = urlParams.get('options_json');
+    var chart_unit = urlParams.get('unit');
 
     // get random times between seven days ago and now
     function randomDate(start, end) {
@@ -14,7 +23,14 @@
     rand_time.sort(function(a,b){return a.getTime() - b.getTime()});
 
     // get random data points
-    var rand_data = Array.from({length: 150}, () => Math.floor(Math.random() * 30) + 20);
+    if (chart_y_max_suggest === null) {
+        var min_rand_data = 20;
+        var max_rand_data = 50;
+    } else {
+        var min_rand_data = chart_y_max_suggest * 0.4;
+        var max_rand_data = chart_y_max_suggest;
+    }
+    var rand_data = Array.from({length: 150}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
 
     var ga_config = {
         "device_id": 1,
@@ -22,24 +38,6 @@
         "data_list": rand_data,
         "error": null
     }
-
-    var chart_type = urlParams.get('chart_type');
-    var time_format_min = urlParams.get('time_format_min');
-    var time_format_hour = urlParams.get('time_format_hour');
-    var time_format_day = urlParams.get('time_format_day');
-    var time_format_month = urlParams.get('time_format_month');
-    var chart_x_max_ticks = urlParams.get('chart_x_max_ticks');
-    var chart_y_max_suggest = urlParams.get('chart_y_max_suggest');
-    var options_json = urlParams.get('options_json');
-
-    console.log(chart_type);
-    console.log(time_format_min);
-    console.log(time_format_hour);
-    console.log(time_format_day);
-    console.log(time_format_month);
-    console.log(chart_x_max_ticks);
-    console.log(chart_y_max_suggest);
-    console.log(options_json);
 
     if (options_json && options_json != 'None') {
         var option_array = options_json
@@ -73,7 +71,11 @@
                     ticks: {
                         beginAtZero: true,
                         callback: function(tick) {
-                            return `${tick.toString()} UNIT`;
+                            if (chart_unit === null) {
+                                return `${tick.toString()} UNIT`;
+                            } else {
+                                return `${tick.toString()} ${chart_unit}`;
+                            }
                         },
                         suggestedMax: chart_y_max_suggest,
                         }

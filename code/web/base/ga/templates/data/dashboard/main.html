@@ -1,0 +1,15 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% load bootstrap_tags %}
+{% block content %}
+    <h1>Dashboard</h1>
+    <br><hr><br>
+    {{ form|as_bootstrap }}
+    dashboard list <br>
+    {{ dashboard_list }} <br><br>
+    dashboard position list <br>
+    {{ dashboard_position_list }} <br><br>
+    id <br>
+    {{ id }}
+
+{% endblock %}

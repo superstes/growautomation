@@ -72,3 +72,8 @@
 form label {
     font-weight: bold;
 }
+
+form .error-msg {
+    color: rgb(164, 0, 15);
+    font-weight: bold;
+}

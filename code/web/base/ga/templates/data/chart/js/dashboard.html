@@ -5,40 +5,42 @@
     var ga_graph = urlParams.get('graph');
     var ga_dataset = urlParams.getAll('dataset');
 
-    var ga_hardcoded = {
-        pointHoverRadius: 7,
-        pointHitRadius: 7,
-        pointBorderColor: 'black',
-    }
+    console.log(`graph: '${ga_graph}' | datasets: '${ga_dataset}'`);
 
-    var ga_fetch = [fetch(`/api/chart/?type=graph&id=${ ga_graph }`),]
-
-    for (index in ga_dataset) {
-        ga_fetch.push(fetch(`/api/chart/?type=dataset&id=${ ga_dataset[index] }`))
-    };
-
-    if (!(ga_graph) || !(ga_dataset)) {
+    if ( ga_graph === null || ga_graph == '' || ga_dataset === null || ga_dataset == '' ) {
         console.log(`error: graph and dataset must be set`);
         document.getElementById("ga_warn_noresult").style.display = "block";
         document.getElementById("ga_chart_div").style.display = "none";
+
     } else {
+        var ga_hardcoded = {
+            pointHoverRadius: 7,
+            pointHitRadius: 7,
+            pointBorderColor: 'black',
+        }
+        var ga_fetch = [fetch(`/api/chart/?type=graph&id=${ ga_graph }`),]
+
+        for (index in ga_dataset) {
+            ga_fetch.push(fetch(`/api/chart/?type=dataset&id=${ ga_dataset[index] }`))
+        };
+
         Promise.all(ga_fetch).then(function (responses) {
             return Promise.all(responses.map(function (response) {
                 return response.json();
             }));
+
         }).then(function (data) {
             var graph_data = data[0].data_dict;
             var dataset_data_list = data.slice(1);
             
             // graph config
-
-            // console.log('graph');
-            // console.log(graph_data);
+            // console.log(`graph data: ${graph_data}`);
 
             var options_json = graph_data['options_json'];
 
             if (options_json != null) {
                 var chart_options = options_json;
+
             } else {
                 var chart_options = {
                     responsive: true,
@@ -82,15 +84,14 @@
                 }
             }
 
-            
-
             // dataset config
-            // console.log('dataset');
+            // console.log(`dataset data: ${dataset_data_list}`);
 
             var dataset_list = [];
+
             for (index in dataset_data_list) {
                 dataset = dataset_data_list[index].data_dict;
-                // console.log(dataset);
+                // console.log(`dataset item data: ${dataset}`);
 
                 var dataset_json = graph_data['dataset_json'];
 
@@ -102,6 +103,7 @@
                         }
                         let merged_dataset = Object.assign({}, dataset_json, data);
                         dataset_list.push(merged_dataset);
+
                     } else {
                         dataset_list.push({
                             label: dataset.data.device_name,
@@ -123,7 +125,7 @@
                 }
             }
 
-            // console.log(dataset_list);
+            // console.log(`dataset data list: ${dataset_list}`);
 
             // chart construct
 
@@ -137,7 +139,9 @@
             });
 
         }).catch(function (error) {
-            console.log(error);
+            console.log(`error: ${error}`);
+            document.getElementById("ga_error_noresult").style.display = "block";
+            document.getElementById("ga_chart_div").style.display = "none";
         });
     }
 </script>
