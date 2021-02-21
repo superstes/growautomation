@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import user_passes_test
 
 from ....user import authorized_to_read, authorized_to_write
 from ....config.nav import nav_dict
-from ....utils.helper import get_datetime_w_tz, set_key
-from ....models import ObjectInputModel, GroupInputModel
+from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill, empty_key
+from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
 from .helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
 
 
@@ -16,6 +16,13 @@ class Chart:
         self.root_path = 'data/chart'
         self.model = model
         self.form = form
+
+    def go(self, chart_option_defaults: dict):
+        if self.request.method == 'POST':
+            return self.post()
+
+        else:
+            return self.get(chart_option_defaults)
 
     def get(self, chart_option_defaults: dict):
         self.test_read(self.request)
@@ -65,7 +72,34 @@ class Chart:
                 'object_list': chart_dict['list'],
             })
 
+        elif self.html_template == 'dbe':
+            dataset_list = ChartDatasetModel.objects.all()
+            dataset_link_list = ChartDatasetLinkModel.objects.all()
+            graph_link_list = ChartGraphLinkModel.objects.all()
+            selected_dataset_ids = []
+            form_error = data['form_error'] if set_key(data, param='form_error') else None
+            graph_form = ChartGraphLinkForm(data, initial=get_form_prefill(self.request))
+
+            if set_key(chart_dict, 'obj'):
+                try:
+                    link_obj = [link for link in graph_link_list if link.group.id == int(chart_dict['id'])][0]
+                    graph_form = ChartGraphLinkForm(instance=link_obj)
+                    for dataset_link in dataset_link_list:
+                        if dataset_link.group.id == int(chart_dict['id']):
+                            selected_dataset_ids.append(dataset_link.obj.id)
+
+                except IndexError:
+                    pass
+
+            return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
+                'request': self.request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
+                'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'selected_dataset_ids': selected_dataset_ids,
+                'dataset_link_list': dataset_link_list, 'graph_link_list': graph_link_list, 'dataset_list': dataset_list, 'graph_form': graph_form,
+                'form_error': form_error
+            })
+
         else:
+
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
                 'request': self.request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'],
@@ -75,18 +109,30 @@ class Chart:
         self.test_write(self.request)
         data = self.request.POST
 
-        action = get_param_if_ok(data, search='do', choices=['show', 'create', 'update', 'delete'], fallback='show', lower=True)
+        action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)
         chart_list = self.model.objects.all()
         chart_id = get_param_if_ok(data, search='selected', no_choices=['---------'], format_as=int)
         form = None
         chart_obj = None
+        redirect_url = data['return'] if set_key(data, param='return') else f'/{self.root_path}/?status={action}d&what={self.html_template}'
+        redirect_url = self.remove_form_error(url=redirect_url)
 
         if action in ['delete', 'update']:
-            chart_obj = [obj for obj in chart_list if obj.id == int(chart_id)][0]
+            try:
+                try:
+                    chart_obj = [link for link in chart_list if link.id == int(chart_id)][0]
+
+                except TypeError:
+                    chart_obj = [link for link in chart_list if link.group.id == int(data['group'])][0]
+
+            except (IndexError, KeyError, TypeError) as error:
+                print(error)
+                action = 'create'
 
         if action in ['update', 'create']:
 
             if action == 'update':
+                print(action, chart_obj)
                 form = self.form(data, instance=chart_obj)
 
             else:
@@ -94,11 +140,15 @@ class Chart:
 
             if form.is_valid():
                 form.save()
-                return redirect(f'/{self.root_path}/?status={action}d&what={self.html_template}')
+                return redirect(redirect_url)
+
+            else:
+                print(form.errors)
+                return redirect(self.add_form_error(url=redirect_url))
 
         elif action == 'delete':
             chart_obj.delete()
-            return redirect(f'/{self.root_path}/?status={action}d&what={self.html_template}')
+            return redirect(redirect_url)
 
         return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
             'request': self.request, 'nav_dict': nav_dict, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list,
@@ -114,18 +164,13 @@ class Chart:
     def test_write(request):
         pass
 
+    def add_form_error(self, url: str, error: str = 'Failed+to+save'):
+        if set_key(self.request.GET, 'form_error'):
+            return url
 
-class Dashboard:
-    def __init__(self, request, html_template: str, model, form):
-        self.request = request
-        self.current_path = request.META['PATH_INFO']
-        self.html_template = html_template
-        self.root_path = 'data/chart'
-        self.model = model
-        self.form = form
+        else:
+            return "%s&form_error=%s" % (url, error)
 
-    def get(self):
-        pass
-
-    def post(self):
-        pass
+    @staticmethod
+    def remove_form_error(url: str, error: str = 'Failed+to+save'):
+        return url.replace("&form_error=%s" % error, '')

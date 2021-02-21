@@ -89,19 +89,26 @@ def add_graph_params_to_url(request, chart_dict: dict, redirect_path: str) -> (N
     # add graph get params if graph was selected
     if set_key(chart_dict, param='id') and set_key(chart_dict, param='obj'):
         missing_params = {}
+        existing_params = {key: value for key, value in request.GET.items()}
 
         for field in chart_dict['obj'].field_list:
-            if field not in request.GET:
+            data = getattr(chart_dict['obj'], field)
+
+            if field not in existing_params:
                 if field == 'input_device':
                     data = chart_dict['obj'].input_device.id
 
-                else:
-                    data = getattr(chart_dict['obj'], field)
-
                 missing_params[field] = data
+
+            # else:
+            #     if str(existing_params[field]) != str(data):
+            #         existing_params.pop(field)
+            #         missing_params[field] = data
 
         if len(missing_params) == 0:
             return None
 
         divider = get_url_divider(redirect_path)
-        return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**missing_params, **get_existing_params_dict(request.GET)})))
+        return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**missing_params, **get_existing_params_dict(existing_params)})))
+
+    return None

@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.contrib.auth.decorators import user_passes_test
 
-from ....models import ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ObjectInputModel, GroupInputModel
+from ....models import ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel
 from ...handlers import handler400_api
 from ....utils.helper import get_instance_from_id
 from ....user import authorized_to_read
@@ -28,7 +28,7 @@ def ApiChart(request):
             typ = ChartGraphModel
         elif chart_type == 'dataset':
             typ = ChartDatasetModel
-        elif chart_type == 'dashboard':
+        elif chart_type == 'dbe':
             typ = ChartDashboardModel
         else:
             return handler400_api(msg="Specified type '%s' not found" % chart_type)
@@ -73,6 +73,20 @@ def ApiChart(request):
             api_params.update(filter_params)
 
             data_dict['data'] = ApiData(request, **api_params, out_dict=True)
+
+        elif chart_type == 'dbe':
+            dataset_list = []
+            for link in ChartDatasetLinkModel.objects.all():
+                if link.group.id == chart_id:
+                    dataset_list.append(link.obj.id)
+
+            graph_id = None
+            for link in ChartGraphLinkModel.objects.all():
+                if link.group.id == chart_id:
+                    graph_id = link.obj.id
+
+            data_dict['dataset'] = dataset_list
+            data_dict['graph'] = graph_id
 
         return JsonResponse(data={
             'chart_id': int(chart_id), 'data_dict': data_dict,

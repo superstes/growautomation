@@ -27,7 +27,7 @@
         var min_rand_data = 20;
         var max_rand_data = 50;
     } else {
-        var min_rand_data = chart_y_max_suggest * 0.4;
+        var min_rand_data = chart_y_max_suggest * 0.2;
         var max_rand_data = chart_y_max_suggest;
     }
     var rand_data = Array.from({length: 150}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
@@ -71,7 +71,7 @@
                     ticks: {
                         beginAtZero: true,
                         callback: function(tick) {
-                            if (chart_unit === null) {
+                            if (chart_unit === null || chart_unit == 'None' ) {
                                 return `${tick.toString()} UNIT`;
                             } else {
                                 return `${tick.toString()} ${chart_unit}`;

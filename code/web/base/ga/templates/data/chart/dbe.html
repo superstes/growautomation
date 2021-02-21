@@ -1,0 +1,111 @@
+{% extends "./tmpl/main.html" %}
+{% load bootstrap_tags %}
+{% load util %}
+{% block title %}
+    <h1>{{ action|title }} dashboard element</h1>
+{% endblock %}
+{% block extraoptions %}
+    <br><hr><br>
+    <h2>
+        Links
+    </h2>
+    <br>
+    {% if selected is not None %}
+        <h3>
+            Graph prototype
+        </h3>
+        <!-- link graph start -->
+        <form method="post" action="/data/chart/dbe/graph">
+            {% csrf_token %}
+            {{ graph_form|as_bootstrap }}
+            <input type="hidden" name="do" value="update" />
+            <input type="hidden" name="group" value="{{ selected }}" />
+            {% if request.user|authorized_to_write %}
+                <input type="submit" value="Save" class="btn btn-warning">
+            {% else %}
+                <input type="submit" value="Save" class="btn btn-warning" disabled/>
+            {% endif %}
+            <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+        </form>
+        <br><br>
+        <!-- link graph stop -->
+        <h3>
+            Datasets
+        </h3>
+        <!-- link dataset start -->
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    NAME
+                </th>
+                <th>
+                    DESCRIPTION
+                </th>
+                <th>
+                    ACTION
+                </th>
+            </tr>
+            {% if dataset_link_list|length == 0 %}
+                {% include "../../warn/table_no_results.html" %}
+            {% else %}
+                {% for dataset_link in dataset_link_list %}
+                    {% if dataset_link.group.id == selected %}
+                        <tr>
+                            <td>
+                                {{ dataset_link.obj.name }}
+                            </td>
+                            <td>
+                                {{ dataset_link.obj.description }}
+                            </td>
+                            <td>
+                                <form style="display:inline" method="post" action="/data/chart/dbe/dataset">
+                                    {% csrf_token %}
+                                    {% if request.user|authorized_to_write %}
+                                        <input type="submit" value="Remove" class="btn btn-danger"/>
+                                    {% else %}
+                                        <input type="submit" value="Remove" class="btn btn-danger" disabled/>
+                                    {% endif %}
+                                    <input type="hidden" name="selected" value="{{ dataset_link.id }}" />
+                                    <input type="hidden" name="do" value="delete" />
+                                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                </form>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            <tr>
+                <td colspan="100%">
+                    <form style="display:inline" method="post" action="/data/chart/dbe/dataset">
+                        {% csrf_token %}
+                        <label>
+                            <select class="form-control" name="obj" >
+                                {% for dataset in dataset_list %}
+                                    {% if dataset.id not in selected_dataset_ids %}
+                                        <option value="{{ dataset.id }}">{{ dataset.name }} | {{ dataset.description }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </label>
+                        {% if request.user|authorized_to_write %}
+                            <input type="submit" value="Add" class="btn btn-success"/>
+                        {% else %}
+                            <input type="submit" value="Add" class="btn btn-success" disabled/>
+                        {% endif %}
+                        <input type="hidden" name="do" value="create" />
+                        <input type="hidden" name="group" value="{{ selected }}" />
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                    </form>
+                </td>
+            </tr>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <strong>Choose a dashboard element to see more.</strong>
+        </div>
+    {% endif %}
+    <!-- link dataset stop -->
+{% endblock %}
+{% block js %}
+    {% include "./js/dashboard.html" %}
+{% endblock %}

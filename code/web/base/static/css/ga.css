@@ -77,3 +77,8 @@ form .error-msg {
     color: rgb(164, 0, 15);
     font-weight: bold;
 }
+
+.ga-img-float {
+    width: 85%;
+    max-width: 650px;
+}

@@ -45,16 +45,19 @@
         <div class="ga-chart ga-chart-main" id="ga_chart_div" align="center">
             <canvas id="ga_chart_canvas"></canvas>
         </div>
+
         <div id="ga_warn_noresult" style="display: none;">
             {% include "../../../warn/no_results.html" %}
         </div>
-        {% if form_error is None and form.erros is None %}
-            <div id="ga_error_noresult" class="alert alert-info" style="display: none;">Check chart options</div>
-        {% else %}
-            <div id="ga_error_noresult" style="display: none;">
+        <div id="ga_error_noresult" style="display: none;">
+            {% if form_error is None and form.erros is None %}
+                <div class="alert alert-info">
+                    Check chart options
+                </div>
+            {% else %}
                 {% include "../../../error/no_results.html" %}
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
         <form method="post">
             <br>
             <div align="center">

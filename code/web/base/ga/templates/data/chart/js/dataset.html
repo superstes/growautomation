@@ -12,7 +12,7 @@
     console.log(`/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`);
     console.log(`/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`);
 
-    if ( (input_device === null || input_device == '' ) && (input_model === null || input_model == '' ) {
+    if ( (input_device === null || input_device == '' ) && (input_model === null || input_model == '' ) ) {
         console.log(`error: neither input device nor input model is set`);
         document.getElementById("ga_error_noresult").style.display = "block";
         document.getElementById("ga_chart_div").style.display = "none";
@@ -45,7 +45,8 @@
         }
         try {
             fetchData().then(ga_config => {
-                console.log(`data received: ${ga_config}`);
+                console.log('data received:');
+                console.log(ga_config);
                 if (ga_config.xy_data.length == 0) {
                     console.log('warning: no results found');
                     document.getElementById("ga_warn_noresult").style.display = "block";
