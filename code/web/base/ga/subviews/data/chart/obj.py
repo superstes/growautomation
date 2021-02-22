@@ -3,9 +3,9 @@ from django.contrib.auth.decorators import user_passes_test
 
 from ....user import authorized_to_read, authorized_to_write
 from ....config.nav import nav_dict
-from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill, empty_key
+from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill
 from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
-from .helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
+from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
 
 
 class Chart:

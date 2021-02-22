@@ -76,7 +76,7 @@ from .submodels.objects import ObjectTimerModel
 # data ##############################
 
 from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ChartDatasetLinkModel, ChartGraphLinkModel
-from .submodels.data import DashboardModel, DashboardPositionModel
+from .submodels.data import DashboardModel, DashboardPositionModel, DashboardDefaultModel
 
 # groups ##############################
 

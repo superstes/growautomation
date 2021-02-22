@@ -101,8 +101,8 @@ def view_data(request, typ: str, sub_type: str = None, third_type: str = None):
 
         return logout_check(request=request, default=DataChartView(request=request))
 
-    # elif typ == 'dashboard':
-    #     return logout_check(request=request, default=DashboardView(request=request))
+    elif typ == 'dashboard':
+        return logout_check(request=request, default=DashboardView(request=request).go())
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 

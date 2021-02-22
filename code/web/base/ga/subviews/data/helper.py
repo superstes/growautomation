@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 
-from ....utils.main import get_as_string
-from ....utils.helper import get_form_prefill, empty_key, get_url_divider, set_key
+from ...utils.main import get_as_string
+from ...utils.helper import get_form_prefill, empty_key, get_url_divider, set_key
 
 
 def get_existing_params_dict(source: dict) -> dict:

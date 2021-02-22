@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import user_passes_test
 
 from ....user import authorized_to_read
 from ....config.nav import nav_dict
-from .helper import get_param_if_ok
+from ..helper import get_param_if_ok
 from ....forms import ChartGraphModel, ChartDatasetModel, ChartDatasetForm, ChartGraphForm, ChartDashboardModel, ChartDashboardForm
 from ....forms import ChartDatasetLinkModel, ChartDatasetLinkForm, ChartGraphLinkModel, ChartGraphLinkForm
 from .obj import Chart

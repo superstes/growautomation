@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 
 from ....user import authorized_to_read, authorized_to_write
 from ....config.nav import nav_dict
-from .helper import get_param_if_ok, get_obj_dict, get_existing_params_dict, add_graph_params_to_url
+from ..helper import get_param_if_ok, get_obj_dict, get_existing_params_dict, add_graph_params_to_url
 from ....forms import ChartDatasetLinkModel, ChartGraphLinkModel, ChartDatasetLinkForm, ChartGraphLinkForm, ChartDashboardForm, ChartDashboardModel
 from ...handlers import handler404
 from ....utils.helper import get_form_prefill, get_instance_from_id, empty_key

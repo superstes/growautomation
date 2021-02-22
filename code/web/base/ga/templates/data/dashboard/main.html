@@ -4,12 +4,12 @@
 {% block content %}
     <h1>Dashboard</h1>
     <br><hr><br>
-    {{ form|as_bootstrap }}
-    dashboard list <br>
-    {{ dashboard_list }} <br><br>
-    dashboard position list <br>
-    {{ dashboard_position_list }} <br><br>
-    id <br>
-    {{ id }}
-
+    <div class="alert alert-warning">
+        WORK IN PROGRESS!!
+    </div>
+    {% if action == 'create' %}
+        {% include "./create.html" %}
+    {% else %}
+        {% include "./show.html" %}
+    {% endif %}
 {% endblock %}

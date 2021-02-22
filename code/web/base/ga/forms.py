@@ -294,6 +294,14 @@ class DashboardPositionForm(BaseForm):
         labels = LABEL_DICT
 
 
+class DashboardDefaultForm(BaseForm):
+    class Meta:
+        model = DashboardDefaultModel
+        fields = model.field_list
+        help_texts = HELP_DICT
+        labels = LABEL_DICT
+
+
 # groups ##############################
 
 class GroupConnectionForm(BaseForm):
