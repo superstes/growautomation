@@ -7,11 +7,15 @@ from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
 from subprocess import TimeoutExpired
 
-logger = Log()
 
+def subprocess(command, out_error=False, web_ctrl_obj=None):
+    if web_ctrl_obj is not None:
+        logger = Log(typ='web', web_ctrl_obj=web_ctrl_obj)
+        logger.write("Executing command \"%s\"" % command, level=2)
 
-def subprocess(command, out_error=False):
-    logger.write("Executing command \"%s\"" % command, level=6)
+    else:
+        logger = Log()
+        logger.write("Executing command \"%s\"" % command, level=6)
 
     if type(command) != list:
         command = [command]

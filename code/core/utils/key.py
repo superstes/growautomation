@@ -1,12 +1,18 @@
-from pathlib import Path
+from pathlib import Path, WindowsPath
 from re import search as regex_search
 
 
 def _file():
     subdir_count = 2
     current_path = Path(__file__).parent.absolute()
-    ga_root_path = '/'.join(str(current_path).split('/')[:-subdir_count])
-    secret_file_path = '/core/secret/random.key'
+    if isinstance(current_path, WindowsPath):
+        ga_root_path = '\\'.join(str(current_path).split('\\')[:-subdir_count])
+        secret_file_path = '\\core\\secret\\random.key'
+
+    else:
+        ga_root_path = '/'.join(str(current_path).split('/')[:-subdir_count])
+        secret_file_path = '/core/secret/random.key'
+
     return "%s%s" % (ga_root_path, secret_file_path)
 
 

@@ -3,11 +3,11 @@
 #   error logging
 
 from core.config import shared as shared_vars
+from core.config.web_shared import init as web_shared_vars
 
 from datetime import datetime
 from os import system as os_system
 from os import path as os_path
-from systemd import journal as systemd_journal
 
 
 def now(time_format: str):
@@ -17,7 +17,10 @@ def now(time_format: str):
 date_year, date_month = now("%Y"), now("%m")
 
 
-def debugger(command) -> bool:
+def debugger(command, web_ctrl_obj=None) -> bool:
+    if web_ctrl_obj is not None:
+        web_shared_vars(web_ctrl_obj)
+
     debug = shared_vars.SYSTEM.debug
 
     if debug == 1:
@@ -43,17 +46,23 @@ class Log:
     except AttributeError:
         SECRET_DATA = []
 
-    def __init__(self, typ: str = 'core', addition: str = None):
+    def __init__(self, typ: str = 'core', addition: str = None, web_ctrl_obj=None):
         from inspect import stack as inspect_stack
         from inspect import getfile as inspect_getfile
         self.type = typ
         self.name = inspect_getfile((inspect_stack()[1])[0])
+
+        if web_ctrl_obj is not None:
+            web_shared_vars(web_ctrl_obj)
+
         self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM.path_log, self.type, date_year)
+        self.log_level = shared_vars.SYSTEM.log_level
+
         if addition is None:
             self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
         else:
             self.log_file = "%s/%s_%s_%s.log" % (self.log_dir, date_month, self.type, addition)
-        self.log_level = shared_vars.SYSTEM.log_level
+
         self._file()
 
     def write(self, output: str, level: int = 1) -> bool:
@@ -138,6 +147,7 @@ class MultiLog:
 
 class FileAndSystemd:
     def __init__(self, log_instance):
+        from systemd import journal as systemd_journal
         self.log = log_instance
 
     def write(self, output: str, level: int = 1) -> bool:
