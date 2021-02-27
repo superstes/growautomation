@@ -2,7 +2,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from .models import *
-
+from .submodels.helper.matrix import Matrix
+from .submodels.helper.crypto import decrypt, encrypt
 
 LABEL_DICT = {
     'name': 'Name',
@@ -182,6 +183,11 @@ class ObjectConditionForm(BaseForm):
         fields = model.field_list
         labels = LABEL_DICT
         help_texts = HELP_DICT
+#    todo: form error should be shown if more than one optional_field is filled
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         if not cleaned_data.get('obj') and not cleaned_data.get('group'):
+#             raise ValidationError({'obj': "You can't leave both fields as null"})
 
 
 class ObjectConditionLinkForm(BaseForm):
@@ -200,8 +206,25 @@ class ObjectControllerForm(BaseForm):
         help_texts = HELP_DICT
 
         widgets = {
-            'sql_secret': forms.PasswordInput(),
+            'sql_secret': forms.PasswordInput(render_value=True),
         }
+
+    def clean(self):
+        super().clean()
+
+        submitted_plain_secret = self.cleaned_data['sql_secret']  # decrypt(instance.sql_secret)
+        current_encrypted_secret = self.instance.sql_secret
+
+        # if password was not changed -> set same one again
+        if submitted_plain_secret.find('●') != -1:
+            if self.instance is None:
+                raise ValidationError('You must provide a valid sql password!')
+
+            self.cleaned_data['sql_secret'] = current_encrypted_secret
+
+        # encrypt secret/password for storage in db if it was changed (else it is already encrypted)
+        if submitted_plain_secret != current_encrypted_secret:
+            self.cleaned_data['sql_secret'] = encrypt(submitted_plain_secret)
 
 
 class ObjectTimerForm(BaseForm):
@@ -292,6 +315,20 @@ class DashboardPositionForm(BaseForm):
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT
+
+    def clean(self):
+        data = super().clean()
+        matrix = data.get('dashboard').matrix
+        xy_data = {'y0': data.get('y0'), 'y1': data.get('y1'), 'x0': data.get('x0'), 'x1': data.get('x1')}
+        free, used_list = Matrix(matrix=matrix).check(xy_data=xy_data)
+
+        if not free:
+            if len(used_list) > 0:
+                error = "Some fields in the dashboard matrix are already in use: \"%s\"" % used_list
+            else:
+                error = 'Placing of the element is not valid!'
+
+            raise ValidationError(error, code='invalid')
 
 
 class DashboardDefaultForm(BaseForm):

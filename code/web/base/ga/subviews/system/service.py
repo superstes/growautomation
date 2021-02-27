@@ -3,10 +3,14 @@ from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime, timedelta
 from time import sleep
 
+from core.utils.debug import Log
+
 from ...user import authorized_to_read, authorized_to_write
 from ...config.nav import nav_dict
-from ...utils.helper import get_time_difference, develop_subprocess
+from ...utils.helper import get_time_difference, develop_subprocess, get_controller_obj
 from ..handlers import handler404
+
+logger = Log(typ='web', web_ctrl_obj=get_controller_obj())
 
 # need to allow www-data to start/stop/restart/reload services
 
@@ -82,16 +86,22 @@ def ServiceView(request):
 
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def service_action(request, service: str):
-    # todo: log commands
     systemctl = 'sudo /bin/systemctl'
+    meta = request.META
+    log_tmpl = f"{meta['PATH_INFO']} - action \"%s service {service}\" was executed by user {request.USER} from remote ip {meta['REMOTE_ADDR']}"
+
     if 'service_start' in request.POST:
+        logger.write(log_tmpl % 'start')
         develop_subprocess(request, command="%s start %s" % (systemctl, service), develop='ok')
 
     elif 'service_reload' in request.POST:
+        logger.write(log_tmpl % 'reload')
         develop_subprocess(request, command="%s reload %s" % (systemctl, service), develop='ok')
 
     elif 'service_restart' in request.POST:
+        logger.write(log_tmpl % 'restart')
         develop_subprocess(request, command="%s restart %s" % (systemctl, service), develop='ok')
 
     elif 'service_stop' in request.POST:
+        logger.write(log_tmpl % 'stop')
         develop_subprocess(request, command="%s stop %s" % (systemctl, service), develop='ok')

@@ -1,0 +1,3 @@
+usermod -a -G ga www-data  # to access the core modules
+usermod -a -G systemd-journal www-data  # for journalctl access /system/log
+write privileges to /var/log/ga/web/*

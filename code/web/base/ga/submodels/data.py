@@ -1,9 +1,12 @@
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMemberModel, BareModel
 from .objects import ObjectInputModel
 from .groups import GroupAreaModel, GroupInputModel
+from .helper.matrix import Matrix
 
 CHART_TYPE_CHOICES = [
     ('line', 'Line'), ('bar', 'Bar'), ('radar', 'Radar'), ('doughnut', 'Doughnut'), ('pie', 'Pie'), ('polarArea', 'polar Area'), ('bubble', 'Bubble'),
@@ -113,26 +116,33 @@ class ChartDatasetLinkModel(BaseMemberModel):
 
 
 class DashboardModel(BaseModel):
+    max_rows = 100
+    max_columns = 30
     field_list = [
         'name', 'description', 'rows', 'columns', 'default',
     ]
 
-    rows = models.PositiveSmallIntegerField(default=4, validators=[MaxValueValidator(1000)])
-    columns = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(30)])
+    rows = models.PositiveSmallIntegerField(default=4, validators=[MaxValueValidator(max_rows)])
+    columns = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(max_columns)])
     default = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+    matrix = models.TextField(
+        max_length=Matrix.MAX_JSON_LEN,
+        default=Matrix(y=max_rows, x=max_columns).get()
+    )
 
 
 class DashboardPositionModel(BareModel):
     field_list = [
-        'y0', 'y1', 'x0', 'x1', 'dashboard', 'chart',
+        'y0', 'y1', 'x0', 'x1', 'dashboard', 'element',
     ]
-
-    dashboard = models.ForeignKey(DashboardModel, on_delete=models.CASCADE, related_name="dpm_fk_dashboard")
-    chart = models.ForeignKey(ChartDashboardModel, on_delete=models.CASCADE, related_name="dpm_fk_chart")
-    y0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(99)])
-    y1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(100)])
-    x0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(29)])
-    x1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(30)])
+    initials = 'dpm'
+    # obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
+    dashboard = models.ForeignKey(DashboardModel, on_delete=models.CASCADE, related_name="%s_fk_dashboard" % initials)
+    element = models.ForeignKey(ChartDashboardModel, on_delete=models.CASCADE, related_name="%s_fk_element" % initials)
+    y0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(DashboardModel.max_rows - 1)])
+    y1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(DashboardModel.max_rows)])
+    x0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(DashboardModel.max_columns - 1)])
+    x1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(DashboardModel.max_columns)])
 
     class Meta:
         constraints = [
@@ -141,6 +151,18 @@ class DashboardPositionModel(BareModel):
             models.UniqueConstraint(fields=['dashboard', 'x0'], name='dpm_uc_dashboard_x0'),
             models.UniqueConstraint(fields=['dashboard', 'x1'], name='dpm_uc_dashboard_x1'),
         ]
+
+
+@receiver(post_save, sender=DashboardPositionModel)
+def dpm_post_save(sender, instance, **kwargs):
+    xy_data = {'y0': instance.y0, 'y1': instance.y1, 'x0': instance.x0, 'x1': instance.x1}
+    m = Matrix(matrix=instance.dashboard.matrix)
+
+    if m.set(xy_data=xy_data, set_value=instance.id):
+        instance.dashboard.matrix = m.get()
+
+    else:
+        print('Unable to update the dashboard matrix')
 
 
 class DashboardDefaultModel(BareModel):

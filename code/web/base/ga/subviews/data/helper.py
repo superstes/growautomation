@@ -100,6 +100,7 @@ def add_graph_params_to_url(request, chart_dict: dict, redirect_path: str) -> (N
 
                 missing_params[field] = data
 
+            # created endless loop; must be debugged if needed
             # else:
             #     if str(existing_params[field]) != str(data):
             #         existing_params.pop(field)

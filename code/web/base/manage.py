@@ -2,6 +2,13 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path, WindowsPath
+
+# workaround when in development -> add growautomation core-path to pythonpath
+current_path = Path(__file__).parent.absolute()
+if isinstance(current_path, WindowsPath):
+    ga_root_path = '\\'.join(str(current_path).split('\\')[:-2])
+    sys.path.append(ga_root_path)
 
 
 def main():

@@ -3,11 +3,12 @@ from datetime import datetime
 from pytz import timezone as pytz_timezone
 from django.utils import timezone as django_timezone
 
+from core.utils.process import subprocess
+
 from ..models import ObjectControllerModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import handler404
-from .process import subprocess
 from ..config.shared import DATETIME_TS_FORMAT
 
 
@@ -30,10 +31,13 @@ def get_time_difference(time_data: str, time_format: str) -> int:
     return int(difference.total_seconds())
 
 
+def get_controller_obj():
+    return [cont for cont in ObjectControllerModel.objects.all()][0]
+
+
 def get_controller_setting(request, setting: str):
     try:
-        controller = [cont for cont in ObjectControllerModel.objects.all()][0]
-        return getattr(controller, setting)
+        return getattr(get_controller_obj(), setting)
 
     except IndexError:
         raise handler404(request, msg="Can't get controller setting if no controller exists. You must create a controller first.")

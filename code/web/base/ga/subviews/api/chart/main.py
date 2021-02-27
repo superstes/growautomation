@@ -19,6 +19,7 @@ def ApiChart(request):
 
         try:
             chart_id = int(request.GET['id'])
+
         except ValueError:
             return handler400_api(msg="Need to specify a valid id; got '%s'" % request.GET['id'])
 

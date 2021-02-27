@@ -38,7 +38,6 @@ class DashboardView:
         if action == 'show':
             pass
 
-        # ['form'], 'db': db_dict['id'], 'object_list': db_dict['list'],
         return render(self.request, self.html_template, context={
             'request': self.request, 'nav_dict': nav_dict, 'action': action, 'db_dict': db_dict, 'dbe_list': dbe_list, 'default_db': default_db,
         })

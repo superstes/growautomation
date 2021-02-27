@@ -4,8 +4,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from ..models import BaseDeviceObjectModel, BaseModel, BareModel, models, BOOLEAN_CHOICES
 from .groups import GroupInputModel
 
-from ..crypto import AESCipher
-
 
 class ObjectConnectionModel(BaseDeviceObjectModel):
     field_list = ['name', 'description', 'connection', 'enabled']
@@ -74,12 +72,6 @@ class ObjectConditionModel(BaseModel):
         else:
             return fk
 
-    # todo: form error should be shown if more than one optional_field is filled
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     if not cleaned_data.get('obj') and not cleaned_data.get('group'):
-    #         raise ValidationError({'obj': "You can't leave both fields as null"})
-
     def save(self, *args, **kwargs):
         if self.fks is False:
             raise ValueError("Must choose exactly one input object for the condition match")
@@ -147,41 +139,6 @@ class ObjectControllerModel(BaseModel):
 
     web_cdn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     web_warn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
-
-    def save(self, *args, **kwargs):
-        # encrypt secret/password for storage in db
-
-        encryption_string = None
-        unencrypted_secret = self.sql_secret
-
-        # todo: set path cleanly
-        def _get_key(lines):
-            for line in lines:
-                if line[0].find('#') == -1:
-                    return line
-
-        try:
-            # test environment
-            with open('base/random.key') as key_file:
-                encryption_string = _get_key(key_file.readlines())
-        except FileNotFoundError:
-            try:
-                with open('/var/www/django/base/random.key') as key_file:
-                    encryption_string = _get_key(key_file.readlines())
-            except FileNotFoundError:
-                pass
-
-        if encryption_string is None:
-            # log error or whatever
-            encrypted_secret = None
-
-        else:
-            crypto = AESCipher(key=encryption_string)
-            encrypted_secret = crypto.encrypt(unencrypted_secret).decode("utf-8")
-
-        self.sql_secret = encrypted_secret
-
-        return super(BaseModel, self).save(*args, **kwargs)
 
 
 class ObjectTimerModel(BaseModel):

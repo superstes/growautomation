@@ -5,8 +5,7 @@ from os import listdir as os_listdir
 
 from ...user import authorized_to_read
 from ...config.nav import nav_dict
-from ...utils.process import subprocess
-from ...utils.helper import check_develop, get_controller_setting, add_line_numbers
+from ...utils.helper import check_develop, get_controller_setting, add_line_numbers, develop_subprocess
 from ..handlers import handler404
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
@@ -39,6 +38,7 @@ def LogView(request):
 
     log_ga_options = {
         'Core': "%s/core/%s/%s_core.log" % (path_log, date_year, date_month),
+        'Web': "%s/web/%s/%s_web.log" % (path_log, date_year, date_month),
     }
 
     for device_log in device_log_list:
@@ -76,12 +76,24 @@ def LogView(request):
                 if develop:
                     log_data = 'test data\ndata service'
                 else:
-                    log_data = add_line_numbers(subprocess(SHELL_SERVICE_LOG_STATUS % log_service_value))
+                    log_data = add_line_numbers(
+                        develop_subprocess(
+                            request,
+                            command=SHELL_SERVICE_LOG_STATUS % log_service_value,
+                            develop="Test output1\nHelloo\nThird time's a charm"
+                        )
+                    )
             elif log_type == 'Service journal':
                 if develop:
                     log_data = 'test data\ndata journal'
                 else:
-                    log_data = add_line_numbers(subprocess(SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count)))
+                    log_data = add_line_numbers(
+                        develop_subprocess(
+                            request,
+                            command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
+                            develop="Test output2\nHelloo\nThird time's a charm"
+                        )
+                    )
 
         if log_type == 'Growautomation':
             log_subtype_options = log_ga_options
@@ -94,7 +106,14 @@ def LogView(request):
                 if develop:
                     log_data = "log from file '%s' -> test data\ndata ga" % path_log
                 else:
-                    log_data = add_line_numbers(subprocess("tail -n %s %s" % (log_entry_count, log_file)), reverse=True)
+                    log_data = add_line_numbers(
+                        develop_subprocess(
+                            request,
+                            command="tail -n %s %s" % (log_entry_count, log_file),
+                            develop="Test output3\nHelloo\nThird time's a charm"
+                        ),
+                        reverse=True
+                    )
         else:
             log_subtype_options = log_service_options
 

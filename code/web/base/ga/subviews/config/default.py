@@ -28,7 +28,7 @@ def DetailView(request, uid, model_obj, typ, form_obj=None):
 
     for attribute in data.field_list:
         form_widget = form_obj.base_fields[attribute].widget
-        if hasattr(form_widget, 'render_value') and form_widget.render_value is False:
+        if hasattr(form_widget, 'render_value'):
             value = '●●●●●●●●●●●●'
         else:
             value = getattr(data, attribute)
