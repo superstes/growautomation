@@ -1,18 +1,20 @@
 {% extends "../../body.html" %}
 {% load util %}
 {% block content %}
-    <table class="table table-striped">
-        {% block subview %}
-        {% endblock %}
-        <tr>
-            <td colspan="100%">
-                <form style="display:inline" method="get" action="/config/create/{{ typ }}/">
-                    <input type="submit" value="Create" class="btn btn-success"/>
-                    <input type="hidden" name="action" value="Create" />
-                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                </form>
-                <a href='{{ request|get_return_path:typ }}' class="btn btn-info">Back</a>
-            </td>
-        </tr>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped ga-text-responsive">
+            {% block subview %}
+            {% endblock %}
+            <tr>
+                <td colspan="100%">
+                    <form style="display:inline" method="get" action="/config/create/{{ typ }}/">
+                        <input type="submit" value="Create" class="btn btn-success"/>
+                        <input type="hidden" name="action" value="Create" />
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                    </form>
+                    <a href='{{ request|get_return_path:typ }}' class="btn btn-info">Back</a>
+                </td>
+            </tr>
+        </table>
+    </div>
 {% endblock %}

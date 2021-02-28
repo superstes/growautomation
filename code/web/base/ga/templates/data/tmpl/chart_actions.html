@@ -2,8 +2,7 @@
 <input type="submit" value="Show" class="btn btn-primary" formmethod='GET'>
 {% if request.user|authorized_to_write %}
     {% if action == 'create' %}
-        <input type="submit" value="Create" class="btn btn-success">
-        <input type="hidden" name="do" value="create">
+        <input name="do" type="submit" value="Create" class="btn btn-success">
     {% else %}
         <input name="do" type="submit" value="Update" class="btn btn-warning">
         <input name="do" type="submit" value="Delete" class="btn btn-danger">
@@ -11,7 +10,6 @@
 {% else %}
     {% if action == 'create' %}
         <input type="submit" value="Create" class="btn btn-success" disabled>
-        <input type="hidden" name="do" value="create">
     {% else %}
         <input type="submit" value="Update" class="btn btn-warning" disabled>
         <input type="submit" value="Delete" class="btn btn-danger" disabled>

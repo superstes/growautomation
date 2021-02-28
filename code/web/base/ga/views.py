@@ -13,10 +13,9 @@ from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
 from .subviews.data.raw.input import DataListView
 from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView, DataChartDbeView, DataChartDbeGraphView, DataChartDbeDatasetView
-from .subviews.data.chart.dashboard import DataChartDashboardView, DataChartDatasetLinkView
 from .subviews.api.data.main import ApiData
 from .subviews.api.chart.main import ApiChart
-from .subviews.data.dashboard.main import DashboardView
+from .subviews.data.dashboard.main import DashboardView, DashboardConfigView
 
 
 login_url = '/accounts/login/'
@@ -102,6 +101,12 @@ def view_data(request, typ: str, sub_type: str = None, third_type: str = None):
         return logout_check(request=request, default=DataChartView(request=request))
 
     elif typ == 'dashboard':
+        if sub_type == 'config':
+            if third_type is not None:
+                return logout_check(request=request, default=DashboardConfigView(request=request).go(info=third_type))
+
+            return logout_check(request=request, default=DashboardConfigView(request=request).go())
+
         return logout_check(request=request, default=DashboardView(request=request).go())
 
     return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))

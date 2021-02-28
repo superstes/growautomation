@@ -4,6 +4,9 @@ from string import ascii_letters, digits, punctuation
 
 from django.contrib.auth.views import LoginView, logout_then_login
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import user_passes_test
+
+from ..user import authorized_to_read, authorized_to_write
 
 
 def get_as_string(get_params: dict, add: bool = False) -> str:
@@ -153,3 +156,13 @@ def logout_check(request, default, hard_logout: bool = False):
             return logout_then_login(request)
 
     return default
+
+
+@user_passes_test(authorized_to_read, login_url='/denied/')
+def test_read(request):
+    pass
+
+
+@user_passes_test(authorized_to_write, login_url='/denied/')
+def test_write(request):
+    pass

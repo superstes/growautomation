@@ -1,43 +1,45 @@
 {% extends "../body.html" %}
 {% load util %}
 {% block content %}
-    <table class="table table-striped">
-        <tr>
-            <th>
-                KEY
-            </th>
-            <th>
-                VALUE
-            </th>
-            <th>
-                INFO
-            </th>
-        </tr>
-        <tr>
-            <td>
-                ID
-            </td>
-            <td>
-                {{ data.id }}
-            </td>
-            <td>
-                ---
-            </td>
-        </tr>
-        {% for attribute, value in data_dict.items %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    KEY
+                </th>
+                <th>
+                    VALUE
+                </th>
+                <th>
+                    INFO
+                </th>
+            </tr>
             <tr>
                 <td>
-                    {{ attribute }}
+                    ID
                 </td>
                 <td>
-                    {{ value|get_item:'value' }}
+                    {{ data.id }}
                 </td>
                 <td>
-                    {{ value|get_item:'info' }}
+                    ---
                 </td>
             </tr>
-        {% endfor %}
-    </table>
+            {% for attribute, value in data_dict.items %}
+                <tr>
+                    <td>
+                        {{ attribute }}
+                    </td>
+                    <td>
+                        {{ value|get_item:'value' }}
+                    </td>
+                    <td>
+                        {{ value|get_item:'info' }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
     <hr>
     <a href='{{ request|get_return_path:typ }}' class="btn btn-info">Back</a>
 {% endblock %}

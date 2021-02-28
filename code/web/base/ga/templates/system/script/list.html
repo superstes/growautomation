@@ -24,61 +24,63 @@
             Refreshed at {% now "Y-m-d H:i:s T" %} <br>
         </strong>
         <br>
-        <table class="table table-striped">
-            <tr>
-                <th>
-                    Name
-                </th>
-                <th>
-                    Changed at
-                </th>
-                <th>
-                    Action
-                </th>
-            </tr>
-            {% if script_dict|length == 0 %}
-                {% include "../../warn/table_no_results.html" %}
-            {% else %}
-                {% for script_name, script_ts in script_dict.items %}
-                    <tr>
-                        <td>
-                            {{ script_name }}
-                        </td>
-                        <td>
-                            {{ script_ts }}
-                        </td>
-                        <td>
-                            <form style="display:inline" method="post" action="/system/script/delete/">
-                                {% csrf_token %}
-                                {% if request.user|authorized_to_write %}
-                                    <input type="submit" value="Delete" class="btn btn-danger"/>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Changed at
+                    </th>
+                    <th>
+                        Action
+                    </th>
+                </tr>
+                {% if script_dict|length == 0 %}
+                    {% include "../../warn/table_no_results.html" %}
+                {% else %}
+                    {% for script_name, script_ts in script_dict.items %}
+                        <tr>
+                            <td>
+                                {{ script_name }}
+                            </td>
+                            <td>
+                                {{ script_ts }}
+                            </td>
+                            <td>
+                                <form style="display:inline" method="post" action="/system/script/delete/">
+                                    {% csrf_token %}
+                                    {% if request.user|authorized_to_write %}
+                                        <input type="submit" value="Delete" class="btn btn-danger"/>
+                                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                        <input type="hidden" name="script_type" value="{{ script_type }}" />
+                                        <input type="hidden" name="script_name" value="{{ script_name }}" />
+                                    {% else %}
+                                        <input type="submit" value="Delete" class="btn btn-danger" disabled/>
+                                    {% endif %}
+                                </form>
+                                <form style="display:inline" method="get" action="/system/script/show/">
                                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                                     <input type="hidden" name="script_type" value="{{ script_type }}" />
                                     <input type="hidden" name="script_name" value="{{ script_name }}" />
-                                {% else %}
-                                    <input type="submit" value="Delete" class="btn btn-danger" disabled/>
-                                {% endif %}
-                            </form>
-                            <form style="display:inline" method="get" action="/system/script/show/">
-                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                                <input type="hidden" name="script_type" value="{{ script_type }}" />
-                                <input type="hidden" name="script_name" value="{{ script_name }}" />
-                                <input type="submit" value="Show content" class="btn btn-info"/>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            {% endif %}
-            <tr>
-                <td colspan="100%">
-                    <form style="display:inline" method="get" action="/system/script/change/">
-                        <input type="submit" value="Upload" class="btn btn-primary"/>
-                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                        <input type="hidden" name="script_type" value="{{ script_type }}" />
-                    </form>
-                </td>
-            </tr>
-        </table>
+                                    <input type="submit" value="Show content" class="btn btn-info"/>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+                <tr>
+                    <td colspan="100%">
+                        <form style="display:inline" method="get" action="/system/script/change/">
+                            <input type="submit" value="Upload" class="btn btn-primary"/>
+                            <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                            <input type="hidden" name="script_type" value="{{ script_type }}" />
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </div>
         <small>
             <i>
                 Current script directory: '{{ script_dir }}'

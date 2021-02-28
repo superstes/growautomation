@@ -152,9 +152,13 @@ def get_device_parent_setting(child_obj, setting: str):
 def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
     if type(dt_str) != str:
         return None
+    try:
+        _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
+        ts_w_tz = add_timezone(request, datetime_obj=_ts_wo_tz)
+        return ts_w_tz
 
-    _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
-    return add_timezone(request, datetime_obj=_ts_wo_tz)
+    except ValueError:
+        return None
 
 
 def get_form_prefill(request):

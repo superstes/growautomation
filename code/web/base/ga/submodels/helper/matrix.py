@@ -14,14 +14,11 @@ class Matrix:
             self.matrix = self._json_input(matrix)
 
     def set(self, xy_data: dict, set_value: int) -> bool:
+        """ Adds data to the matrix if it is valid """
         if self._valid_xy_data(xy_data=xy_data):
             free, used_list = self.check(xy_data=xy_data)
-            if free:
-                if self._set_fields(xy_data=xy_data, set_value=set_value):
-                    return True
-
-                else:
-                    return False
+            if free or set_value == 0:
+                return self._set_fields(xy_data=xy_data, set_value=set_value)
 
             else:
                 # print("unable to set field '%s' since the following fields are already present: '%s'" % (set_value, used_list))
@@ -32,6 +29,7 @@ class Matrix:
             return False
 
     def check(self, xy_data: dict) -> tuple:
+        """ Checks if provided area is empty or in use """
         if self._valid_xy_data(xy_data=xy_data):
             free = True
             used_list = []
@@ -48,10 +46,36 @@ class Matrix:
 
             return free, used_list
 
+        # log error or whatever
         return False, []
 
-    def get(self):
+    def get(self) -> str:
         return self._json_output(self.matrix)
+
+    def free(self, xy_data: dict, used: bool = False, both: bool = False) -> (list, tuple):
+        """ Checks dashboard matrix for unused/used/or both positions in the provided area """
+        free_list = []
+        used_list = []
+
+        for y in range(xy_data['y0'], xy_data['y1'] + 1):
+            _row = self.matrix[y - 1]
+            for x in range(xy_data['x0'], xy_data['x1'] + 1):
+                _col = _row[x - 1]
+
+                if _col == 0:
+                    free_list.append({'x': x, 'y': y})
+
+                elif _col != 0:
+                    used_list.append({'x': x, 'y': y, 'value': _col})
+
+        if both:
+            return free_list, used_list
+
+        elif used:
+            return used_list
+
+        else:
+            return free_list
 
     @staticmethod
     def _json_input(matrix: str) -> list:
@@ -61,7 +85,7 @@ class Matrix:
     def _json_output(matrix: list) -> str:
         return json_dumps(matrix)
 
-    def _set_fields(self, xy_data: dict, set_value: int):
+    def _set_fields(self, xy_data: dict, set_value: int) -> bool:
         _matrix = self.matrix.copy()
         for y in range(len(_matrix)):
             if y in range(xy_data['y0'] - 1, xy_data['y1']):
@@ -69,6 +93,7 @@ class Matrix:
                     _matrix[y][x - 1] = set_value
 
         if len(self._json_output(_matrix)) > self.MAX_JSON_LEN:
+            # log error or whatever
             return False
 
         else:
@@ -88,9 +113,8 @@ class Matrix:
         return matrix
 
     @staticmethod
-    def _valid_xy_data(xy_data: dict):
+    def _valid_xy_data(xy_data: dict) -> bool:
         valid = True
-
         must_have = ['y0', 'y1', 'x0', 'x1']
 
         for field in must_have:

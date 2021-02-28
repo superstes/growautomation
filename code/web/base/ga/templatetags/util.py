@@ -225,3 +225,19 @@ def request_getlist(request, parameter: str) -> list:
         return request.GET.getlist(parameter)
     else:
         return []
+
+
+@register.filter
+def percentage(amount: int) -> float:
+    if type(amount) != int:
+        return 100
+
+    return 100 / amount
+
+
+@register.filter
+def range_list(number: int) -> list:
+    if type(number) != int:
+        return []
+
+    return list(range(1, number + 1))

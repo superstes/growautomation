@@ -3,13 +3,6 @@
     text-transform: uppercase;
 }
 
-@media only screen and (max-width: 991px) {
-    .ga-nav-main {
-        font-weight: bold;
-        text-transform: uppercase;
-    }
-}
-
 .ga-nav-main-a {
     font-weight: normal;
     text-transform: none;
@@ -55,13 +48,7 @@
 .ga-chart-main {
     height: 45vh;
     width: 90vw;
-}
-
-@media only screen and (max-width: 600px) {
-    .ga-chart-main {
-    height: 35vh;
-    width: 90vw;
-    }
+    margin: 3vh auto;
 }
 
 .help-block {
@@ -81,4 +68,29 @@ form .error-msg {
 .ga-img-float {
     width: 85%;
     max-width: 650px;
+}
+
+.ga-db-preview {
+    display: grid;
+    grid-template-rows: 5vw;
+    grid-gap: 5px;
+    width: 98%;
+    max-height: 70vh;
+    min-height: 15vh;
+    margin: 3vh auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #343a40;
+    border-width: 3px;
+    background-color: #d9e0d7;
+}
+
+.ga-db-preview > div {
+    text-align: center;
+}
+
+.ga-dbp {
+    grid-area: used;
 }

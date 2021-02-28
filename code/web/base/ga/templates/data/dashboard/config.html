@@ -1,0 +1,193 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block extrahead %}
+    {% include "../tmpl/chart_head.html" %}
+{% endblock %}
+{% load bootstrap_tags %}
+{% block content %}
+    {% set_var db_dict|get_item:'list' as object_list %}
+    {% set_var db_dict|get_item:'id' as selected %}
+    {% set_var db_dict|get_item:'obj' as dashboard %}
+    <h1>Configure Dashboard</h1>
+    <br><hr><br>
+    {% if status is not None and form_error is None %}
+        <div class="alert alert-success">
+            <strong>{{ status|title }} dashboard</strong>
+        </div>
+        <br><hr><br>
+    {% endif %}
+    {% include "../../error/form.html" %}
+    {% if action != 'create' and object_list|length != 0 %}
+        <form method="get">
+            <label for="selected">Existing dashboard object</label>
+            <select class="form-control" id="selected" name="selected" >
+                {% if action == 'show' %}
+                    <option value="---------">---------</option>
+                {% endif %}
+                {% for option in object_list %}
+                    {% if option.id == selected %}
+                        <option selected value="{{ option.id }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option.id }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <br>
+            <input type="hidden" name="do" value="{{ action }}" />
+            <input type="submit" value="Select" class="btn btn-primary">
+        </form>
+        <br><hr><br>
+    {% elif action != 'create' %}
+        <div class="alert alert-warning">
+            <strong>No existing dashboard object found</strong>
+        </div>
+    {% endif %}
+    {% if selected is None and action != 'create' %}
+        {% if object_list|length != 0 %}
+            <br>
+            <div class="alert alert-info">
+                <strong>Choose a chart object</strong>
+            </div>
+        {% endif %}
+    {% elif action != 'create' %}
+        <h2>
+            Preview
+        </h2>
+        <div class="ga-db-preview"  style="
+        grid-template-columns: repeat({{ dashboard|get_item:'columns' }}, 1fr);
+        grid-template-rows: repeat({{ dashboard|get_item:'rows' }}, 5vw);
+        grid-template-areas: {{ grid_areas }};
+        ">
+            {% for position_obj in used_positions %}
+                <div class="ga-dbp" style="grid-area: ga_dbp_{{ position_obj.id }};">
+                    <canvas id="ga_dbp_{{ position_obj.id }}_chart"></canvas>
+                    <div id="ga_dbp_{{ position_obj.id }}_warn" style="display: none;">
+                        {% include "../../warn/no_results.html" %}
+                    </div>
+                    <div id="ga_dbp_{{ position_obj.id }}_error" style="display: none;">
+                        {% include "../../error/no_results.html" %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <br><hr><br>
+    {% endif %}
+    {% if selected is not None or action == 'create' %}
+        <h2>
+            Options
+        </h2>
+        <form method="post">
+            {{ db_dict|get_item:'form'|as_bootstrap }}
+            {% include "../tmpl/chart_actions.html" %}
+            <input type="hidden" name="selected" value="{{ selected }}">
+            {% csrf_token %}
+        </form>
+        <br><hr>
+    {% endif %}
+    {% if selected is not None and action != 'create' %}
+    <br>
+    <h2>
+        Charts
+    </h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    NAME
+                </th>
+                <th>
+                    DESCRIPTION
+                </th>
+                <th>
+                    BEGIN
+                </th>
+                <th>
+                    END
+                </th>
+                <th>
+                    ACTION
+                </th>
+            </tr>
+            {% if position_list|length == 0 %}
+                {% include "../../warn/table_no_results.html" %}
+            {% else %}
+                {% for position in position_list %}
+                    {% if position.dashboard.id == selected %}
+                        <tr>
+                            <td>
+                                {{ position.element.name }}
+                            </td>
+                            <td>
+                                {{ position.element.description }}
+                            </td>
+                            <td>
+                                Row {{ position.y0 }} | Col {{ position.x0 }}
+                            </td>
+                            <td>
+                                Row {{ position.y1 }} | Col {{ position.x1 }}
+                            </td>
+                            <td>
+                                <form style="display:inline" method="post" action="/data/dashboard/config/dp">
+                                    {% csrf_token %}
+                                    {% if request.user|authorized_to_write %}
+                                        <input type="submit" value="Remove" class="btn btn-danger"/>
+                                    {% else %}
+                                        <input type="submit" value="Remove" class="btn btn-danger" disabled/>
+                                    {% endif %}
+                                    <input type="hidden" name="selected" value="{{ position.id }}" />
+                                    <input type="hidden" name="dashboard" value="{{ selected }}" />
+                                    <input type="hidden" name="do" value="delete" />
+                                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                </form>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            <tr>
+                <td colspan="100%">
+                    <form style="display:inline" method="post" action="/data/dashboard/config/dp">
+                        {% csrf_token %}
+                        <label for="dp_element">
+                            Chart Element
+                            <select class="form-control" name="element" id="dp_element">
+                                {% for element in dbe_list %}
+                                    <option value="{{ element.id }}">{{ element.name }} | {{ element.description }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label for="dp_begin">
+                            Begin coordinates
+                            <select class="form-control" name="begin" id="dp_begin">
+                                {% for position in free_positions %}
+                                    <option value="{{ position }}">Row {{ position.y }} | Col {{ position.x }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label for="dp_end">
+                            End coordinates
+                            <select class="form-control" name="end" id="dp_end">
+                                {% for position in free_positions %}
+                                    <option value="{{ position }}">Row {{ position.y }} | Col {{ position.x }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        {% if request.user|authorized_to_write %}
+                            <input type="submit" value="Add" class="btn btn-success"/>
+                        {% else %}
+                            <input type="submit" value="Add" class="btn btn-success" disabled/>
+                        {% endif %}
+                        <input type="hidden" name="do" value="create" />
+                        <input type="hidden" name="dashboard" value="{{ selected }}" />
+                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                    </form>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+    {% include "../tmpl/chartjs_info.html" %}
+    <hr>
+    <a href="/data/dashboard/" class="btn btn-primary">Back to the Dashboard</a>
+    {% include "./js.html" %}
+{% endblock %}

@@ -1,11 +1,12 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect
+from ast import literal_eval
 
-from ....user import authorized_to_read, authorized_to_write
 from ....config.nav import nav_dict
 from ....forms import DashboardModel, DashboardPositionModel, DashboardForm, DashboardPositionForm, ChartDashboardModel, DashboardDefaultModel
-from ....utils.helper import get_instance_from_id
+from ....utils.helper import set_key, get_instance_from_id
 from ..helper import get_obj_dict, get_param_if_ok
+from ....utils.main import test_read, test_write
+from ....submodels.helper.matrix import Matrix
 
 
 class DashboardView:
@@ -17,7 +18,7 @@ class DashboardView:
         self.form = DashboardForm
 
     def go(self):
-        self.test_read(self.request)
+        test_read(self.request)
         if self.request.method == 'POST':
             return self.post()
 
@@ -27,7 +28,7 @@ class DashboardView:
     def get(self):
         data = self.request.GET
         action = get_param_if_ok(data, search='do', choices=['show', 'create'], fallback='show', lower=True)
-        db_dict = get_obj_dict(request=self.request, typ_model=self.model, typ_form=self.form, action=action, selected='db')
+        db_dict = get_obj_dict(request=self.request, typ_model=self.model, typ_form=self.form, selected='db')
         dbe_list = ChartDashboardModel.objects.all()
 
         default_db = None
@@ -43,18 +44,168 @@ class DashboardView:
         })
 
     def post(self):
-        self.test_write(self.request)
+        test_write(self.request)
         data = self.request.POST
         action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)
 
 
+class DashboardConfigView:
+    def __init__(self, request):
+        self.request = request
+        self.current_path = request.META['PATH_INFO']
+        self.html_template = "data/dashboard/config.html"
+        self.model = DashboardModel
+        self.form = DashboardForm
+        self.root_path = 'data/dashboard/config'
+
+    def go(self, info: str = None):
+        test_read(self.request)
+        if self.request.method == 'POST':
+            return self.post(info=info)
+
+        else:
+            if info is not None:
+                redirect(f'/{self.root_path}/?form_error={info}+does+only+support+POST+method')
+
+            return self.get()
+
+    def get(self):
+        data = self.request.GET
+        action = get_param_if_ok(data, search='do', choices=['show', 'create'], fallback='show', lower=True)
+        dbe_list = ChartDashboardModel.objects.all()
+        position_list = DashboardPositionModel.objects.all()
+        db_dict, default_db = self._get_config()
+        status = get_param_if_ok(self.request.GET, search='status', choices=['updated', 'created', 'deleted'])
+        free_positions = []
+        used_positions = {}
+        selected_dbe_ids = []
+        form_error = None
+        grid_areas = ''
+
+        if set_key(data, 'form_error'):
+            form_error = data['form_error']
+
+        if db_dict['obj'] is not None:
+            _obj = db_dict['obj']
+            matrix = Matrix(matrix=_obj.matrix)
+            free_positions, position_used = matrix.free({'y0': 1, 'y1': _obj.rows, 'x0': 1, 'x1': _obj.columns}, used=True, both=True)
+
+            """ Config for css matrix-grid """
+            grid_item_free = '.'
+            grid_item_used_tmpl = "ga_dbp_%s"
+            grid_areas = ''
+            for row in range(1, db_dict['obj'].rows + 1):
+                _cols = ["'"]
+                for col in range(1, db_dict['obj'].columns + 1):
+                    if {'y': row, 'x': col} in free_positions:
+                        _cols.append(grid_item_free)
+
+                    else:
+                        try:
+                            dbp_id = [dbe['value'] for dbe in position_used if dbe['x'] == col and dbe['y'] == row][0]
+                            _cols.append(grid_item_used_tmpl % dbp_id)
+                            dbp_obj = get_instance_from_id(DashboardPositionModel, dbp_id)
+
+                            if dbp_obj is not None:
+                                used_positions[dbp_obj] = 'NonDuplicationWA'
+
+                        except IndexError:
+                            continue
+
+                _cols.append("' ")
+                grid_areas = grid_areas + ' '.join(_cols)
+
+        return render(self.request, self.html_template, context={
+            'request': self.request, 'nav_dict': nav_dict, 'action': action, 'db_dict': db_dict, 'dbe_list': dbe_list, 'default_db': default_db,
+            'status': status, 'position_list': position_list, 'selected_dbe_ids': selected_dbe_ids, 'free_positions': free_positions,
+            'form_error': form_error, 'grid_areas': grid_areas, 'used_positions': list(used_positions.keys()),
+        })
+
+    def post(self, info: str = None):
+        test_write(self.request)
+        data = self.request.POST
+        action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)
+        db_dict, default_db = self._get_config()
+
+        if info == 'dp':
+            db_dict = get_obj_dict(request=self.request, typ_model=self.model, typ_form=self.form, selected='dashboard')
+            redirect_url = f"/{self.root_path}/?status=updated&do=show&selected={db_dict['id']}"
+            post_form = DashboardPositionForm
+
+            if action == 'create':
+                xy_begin = literal_eval(data['begin'])
+                xy_end = literal_eval(data['end'])
+                data = data.copy()
+                data['x0'] = xy_begin['x']
+                data['y0'] = xy_begin['y']
+                data['x1'] = xy_end['x']
+                data['y1'] = xy_end['y']
+
+            else:
+                db_dict = get_obj_dict(request=self.request, typ_model=DashboardPositionModel, typ_form=post_form, selected='selected')
+
+        else:
+            post_form = self.form
+            redirect_url = f'/{self.root_path}/?status={action}d&do=show'
+
+        if db_dict['id'] is not None and action != 'delete':
+            print('wrong')
+            redirect_url = redirect_url + f"&selected={db_dict['id']}"
+
+        redirect_url = self._remove_form_error(url=redirect_url)
+
+        if action in ['delete', 'update'] and db_dict['obj'] is None:
+            action = 'create'
+
+        if action in ['update', 'create']:
+
+            if action == 'update':
+                form = post_form(data, instance=db_dict['obj'])
+
+            else:
+                form = post_form(data)
+
+            if form.is_valid():
+                _obj = form.save()
+
+                if post_form == self.form and redirect_url.find('selected') == -1:
+                    redirect_url = redirect_url + f"&selected={_obj.id}"
+
+                return redirect(redirect_url)
+
+            else:
+                # log error or whatever
+                error = str(list(form.errors.as_data().values())[0][0]).replace("['", '').replace("']", '')
+                return redirect(self._add_form_error(url=redirect_url, error=error))
+
+        elif action == 'delete':
+            db_dict['obj'].delete()
+            return redirect(redirect_url)
+
+        return render(self.request, self.html_template, context={
+            'request': self.request, 'nav_dict': nav_dict, 'action': action, 'db_dict': db_dict, 'dbe_list': db_dict['list'], 'default_db': default_db,
+        })
+
+    def _get_config(self) -> tuple:
+        db_dict = get_obj_dict(request=self.request, typ_model=self.model, typ_form=self.form, selected='selected')
+
+        default_db = None
+        for default in DashboardDefaultModel.objects.all():
+            if default.user == self.request.user:
+                default_db = default.dashboard
+
+        return db_dict, default_db
+
+    def _add_form_error(self, url: str, error: str = 'Failed+to+save+form'):
+        if set_key(self.request.GET, 'form_error'):
+            return url
+
+        else:
+            if url.find('?') == -1:
+                return "%s?form_error=%s" % (url, error)
+
+            return "%s&form_error=%s" % (url, error)
 
     @staticmethod
-    @user_passes_test(authorized_to_read, login_url='/denied/')
-    def test_read(request):
-        pass
-
-    @staticmethod
-    @user_passes_test(authorized_to_write, login_url='/denied/')
-    def test_write(request):
-        pass
+    def _remove_form_error(url: str, error: str = 'Failed+to+save+form'):
+        return url.replace("&form_error=%s" % error, '')

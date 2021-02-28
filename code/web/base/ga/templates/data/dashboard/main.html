@@ -2,14 +2,64 @@
 {% load util %}
 {% load bootstrap_tags %}
 {% block content %}
+    {% set_var db_dict|get_item:'list' as object_list %}
+    {% set_var db_dict|get_item:'id' as selected %}
+    {% set_var db_dict|get_item:'obj' as dashboard %}
     <h1>Dashboard</h1>
     <br><hr><br>
     <div class="alert alert-warning">
         WORK IN PROGRESS!!
     </div>
-    {% if action == 'create' %}
-        {% include "./create.html" %}
+    <a href='/data/dashboard/config/?do=create' class="btn btn-primary">Create</a>
+    {% if db_dict|get_item:'list'|length != 0 %}
+        <a href='/data/dashboard/config/?do=show' class="btn btn-primary">Edit</a>
     {% else %}
-        {% include "./show.html" %}
+        <button class="btn btn-primary" disabled>Edit</button>
+    {% endif %}
+    <br><hr><br>
+    <h2>Select</h2>
+    {% if db_dict|get_item:'list'|length == 0 %}
+        <div class="alert alert-info">
+            <strong>No existing dashboards found</strong>
+        </div>
+    {% else %}
+        <form method="get">
+            <label for="selected">
+                Existing dashboard object
+                <select class="form-control" id="selected" name="selected" >
+                    <option value="---------">---------</option>
+                    {% for option in object_list %}
+                        {% if option.id == selected %}
+                            <option selected value="{{ option.id }}">{{ option }}</option>
+                        {% else %}
+                            <option value="{{ option.id }}">{{ option }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+            <input type="hidden" name="do" value="show" />
+            <input type="submit" value="Select" class="btn btn-primary">
+        </form>
+        <form method="get">
+            <label>
+                Default Dashboard
+                <select class="form-control" id="default" name="selected" >
+                    <option value="---------">---------</option>
+                    {% for option in object_list %}
+                        {% if option.id == selected %}
+                            <option selected value="{{ option.id }}">{{ option }}</option>
+                        {% else %}
+                            <option value="{{ option.id }}">{{ option }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+            <input type="hidden" name="do" value="show" />
+            {% if request.user|authorized_to_write %}
+                <input type="submit" value="Save" class="btn btn-success">
+            {% else %}
+                <input type="submit" value="Save" class="btn btn-success" disabled>
+            {% endif %}
+        </form>
     {% endif %}
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMemberModel, BareModel
@@ -119,12 +119,11 @@ class DashboardModel(BaseModel):
     max_rows = 100
     max_columns = 30
     field_list = [
-        'name', 'description', 'rows', 'columns', 'default',
+        'name', 'description', 'rows', 'columns',  # 'matrix' -> hidden in form
     ]
 
     rows = models.PositiveSmallIntegerField(default=4, validators=[MaxValueValidator(max_rows)])
     columns = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(max_columns)])
-    default = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     matrix = models.TextField(
         max_length=Matrix.MAX_JSON_LEN,
         default=Matrix(y=max_rows, x=max_columns).get()
@@ -144,13 +143,18 @@ class DashboardPositionModel(BareModel):
     x0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(DashboardModel.max_columns - 1)])
     x1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(DashboardModel.max_columns)])
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['dashboard', 'y0'], name='dpm_uc_dashboard_y0'),
-            models.UniqueConstraint(fields=['dashboard', 'y1'], name='dpm_uc_dashboard_y1'),
-            models.UniqueConstraint(fields=['dashboard', 'x0'], name='dpm_uc_dashboard_x0'),
-            models.UniqueConstraint(fields=['dashboard', 'x1'], name='dpm_uc_dashboard_x1'),
-        ]
+
+@receiver(post_delete, sender=DashboardPositionModel)
+def dpm_post_delete(sender, instance, **kwargs):
+    xy_data = {'y0': instance.y0, 'y1': instance.y1, 'x0': instance.x0, 'x1': instance.x1}
+    m = Matrix(matrix=instance.dashboard.matrix)
+
+    if m.set(xy_data=xy_data, set_value=0):
+        instance.dashboard.matrix = m.get()
+        instance.dashboard.save()
+
+    else:
+        print('Unable to update the dashboard matrix')
 
 
 @receiver(post_save, sender=DashboardPositionModel)
@@ -160,6 +164,7 @@ def dpm_post_save(sender, instance, **kwargs):
 
     if m.set(xy_data=xy_data, set_value=instance.id):
         instance.dashboard.matrix = m.get()
+        instance.dashboard.save()
 
     else:
         print('Unable to update the dashboard matrix')

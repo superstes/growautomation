@@ -32,43 +32,45 @@
     <h2><strong>Data</strong></h2>
     <br>
     {% if input_device is not None %}
-        <table class="table table-striped">
-            {% if data_list|length == 0 %}
-                {% include "../../warn/table_no_results.html" %}
-            {% else %}
-                <tr>
-                    <th>
-                        Timestamp
-                    </th>
-                    <th>
-                        Data
-                    </th>
-                    <th>
-                        Data type
-                    </th>
-                </tr>
-                {% for data in data_list %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                {% if data_list|length == 0 %}
+                    {% include "../../warn/table_no_results.html" %}
+                {% else %}
                     <tr>
-                        <td>
-                            {{ data.created|format_ts }}
-                        </td>
-                        <td>
-                            {{ data.data }}
-                            {% if data_unit is not None %}
-                                {{ data_unit }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if data_type is None %}
-                                ---
-                            {% else %}
-                                {{ data_type }}
-                            {% endif %}
-                        </td>
+                        <th>
+                            Timestamp
+                        </th>
+                        <th>
+                            Data
+                        </th>
+                        <th>
+                            Data type
+                        </th>
                     </tr>
-                {% endfor %}
-            {% endif %}
-        </table>
+                    {% for data in data_list %}
+                        <tr>
+                            <td>
+                                {{ data.created|format_ts }}
+                            </td>
+                            <td>
+                                {{ data.data }}
+                                {% if data_unit is not None %}
+                                    {{ data_unit }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data_type is None %}
+                                    ---
+                                {% else %}
+                                    {{ data_type }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </table>
+        </div>
     {% else %}
         <div class="alert alert-info">Select a input device to see more</div>
     {% endif %}

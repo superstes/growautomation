@@ -1,0 +1,28 @@
+@media only screen and (max-width: 991px) {
+    .ga-nav-main {
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .ga-chart-main {
+        height: 35vh;
+        width: 90vw;
+    }
+
+    .ga-text-responsive, .ga-text-responsive .btn {
+        font-size: 0.8rem;
+    }
+
+    .ga-db-row {
+        height: 15vw;
+    }
+
+}
+
+@include media-breakpoint-between(xs,sm){
+  .btn {
+      @include button-size($btn-padding-y-sm, $btn-padding-x-sm, $font-size-sm, $btn-border-radius-sm);
+  }
+}

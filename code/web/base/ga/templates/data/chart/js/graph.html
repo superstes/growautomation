@@ -13,13 +13,15 @@
     var options_json = urlParams.get('options_json');
     var chart_unit = urlParams.get('unit');
 
+    var random_datapoints = 75;
+
     // get random times between seven days ago and now
     function randomDate(start, end) {
         return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     }
     var seven_days_ago = new Date();
     seven_days_ago.setDate(seven_days_ago.getDate()-7);
-    var rand_time = Array.from({length: 150}, () => randomDate(seven_days_ago, new Date()));
+    var rand_time = Array.from({length: random_datapoints}, () => randomDate(seven_days_ago, new Date()));
     rand_time.sort(function(a,b){return a.getTime() - b.getTime()});
 
     // get random data points
@@ -30,7 +32,7 @@
         var min_rand_data = chart_y_max_suggest * 0.2;
         var max_rand_data = chart_y_max_suggest;
     }
-    var rand_data = Array.from({length: 150}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
+    var rand_data = Array.from({length: random_datapoints}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
 
     var ga_config = {
         "device_id": 1,

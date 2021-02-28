@@ -62,25 +62,27 @@ def get_param_if_ok(parameters, search: str, choices: list = None, no_choices: l
         return fallback
 
 
-def get_obj_dict(request, typ_model, typ_form, action: str, selected: str = None, selected_id: int = None) -> dict:
+def get_obj_dict(request, typ_model, typ_form, selected: str = None, selected_id: int = None) -> dict:
+    if request.method == 'GET':
+        data = request.GET
+    else:
+        data = request.POST
+
     if selected_id is not None:
         _id = selected_id
-    else:
-        _id = get_param_if_ok(request.GET, search=selected, no_choices=['---------'], format_as=int)
 
-    _obj = None
+    else:
+        _id = get_param_if_ok(data, search=selected, no_choices=['---------'], format_as=int)
+
     obj_list = typ_model.objects.all()
 
-    if _id and action == 'show':
-        try:
-            _obj = [obj for obj in obj_list if obj.id == int(_id)][0]
-        except IndexError:
-            pass
-
-    if _obj:
+    try:
+        _obj = [obj for obj in obj_list if obj.id == int(_id)][0]
         form = typ_form(instance=_obj)
-    else:
-        form = typ_form(request.GET, initial=get_form_prefill(request))
+
+    except (IndexError, TypeError):
+        _obj = None
+        form = typ_form(data, initial=get_form_prefill(request))
 
     return {'id': _id, 'obj': _obj, 'form': form, 'list': obj_list}
 
