@@ -122,7 +122,7 @@ HELP_DICT = {
     'interval': 'Custom interval in which to execute system task',
     'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks',
     'web_warn': 'If the webinterface should hide warnings',
-    'chart_type': 'Chart.js chart-type',
+    'chart_type': 'Chart.js chart-type => DISCLAIMOR: The GA config was only optimized for line charts',
     'time_format_min': 'Time format if the range is shown in minutes [must be valid moment.js format]',
     'time_format_hour': 'Time format if the range is shown in hours [must be valid moment.js format]',
     'time_format_day': 'Time format if the range is shown in days [must be valid moment.js format]',
@@ -307,6 +307,10 @@ class DashboardForm(BaseForm):
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT
+
+    def clean(self):
+        data = super().clean()
+        # todo: if rows/columns get changed -> need to validate that removed ones are empty
 
 
 class DashboardPositionForm(BaseForm):

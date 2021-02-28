@@ -71,20 +71,25 @@ form .error-msg {
 }
 
 .ga-db-preview {
-    display: grid;
-    grid-template-rows: 5vw;
-    grid-gap: 5px;
     width: 98%;
     max-height: 70vh;
     min-height: 15vh;
     margin: 3vh auto;
-    overflow-y: scroll;
-    overflow-x: hidden;
     border-style: solid;
     border-radius: 5px;
     border-color: #343a40;
     border-width: 3px;
-    background-color: #d9e0d7;
+    background-color: white;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.ga-db-preview-grid {
+    margin: 1vw;
+    display: grid;
+    grid-auto-rows: 5vw;
+    grid-auto-columns: 1fr;
+    grid-gap: 5px;
 }
 
 .ga-db-preview > div {
@@ -92,5 +97,67 @@ form .error-msg {
 }
 
 .ga-dbp {
-    grid-area: used;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #343a40;
+    border-width: 2px;
+    background-color: white;
+}
+
+.ga-dbp-preview-filler {
+    background-color: rgba(21, 172, 64, 0.1);
+    padding-top: 2vw;
+}
+
+.ga-dbp-chart {
+    display: block;
+    max-height: 80%;
+    overflow: hidden;
+}
+
+.ga-dbp-text {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+}
+
+.ga-dbp-title {
+    display: block;
+    line-height: 0;
+    padding-top: 10px;
+}
+
+.ga-dbp-description {
+    display: block;
+    font-style: italic;
+    font-size: x-small;
+    line-height: 0;
+    padding-bottom: 0.1px;
+}
+
+.ga-sideinfo {
+    font-style: italic;
+    font-size: x-small;
+}
+
+.ga-form-inline {
+    display: inline;
+}
+
+.ga-form-inline-right {
+    float: right;
+}
+
+.ga-db {
+    width: 100%;
+}
+
+.ga-db-grid {
+    display: grid;
+    grid-auto-rows: 5vw;
+    grid-auto-columns: 1fr;
+    grid-gap: 5px;
 }

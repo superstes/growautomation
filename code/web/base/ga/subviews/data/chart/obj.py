@@ -4,7 +4,7 @@ from ....config.nav import nav_dict
 from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill
 from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
 from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
-from ....utils.main import test_read, test_write
+from ....utils.main import test_read, test_write, error_formatter
 
 
 class Chart:
@@ -143,17 +143,15 @@ class Chart:
             if form.is_valid():
                 _obj = form.save()
 
-                if self.html_template == 'dbe' and action == 'create':
+                if self.html_template == 'dbe' and action == 'create' and redirect_url.find('selected') == -1:
                     redirect_url = f'/{self.root_path}/dbe/?selected={_obj.id}&do=show'
 
                 return redirect(redirect_url)
 
             else:
                 # log error or whatever
-                try:
-                    error = str(list(form.errors.as_data().values())[0][0]).replace("['", '').replace("']", '')
-                except IndexError:
-                    error = 'Failed+to+save+form'
+                error = error_formatter(form.errors)
+
                 return redirect(self._add_form_error(url=redirect_url, error=error))
 
         elif action == 'delete':

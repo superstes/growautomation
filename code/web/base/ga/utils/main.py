@@ -166,3 +166,11 @@ def test_read(request):
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def test_write(request):
     pass
+
+
+def error_formatter(form_error, fallback: str = 'Failed to save form') -> str:
+    try:
+        return str(list(form_error.as_data().values())[0][0]).replace("['", '').replace("']", '')
+
+    except IndexError:
+        return fallback

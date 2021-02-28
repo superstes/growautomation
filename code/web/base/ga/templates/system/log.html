@@ -71,11 +71,11 @@
         {% endif %}
     {% endif %}
     {% if log_type == 'Growautomation' and log_file is not None %}
-        <small>
-            <i>
+        <div class="ga-sideinfo">
+            <p>
                 Current log file: '{{ log_file }}'
-            </i>
-        </small>
+            </p>
+        </div>
     {% endif %}
 
     <br>

@@ -4,15 +4,6 @@ from ...utils.main import get_as_string
 from ...utils.helper import get_form_prefill, empty_key, get_url_divider, set_key
 
 
-def get_existing_params_dict(source: dict) -> dict:
-    existing_params = {}
-
-    for param, value in source.items():
-        existing_params[param] = value
-
-    return existing_params
-
-
 def add_default_chart_options(request, defaults: dict, redirect_path: str) -> (None, redirect):
     missing_params = {}
 
@@ -25,7 +16,7 @@ def add_default_chart_options(request, defaults: dict, redirect_path: str) -> (N
 
     divider = get_url_divider(redirect_path)
 
-    return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**get_existing_params_dict(request.GET), **missing_params})))
+    return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**{key: value for key, value in request.GET.items()}, **missing_params})))
 
 
 def get_param_if_ok(parameters, search: str, choices: list = None, no_choices: list = None, format_as: (str, int, list, dict, bool) = str, fallback=None,
@@ -112,6 +103,6 @@ def add_graph_params_to_url(request, chart_dict: dict, redirect_path: str) -> (N
             return None
 
         divider = get_url_divider(redirect_path)
-        return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**missing_params, **get_existing_params_dict(existing_params)})))
+        return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**missing_params, **existing_params})))
 
     return None

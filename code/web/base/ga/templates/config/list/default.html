@@ -30,16 +30,16 @@
                 {{ data.enabled }}
             </td>
             <td>
-                <form method="get" style="display:inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
+                <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
                     <input type="submit" value="More info" class="btn btn-info"/>
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
-                <form method="get" style="display:inline" action="/config/update/{{ typ }}/{{ data.id }}">
+                <form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
                     <input type="submit" value="Change" class="btn btn-warning"/>
                     <input type="hidden" name="action" value="Update" />
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
-                <form style="display:inline" method="post" action="/config/delete/{{ typ }}/{{ data.id }}">
+                <form class="ga-form-inline" method="post" action="/config/delete/{{ typ }}/{{ data.id }}">
                     {% csrf_token %}
                     {% if request.user|authorized_to_write %}
                         <input type="submit" value="Delete" class="btn btn-danger"/>

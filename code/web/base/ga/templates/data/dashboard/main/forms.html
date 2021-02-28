@@ -1,0 +1,50 @@
+{% load util %}
+<form method="get" class="ga-form-inline" action="/data/dashboard">
+    <label for="action">
+        Action
+        <select class="form-control" id="action" name="do">
+            <option selected value="show">Show</option>
+            <option value="create">Create</option>
+            <option value="update">Edit</option>
+        </select>
+    </label>
+    <label for="selected">
+        Dashboard object
+        <select class="form-control" id="selected" name="selected" >
+            <option value="---------">---------</option>
+            {% for option in object_list %}
+                {% if option.id == selected %}
+                    <option selected value="{{ option.id }}">{{ option }}</option>
+                {% elif option.id == default %}
+                    <option selected value="{{ option.id }}">{{ option }}</option>
+                {% else %}
+                    <option value="{{ option.id }}">{{ option }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </label>
+    <input type="submit" value="Go" class="btn btn-primary">
+</form>
+<form method="post" class="ga-form-inline ga-form-inline-right">
+    <label>
+        Default Dashboard
+        <select class="form-control" name="dashboard">
+            <option value="---------">---------</option>
+            {% for option in object_list %}
+                {% if option.id == default %}
+                    <option selected value="{{ option.id }}">{{ option }}</option>
+                {% else %}
+                    <option value="{{ option.id }}">{{ option }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </label>
+    <input type="hidden" name="user" value="{{ request.user.id }}" />
+    <input type="hidden" name="default" value="1" />
+    {% if request.user|authorized_to_write %}
+        <input type="submit" value="Save" class="btn btn-success">
+    {% else %}
+        <input type="submit" value="Save" class="btn btn-success" disabled>
+    {% endif %}
+    {% csrf_token %}
+</form>

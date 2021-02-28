@@ -6,7 +6,7 @@
         <strong>Filter error: {{ filter_dict }}</strong>
     </div>
 {% else %}
-    <form style="display:inline" name="{{ value_dict|get_item:'obj' }}" method="post" >
+    <form class="ga-form-inline" name="{{ value_dict|get_item:'obj' }}" method="post" >
         {% csrf_token %}
         {% for typ, value_dict in filter_dict.items %}
             {% set_var value_dict|get_item:'dataset' as dataset %}
@@ -33,7 +33,7 @@
         <br>
         <input type="submit" value="Filter" class="btn btn-info">
     </form>
-    <form style="display:inline" action="/config/list/{{ typ }}/">
+    <form class="ga-form-inline" action="/config/list/{{ typ }}/">
         <input type="submit" value="Reset filter" class="btn btn-info"/>
     </form>
     <hr>

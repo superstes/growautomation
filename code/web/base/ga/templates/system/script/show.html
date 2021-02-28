@@ -12,11 +12,11 @@
 {{ script_content }}
         </pre>
     {% endif %}
-    <small>
-        <i>
+    <div class="ga-sideinfo">
+        <p>
             Current script: '{{ script_path }}'
-        </i>
-    </small>
+        </p>
+    </div>
     <br><br>
     <a href="{{ request|get_return_path }}" class="btn btn-info">Return</a>
 {% endblock %}

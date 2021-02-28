@@ -7,7 +7,7 @@
             {% endblock %}
             <tr>
                 <td colspan="100%">
-                    <form style="display:inline" method="get" action="/config/create/{{ typ }}/">
+                    <form class="ga-form-inline" method="get" action="/config/create/{{ typ }}/">
                         <input type="submit" value="Create" class="btn btn-success"/>
                         <input type="hidden" name="action" value="Create" />
                         <input type="hidden" name="return" value="{{ request.get_full_path }}" />

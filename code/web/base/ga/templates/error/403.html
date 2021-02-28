@@ -14,7 +14,7 @@
     </div>
     {% if not request|get_login_state %}
         <a href='{{ request|get_return_path }}' class="btn btn-info">Back</a>
-        <form action="/accounts/login/" style="display:inline">
+        <form action="/accounts/login/" class="ga-form-inline">
             <input type="submit" value="Login" class="btn btn-info"/>
         </form>
     {% endif %}

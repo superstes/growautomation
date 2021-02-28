@@ -1,0 +1,101 @@
+{% load util %}
+<br>
+<h2>
+    Charts
+</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tr>
+            <th>
+                NAME
+            </th>
+            <th>
+                DESCRIPTION
+            </th>
+            <th>
+                BEGIN
+            </th>
+            <th>
+                END
+            </th>
+            <th>
+                ACTION
+            </th>
+        </tr>
+        {% if position_list|length == 0 %}
+            {% include "../../../warn/table_no_results.html" %}
+        {% else %}
+            {% for position in position_list %}
+                {% if position.dashboard.id == selected %}
+                    <tr>
+                        <td>
+                            {{ position.element.name }}
+                        </td>
+                        <td>
+                            {{ position.element.description }}
+                        </td>
+                        <td>
+                            Row {{ position.y0 }} | Col {{ position.x0 }}
+                        </td>
+                        <td>
+                            Row {{ position.y1 }} | Col {{ position.x1 }}
+                        </td>
+                        <td>
+                            <form class="ga-form-inline" method="post" action="/data/dashboard/config/dp">
+                                {% csrf_token %}
+                                {% if request.user|authorized_to_write %}
+                                    <input type="submit" value="Remove" class="btn btn-danger"/>
+                                {% else %}
+                                    <input type="submit" value="Remove" class="btn btn-danger" disabled/>
+                                {% endif %}
+                                <input type="hidden" name="selected" value="{{ position.id }}" />
+                                <input type="hidden" name="dashboard" value="{{ selected }}" />
+                                <input type="hidden" name="do" value="delete" />
+                                <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                            </form>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        <tr>
+            <td colspan="100%">
+                <form class="ga-form-inline" method="post" action="/data/dashboard/config/dp">
+                    {% csrf_token %}
+                    <label for="dp_element">
+                        Chart Element
+                        <select class="form-control" name="element" id="dp_element">
+                            {% for element in dbe_list %}
+                                <option value="{{ element.id }}">{{ element.name }} | {{ element.description }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label for="dp_begin">
+                        Begin coordinates
+                        <select class="form-control" name="begin" id="dp_begin">
+                            {% for position in free_positions %}
+                                <option value="{{ position }}">Row {{ position.y }} | Col {{ position.x }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label for="dp_end">
+                        End coordinates
+                        <select class="form-control" name="end" id="dp_end">
+                            {% for position in free_positions %}
+                                <option value="{{ position }}">Row {{ position.y }} | Col {{ position.x }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    {% if request.user|authorized_to_write %}
+                        <input type="submit" value="Add" class="btn btn-success"/>
+                    {% else %}
+                        <input type="submit" value="Add" class="btn btn-success" disabled/>
+                    {% endif %}
+                    <input type="hidden" name="do" value="create" />
+                    <input type="hidden" name="dashboard" value="{{ selected }}" />
+                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>

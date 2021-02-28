@@ -62,7 +62,7 @@
             Actions
         </h3>
         <br>
-        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+        <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
             {% csrf_token %}
             {% if service_status != 'active' and request.user|authorized_to_write %}
                 <input type="submit" value="Start" class="btn btn-success"/>
@@ -72,7 +72,7 @@
             <input type="hidden" name="service_start" value="1" />
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
-        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+        <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
             {% csrf_token %}
             {% if service_status == 'active' and request.user|authorized_to_write %}
                 <input type="submit" value="Reload" class="btn btn-warning"/>
@@ -82,7 +82,7 @@
             <input type="hidden" name="service_reload" value="1" />
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
-        <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+        <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
             {% csrf_token %}
             {% if service_status == 'active' and request.user|authorized_to_write %}
                 <input type="submit" value="Restart" class="btn btn-warning"/>
@@ -93,7 +93,7 @@
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
         {% if service_name != 'Apache webserver' %}
-            <form style="display:inline" method="post" action="/system/service/?service_name={{ service_name }}">
+            <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
                 {% csrf_token %}
                 {% if service_status == 'active' and request.user|authorized_to_write %}
                     <input type="submit" value="Stop" class="btn btn-danger"/>

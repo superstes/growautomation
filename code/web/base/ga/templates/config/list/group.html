@@ -54,33 +54,33 @@
                     <td>
                         {% if member_view_active %}
                             {% if member_view_active == data.name %}
-                                <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                                <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
                                     <input type="submit" value="Hide members" class="btn btn-secondary"/>
                                 </form>
                             {% else %}
-                                <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                                <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
                                     <input type="submit" value="Show members" class="btn btn-info"/>
                                     <input type="hidden" name="list_member" value="{{ data.name }}" />
                                 </form>
                             {% endif %}
                         {% else %}
-                            <form method="get" style="display:inline" action="{{ request.REFERER }}">
+                            <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
                                 <input type="submit" value="Show members" class="btn btn-info"/>
                                 <input type="hidden" name="list_member" value="{{ data.name }}" />
                             </form>
                         {% endif %}
                     </td>
                     <td>
-                        <form method="get" style="display:inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
+                        <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
                             <input type="submit" value="More info" class="btn btn-info"/>
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
-                        <form method="get" style="display:inline" action="/config/update/{{ typ }}/{{ data.id }}">
+                        <form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
                             <input type="submit" value="Change" class="btn btn-warning"/>
                             <input type="hidden" name="action" value="Update" />
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
-                        <form method="post" style="display:inline" action="/config/delete/{{ typ }}/{{ data.id }}">
+                        <form method="post" class="ga-form-inline" action="/config/delete/{{ typ }}/{{ data.id }}">
                             {% csrf_token %}
                             {% if request.user|authorized_to_write %}
                                 <input type="submit" value="Delete" class="btn btn-danger" data-toggle="confirmation"/>

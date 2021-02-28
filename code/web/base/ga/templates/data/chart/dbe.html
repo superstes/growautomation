@@ -59,7 +59,7 @@
                                     {{ dataset_link.obj.description }}
                                 </td>
                                 <td>
-                                    <form style="display:inline" method="post" action="/data/chart/dbe/dataset">
+                                    <form class="ga-form-inline" method="post" action="/data/chart/dbe/dataset">
                                         {% csrf_token %}
                                         {% if request.user|authorized_to_write %}
                                             <input type="submit" value="Remove" class="btn btn-danger"/>
@@ -77,7 +77,7 @@
                 {% endif %}
                 <tr>
                     <td colspan="100%">
-                        <form style="display:inline" method="post" action="/data/chart/dbe/dataset">
+                        <form class="ga-form-inline" method="post" action="/data/chart/dbe/dataset">
                             {% csrf_token %}
                             <label>
                                 <select class="form-control" name="obj" >

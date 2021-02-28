@@ -19,16 +19,16 @@
             {{ member_obj|get_item:'enabled,---' }}
         </td>
         <td>
-            <form method="get" style="display:inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
+            <form method="get" class="ga-form-inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
                 <input type="submit" value="Detailed" class="btn btn-info"/>
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form method="get" style="display:inline" action="/config/update/{{ member_own_type }}/{{ member_obj.id }}">
+            <form method="get" class="ga-form-inline" action="/config/update/{{ member_own_type }}/{{ member_obj.id }}">
                 <input type="submit" value="Change" class="btn btn-warning"/>
                 <input type="hidden" name="action" value="Update" />
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form method="post" style="display:inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
+            <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
                 {% csrf_token %}
                 {% if request.user|authorized_to_write %}
                     <input type="submit" value="Remove" class="btn btn-danger"/>
@@ -37,7 +37,7 @@
                 {% endif %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form style="display:inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
+            <form class="ga-form-inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
                 {% csrf_token %}
                 {% if request.user|authorized_to_write %}
                     <input type="submit" value="Delete" class="btn btn-dark"/>

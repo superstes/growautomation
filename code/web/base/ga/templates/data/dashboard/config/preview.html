@@ -1,0 +1,35 @@
+{% load util %}
+<h2>
+    Preview
+</h2>
+<div class="ga-db-preview">
+    <div class="ga-db-preview-grid" style="
+    grid-template-areas: {{ grid_areas }};
+    ">
+        {% for position_obj in used_positions %}
+            <div class="ga-dbp" style="grid-area: ga_dbp_{{ position_obj.id }};">
+                <div class="ga-dbp-text">
+                    <div class="ga-dbp-title">
+                        <p>{{ position_obj.element.name }}</p>
+                    </div>
+                    <div class="ga-dbp-description">
+                        <p>{{ position_obj.element.description }}</p>
+                    </div>
+                </div>
+                <canvas class="ga-dbp-chart" id="ga_dbp_{{ position_obj.id }}_chart"></canvas>
+                <div id="ga_dbp_{{ position_obj.id }}_warn" style="display: none;">
+                    {% include "../../../warn/no_results.html" %}
+                </div>
+                <div id="ga_dbp_{{ position_obj.id }}_error" style="display: none;">
+                    {% include "../../../error/no_results.html" %}
+                </div>
+            </div>
+        {% endfor %}
+        {% for free_pos in grid_free_positions %}
+            <div class="ga-dbp-preview-filler" style="grid-area: ga_dbp_filler_{{ free_pos|get_item:'count' }};">
+                Y {{ free_pos|get_item:'y' }} | X {{ free_pos|get_item:'x' }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<br><hr><br>
