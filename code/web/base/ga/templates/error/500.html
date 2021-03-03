@@ -17,6 +17,12 @@
             <br><br>
             '{{ request|get_full_uri }}'
         </strong>
+        <br><hr><br>
+        <strong>
+            Last errors: <br>
+        </strong>
+        {% get_last_errors %} <br>
+        {% include "./500_gif.html" %}
     </div>
     <a href='{{ request|get_return_path }}' class="btn btn-info">Back</a>
 {% endblock %}

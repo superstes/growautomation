@@ -1,6 +1,8 @@
 from django import template
 from netaddr import IPAddress
 from datetime import datetime, timedelta
+from random import randint
+from sys import exc_info as sys_exc_info
 
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
@@ -241,3 +243,15 @@ def range_list(number: int) -> list:
         return []
 
     return list(range(1, number + 1))
+
+
+@register.simple_tag
+def random_gif() -> str:
+    pre_rand = 'img/500/'
+    post_rand = '.gif'
+    return f"{pre_rand}{randint(1, 20)}{post_rand}"
+
+
+@register.simple_tag
+def get_last_errors() -> BaseException:
+    return sys_exc_info()[1]

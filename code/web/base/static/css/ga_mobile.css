@@ -7,6 +7,14 @@
         grid-auto-rows: 35vw;
         margin: 2vw;
     }
+
+    .ga-db-grid {
+        grid-auto-rows: 35vw;
+    }
+
+    .ga-form-inline-right {
+        float: none;
+    }
 }
 
 @media only screen and (max-width: 991px) {
@@ -26,6 +34,10 @@
         grid-auto-rows: 45w;
         margin: 3vw;
     }
+
+    .ga-db-grid {
+        grid-auto-rows: 45w;
+    }
 }
 
 @media only screen and (max-width: 500px) {  /* mobile devices */
@@ -41,6 +53,10 @@
     .ga-db-preview-grid {
         grid-auto-rows: 75vw;
         margin: 5vw;
+    }
+
+    .ga-db-grid {
+        grid-auto-rows: 75vw;
     }
 
 }

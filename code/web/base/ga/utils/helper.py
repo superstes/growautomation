@@ -17,7 +17,7 @@ DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 
 def check_develop(request) -> bool:
     server = request.META.get('wsgi.file_wrapper', None)
-    if server is not None and server.__module__ == 'django.core.servers.basehttp':
+    if server is not None and server.__module__ in ['django.core.servers.basehttp', 'wsgiref.util']:
         return True
 
     return False

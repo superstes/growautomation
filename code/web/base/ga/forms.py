@@ -141,6 +141,8 @@ HELP_DICT = {
     'device_fail_count': 'How often a device can fail (in a row) until it enters the fail-sleep time',
     'device_fail_sleep': 'How long a device should be ignored by the core after a recurring error was recognized',
     'device_log': 'If a per-device logfile should be created',
+    'rows': 'How many rows there should be [max 100]',
+    'columns': 'How many columns there should be [max 30]',
 }
 
 

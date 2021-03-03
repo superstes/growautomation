@@ -161,3 +161,20 @@ form .error-msg {
     grid-auto-columns: 1fr;
     grid-gap: 5px;
 }
+
+.ga-error-500 {
+    text-align: center;
+}
+
+.ga-error-500 > img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: black;
+    border-width: 2px;
+    border-radius: 5px;
+    max-height: 60vh;
+    max-width: 80vw;
+}
