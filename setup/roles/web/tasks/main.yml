@@ -1,0 +1,107 @@
+---
+
+- name: Apache | Install apache
+  apt:
+    name: 'apache2'
+    state: present
+  register: first_run
+  notify: 'enable_apache'
+
+- name: GA | Web | Add custom config options
+  blockinfile:
+    path: '/etc/apache2/apache2.conf'
+    block: |
+      {% for setting, value in ga_apache_config_additions.items() %}
+        {{ setting }} {{ value }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - custom config"
+    validate: 'apachectl -t -f %s'
+  notify: 'restart_apache'
+
+- name: GA | Web | Adding service user
+  ansible.builtin.user:
+    name: "{{ ga_web_service_user }}"
+    shell: '/usr/sbin/nologin'
+    home: "{{ ga_home_dir }}/{{ ga_web_service_user }}"
+    groups: "{{ ga_web_groups }}"
+    append: yes
+
+- name: GA | Web | Creating directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ga_web_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0755
+  with_items:
+    - "{{ ga_web_path }}"
+    - "{{ ga_web_path_log }}"
+    - "{{ ga_web_path_static }}"
+    - "{{ ga_web_path_venv }}"
+
+- name: GA | Web | Cloning ga code
+  ansible.builtin.git:
+    repo: 'https://github.com/superstes/growautomation.git'
+    dest: '/tmp/'
+    depth: 1
+    version: "{{ ga_version }}"
+
+- name: GA | Web | Copying core-code
+  ansible.builtin.copy:
+    src: '/tmp/growautomation/code/web'
+    dest: "{{ ga_web_path }}"
+    remote_src: yes
+    owner: "{{ ga_web_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0755
+
+- name: GA | Web | Enabling apache mods
+  community.general.apache2_module:
+    state: present
+    name: "{{ item }}"
+  with_items:
+    - 'wsgi'
+    - 'ssl'
+    - 'rewrite'
+  notify: 'reload_apache'
+
+- name: GA | Web | Disabling autoindex
+  community.general.apache2_module:
+    state: absent
+    name: 'autoindex'
+    force: yes
+  when: not ga_web_autoindex
+
+- name: GA | Web | Disabling default apache sites
+  file:
+    state: absent
+    dest: "/etc/apache2/sites-enabled/{{ item }}"
+  with_items:
+    - '000-default.conf'
+    - 'default-ssl.conf'
+  when: first_run.changed
+  notify: 'reload_apache'
+
+- name: GA | Web | Configure apache site
+  template:
+    src: 'templates/etc/apache2/sites-available/ga.conf.j2'
+    dest: '/etc/apache2/sites-available/ga.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+    validate: 'apachectl -t -f %s'
+  notify: 'reload_apache'
+
+- name: GA | Web | Enable apache site
+  file:
+    state: link
+    src: '/etc/apache2/sites-available/ga.conf'
+    dest: '/etc/apache2/sites-enabled/ga.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  notify: 'reload_apache'
+
+- name: GA | Configure UFW
+  import_role: ufw
+  when: ga_ufw_manage

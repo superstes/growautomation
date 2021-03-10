@@ -1,0 +1,25 @@
+[Unit]
+Description=GrowAutomation Service
+Documentation=https://docs.growautomation.eu
+Documentation=https://github.com/superstes/growautomation
+After=mariadb.service
+StartLimitBurst=10
+StartLimitIntervalSec=630
+
+[Service]
+Type=simple
+Environment="PYTHONPATH={{ ga_core_path }}"
+Environment="PYTHONHOME={{ ga_core_path_venv }}"
+ExecStartPre=/usr/bin/python3 {{ ga_core_path }}/core/service/prestart.py
+ExecStart=/usr/bin/python3 {{ ga_core_path }}/core/service/service.py
+ExecReload=/bin/kill -10 $MAINPID
+User={{ ga_core_service_user }}
+Group={{ ga_core_service_user }}
+Restart=on-failure
+RestartSec=60s
+TimeoutStopSec=120s
+StandardOutput=append:{{ ga_core_path_log }}/service_output.log
+StandardError=append:{{ ga_core_path_log }}/service_error.log
+
+[Install]
+WantedBy=multi-user.target

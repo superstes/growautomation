@@ -1,0 +1,11 @@
+---
+
+- name: 'reload_systemd_deamon'
+  systemd:
+    daemon_reload: yes
+
+- name: 'enable_core'
+  service:
+    name: 'ga_core.service'
+    enabled: yes
+    state: started

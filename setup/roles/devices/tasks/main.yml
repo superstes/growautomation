@@ -1,0 +1,23 @@
+---
+
+- name: GA | Devices | Installing packages
+  apt:
+    name: "{{ ga_device_apt }}"
+    state: present
+
+- name: GA | Devices | Install python modules
+  pip:
+    name: "{{ ga_device_pip }}"
+    executable: pip3
+    state: present
+
+- name: GA | Devices | Adding service user to groups
+  ansible.builtin.user:
+    name: "{{ ga_core_service_user }}"
+    groups: "{{ ga_device_groups }}"
+    append: yes
+
+- name: GA | Devices | Configuring raspi-config
+  shell: "raspi-config {{ item }}"
+  with_items: "{{ ga_device_raspiconfig }}"
+  ignore_errors: true

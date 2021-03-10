@@ -1,0 +1,7 @@
+[Unit]
+Description=Lets encrypt certificate renew daemon
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/certbot renew -{{ certbot_verbosity }} --non-interactive --agree-tos --renew-with-new-domains --rsa-key-size {{ letsencrypt_key_size }} {% if certbot_force_renewal %} --force-renewal {% endif %}
+SuccessExitStatus=0

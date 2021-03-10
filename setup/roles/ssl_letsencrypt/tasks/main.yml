@@ -1,0 +1,31 @@
+---
+
+- name: GA | LetsEncrypt | Install package
+  apt:
+    name: ['python3', 'python3-certbot-apache', 'software-properties-common']
+    state: present
+
+- name: GA | LetsEncrypt | Check if a apache virtualhost is available
+  shell: 'ls -l /etc/apache2/sites-enabled/'
+  register: enabled_apache_sites
+
+- name: GA | LetsEncrypt | Configuring dependencies
+  include_tasks: dependencies.yml
+  when: '"total 0" in enabled_apache_sites["stdout_lines"]'
+
+- name: GA | LetsEncrypt | Configuring certbot
+  include_tasks: domain.yml
+
+- name: GA | LetsEncrypt | Cleanup dependencies
+  include_tasks: cleanup.yml
+
+- name: GA | LetsEncrypt | Adding systemd files for certbot renewal
+  template:
+    src: "templates/lib/systemd/system/{{ item }}"
+    dest: "/lib/systemd/system/{{ item }}"
+  with_items:
+    - 'ga_letsEncryptCertbot.service'
+    - 'ga_letsEncryptCertbot.timer'
+  notify:
+    - 'reload_systemd_deamon'
+    - 'enable_certbot'

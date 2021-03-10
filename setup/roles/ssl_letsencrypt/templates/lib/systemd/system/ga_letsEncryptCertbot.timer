@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer to renew lets encrypt certificates
+
+[Timer]
+OnCalendar={{ certbot_renew_timer }}
+Persistent=false
+WakeSystem=false
+
+[Install]
+WantedBy=multi-user.target

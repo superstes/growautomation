@@ -1,0 +1,7 @@
+---
+
+- name: 'enable_mariadb'
+  service:
+    name: 'mariadb.service'
+    enabled: yes
+    state: started

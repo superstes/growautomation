@@ -1,0 +1,38 @@
+---
+
+# basic
+ga_version: '1.0'
+ga_path_log: '/var/log/ga'
+ga_ufw_manage: true  # if the ufw (software firewall) should be configure => NOT RECOMMENDED if you run other software on the same server
+ga_ufw_allow_ssh: true
+ga_service_group: 'ga'
+ga_home_dir: '/var/lib/ga'
+ga_python_version: 3.7  # venv version
+
+# ga core
+ga_core_install: true
+ga_core_path: '/usr/sbin/ga'
+ga_core_service_user: 'ga_core'
+ga_core_path_venv: "{{ ga_home_dir }}/{{ ga_core_service_user }}/venv"
+ga_core_device_support: true  # if support for basic devices should be provided
+
+# ga django web
+ga_web_install: true
+ga_web_path: '/var/www/ga'
+ga_web_path_static: '/var/www/ga_static'
+ga_web_service_user: 'ga_web'
+ga_web_path_venv: "{{ ga_home_dir }}/{{ web_service_user }}/venv"
+ga_web_ssl_mode: 'self_signed'  # or letsencrypt
+# if letsencrypt is used as ssl_mode:
+#   1. dns-name and -aliases MUST BE VALID and set to the server-(public)-ip
+#   2. server must have port 80/443 publicly available
+#   (for details see => https://letsencrypt.org/docs/)
+ga_web_dns: 'ga.lan'
+ga_web_alias: []  # list of dns-aliases
+
+# mariadb/mysql
+ga_sql_server: 'localhost'
+ga_sql_port: 3306
+ga_sql_admin: 'ga_admin'
+ga_sql_admin_pw: 'WILL_BE_RANDOM'  # you will find it in the file '/tmp/${DATETIME}.tmp'
+ga_sql_db: 'ga'

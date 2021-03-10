@@ -1,0 +1,20 @@
+---
+
+ga_device_apt:
+  - 'libgpiod2'
+  - 'python3-smbus'
+  - 'i2c-tools'
+
+ga_device_pip:
+  - 'adafruit-circuitpython-dht'
+  - 'adafruit-circuitpython-ads1x15'
+  - 'adafruit-circuitpython-mcp3xxx'
+
+ga_device_groups:
+  - 'gpio'
+  - 'i2c'
+  - 'spi'
+
+ga_device_raspiconfig:
+  - 'nonint do_i2c 0'
+  - 'nonint do_spi 0'

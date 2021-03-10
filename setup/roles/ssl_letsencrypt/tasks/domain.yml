@@ -1,0 +1,38 @@
+---
+
+- name: GA | LetsEncrypt | Checking if key
+  ansible.builtin.stat:
+    path: "{{ ga_ssl_path_key }}"
+  register: domain_key
+
+- name: GA | LetsEncrypt | Creating key/cert directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: 'root'
+    group: 'root'
+    mode: 0755
+  with_items:
+  - '/etc/ssl/private'
+  - '/etc/ssl/certs'
+
+- name: GA | LetsEncrypt | Getting cert
+  include_tasks: domain_new.yml
+  when: not domain_key.stat.exists
+
+- name: GA | LetsEncrypt | Linking certificates
+  file:
+    state: link
+    src: "{{ item.value.src }}"
+    dest: "{{ item.value.dst }}"
+    owner: "{{ lensencrypt_file_owner }}"
+    group: "{{ lensencrypt_file_group }}"
+    mode: "{{ lensencrypt_file_mode }}"
+    follow: yes
+  with_dict:
+    - {'config': {'dst': "{{ ga_ssl_path_key }}", 'src': "{{ ga_letsencrypt_live_dir }}/privkey.pem"}}
+    - {'config': {'dst': "{{ ga_ssl_path_cert }}", 'src': "{{ ga_letsencrypt_live_dir }}/cert.pem"}}
+    - {'config': {'dst': "{{ ga_ssl_path_chain }}", 'src': "{{ ga_letsencrypt_live_dir }}/chain.pem"}}
+    - {'config': {'dst': "{{ ga_ssl_path_fullchain }}", 'src': "{{ ga_letsencrypt_live_dir }}/fullchain.pem"}}
+  ignore_errors: yes
+  notify: 'reload_apache'

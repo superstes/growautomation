@@ -1,0 +1,21 @@
+---
+
+# CERTBOT config
+#   howto: https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-18-04
+#   parameters: https://certbot.eff.org/docs/using.html
+
+letsencrypt_key_size: 4096
+letsencrypt_hash_algo: 'sha256'
+letsencrypt_dir: '/etc/letsencrypt'
+
+lensencrypt_file_owner: 'root'
+lensencrypt_file_group: "{{ ga_web_service_user }}"
+lensencrypt_file_mode: 0640
+
+certbot_email: "webmaster@{{ ga_web_dns }}"
+
+certbot_renew_timer: 'Mon *-*-* 00:00:00'
+certbot_force_renewal: false
+certbot_verbosity: 'v'
+
+ga_letsencrypt_live_dir: "{{ letsencrypt_dir }}/{{ ga_web_key }}"

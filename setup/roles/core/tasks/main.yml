@@ -1,0 +1,71 @@
+---
+
+- name: GA | Configure database
+  import_role: db
+  when: ga_sql_server == 'localhost'
+
+- name: GA | Core | Installing packages
+  apt:
+    name: ['git', 'python3', 'python3-pip']
+    state: present
+
+- name: GA | Core | Adding service user
+  ansible.builtin.user:
+    name: "{{ ga_core_service_user }}"
+    shell: '/usr/sbin/nologin'
+    home: "{{ ga_home_dir }}/{{ ga_core_service_user }}"
+    groups: "{{ ga_service_group }}"
+    append: yes
+
+- name: GA | Core | Creating core directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0755
+  with_items:
+  - "{{ ga_core_path }}"
+  - "{{ ga_path_log }}"
+  - "{{ ga_core_path_venv }}"
+
+- name: GA | Core | Cloning ga code
+  ansible.builtin.git:
+    repo: 'https://github.com/superstes/growautomation.git'
+    dest: '/tmp/'
+    depth: 1
+    version: "{{ ga_version }}"
+
+- name: GA | Core | Copying core-code
+  ansible.builtin.copy:
+    src: '/tmp/growautomation/code/core'
+    dest: "{{ ga_core_path }}"
+    remote_src: yes
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0755
+
+- name: GA | Core | Install python virtualenv
+  pip:
+    name: 'virtualenv'
+    executable: pip3
+    state: present
+
+- name: GA | Core | Install python modules into venv
+  pip:
+    name: "{{ ga_core_mods }}"
+    virtualenv: "{{ ga_core_path_venv }}"
+    virtualenv_python: "{{ ga_python_version }}"
+    state: present
+
+- name: GA | Core | Adding core service file
+  template:
+    src: "templates/lib/systemd/system/ga_core.service"
+    dest: "/lib/systemd/system/ga_core.service"
+  notify:
+    - 'reload_systemd_deamon'
+    - 'enable_core'
+
+- name: GA | Configure device support
+  import_role: devices
+  when: ga_core_device_support

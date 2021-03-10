@@ -1,0 +1,8 @@
+---
+
+ga_core_mods:
+  - 'pycryptodome'
+  - 'mysql.connector'
+  - 'systemd'
+
+ga_core_path_log: "{{ path_log }}/core"

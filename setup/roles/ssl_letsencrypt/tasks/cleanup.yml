@@ -1,0 +1,13 @@
+---
+
+- name: GA | LetsEncrypt | Cleanup | Disable temporary apache site
+  file:
+    state: absent
+    dest: "/etc/apache2/sites-enabled/tmp_lets_encrypt.conf"
+  register: tmp_site_config
+
+- name: GA | LetsEncrypt | Cleanup | Reload apache
+  service:
+    name: 'apache2.service'
+    state: reloaded
+  when: tmp_site_config.changed
