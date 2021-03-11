@@ -1,7 +1,26 @@
 ---
 
+# note: db-schema and initial controller configuration will be initialized by django
+
 - name: GA | DB | Install mariadb
   apt:
     name: ['mariadb-server', 'mariadb-client']
     state: present
   notify: 'enable_mariadb'
+
+- name: GA | DB | Creating database
+  community.mysql.mysql_db:
+    name: "{{ ga_sql_db }}"
+    state: present
+    login_unix_socket: "{{ ga_sql_socket }}"
+
+- name: GA | DB | Creating users
+  community.mysql.mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.pwd }}"
+    priv: "{{ ga_sql_db }}.*:ALL"
+    state: present
+    login_unix_socket: "{{ ga_sql_socket }}"
+  with_items:
+    - {user: "{{ ga_sql_user_core }}", pwd: "{{ ga_sql_pwd_core }}"}
+    - {user: "{{ ga_sql_user_web }}", pwd: "{{ ga_sql_pwd_web }}"}

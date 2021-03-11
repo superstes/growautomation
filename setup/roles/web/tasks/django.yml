@@ -1,17 +1,16 @@
 ---
 
-- name: GA | Web | Install packages
+- name: GA | Web | Django | Install packages
   apt:
     name: ['python3-pip', 'libapache2-mod-wsgi-py3']
     state: present
-  notify: 'reload_apache'
+  notify: 'restart_apache'
 
 - name: GA | Web | Django | Install python virtualenv
   pip:
     name: 'virtualenv'
     executable: pip3
     state: present
-  notify: 'reload_apache'
 
 - name: GA | Web | Django | Install python modules into venv
   pip:
@@ -19,4 +18,31 @@
     virtualenv: "{{ ga_web_path_venv }}"
     virtualenv_python: "{{ ga_python_version }}"
     state: present
-  notify: 'reload_apache'
+  notify: 'restart_apache'
+
+- name: GA | Web | Django | Adding database config
+  template:
+    src: "templates/var/www/ga/database.cnf.j2"
+    dest: "{{ ga_web_path }}/database.cnf"
+    owner: "{{ ga_web_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0440
+  notify: 'restart_apache'
+
+- name: GA | Web | Django | Configuring django settings
+  ansible.builtin.lineinfile:
+    path: "{{ ga_web_path }}/base/settings.py"
+    regexp: '{{ item.search }}'
+    line: '{{ item.replace }}'
+  with_items: "{{ ga_django_setting_replacement }}"
+
+- name: GA | Web | Django | Building database schema
+  shell:
+    cmd: "python3 manage.py makemigrations"
+    chdir: "{{ ga_web_path }}"
+
+- name: GA | Web | Django | Applying database schema
+  shell:
+    cmd: "python3 manage.py migrate"
+    chdir: "{{ ga_web_path }}"
+  notify: 'restart_apache'

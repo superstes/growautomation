@@ -29,3 +29,13 @@ ga_apache_config_additions:
 ga_web_groups:
   - 'systemd-journal'
   - "{{ service_group }}"
+
+ga_django_setting_replacement:
+  - {search: '^DEBUG = True$',
+     replace: 'DEBUG = False'}
+  - {search: '^ALLOWED_HOSTS = [',
+     replace: "ALLOWED_HOSTS = ['localhost', '{{ ga_web_dns }}'{% for alias in ga_web_alias %}, '{{ alias}}' {% endfor %}]"}
+  - {search: "^SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'$",
+     replace: "SECRET_KEY = '{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits,punctuation') }}'"}
+  - {search: "^TIME_ZONE = 'Europe/Vienna'$",
+     replace: "TIME_ZONE = '{{ ga_timezone }}'"}
