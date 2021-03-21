@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# source: https://github.com/superstes/growautomation
+
 # dependencies
 #   apt
 #     python3-smbus
