@@ -35,23 +35,23 @@ It's simple. And should also remain so if you have little time for it.
 
 __The code is currently not in a stable state !__
 
-Version: 0.7
+Version: 0.8
 
 => <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
 
 ### Work in progress
-- creating _(django)_ web interface for easy user interactions
-    - updating growautomation core to work with django database schema
-    - customizable statistics/graphs for data visualization
 - testing and fixing input-condition-output workflow
+- writing ansible-script to set-up the application
+
 
 ### History
-- v0.7 _(2020-12 - 2021-02)_
+- v0.7 _(2020-12 - 2021-03)_
   - created basic _(django)_ web interface => <a href="https://demo.growautomation.at/">DEMO</a>
     - functionality:
       - config management
       - system management _(systemd / logs)_
       - help users test and debug their setup
+      - customizable statistics/graphs
   - updated core to use django mysql schema
 
 - v0.6 _(2020-11 - 2020-12)_
@@ -68,15 +68,14 @@ Version: 0.7
   - dark age _(connected scripts)_
 
 ### Planned features
-- implementing unit and integration tests
+- plant monitoring via nfc-tags and harvest-scale => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
 - documentation via sphinx _(read the docs)_
 - documenting clean hardware setup _(easy wiring via patchpanel)_
 - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
 - builtin notification tasks
   - *get notified if the temperature is not optimal for growing*
 - creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
--  
- 
+
 ### Maybe future features
 - agent/server installation
   - server should be able to run as vm or on dedicated hardware
