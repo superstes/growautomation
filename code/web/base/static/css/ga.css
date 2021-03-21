@@ -29,12 +29,18 @@
 }
 
 .ga-file-content {
-    white-space: break-spaces;
     background: #d9e0d7;
-    padding: 1% 2%;
     border-radius: 5px;
     overflow: auto;
+    padding: 1% 2%;
     margin: 0 0;
+}
+
+.ga-file-content-line {
+    text-indent: -1vw;
+    padding-left: 1vw;
+    padding-top: 3px;
+    white-space: break-spaces;
 }
 
 .ga-nav-icon {
@@ -153,6 +159,7 @@ form .error-msg {
 
 .ga-db {
     width: 100%;
+    margin-top: 5vh;
 }
 
 .ga-db-grid {

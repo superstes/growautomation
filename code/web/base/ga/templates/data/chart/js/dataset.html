@@ -33,7 +33,7 @@
             if (period && period_data) {
                 var url = `/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`;
             } else if (start_ts && stop_ts) {
-                var url= `/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`;
+                var url = `/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`;
             } else {
                 var url = `/api/data/?start_ts=${start_ts}&input_device=${input_device}`;
             }

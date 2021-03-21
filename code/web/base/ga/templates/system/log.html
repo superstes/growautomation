@@ -65,9 +65,11 @@
         {% if log_data is None %}
             {% include "../warn/no_results.html" %}
         {% else %}
-            <pre class="ga-file-content">
-{{ log_data }}
-            </pre>
+            <div class="ga-file-content">
+                {% for line in log_data %}
+<div class="ga-file-content-line">{{ line }}</div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endif %}
     {% if log_type == 'Growautomation' and log_file is not None %}

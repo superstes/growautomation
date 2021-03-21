@@ -25,8 +25,10 @@ DEFAULT_REFRESH_SECS = 120
 def ServiceView(request):
     service_name_options = {
         'Growautomation': 'ga.service',
-        'Apache webserver': 'apache2.service'
+        'Apache webserver': 'apache2.service',
+        'Mariadb database': 'mariadb.service',
     }
+    non_stop_services = ['Apache webserver', 'Mariadb database']
 
     service_status = None
     service_name = None
@@ -80,7 +82,7 @@ def ServiceView(request):
     return render(request, 'system/service.html', context={
         'request': request, 'nav_dict': nav_dict, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
         'service_name_options': service_name_options, 'service_status_time': service_status_time, 'service_enabled': service_enabled,
-        'service_runtime': service_runtime, 'reload_time': reload_time,
+        'service_runtime': service_runtime, 'reload_time': reload_time, 'non_stop_services': non_stop_services,
     })
 
 
@@ -88,7 +90,7 @@ def ServiceView(request):
 def service_action(request, service: str):
     systemctl = 'sudo /bin/systemctl'
     meta = request.META
-    log_tmpl = f"{meta['PATH_INFO']} - action \"%s service {service}\" was executed by user {request.USER} from remote ip {meta['REMOTE_ADDR']}"
+    log_tmpl = f"{meta['PATH_INFO']} - action \"%s service {service}\" was executed by user {request.user} from remote ip {meta['REMOTE_ADDR']}"
 
     if 'service_start' in request.POST:
         logger.write(log_tmpl % 'start')

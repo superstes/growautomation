@@ -8,9 +8,11 @@
     {% if script_content is None %}
         {% include "../../warn/no_results.html" %}
     {% else %}
-        <pre class="ga-file-content">
-{{ script_content }}
-        </pre>
+        <div class="ga-file-content">
+            {% for line in script_content %}
+<div class="ga-file-content-line">{{ line }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
     <div class="ga-sideinfo">
         <p>

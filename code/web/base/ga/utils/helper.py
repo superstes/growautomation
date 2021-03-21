@@ -66,7 +66,7 @@ def get_client_ip(request):
     return censored_client_ip
 
 
-def develop_subprocess(request, command: str, develop: str = None) -> str:
+def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:
     if check_develop(request):
         return develop
 
@@ -171,13 +171,9 @@ def get_form_prefill(request):
     return form_prefill
 
 
-def add_line_numbers(data: (list, str), reverse: bool = False) -> str:
+def add_line_numbers(data: (list, str), reverse: bool = False) -> list:
     if type(data) == str:
         data = data.split('\n')
-        join_str = '\n'
-
-    else:
-        join_str = ''
 
     if reverse:
         data.reverse()
@@ -191,7 +187,7 @@ def add_line_numbers(data: (list, str), reverse: bool = False) -> str:
         output.append("%s | %s" % (str(count).zfill(_zfill_count), line))
         count += 1
 
-    return join_str.join(output)
+    return output
 
 
 def empty_key(search, param: str) -> bool:

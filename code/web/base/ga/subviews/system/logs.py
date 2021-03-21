@@ -28,7 +28,8 @@ def LogView(request):
     log_type_options = ['Service', 'Service journal', 'Growautomation']
     log_service_options = {
         'Growautomation': 'ga.service',
-        'Apache webserver': 'apache2.service'
+        'Apache webserver': 'apache2.service',
+        'Mariadb database': 'mariadb.service',
     }
 
     if develop:
@@ -74,24 +75,24 @@ def LogView(request):
 
             if log_type == 'Service':
                 if develop:
-                    log_data = 'test data\ndata service'
+                    log_data = ['test data', 'data service']
                 else:
                     log_data = add_line_numbers(
                         develop_subprocess(
                             request,
                             command=SHELL_SERVICE_LOG_STATUS % log_service_value,
-                            develop="Test output1\nHelloo\nThird time's a charm"
+                            develop=['Test output1', 'Helloo', "Third time's a charm"]
                         )
                     )
             elif log_type == 'Service journal':
                 if develop:
-                    log_data = 'test data\ndata journal'
+                    log_data = ['test data', 'data journal']
                 else:
                     log_data = add_line_numbers(
                         develop_subprocess(
                             request,
                             command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
-                            develop="Test output2\nHelloo\nThird time's a charm"
+                            develop=['Test output2', 'Helloo', "Third time's a charm"]
                         )
                     )
 
@@ -104,13 +105,13 @@ def LogView(request):
 
                 # option to view older (truncated) logs?
                 if develop:
-                    log_data = "log from file '%s' -> test data\ndata ga" % path_log
+                    log_data = [f"log from file '{path_log}' -> test data", 'data ga']
                 else:
                     log_data = add_line_numbers(
                         develop_subprocess(
                             request,
                             command="tail -n %s %s" % (log_entry_count, log_file),
-                            develop="Test output3\nHelloo\nThird time's a charm"
+                            develop=['Test output3', 'Helloo', "Third time's a charm"]
                         ),
                         reverse=True
                     )
@@ -121,7 +122,7 @@ def LogView(request):
             if reload_time is None:
                 reload_time = DEFAULT_REFRESH_SECS
 
-    if type(log_data) == str and len(log_data) == 0:
+    if type(log_data) == list and len(log_data) == 0:
         log_data = None
 
     handler404(request=request, msg='test')

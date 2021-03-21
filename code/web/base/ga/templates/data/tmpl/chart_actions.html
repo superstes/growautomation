@@ -1,5 +1,6 @@
 {% load util %}
 <input type="submit" value="Show" class="btn btn-primary" formmethod='GET'>
+<input type="hidden" name="do" value="{{ action }}">
 {% if request.user|authorized_to_write %}
     {% if action == 'create' %}
         <input name="do" type="submit" value="Create" class="btn btn-success">
