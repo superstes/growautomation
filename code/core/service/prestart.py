@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # This file is part of Growautomation
-#     Copyright (C) 2020  René Pascal Rath
+#     Copyright (C) 2021  René Pascal Rath
 #
 #     Growautomation is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -83,14 +83,13 @@ class Prepare:
         service_dir = Path(__file__).parent.absolute()
         subtract_to_root = 2  # how many dirs are it to get from here down to the ga root path
         ga_root_path = '/'.join(str(service_dir).split('/')[:-subtract_to_root])
-        test_line = '##### FILE_TEST ####'
 
         file_dict = {
             'config': {
                 'path': '/core/config/file/core.conf',
                 'type': 'text',
                 'access': 'rw',
-                'perms': 600,
+                'perms': 640,
                 'owner': ga_uid,
                 'group': ga_gid,
             },
@@ -98,7 +97,7 @@ class Prepare:
                 'path': '/core/secret/random.key',
                 'type': 'text',
                 'access': 'r',
-                'perms': 400,
+                'perms': 440,
                 'owner': ga_uid,
                 'group': ga_gid,
             }
@@ -223,8 +222,10 @@ class Prepare:
     def _log(self, output, level: int = 1):
         if self.logger is not None:
             if len(self.log_cache) > 0:
+                from core.utils.debug import Log
+                _logger = Log()
                 for _log in self.log_cache:
-                    self.logger.write(output=_log['output'], level=_log['level'])
+                    _logger.write(output=_log['output'], level=_log['level'])
 
                 self.log_cache = []
 

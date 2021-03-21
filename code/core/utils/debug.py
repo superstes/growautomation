@@ -37,7 +37,8 @@ def debugger(command, web_ctrl_obj=None) -> bool:
 
 
 class Log:
-    LOG_TIMESTAMP_FORMAT = '%Y-%m-%d | %H:%M:%S:%f'
+    LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
+    SEPARATOR = ' | '
 
     CENSOR_OUTPUT = '●●●●●●●●●'
     SECRET_SETTINGS = ['sql_secret']
@@ -46,11 +47,14 @@ class Log:
     except AttributeError:
         SECRET_DATA = []
 
-    def __init__(self, typ: str = 'core', addition: str = None, web_ctrl_obj=None):
-        from inspect import stack as inspect_stack
-        from inspect import getfile as inspect_getfile
+    def __init__(self, typ: str = 'core', addition: str = None, web_ctrl_obj=None, src_file: str = None):
+        self.name = src_file
+        if src_file is None:
+            from inspect import stack as inspect_stack
+            from inspect import getfile as inspect_getfile
+            self.name = inspect_getfile(inspect_stack()[1][0])
+
         self.type = typ
-        self.name = inspect_getfile((inspect_stack()[1])[0])
 
         if web_ctrl_obj is not None:
             web_shared_vars(web_ctrl_obj)
@@ -85,12 +89,12 @@ class Log:
 
         output = self._censor(str(output))
 
-        output_formatted = "%s - %s - %s" % (datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT), self.name, output)
+        output_formatted = f"{datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT)}{self.SEPARATOR}{self.name}{self.SEPARATOR}{output}"
 
         debugger(command=output_formatted)
 
         with open(self.log_file, 'a') as logfile:
-            logfile.write("%s - %s\n" % (level, output_formatted))
+            logfile.write(f"{level}{self.SEPARATOR}{output_formatted}\n")
 
         return True
 
@@ -116,9 +120,8 @@ class Log:
                             )
                         )
                     except IndexError:
-                        output = "LOG ERROR: 'Output has sensitive data (\"%s\") in it that must be censored. " \
-                                 "But we were not able to safely censor it. " \
-                                 "Output was completely replaced.'" % setting
+                        output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
+                                 f"But we were not able to safely censor it. Output was completely replaced.'"
 
                 if output.find('LOG ERROR') == -1:
                     output = ''.join(updated_list)
@@ -147,10 +150,10 @@ class MultiLog:
 
 class FileAndSystemd:
     def __init__(self, log_instance):
-        from systemd import journal as systemd_journal
         self.log = log_instance
 
     def write(self, output: str, level: int = 1) -> bool:
+        from systemd import journal as systemd_journal
         if level == 1:
             systemd_journal.write(output)
 

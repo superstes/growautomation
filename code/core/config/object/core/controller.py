@@ -34,7 +34,7 @@ class GaControllerDevice(GaBase):
 class GaControllerModel(GaBase):
     # hardcoded default values
     default_setting_dict = {
-        'name': 'gacon', 'description': 'Growautomation controller', 'path_root': '/etc/ga', 'path_log': '/var/log/ga', 'path_backup': '/mnt/backup/ga',
+        'name': 'gacon', 'description': 'Growautomation controller', 'path_root': '/usr/sbin/ga', 'path_log': '/var/log/ga', 'path_backup': '/mnt/backup/ga',
         'sql_server': 'localhost', 'sql_port': 3306, 'sql_user': 'ga_admin', 'sql_secret': '4t/GdVV9Yd13IJqNbUC/cydeIU+aEO2kkyNIJ8+4Qd2pN2stAq/BrCT27RIgvwYk',
         'sql_database': 'ga', 'log_level': 2, 'debug': False, 'security': False, 'backup': True, 'timezone': 'MEZ', 'device_fail_count': 3,
         'device_fail_sleep': 3600, 'device_log': True,

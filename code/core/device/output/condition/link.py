@@ -18,7 +18,7 @@ class Go:
 
     def _process_links(self, group) -> bool:
         # static group for recursion
-        self.logger.write("Processing links for condition \"%s\"" % group.name, level=8)
+        self.logger.write(f"Processing links for condition \"{group.name}\"", level=8)
         group_member_count = len(group.member_list)
         last_result = None
 
@@ -37,15 +37,14 @@ class Go:
             )
 
             link.processed = True
-
             last_result = result
 
-        self.logger.write("Result of condition \"%s\": \"%s\" " % (group.name, last_result), level=6)
+        self.logger.write(f"Result of condition \"{group.name}\": \"{last_result}\" ", level=6)
 
         return last_result
 
     def _get_link_data(self, link) -> dict:
-        self.logger.write("Getting data for link \"%s\"" % link.name, level=9)
+        self.logger.write(f"Getting data for link \"{link.name}\"", level=9)
 
         result_dict = {}
 
@@ -63,14 +62,14 @@ class Go:
                     # else process the condition
                     result_dict[order] = ConditionResult(condition=condition, device=self.group.name).get()
 
-        self.logger.write("Data of condition-link \"%s\": \"%s\"" % (link.name, result_dict), level=8)
+        self.logger.write(f"Data of condition-link \"{link.name}\": \"{result_dict}\"", level=8)
 
         return result_dict
 
     def _get_link_data_result(self, link, result_dict: dict) -> bool:
         # get the link result via processing its child-results and comparing them via the link-operator
 
-        self.logger.write("Getting result of condition-link \"%s\"" % link.name, level=9)
+        self.logger.write(f"Getting result of condition-link \"{link.name}\"", level=9)
 
         try:
             result = get_link_result(
@@ -79,7 +78,7 @@ class Go:
                 device=self.group.name
             )
 
-            self.logger.write("Result of condition-link \"%s\": \"%s\"" % (link.name, result), level=7)
+            self.logger.write(f"Result of condition-link \"{link.name}\": \"{result}\"", level=7)
             return result
 
         except (KeyError, ValueError) as error_msg:
@@ -95,8 +94,7 @@ class Go:
     def _post_process(self, link, result: bool, group, process_nr: int, group_member_count: int):
         # check which of the two child-conditions will be further processed
 
-        self.logger.write("Post-process of condition \"%s\", link \"%s\", result \"%s\", process_nr \"%s\", group_member_count \"%s\""
-                          % (group.name, link.name, result, process_nr, group_member_count), level=9)
+        self.logger.write(f"Post-process of condition \"{group.name}\", link \"{link.name}\", result \"{result}\", process_nr \"{process_nr}\", group_member_count \"{group_member_count}\"", level=9)
 
         slm_list = self._get_single_link_member_list(group=group)
         nslm = False
@@ -105,7 +103,7 @@ class Go:
             if condition not in slm_list:
                 # if the condition will be further processed -> update its data to the link result
 
-                self.logger.write("Updating data for condition \"%s\" to result \"%s\"" % (condition.name, result), level=9)
+                self.logger.write(f"Updating data for condition \"{condition.name}\" to result \"{result}\"", level=9)
 
                 condition.data = result
                 nslm = True
@@ -115,15 +113,13 @@ class Go:
             # 1. there is more than one condition that should be further processed
             # or 2. there is no condition that should be further processed and the link is not the last one
             # log error or whatever
-            self.logger.write("Link \"%s\" (id \"%s\") has only single members \"%s\" and is not the last one to process"
-                              % (link.name, link.object_id, link.member_dict), level=4)
-            self._error(RuntimeError("Link with id \"%s\" is not the last to process but it does not have "
-                                     "any link-neighbors."))
+            self.logger.write(f"Link \"{link.name}\" (id \"{link.object_id}\") has only single members \"{link.member_dict}\" and is not the last one to process", level=4)
+            self._error(RuntimeError(f"Link with id \"{link.object_id}\" is not the last to process but it does not have any link-neighbors."))
 
     def _get_single_link_member_list(self, group) -> list:
         # we must always start at a link that has one object within it, which only has THIS link
 
-        self.logger.write("Getting single link members for condition \"%s\"" % group.name, level=9)
+        self.logger.write(f"Getting single link members for condition \"{group.name}\"", level=9)
 
         lm_list = []
         slm_list = []
@@ -138,7 +134,7 @@ class Go:
             if count == 1:
                 slm_list.append(instance)
 
-        self.logger.write("Condition \"%s\" has the following single link members \"%s\"" % (group.name, slm_list), level=8)
+        self.logger.write(f"Condition \"{group.name}\" has the following single link members \"{slm_list}\"", level=8)
 
         return slm_list
 
@@ -147,7 +143,7 @@ class Go:
         raise error_exception
 
     def _reset_flags(self, group):
-        self.logger.write("Resetting flags for condition \"%s\"" % group.name, level=9)
+        self.logger.write(f"Resetting flags for condition \"{group.name}\"", level=9)
 
         for link in group.member_list:
             link.processed = False

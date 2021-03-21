@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # This file is part of Growautomation
-#     Copyright (C) 2020  René Pascal Rath
+#     Copyright (C) 2021  René Pascal Rath
 #
 #     Growautomation is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 # ga_version 0.7
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
-#   (export PYTHONPATH=/etc/ga)
-#   is being set automatically by the systemd service
+#   (export PYTHONPATH=/usr/sbin/ga)
+#   it's being set automatically by the systemd service
 
 from core.config import startup_shared as startup_shared_vars
 startup_shared_vars.init()
@@ -83,7 +83,6 @@ class Service:
             self.stop()
         self._run()
 
-    # todo: I think the service currently dies on reload
     def reload(self, signum=None, stack=None):
         self.logger.write('Service reload -> checking for config changes', level=6)
         # check current db config against currently loaded config
@@ -151,9 +150,7 @@ class Service:
     def _exit(self) -> None:
         if self.exit_count == 0:
             self.exit_count += 1
-            # ShellOutput(font='line', symbol='#')
             self.logger.write('Growautomation service: Farewell!')
-            # ShellOutput(font='line', symbol='#')
         raise SystemExit('Service exited gracefully.')
 
     def _hard_exit(self):
