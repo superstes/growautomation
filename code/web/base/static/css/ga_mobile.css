@@ -59,6 +59,11 @@
         grid-auto-rows: 75vw;
     }
 
+    .ga-file-content-line {
+        text-indent: -3vw;
+        padding-left: 3vw;
+    }
+
 }
 
 @include media-breakpoint-between(xs,sm){

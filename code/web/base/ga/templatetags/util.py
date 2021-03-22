@@ -7,6 +7,7 @@ from sys import exc_info as sys_exc_info
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
 from ..config.shared import DATETIME_TS_FORMAT
+from ..config.nav import nav_dict
 
 register = template.Library()
 
@@ -19,25 +20,25 @@ def get_type(value):
 
 
 @register.filter
-def get_item(dictionary, key):
+def get_item(data, key):
+    value = None
     if key.find(',') != -1:
-        key, fallback = key.split(',')
+        # workaround since template does only support two arguments for filters
+        key, fallback = key.split(',', 1)
     else:
         fallback = None
 
     try:
-        if key in dictionary:
-            return dictionary.get(key)
-        else:
-            return fallback
+        if key in data:
+            value = data.get(key)
+    except TypeError:
+        if hasattr(data, key):
+            value = getattr(data, key)
 
-    except TypeError:  # if object not iterable
+    if value is not None:
+        return value
 
-        if hasattr(dictionary, key):
-            return getattr(dictionary, key)
-
-        else:
-            return fallback
+    return fallback
 
 
 @register.filter
@@ -167,7 +168,6 @@ def get_return_path(request, typ=None) -> str:
     elif 'return' in request.POST:
         path = request.POST['return']
 
-
     else:
         if typ is None:
             path = request.META.get('HTTP_REFERER')
@@ -247,11 +247,22 @@ def range_list(number: int) -> list:
 
 @register.simple_tag
 def random_gif() -> str:
-    pre_rand = 'img/500/'
-    post_rand = '.gif'
-    return f"{pre_rand}{randint(1, 20)}{post_rand}"
+    return f"img/500/{randint(1, 20)}.gif"
 
 
 @register.simple_tag
 def get_last_errors() -> BaseException:
     return sys_exc_info()[1]
+
+
+@register.filter
+def nav_config(_) -> dict:
+    # serves navigation config to template
+    return nav_dict
+
+
+@register.filter
+def found(data: str, search: str) -> bool:
+    if data.find(search) != -1:
+        return True
+    return False

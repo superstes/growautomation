@@ -4,9 +4,10 @@ from string import ascii_letters, digits, punctuation
 
 from django.contrib.auth.views import LoginView, logout_then_login
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 
-from ..user import authorized_to_read, authorized_to_write
+from ..user import authorized_to_read, authorized_to_write, authorized_to_access
 
 
 def get_as_string(get_params: dict, add: bool = False) -> str:
@@ -16,25 +17,25 @@ def get_as_string(get_params: dict, add: bool = False) -> str:
     return "?%s" % parse.urlencode(get_params)
 
 
-def get_route(choose_from, action, typ):
-    route = None
-
-    for choose_type, choose_route in choose_from[action].items():
-        if choose_type == '*':
-            continue
-
-        elif choose_type == '*list':
-            for list_dict in choose_route.values():
-                if typ in list_dict['option']:
-                    route = list_dict['value']
-                    break
-
-        else:
-            if choose_type == typ:
-                route = choose_route
-                break
-
-    return route
+# def get_route(choose_from, action, typ):
+#     route = None
+#
+#     for choose_type, choose_route in choose_from[action].items():
+#         if choose_type == '*':
+#             continue
+#
+#         elif choose_type == '*list':
+#             for list_dict in choose_route.values():
+#                 if typ in list_dict['option']:
+#                     route = list_dict['value']
+#                     break
+#
+#         else:
+#             if choose_type == typ:
+#                 route = choose_route
+#                 break
+#
+#     return route
 
 
 def redirect_if_overwritten(request, type_dict: dict):
@@ -165,6 +166,17 @@ def test_read(request):
 
 @user_passes_test(authorized_to_write, login_url='/denied/')
 def test_write(request):
+    pass
+
+
+@login_required
+def test_login(request):
+    pass
+
+
+@login_required
+@user_passes_test(authorized_to_access, login_url='/accounts/login/')
+def test_access(request):
     pass
 
 

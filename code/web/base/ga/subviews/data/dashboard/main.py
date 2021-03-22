@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from ast import literal_eval
 
-from ....config.nav import nav_dict
 from ....forms import DashboardModel, DashboardPositionModel, DashboardForm, DashboardPositionForm, ChartDashboardModel, DashboardDefaultModel, DashboardDefaultForm
 from ....utils.helper import set_key, get_instance_from_id, empty_key
 from ..helper import get_obj_dict, get_param_if_ok
@@ -117,7 +116,7 @@ class DashboardView:
                 grid_areas = grid_areas + ' '.join(_cols)
 
         return render(self.request, self.html_template, context={
-            'request': self.request, 'nav_dict': nav_dict, 'action': action, 'db_dict': db_dict, 'dbe_list': dbe_list, 'default_db': default_db,
+            'request': self.request, 'action': action, 'db_dict': db_dict, 'dbe_list': dbe_list, 'default_db': default_db,
             'status': status, 'position_list': position_list, 'selected_dbe_ids': selected_dbe_ids, 'free_positions': free_positions,
             'form_error': form_error, 'grid_areas': grid_areas, 'used_positions': list(used_positions.keys()), 'grid_free_positions': grid_free_positions,
             'default': default_db,
@@ -188,7 +187,7 @@ class DashboardView:
             return redirect(redirect_url)
 
         return render(self.request, self.html_template, context={
-            'request': self.request, 'nav_dict': nav_dict, 'action': action, 'db_dict': db_dict, 'dbe_list': db_dict['list'], 'default_db': default_db,
+            'request': self.request, 'action': action, 'db_dict': db_dict, 'dbe_list': db_dict['list'], 'default_db': default_db,
         })
 
     def _get_config(self) -> tuple:

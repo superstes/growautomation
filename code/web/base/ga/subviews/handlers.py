@@ -1,7 +1,23 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from ..config.nav import nav_dict
+
+class PseudoException(Exception):
+    def __init__(self, ga: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ga = ga
+
+
+class Pseudo404(PseudoException):
+    pass
+
+
+class Pseudo403(PseudoException):
+    pass
+
+
+class Pseudo500(PseudoException):
+    pass
 
 
 def handler400_api(msg=None):
@@ -12,7 +28,7 @@ def handler400_api(msg=None):
 
 
 def handler403(request, msg=None):
-    return render(request, 'error/403.html', context={'request': request, 'nav_dict': nav_dict, 'error_msg': msg})
+    return render(request, 'error/403.html', context={'request': request, 'error_msg': msg})
 
 
 def handler403_api(msg=None):
@@ -23,7 +39,7 @@ def handler403_api(msg=None):
 
 
 def handler404(request, msg=None):
-    return render(request, 'error/404.html', context={'request': request, 'nav_dict': nav_dict, 'error_msg': msg})
+    return render(request, 'error/404.html', context={'request': request, 'error_msg': msg})
 
 
 def handler404_api(msg=None):
@@ -37,7 +53,7 @@ def handler500(request, msg=None):
     if request is None:
         return render(request, 'error/500_basic.html', context={'error_msg': msg})
 
-    return render(request, 'error/500.html', context={'request': request, 'nav_dict': nav_dict, 'error_msg': msg})
+    return render(request, 'error/500.html', context={'request': request, 'error_msg': msg})
 
 
 def handler500_api(msg=None):

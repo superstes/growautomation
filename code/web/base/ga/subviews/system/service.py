@@ -6,7 +6,6 @@ from time import sleep
 from core.utils.debug import Log
 
 from ...user import authorized_to_read, authorized_to_write
-from ...config.nav import nav_dict
 from ...utils.helper import get_time_difference, develop_subprocess, get_controller_obj
 from ..handlers import handler404
 
@@ -80,7 +79,7 @@ def ServiceView(request):
             return redirect("/system/service/?service_name=%s" % service_name.replace(' ', '+'))
 
     return render(request, 'system/service.html', context={
-        'request': request, 'nav_dict': nav_dict, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
+        'request': request, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
         'service_name_options': service_name_options, 'service_status_time': service_status_time, 'service_enabled': service_enabled,
         'service_runtime': service_runtime, 'reload_time': reload_time, 'non_stop_services': non_stop_services,
     })

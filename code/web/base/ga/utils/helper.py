@@ -171,23 +171,32 @@ def get_form_prefill(request):
     return form_prefill
 
 
-def add_line_numbers(data: (list, str), reverse: bool = False) -> list:
+def str_to_list(data: (list, str), reverse: bool = False) -> list:
     if type(data) == str:
-        data = data.split('\n')
+        _ = data.split('\n')
+    else:
+        _ = data
 
     if reverse:
-        data.reverse()
+        return _.reverse()
 
-    output = []
+    return _
 
-    count = 1
-    _zfill_count = len(str(len(data)))
 
-    for line in data:
-        output.append("%s | %s" % (str(count).zfill(_zfill_count), line))
-        count += 1
-
-    return output
+# replaced by css counter
+# def add_line_numbers(data: (list, str), reverse: bool = False) -> list:
+#     data = str_to_list(data, reverse=reverse)
+#
+#     output = []
+#
+#     count = 1
+#     _zfill_count = len(str(len(data)))
+#
+#     for line in data:
+#         output.append("%s | %s" % (str(count).zfill(_zfill_count), line))
+#         count += 1
+#
+#     return output
 
 
 def empty_key(search, param: str) -> bool:

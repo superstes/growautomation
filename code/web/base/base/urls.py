@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import view_config, view_home, view_system, handler404, view_logout, view_data, view_api, view_api_denied, view_denied
+from ga.views import view, handler404
 from django.conf.urls import include
 
 urlpatterns = [
@@ -25,36 +25,19 @@ urlpatterns = [
     # auth
     url('^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
     path('accounts/', include('django.contrib.auth.urls')),  # login page
-    path('logout/', view_logout),  # logout page
     # ga
-    #   api
-    url(r'^api/denied/?$', view_api_denied),
-    path('api/<str:typ>', view_api),
-    path('api/<str:typ>/', view_api),
-    path('api/<str:typ>/<str:sub_type>', view_api),
-    path('api/<str:typ>/<str:sub_type>/', view_api),
-    #   defaults
-    url(r'^$|^home/?|^main/?|^/?$', view_home),
-    url(r'^denied/?$', view_denied),
-    #   config
-    path('config/<str:action>/<str:typ>', view_config),
-    path('config/<str:action>/<str:typ>/', view_config),
-    path('config/<str:action>/<str:typ>/<int:uid>', view_config),
-    path('config/<str:action>/<str:typ>/<int:uid>/', view_config),
-    path('config/<str:action>/<str:typ>/<str:sub_type>', view_config),
-    path('config/<str:action>/<str:typ>/<str:sub_type>/', view_config),
-    path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>', view_config),
-    path('config/<str:action>/<str:typ>/<str:sub_type>/<int:uid>/', view_config),
-    #   system
-    path('system/<str:typ>/<str:sub_type>/', view_system),
-    path('system/<str:typ>/', view_system),
-    #   data
-    path('data/<str:typ>', view_data),
-    path('data/<str:typ>/', view_data),
-    path('data/<str:typ>/<str:sub_type>', view_data),
-    path('data/<str:typ>/<str:sub_type>/', view_data),
-    path('data/<str:typ>/<str:sub_type>/<str:third_type>', view_data),
-    path('data/<str:typ>/<str:sub_type>/<str:third_type>/', view_data),
-    #   fallback
+    url(r'^$', view),
+    path('<str:a>', view),
+    path('<str:a>/', view),
+    path('<str:a>/<str:b>', view),
+    path('<str:a>/<str:b>/', view),
+    path('<str:a>/<str:b>/<str:c>', view),
+    path('<str:a>/<str:b>/<str:c>/', view),
+    path('<str:a>/<str:b>/<str:c>/<str:d>', view),
+    path('<str:a>/<str:b>/<str:c>/<str:d>/', view),
+    path('<str:a>/<str:b>/<str:c>/<str:d>/<str:e>', view),
+    path('<str:a>/<str:b>/<str:c>/<str:d>/<str:e>/', view),
+
+    # fallback
     url(r'^', handler404),
 ]

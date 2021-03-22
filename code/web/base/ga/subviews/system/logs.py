@@ -4,8 +4,7 @@ from datetime import datetime
 from os import listdir as os_listdir
 
 from ...user import authorized_to_read
-from ...config.nav import nav_dict
-from ...utils.helper import check_develop, get_controller_setting, add_line_numbers, develop_subprocess
+from ...utils.helper import check_develop, get_controller_setting, str_to_list, develop_subprocess
 from ..handlers import handler404
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
@@ -77,7 +76,7 @@ def LogView(request):
                 if develop:
                     log_data = ['test data', 'data service']
                 else:
-                    log_data = add_line_numbers(
+                    log_data = str_to_list(
                         develop_subprocess(
                             request,
                             command=SHELL_SERVICE_LOG_STATUS % log_service_value,
@@ -88,7 +87,7 @@ def LogView(request):
                 if develop:
                     log_data = ['test data', 'data journal']
                 else:
-                    log_data = add_line_numbers(
+                    log_data = str_to_list(
                         develop_subprocess(
                             request,
                             command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
@@ -107,7 +106,7 @@ def LogView(request):
                 if develop:
                     log_data = [f"log from file '{path_log}' -> test data", 'data ga']
                 else:
-                    log_data = add_line_numbers(
+                    log_data = str_to_list(
                         develop_subprocess(
                             request,
                             command="tail -n %s %s" % (log_entry_count, log_file),
@@ -131,7 +130,7 @@ def LogView(request):
         log_subtype_option_list = sorted([key for key in log_subtype_options.keys()])
 
     return render(request, 'system/log.html', context={
-        'request': request, 'nav_dict': nav_dict, 'log_data': log_data, 'log_type_options': log_type_options, 'log_type': log_type,
+        'request': request, 'log_data': log_data, 'log_type_options': log_type_options, 'log_type': log_type,
         'log_subtype': log_subtype, 'log_entry_count': log_entry_count, 'log_entry_range': SHELL_MAX_LOG_LINES_RANGE, 'log_file': log_file,
         'log_subtype_option_list': log_subtype_option_list, 'reload_time': reload_time,
     })

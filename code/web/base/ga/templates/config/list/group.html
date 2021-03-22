@@ -13,10 +13,10 @@
             <th>
                 DESCRIPTION
             </th>
+            <th>
+                ENABLED
+            </th>
         {% endif %}
-        <th>
-            ENABLED
-        </th>
         <th>
             MEMBERS
         </th>
@@ -37,20 +37,20 @@
             {% if not group_show_list or data.typ.name in group_show_list %}
                 <tr>
                     <td>
-                        {{ data.name }}
+                        {{ data|get_item:'name' }}
                     </td>
                     {% if typ == 'conditionlinkobject' %}
                         <td>
-                            {{ data.operator|to_uppercase }}
+                            {{ data|get_item:'operator'|to_uppercase }}
                         </td>
                     {% else %}
                         <td>
-                            {{ data.description }}
+                            {{ data|get_item:'description' }}
+                        </td>
+                        <td>
+                            {{ data|get_item:'enabled' }}
                         </td>
                     {% endif %}
-                    <td>
-                        {{ data.enabled }}
-                    </td>
                     <td>
                         {% if member_view_active %}
                             {% if member_view_active == data.name %}

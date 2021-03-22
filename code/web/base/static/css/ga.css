@@ -34,6 +34,7 @@
     overflow: auto;
     padding: 1% 2%;
     margin: 0 0;
+    list-style-type: none;
 }
 
 .ga-file-content-line {
@@ -41,6 +42,18 @@
     padding-left: 1vw;
     padding-top: 3px;
     white-space: break-spaces;
+    counter-increment: step-counter;
+}
+
+.ga-file-content li::before {
+    content: counter(step-counter, decimal-leading-zero);
+    margin-right: 5px;
+    font-size: 80%;
+    background-color: rgb(23,162,184);
+    color: white;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 3px;
 }
 
 .ga-nav-icon {

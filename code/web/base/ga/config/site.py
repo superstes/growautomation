@@ -37,19 +37,19 @@ sub_type_dict = {
     'connectionmember': {
         'object': {
             'model': MemberConnectionModel, 'form': MemberConnectionForm,
-            'pretty': 'Object', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'connectionobject'
+            'pretty': 'Device', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'connectionobject'
         },
     },
     'inputmember': {
         'object': {
             'model': MemberInputModel, 'form': MemberInputForm,
-            'pretty': 'Object', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'inputobject'
+            'pretty': 'Device', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'inputobject'
         },
     },
     'outputmember': {
         'object': {
             'model': MemberOutputModel, 'form': MemberOutputForm,
-            'pretty': 'Object', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'outputobject'
+            'pretty': 'Device', 'member_key': 'obj', 'group_key': 'group', 'create_redirect': 'outputobject'
         },
     },
     'conditionmember': {
@@ -70,15 +70,15 @@ sub_type_dict = {
     },
     'areamember': {
         'connection_object': {'model': MemberAreaModel, 'form': MemberAreaForm,
-                              'pretty': 'Connection object', 'member_key': 'connection_obj', 'group_key': 'area', 'create_redirect': 'connectionobject'},
+                              'pretty': 'Connection device', 'member_key': 'connection_obj', 'group_key': 'area', 'create_redirect': 'connectionobject'},
         'connection_group': {'model': MemberAreaModel, 'form': MemberAreaForm,
                              'pretty': 'Connection group', 'member_key': 'connection_group', 'group_key': 'area', 'create_redirect': 'connectiongroup'},
         'input_object': {'model': MemberAreaModel, 'form': MemberAreaForm,
-                         'pretty': 'Input object', 'member_key': 'input_obj', 'group_key': 'area', 'create_redirect': 'inputobject'},
+                         'pretty': 'Input device', 'member_key': 'input_obj', 'group_key': 'area', 'create_redirect': 'inputobject'},
         'input_group': {'model': MemberAreaModel, 'form': MemberAreaForm,
                         'pretty': 'Input group', 'member_key': 'input_group', 'group_key': 'area', 'create_redirect': 'inputgroup'},
         'output_object': {'model': MemberAreaModel, 'form': MemberAreaForm,
-                          'pretty': 'Output object', 'member_key': 'output_obj', 'group_key': 'area', 'create_redirect': 'outputobject'},
+                          'pretty': 'Output device', 'member_key': 'output_obj', 'group_key': 'area', 'create_redirect': 'outputobject'},
         'output_group': {'model': MemberAreaModel, 'form': MemberAreaForm,
                          'pretty': 'Output group', 'member_key': 'output_group', 'group_key': 'area', 'create_redirect': 'outputgroup'},
         'nested_area': {'model': NestedAreaModel, 'form': NestedAreaForm,

@@ -2,22 +2,17 @@
 {% for member in member_data %}
     <tr class="table-active">
         {% set_var member|get_item:member_key as member_obj %}
-        <td>
-            {% if typ == 'conditionlinkobject' %}
-                {{ member|get_item:'order' }} | {{ member_pretty }}
-            {% else %}
-                {{ member_pretty }}
-            {% endif %}
-        </td>
-        <td>
-            {{ member_obj|get_item:'name,---' }}
-        </td>
-        <td>
-            {{ member_obj|get_item:'description,---' }}
-        </td>
-        <td>
-            {{ member_obj|get_item:'enabled,---' }}
-        </td>
+        {% for value in member_tbl.values %}
+            <td>
+                {% if value|found:'!' %}
+                    {% set_var value|slice:"1:" as val %}
+                    {{ member_config|get_item:val }}
+                {% else %}
+                    {% set_var value|add:',---' as val %}
+                    {{ member_obj|get_item:val }}
+                {% endif %}
+            </td>
+        {% endfor %}
         <td>
             <form method="get" class="ga-form-inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
                 <input type="submit" value="Detailed" class="btn btn-info"/>

@@ -6,8 +6,7 @@ from os import remove as os_remove
 from datetime import datetime
 
 from ...user import authorized_to_read, authorized_to_write
-from ...config.nav import nav_dict
-from ...utils.helper import get_script_dir, add_line_numbers
+from ...utils.helper import get_script_dir, str_to_list
 from ...forms import SystemScriptForm
 from ..handlers import handler404
 
@@ -55,7 +54,7 @@ def ScriptView(request):
             script_dir = get_script_dir(request, typ=script_type)
 
     return render(request, 'system/script/list.html', context={
-        'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'script_dict': script_dict, 'script_type_options': script_type_options,
+        'request': request, 'script_type': script_type, 'script_dict': script_dict, 'script_type_options': script_type_options,
         'script_dir': script_dir,
     })
 
@@ -84,7 +83,7 @@ def ScriptChangeView(request):
             return handler404(request, msg='A script type must be defined.')
 
         return render(request, 'system/script/change.html', context={
-            'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'form': form, 'script_dir': script_dir,
+            'request': request, 'script_type': script_type, 'form': form, 'script_dir': script_dir,
         })
 
 
@@ -117,7 +116,7 @@ def ScriptShow(request):
 
         if os_path.exists(script_path):
             with open(script_path, 'r') as script:
-                script_content = add_line_numbers(data=script.readlines())
+                script_content = str_to_list(data=script.readlines())
 
     elif 'script_type' in request.GET:
         script_type = request.GET['script_type']
@@ -127,5 +126,5 @@ def ScriptShow(request):
         return redirect("/system/script/")
 
     return render(request, 'system/script/show.html', context={
-        'request': request, 'nav_dict': nav_dict, 'script_type': script_type, 'script_content': script_content, 'script_path': script_path,
+        'request': request, 'script_type': script_type, 'script_content': script_content, 'script_path': script_path,
     })

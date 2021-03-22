@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import user_passes_test
 from django.utils import timezone
 
 from ....user import authorized_to_read
-from ....config.nav import nav_dict
 from ....models import InputDataModel, ObjectInputModel
 from ....utils.helper import get_device_parent_setting, get_datetime_w_tz
 
@@ -65,7 +64,7 @@ def DataListView(request):
             ).order_by('-created')[:result_count]
 
     return render(request, 'data/raw/input.html', context={
-        'request': request, 'nav_dict': nav_dict, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
+        'request': request, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
         'input_device': input_device, 'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
         'data_unit': data_unit, 'data_type': data_type, 'stop_ts_ok': stop_ts_ok,
     })

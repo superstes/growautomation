@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 
-from ....config.nav import nav_dict
 from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill
 from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
 from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
@@ -66,7 +65,7 @@ class Chart:
                             stop_ts = _stop_ts
 
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-                'request': self.request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'start_ts': start_ts, 'stop_ts': stop_ts,
+                'request': self.request, 'input_device_dict': input_device_dict, 'start_ts': start_ts, 'stop_ts': stop_ts,
                 'input_device': input_device, 'input_model_dict': input_model_dict, 'action': action, 'selected': chart_dict['id'], 'form': chart_dict['form'],
                 'object_list': chart_dict['list'],
             })
@@ -91,7 +90,7 @@ class Chart:
                     pass
 
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-                'request': self.request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
+                'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'selected_dataset_ids': selected_dataset_ids,
                 'dataset_link_list': dataset_link_list, 'graph_link_list': graph_link_list, 'dataset_list': dataset_list, 'graph_form': graph_form,
                 'form_error': form_error
@@ -100,7 +99,7 @@ class Chart:
         else:
 
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-                'request': self.request, 'nav_dict': nav_dict, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
+                'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'],
             })
 
@@ -159,7 +158,7 @@ class Chart:
             return redirect(redirect_url)
 
         return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-            'request': self.request, 'nav_dict': nav_dict, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list,
+            'request': self.request, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list,
         })
 
     def _add_form_error(self, url: str, error: str = 'Failed+to+save+form'):

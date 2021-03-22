@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import user_passes_test
 
 from ....user import authorized_to_read
-from ....config.nav import nav_dict
 from ..helper import get_param_if_ok
 from ....forms import ChartGraphModel, ChartDatasetModel, ChartDatasetForm, ChartGraphForm, ChartDashboardModel, ChartDashboardForm
 from ....forms import ChartDatasetLinkModel, ChartDatasetLinkForm, ChartGraphLinkModel, ChartGraphLinkForm
@@ -22,7 +21,7 @@ def DataChartView(request):
     what = get_param_if_ok(request.GET, search='what', choices=['graph', 'dataset', 'dbe'])
 
     return render(request, 'data/chart/main.html', context={
-        'request': request, 'nav_dict': nav_dict, 'status': status, 'what': what, 'graph_list': graph_list, 'dataset_list': dataset_list,
+        'request': request, 'status': status, 'what': what, 'graph_list': graph_list, 'dataset_list': dataset_list,
         'dashboard_list': dashboard_list,
     })
 
