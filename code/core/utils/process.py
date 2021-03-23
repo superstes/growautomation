@@ -8,7 +8,7 @@ from subprocess import PIPE as subprocess_pipe
 from subprocess import TimeoutExpired
 
 
-def subprocess(command, out_error=False, web_ctrl_obj=None):
+def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None):
     if web_ctrl_obj is not None:
         logger = Log(typ='web', web_ctrl_obj=web_ctrl_obj)
         logger.write("Executing command \"%s\"" % command, level=2)
@@ -19,6 +19,7 @@ def subprocess(command, out_error=False, web_ctrl_obj=None):
 
     if type(command) != list:
         command = [command]
+
     try:
         output, error = subprocess_popen(
             command,
@@ -26,10 +27,12 @@ def subprocess(command, out_error=False, web_ctrl_obj=None):
             stdout=subprocess_pipe,
             stderr=subprocess_pipe
         ).communicate(timeout=SUBPROCESS_TIMEOUT)
+
+        output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
+
     except TimeoutExpired as error:
         output = None
-
-    output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
+        error = error
 
     if error in [None, '']:
         error = None

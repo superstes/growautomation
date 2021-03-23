@@ -178,7 +178,7 @@ def str_to_list(data: (list, str), reverse: bool = False) -> list:
         _ = data
 
     if reverse:
-        return _.reverse()
+        _.reverse()
 
     return _
 

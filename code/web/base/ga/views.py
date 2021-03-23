@@ -1,9 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .config.site import type_dict
 from .subviews.config.main import ConfigView
-from .utils.main import logout_check, test_access, test_login
-from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, Pseudo403, Pseudo404, handler500, Pseudo500
+from .utils.main import logout_check
+from .user import authorized_to_access
+from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
+from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
 from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
@@ -30,18 +33,16 @@ class GaView:
             elif a == 'api':
                 return self.api(request=request, typ=b)
 
-            test_login(request)
             if a == 'logout':
                 return self.logout(request=request)
 
-            test_access(request)
             if a == 'config':
                 if e is not None:
                     return self.config(request=request, action=b, typ=c, sub_type=d, uid=int(e))
                 elif d is not None:
                     try:
                         return self.config(request=request, action=b, typ=c, uid=int(d))
-                    except TypeError:
+                    except ValueError:
                         return self.config(request=request, action=b, typ=c, sub_type=d)
                 return self.config(request=request, action=b, typ=c)
 
@@ -73,14 +74,20 @@ class GaView:
             return handler500(request=exc.ga['request'], msg=exc.ga['msg'])
 
     @staticmethod
+    @login_required
+    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
     def home(request):
         return logout_check(request=request, default=render(request, 'home.html', {'type_dict': type_dict}))
 
     @staticmethod
+    @login_required
+    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
     def config(request, action: str, typ: str, uid: int = None, sub_type: str = None):
         return logout_check(request=request, default=ConfigView(request=request, typ=typ, action=action, sub_type=sub_type, uid=uid).go())
 
     @staticmethod
+    @login_required
+    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
     def system(request, typ: str, sub_type: str = None):
         if typ == 'log':
             return logout_check(request=request, default=LogView(request=request))
@@ -102,6 +109,8 @@ class GaView:
         return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 
     @staticmethod
+    @login_required
+    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
     def data(request, typ: str, sub_type: str = None, third_type: str = None):
         if typ == 'table':
             return logout_check(request=request, default=DataListView(request=request))
@@ -140,6 +149,7 @@ class GaView:
         return logout_check(request=request, default=handler403(request))
 
     @staticmethod
+    @login_required
     def logout(request):
         return logout_check(request=request, default=handler403(request), hard_logout=True)
 

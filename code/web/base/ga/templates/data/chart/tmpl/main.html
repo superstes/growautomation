@@ -10,19 +10,20 @@
     {% include "../../../error/form.html" %}
     {% if action != 'create' and object_list|length != 0 %}
         <form method="get">
-            <label for="selected">Existing chart object</label>
-            <select class="form-control" id="selected" name="selected" >
-                {% if action == 'show' %}
-                    <option value="---------">---------</option>
-                {% endif %}
-                {% for option in object_list %}
-                    {% if option.id == selected %}
-                        <option selected value="{{ option.id }}">{{ option }}</option>
-                    {% else %}
-                        <option value="{{ option.id }}">{{ option }}</option>
+            <label for="selected">Existing chart object
+                <select class="form-control" id="selected" name="selected" >
+                    {% if action == 'show' %}
+                        <option value="---------">---------</option>
                     {% endif %}
-                {% endfor %}
-            </select>
+                    {% for option in object_list %}
+                        {% if option.id == selected %}
+                            <option selected value="{{ option.id }}">{{ option }}</option>
+                        {% else %}
+                            <option value="{{ option.id }}">{{ option }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
             <br>
             <input type="hidden" name="do" value="{{ action }}" />
             <input type="submit" value="Select" class="btn btn-primary">

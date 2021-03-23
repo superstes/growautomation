@@ -2,30 +2,15 @@
 {% load util %}
 {% block subview %}
     <tr>
-        <th>
-            NAME
-        </th>
-        {% if typ == 'conditionlinkobject' %}
+        {% for header in group_tbl.keys %}
             <th>
-                OPERATOR
+                {{ header|upper }}
             </th>
-        {% else %}
-            <th>
-                DESCRIPTION
-            </th>
-            <th>
-                ENABLED
-            </th>
-        {% endif %}
+        {% endfor %}
         <th>
             MEMBERS
         </th>
-
-        {% if typ == 'conditionlinkobject' %}
-            <th colspan="2">
-        {% else %}
-            <th>
-        {% endif %}
+        <th>
             ACTION
         </th>
     </tr>
@@ -36,21 +21,12 @@
         {% if not group_hide_list or not data.typ.name in group_hide_list %}
             {% if not group_show_list or data.typ.name in group_show_list %}
                 <tr>
-                    <td>
-                        {{ data|get_item:'name' }}
-                    </td>
-                    {% if typ == 'conditionlinkobject' %}
+                    {% for value in group_tbl.values %}
                         <td>
-                            {{ data|get_item:'operator'|to_uppercase }}
+                            {% set_var value|add:', ' as val %}
+                            {{ data|get_item:val }}
                         </td>
-                    {% else %}
-                        <td>
-                            {{ data|get_item:'description' }}
-                        </td>
-                        <td>
-                            {{ data|get_item:'enabled' }}
-                        </td>
-                    {% endif %}
+                    {% endfor %}
                     <td>
                         {% if member_view_active %}
                             {% if member_view_active == data.name %}

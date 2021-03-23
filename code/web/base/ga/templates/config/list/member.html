@@ -18,30 +18,34 @@
             {% for member_typ, member_config in member_type_dict.items %}
                 {% set_var member_config|get_item:'member_key' as member_key %}
                 {% set_var member_data_dict|get_item:member_typ as member_data %}
-                {% set_var member_config|get_item:'create_redirect' as member_own_type %}
+                {% set_var member_config|get_item:'url' as member_own_type %}
                 {% include "./member_data.html" %}
             {% endfor %}
         {% endif %}
-<!--     todo: hand over data.name so i can auto-select the chosen one -->
          <tr class="table-active">
              <td colspan="100%">
-                 <form method="get" class="ga-form-inline" action="/config/list/{{ member_type }}/">
-                     {% if member_type_dict|length > 1 %}
-                         <label>Choose member type:</label>
-                         <select name="typ" onchange="this.form.action=this.value">
+                 {% if member_type_dict|length == 1 %}
+                     {% for typ_name, typ_nested in member_type_dict.items %}
+                        <form method="get" class="ga-form-inline" action="/config/switch/{{ member_type }}/{{ typ_name }}/">
+                     {% endfor %}
+                 {% elif member_type_dict|length > 1 %}
+                     <form method="get" class="ga-form-inline" action="/config/switch/{{ member_type }}/">
+                     <label>Choose member type:
+                         <select class="form-control" name="typ" onchange="this.form.action=this.value">
+                             <option selected>---------</option>
                              {% for typ_name, typ_nested in member_type_dict.items %}
-                             <!-- todo: change action via button (?) & disable list if target is hidden -->
-                                 <option value="/config/list/{{ typ_nested|get_item:'create_redirect' }}/">{{ typ_nested|get_item:'pretty' }}</option>
+                                 <option value="/config/switch/{{ member_type }}/{{ typ_name }}/">{{ typ_nested|get_item:'pretty' }}</option>
                              {% endfor %}
                          </select>
-                     {% else %}
-                         <input type="hidden" name="typ" value="{{ member_type_dict|get_first_key }}" />
-                     {% endif %}
+                     </label>
+                 {% endif %}
+                     <input type="hidden" name="group" value="{{ data|get_item:'id' }}" />
                      <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                      <br>
-                     <input type="submit" name="action" value="Add" class="btn btn-success" disabled/>
-                     <input type="submit" name="action" value="Create" class="btn btn-success" disabled/>
-                     <input type="submit" name="action" value="List" class="btn btn-info" disabled/>
+                     <input type="submit" name="action" value="Add" class="btn btn-success"/>
+                     <input type="submit" name="action" value="Create" class="btn btn-success"/>
+                     <!-- todo: disable list if target is hidden -->
+                     <input type="submit" name="action" value="List" class="btn btn-info"/>
                  </form>
              </td>
          </tr>

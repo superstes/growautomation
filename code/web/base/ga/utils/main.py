@@ -1,13 +1,13 @@
 from urllib import parse
+from functools import wraps
 from random import choice as random_choice
 from string import ascii_letters, digits, punctuation
 
 from django.contrib.auth.views import LoginView, logout_then_login
 from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import user_passes_test
-
-from ..user import authorized_to_read, authorized_to_write, authorized_to_access
+from django.conf import settings
+from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.shortcuts import resolve_url
 
 
 def get_as_string(get_params: dict, add: bool = False) -> str:
@@ -43,7 +43,7 @@ def redirect_if_overwritten(request, type_dict: dict):
         overwrite_action = request.GET['action'].lower()
         if overwrite_action == 'create':
             try:
-                redirect_url = "/config/create/%s/%s" % (type_dict['create_redirect'], get_as_string(request.GET))
+                redirect_url = "/config/create/%s/%s" % (type_dict['url'], get_as_string(request.GET))
                 return redirect(redirect_url)
 
             except KeyError:
@@ -51,7 +51,7 @@ def redirect_if_overwritten(request, type_dict: dict):
 
         elif overwrite_action == 'list':
             try:
-                redirect_url = "/config/list/%s/%s" % (type_dict['create_redirect'], get_as_string(request.GET))
+                redirect_url = "/config/list/%s/%s" % (type_dict['url'], get_as_string(request.GET))
                 return redirect(redirect_url)
 
             except KeyError:
@@ -159,30 +159,34 @@ def logout_check(request, default, hard_logout: bool = False):
     return default
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
-def test_read(request):
-    pass
-
-
-@user_passes_test(authorized_to_write, login_url='/denied/')
-def test_write(request):
-    pass
-
-
-@login_required
-def test_login(request):
-    pass
-
-
-@login_required
-@user_passes_test(authorized_to_access, login_url='/accounts/login/')
-def test_access(request):
-    pass
-
-
 def error_formatter(form_error, fallback: str = 'Failed to save form') -> str:
     try:
         return str(list(form_error.as_data().values())[0][0]).replace("['", '').replace("']", '')
 
     except IndexError:
         return fallback
+
+
+def method_user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
+    """
+    modified version of "django.contrib.auth.decorators.user_passes_test" for use on class methods
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(instance, *args, **kwargs):
+            if test_func(instance.request.user):
+                return view_func(instance, *args, **kwargs)
+            path = instance.request.build_absolute_uri()
+            resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+            # If the login url is the same scheme and net location then just
+            # use the path as the "next" url.
+            login_scheme, login_netloc = parse.urlparse(resolved_login_url)[:2]
+            current_scheme, current_netloc = parse.urlparse(path)[:2]
+            if ((not login_scheme or login_scheme == current_scheme) and
+                    (not login_netloc or login_netloc == current_netloc)):
+                path = instance.request.get_full_path()
+            from django.contrib.auth.views import redirect_to_login
+            return redirect_to_login(
+                path, resolved_login_url, redirect_field_name)
+        return _wrapped_view
+    return decorator

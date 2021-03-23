@@ -32,14 +32,14 @@
     background: #d9e0d7;
     border-radius: 5px;
     overflow: auto;
-    padding: 1% 2%;
+    padding: 1% 1.5%;
     margin: 0 0;
     list-style-type: none;
 }
 
 .ga-file-content-line {
-    text-indent: -1vw;
-    padding-left: 1vw;
+    text-indent: -3vw;
+    padding-left: 3vw;
     padding-top: 3px;
     white-space: break-spaces;
     counter-increment: step-counter;
@@ -47,9 +47,9 @@
 
 .ga-file-content li::before {
     content: counter(step-counter, decimal-leading-zero);
-    margin-right: 5px;
+    margin-right: 15px;
     font-size: 80%;
-    background-color: rgb(23,162,184);
+    background-color: rgb(23, 162, 184);
     color: white;
     font-weight: bold;
     padding: 3px 8px;

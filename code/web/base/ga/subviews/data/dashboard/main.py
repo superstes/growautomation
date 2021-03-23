@@ -4,8 +4,9 @@ from ast import literal_eval
 from ....forms import DashboardModel, DashboardPositionModel, DashboardForm, DashboardPositionForm, ChartDashboardModel, DashboardDefaultModel, DashboardDefaultForm
 from ....utils.helper import set_key, get_instance_from_id, empty_key
 from ..helper import get_obj_dict, get_param_if_ok
-from ....utils.main import test_read, test_write, error_formatter
+from ....utils.main import error_formatter, method_user_passes_test
 from ....submodels.helper.matrix import Matrix
+from ....user import authorized_to_read, authorized_to_write
 
 
 class DashboardView:
@@ -18,30 +19,30 @@ class DashboardView:
         self.root_path = 'data/dashboard'
         self.initiator = None
 
+    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
     def go_config(self, info: str = None):
         self.initiator = 'config'
-        test_read(self.request)
         self.html_template = "data/dashboard/config.html"
         self.root_path = 'data/dashboard/config'
         if self.request.method == 'POST':
-            return self.post(info=info)
+            return self._post(info=info)
 
         else:
             if info is not None:
                 redirect(f'/{self.root_path}/?form_error={info}+does+only+support+POST+method')
 
-            return self.get()
+            return self._get()
 
+    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
     def go_main(self):
         self.initiator = 'main'
-        test_read(self.request)
         if self.request.method == 'POST':
-            return self.post()
+            return self._post()
 
         else:
-            return self.get()
+            return self._get()
 
-    def get(self):
+    def _get(self):
         data = self.request.GET
         action = get_param_if_ok(data, search='do', choices=['show', 'create', 'update'], fallback='show', lower=True)
         db_dict, default_db = self._get_config()
@@ -122,8 +123,8 @@ class DashboardView:
             'default': default_db,
         })
 
-    def post(self, info: str = None):
-        test_write(self.request)
+    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
+    def _post(self, info: str = None):
         data = self.request.POST
         action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)
         db_dict, default_db = self._get_config()

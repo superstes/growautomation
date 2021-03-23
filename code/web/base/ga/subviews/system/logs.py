@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime
 from os import listdir as os_listdir
 
+from core.utils.debug import Log
+
 from ...user import authorized_to_read
 from ...utils.helper import check_develop, get_controller_setting, str_to_list, develop_subprocess
 from ..handlers import handler404
@@ -109,7 +111,7 @@ def LogView(request):
                     log_data = str_to_list(
                         develop_subprocess(
                             request,
-                            command="tail -n %s %s" % (log_entry_count, log_file),
+                            command=f"tail -n {log_entry_count} {log_file}",
                             develop=['Test output3', 'Helloo', "Third time's a charm"]
                         ),
                         reverse=True

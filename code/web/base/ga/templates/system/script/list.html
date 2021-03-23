@@ -2,19 +2,20 @@
 {% load util %}
 {% block content %}
     <form class="ga-form-inline" method="get" action="/system/script/">
-        <label><strong>Script type</strong></label><br>
-        <select class="form-control" name="script_type" >
-            {% if script_type is None %}
-                <option selected disabled hidden>---------</option>
-            {% endif %}
-            {% for option in script_type_options %}
-                {% if script_type == option %}
-                    <option value="{{ option }}" selected>{{ option }}</option>
-                {% else %}
-                    <option value="{{ option }}">{{ option }}</option>
+        <label>Script type
+            <select class="form-control" name="script_type" >
+                {% if script_type is None %}
+                    <option selected disabled hidden>---------</option>
                 {% endif %}
-            {% endfor %}
-        </select>
+                {% for option in script_type_options %}
+                    {% if script_type == option %}
+                        <option value="{{ option }}" selected>{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </label>
         <br>
         <input type="submit" value="Show" class="btn btn-info"/>
     </form>

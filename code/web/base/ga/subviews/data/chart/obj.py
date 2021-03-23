@@ -3,7 +3,8 @@ from django.shortcuts import render, redirect
 from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill
 from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
 from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
-from ....utils.main import test_read, test_write, error_formatter
+from ....utils.main import error_formatter, method_user_passes_test
+from ....user import authorized_to_read, authorized_to_write
 
 
 class Chart:
@@ -22,8 +23,8 @@ class Chart:
         else:
             return self.get(chart_option_defaults)
 
+    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
     def get(self, chart_option_defaults: dict):
-        test_read(self.request)
         data = self.request.GET
 
         input_device_dict = {instance.name: instance.id for instance in ObjectInputModel.objects.all()}
@@ -103,8 +104,8 @@ class Chart:
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'],
             })
 
+    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
     def post(self):
-        test_write(self.request)
         data = self.request.POST
 
         action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)

@@ -8,6 +8,7 @@ from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
 from ..config.shared import DATETIME_TS_FORMAT
 from ..config.nav import nav_dict
+from ..models import MemberConditionLinkModel, ObjectConditionModel, GroupConditionModel
 
 register = template.Library()
 
@@ -251,8 +252,10 @@ def random_gif() -> str:
 
 
 @register.simple_tag
-def get_last_errors() -> BaseException:
-    return sys_exc_info()[1]
+def get_last_errors() -> str:
+    error_type = str(sys_exc_info()[0]).split("'", 3)[1]
+    error_msg = sys_exc_info()[1]
+    return f"{error_type} => {error_msg}"
 
 
 @register.filter
@@ -266,3 +269,18 @@ def found(data: str, search: str) -> bool:
     if data.find(search) != -1:
         return True
     return False
+
+
+@register.filter
+def member_data_custom(key: str, obj):
+    if key == 'order':
+        # print(obj.__dict__)
+        if isinstance(obj, GroupConditionModel):
+            attr = {'group': obj}
+        else:
+            attr = {'condition': obj}
+
+        member_obj = MemberConditionLinkModel.objects.filter(**attr)[0]
+        # print(member_obj.__dict__)
+
+        return getattr(member_obj, key)

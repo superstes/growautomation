@@ -2,18 +2,20 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from ...forms import LABEL_DICT, HELP_DICT
 from ...subviews.handlers import Pseudo404
-from ...utils.main import test_read, test_write, redirect_if_overwritten, redirect_if_hidden
+from ...utils.main import redirect_if_overwritten, redirect_if_hidden, method_user_passes_test
 from ...config.site import type_dict, sub_type_dict
 from ...utils.main import member_pre_process
+from ...user import authorized_to_read, authorized_to_write
+from ...utils.helper import set_key
 
 
 class ConfigView:
-    def __init__(self, request, typ: str, action: str, uid: int = None, sub_type: str = None):
+    def __init__(self, request, typ: str, action: str, uid: (str, int) = None, sub_type: str = None):
         self.request = request
         self.action = action
         self.type = typ
-        self.sub_type = sub_type
         self.uid = uid
+        self.sub_type = sub_type
         self.tmpl_root = 'config'
         self.post_redirect = f'/{self.tmpl_root}/list/{self.type}/'
         self.error_msgs = {
@@ -22,6 +24,7 @@ class ConfigView:
             'type': f"Data type '{self.type}' does not exist",
         }
         self.model, self.form = None, None
+        self.data = request.GET
 
     def go(self):
         self._set_model_form()
@@ -30,14 +33,14 @@ class ConfigView:
             return hidden_redirect
 
         if self.request.method == 'POST':
+            self.data = self.request.POST
             return self._post()
 
         else:
             return self._get()
 
+    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
     def _get(self):
-        test_read(self.request)
-
         if self.action == 'list':
             tmpl, context = self._get_list()
 
@@ -50,14 +53,16 @@ class ConfigView:
         elif self.action == 'create':
             tmpl, context = self._get_create()
 
+        elif self.action == 'switch':
+            return self._get_switch()
+
         else:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['method']})
 
         return render(self.request, f'{self.tmpl_root}/{tmpl}.html', context=context)
 
+    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
     def _post(self):
-        test_write(self.request)
-
         if self.action == 'update':
             return self._post_update()
 
@@ -81,9 +86,42 @@ class ConfigView:
         if type_dict[self.type]['hidden'] is True and self.action == 'list':
             return redirect_if_hidden(request=self.request, target=type_dict[self.type]['redirect'])
 
+    def _get_switch(self):
+        """
+        will care for complexer request-switching
+        used for member-action (add/create/list) forms
+        """
+        switch_action = self.data['action'].lower()
+        switch_type = self.type
+        switch_sub_type = self.sub_type
+        default_switch_sub_type = 'object'
+        params = '?action=Create'
+        _type_dict = sub_type_dict[self.type]
+
+        if switch_action in ['create', 'list']:
+            if switch_sub_type in _type_dict:
+                switch_type = _type_dict[switch_sub_type]['url']
+
+            else:
+                switch_sub_type = default_switch_sub_type
+                switch_type = _type_dict[default_switch_sub_type]['url']
+
+        if switch_action == 'add':
+            switch_action = 'create'
+
+            if switch_sub_type in _type_dict:
+                if set_key(_type_dict[switch_sub_type], 'add_url'):
+                    switch_type = _type_dict[switch_sub_type]['add_url']
+
+            params = f"?group={self.data['group']}&member_type={switch_sub_type}&group_type={self.type}&action=Add"
+
+        return redirect(f"/{self.tmpl_root}/{switch_action}/{switch_type}/{params}")
+
     def _get_list(self):
         dataset = self.model.objects.all()
         context, member_type, member_data, _type_dict = None, None, None, None
+        # group_tbl and member_tbl should be the same length
+        #   '': '' can be used for empty columns
         group_tbl = {'name': 'name', 'description': 'description', 'enabled': 'enabled'}
         member_tbl = {'type': '!pretty', 'name': 'name', 'description': 'description', 'enabled': 'enabled'}
 
@@ -96,15 +134,15 @@ class ConfigView:
                 'condition_member_output_group': _type_dict['condition_member_output_group']['model'].objects.all(),
             }
 
-        elif self.type == 'conditionlinkobject':
+        elif self.type == 'conditionlinkgroup':
             member_type = 'conditionlinkmember'
             _type_dict = sub_type_dict[member_type]
             member_data = {
                 'condition_link_member': _type_dict['condition_link_member']['model'].objects.all(),
                 'condition_link_group': _type_dict['condition_link_group']['model'].objects.all(),
             }
-            group_tbl = {'name': 'name', 'operator': 'operator'}
-            member_tbl = {'order': 'order', 'type': '!pretty', 'name': 'name', 'description': 'description'}
+            group_tbl = {'name': 'name', 'operator': 'operator', '': ''}
+            member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name', 'description': 'description'}
 
         elif self.type.endswith('group'):
             member_type = "%smember" % self.type.replace('group', '')
@@ -163,11 +201,27 @@ class ConfigView:
     def _get_create(self):
         tmpl = 'change'
         form = self.form()
+
+        if set_key(self.data, 'group') and set_key(self.data, 'member_type'):
+            member_type = self.data['member_type']
+            group_id = self.data['group']
+            try:
+                form = self.form({sub_type_dict[self.type][member_type]['group_key']: group_id})
+
+            except KeyError:
+                try:
+                    if set_key(self.data, 'group_type'):
+                        group_type = self.data['group_type']
+                        form = self.form({sub_type_dict[group_type][member_type]['group_key']: group_id})
+
+                except KeyError:
+                    pass
+
         context = {'form': form, 'typ': self.type}
         return tmpl, context
 
     def _post_create(self):
-        form = self.form(self.request.POST)
+        form = self.form(self.data)
         tmpl = f'{self.tmpl_root}/change.html'
 
         if form.is_valid():
@@ -200,7 +254,7 @@ class ConfigView:
         except Exception:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['id']})
 
-        form = self.form(self.request.POST, instance=existing_instance)
+        form = self.form(self.data, instance=existing_instance)
 
         if form.is_valid():
             form.save()
