@@ -32,6 +32,8 @@ It's simple. And should also remain so if you have little time for it.
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
 ## Version
+<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic">
+<br><br>
 
 __The code is currently not in a stable state !__
 
