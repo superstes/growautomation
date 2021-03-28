@@ -31,10 +31,12 @@ It's simple. And should also remain so if you have little time for it.
 ## Contact
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
-## Version
-<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic">
-<br><br>
+## Documentation
+<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
+<br>
+<a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
 
+## Version
 __The code is currently not in a stable state !__
 
 Version: 0.8
