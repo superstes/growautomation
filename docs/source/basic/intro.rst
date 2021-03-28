@@ -1,3 +1,5 @@
+.. _basic-intro:
+
 =====
 Intro
 =====
@@ -7,6 +9,8 @@ Links
 * `Source on GitHub <https://github.com/superstes/growautomation>`_
 * `Video tutorials <https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw>`_
 * `Demo system <https://demo.growautomation.at/>`_
+
+----
 
 What is GrowAutomation?
 ***********************
@@ -24,6 +28,7 @@ Aim of this project
 
 * extension by external scripts
 * being an independent system
+* create a collection of knowledge regarding this topics
 * building a community around this ideas
 
 
@@ -31,6 +36,8 @@ This project is not
 ===================
 * yet in a stable state
 
+
+----
 
 Features
 ********

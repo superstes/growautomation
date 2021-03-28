@@ -33,7 +33,6 @@ It's simple. And should also remain so if you have little time for it.
 
 ## Documentation
 <img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
-<br>
 <a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
 
 ## Version

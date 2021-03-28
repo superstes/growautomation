@@ -9,10 +9,23 @@ Index
 
    basic/*
 
+.. toctree::
+   :caption: Workflows
+   :glob:
+   :maxdepth: 1
+
+   workflow/*
 
 .. toctree::
-   :caption: Manual
+   :caption: Configuration
    :glob:
-   :maxdepth: 2
+   :maxdepth: 1
 
-   manual/*
+   config/*
+
+.. toctree::
+   :caption: Devices
+   :glob:
+   :maxdepth: 1
+
+   device/*
