@@ -28,8 +28,8 @@ class ObjectConditionModel(BaseModel):
     OPERATOR_CHOICES = [
         ('=', '= (value is the same)'),
         ('!=', '!= (value is not the same)'),
-        ('<', '< (value is bigger)'),
-        ('>', '> (value is smaller)'),
+        ('<', '< (data is bigger than value)'),
+        ('>', '> (data is smaller than value)'),
     ]
     CHECK_CHOICES = [
         ('avg', 'AVG (average value of chosen datapool)'),

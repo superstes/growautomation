@@ -21,13 +21,13 @@
     {% for data in dataset %}
         <tr>
             <td>
-                {{ data.name }}
+                {{ data|get_item:'name,---' }}
             </td>
             <td>
-                {{ data.description }}
+                {{ data|get_item:'description,---' }}
             </td>
             <td>
-                {{ data.enabled }}
+                {{ data|get_item:'enabled,---' }}
             </td>
             <td>
                 <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">

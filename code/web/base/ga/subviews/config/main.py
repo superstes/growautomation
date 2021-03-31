@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from ...forms import LABEL_DICT, HELP_DICT
 from ...subviews.handlers import Pseudo404
-from ...utils.main import redirect_if_overwritten, redirect_if_hidden, method_user_passes_test
+from ...utils.main import redirect_if_hidden, method_user_passes_test
 from ...config.site import type_dict, sub_type_dict
 from ...utils.main import member_pre_process
 from ...user import authorized_to_read, authorized_to_write
@@ -17,7 +17,13 @@ class ConfigView:
         self.uid = uid
         self.sub_type = sub_type
         self.tmpl_root = 'config'
-        self.post_redirect = f'/{self.tmpl_root}/list/{self.type}/'
+
+        if self.type in type_dict and 'redirect' in type_dict[self.type]:
+            post_target = type_dict[self.type]['redirect']
+        else:
+            post_target = self.type
+
+        self.post_redirect = f'/{self.tmpl_root}/list/{post_target}/'
         self.error_msgs = {
             'id': f"Item with id {self.uid} does not exist",
             'method': f"Action '{self.action}' not supported for current method",
@@ -139,7 +145,6 @@ class ConfigView:
             _type_dict = sub_type_dict[member_type]
             member_data = {
                 'condition_link_member': _type_dict['condition_link_member']['model'].objects.all(),
-                'condition_link_group': _type_dict['condition_link_group']['model'].objects.all(),
             }
             group_tbl = {'name': 'name', 'operator': 'operator', '': ''}
             member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name', 'description': 'description'}

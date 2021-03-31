@@ -21,14 +21,14 @@ type_dict = {
     'conditionlinkgroup': {'model': ObjectConditionLinkModel, 'form': ObjectConditionLinkForm, 'pretty': 'Condition link', 'hidden': False},
     'areagroup': {'model': GroupAreaModel, 'form': GroupAreaForm, 'pretty': 'Area', 'hidden': False},
     # members
-    'connectionmember': {'model': MemberConnectionModel, 'form': MemberConnectionForm, 'pretty': 'Connection member', 'hidden': True, 'redirect': 'connectionobject'},
-    'inputmember': {'model': MemberInputModel, 'form': MemberInputForm, 'pretty': 'Input member', 'hidden': True, 'redirect': 'inputobject'},
-    'outputmember': {'model': MemberOutputModel, 'form': MemberOutputForm, 'pretty': 'Output member', 'hidden': True, 'redirect': 'outputobject'},
+    'connectionmember': {'model': MemberConnectionModel, 'form': MemberConnectionForm, 'pretty': 'Connection member', 'hidden': True, 'redirect': 'connectiongroup'},
+    'inputmember': {'model': MemberInputModel, 'form': MemberInputForm, 'pretty': 'Input member', 'hidden': True, 'redirect': 'inputgroup'},
+    'outputmember': {'model': MemberOutputModel, 'form': MemberOutputForm, 'pretty': 'Output member', 'hidden': True, 'redirect': 'outputgroup'},
     'conditionlinkmember': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'pretty': 'Condition Link Member', 'hidden': True, 'redirect': 'conditionlinkgroup'},
     'conditionmember': {'model': MemberConditionModel, 'form': MemberConditionForm, 'pretty': 'Condition Member', 'hidden': True, 'redirect': 'conditiongroup'},
     'conditionoutputmember': {'model': MemberConditionOutputModel, 'form': MemberConditionOutputForm, 'pretty': 'Condition Output Member', 'hidden': True, 'redirect': 'conditiongroup'},
-    'conditionoutputgroupmember': {'model': MemberConditionOutputGroupModel, 'form': MemberConditionOutputGroupForm, 'pretty': 'Condition Output Member Group', 'hidden': True,
-                                   'redirect': 'conditiongroup'},
+    'conditionoutputgroupmember': {'model': MemberConditionOutputGroupModel, 'form': MemberConditionOutputGroupForm, 'pretty': 'Condition Output Member Group', 'hidden': True, 'redirect': 'conditiongroup'},
+    'conditionareamember': {'model': MemberConditionAreaGroupModel, 'form': MemberConditionAreaGroupForm, 'pretty': 'Condition Area', 'hidden': True, 'redirect': 'conditiongroup'},
     'areamember': {'model': MemberAreaModel, 'form': MemberAreaForm, 'pretty': 'Area Member', 'hidden': True, 'redirect': 'areagroup'},
     'areanestedgroup': {'model': NestedAreaModel, 'form': NestedAreaForm, 'pretty': 'Nested area group', 'hidden': True, 'redirect': 'areagroup'},
 }
@@ -59,14 +59,12 @@ sub_type_dict = {
                                     'pretty': 'Output object', 'member_key': 'obj', 'group_key': 'condition_group', 'url': 'outputobject'},
         'condition_member_output_group': {'model': MemberConditionOutputGroupModel, 'form': MemberConditionOutputGroupForm, 'add_url': 'conditionoutputgroupmember',
                                           'pretty': 'Output group', 'member_key': 'group', 'group_key': 'condition_group', 'url': 'outputgroup'},
-        'condition_member_area_group': {'model': MemberConditionAreaGroupModel, 'form': MemberConditionAreaGroupForm, 'add_url': '',
+        'condition_member_area_group': {'model': MemberConditionAreaGroupModel, 'form': MemberConditionAreaGroupForm, 'add_url': 'conditionareamember',
                                         'pretty': 'Area', 'member_key': 'group', 'group_key': 'condition_group', 'url': 'areagroup'},
     },
     'conditionlinkmember': {
-        'condition_link_member': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditionobject', 'add_url': '',
+        'condition_link_member': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditionobject',
                                   'pretty': 'Condition match', 'member_key': 'condition', 'group_key': 'link', 'url': 'conditionobject'},
-        'condition_link_group': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditiongroup', 'add_url': '',
-                                 'pretty': 'Nested condition', 'member_key': 'group', 'group_key': 'link', 'url': 'conditiongroup'}
     },
     'areamember': {
         'connection_object': {'model': MemberAreaModel, 'form': MemberAreaForm,

@@ -11,7 +11,7 @@
                     {% set_var value|slice:"1:" as val %}
                     {{ val|member_data_custom:member_obj }}
                 {% else %}
-                    {% set_var value|add:', ' as val %}
+                    {% set_var value|add:',---' as val %}
                     {{ member_obj|get_item:val }}
                 {% endif %}
             </td>
