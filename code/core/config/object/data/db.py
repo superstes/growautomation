@@ -6,13 +6,14 @@ from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
 from core.config.db.validate import Go as Validate
 from core.config import shared as shared_vars
-from core.utils.debug import debugger
+from core.utils.debug import Log
 
 
 class GaDataDb:
     def __init__(self):
+        self.logger = Log()
+
         try:
-            # debug input
             self.connection_data_dict = {
                 'server': shared_vars.SYSTEM.sql_server,
                 'port': shared_vars.SYSTEM.sql_port,
@@ -20,6 +21,13 @@ class GaDataDb:
                 'secret': shared_vars.SYSTEM.sql_secret,
                 'database': shared_vars.SYSTEM.sql_database
             }
+
+            self.logger.write(f"DB connection config: "
+                              f"\"server={self.connection_data_dict['server']}\""
+                              f"\"port={self.connection_data_dict['port']}\""
+                              f"\"user={self.connection_data_dict['user']}\""
+                              f"\"database={self.connection_data_dict['database']}\"", level=7)
+
         except IndexError as error_msg:
             self._error(error_msg)
 
@@ -29,6 +37,7 @@ class GaDataDb:
     def _link(self):
         if Check(self.connection_data_dict).get():
             self.link = Link(self.connection_data_dict)
+
         else:
             self._error("Connection check failed.")
 
@@ -44,8 +53,7 @@ class GaDataDb:
         return self.link.put(command)
 
     def _error(self, msg):
-        debugger("config-object-data-db | _error | received error \"%s\"" % msg)
-        # log error or whatever
+        self.logger.write(f"Received error \"{msg}\"")
         raise ConnectionError(msg)
 
     def disconnect(self):

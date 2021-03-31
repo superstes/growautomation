@@ -17,8 +17,10 @@ class Go:
     def get(self) -> list:
         if isinstance(self.instance, self.model_obj):
             self._model()
+
         elif isinstance(self.instance, self.device_obj):
             self._device(instance=self.instance)
+
         else:
             self.logger.write(f"Instance \"{self.instance.name}\" matches neither provided objects", level=3)
 
@@ -36,6 +38,7 @@ class Go:
     def _device(self, instance):
         if instance.downlink is not None:
             self._downlink(instance=instance)
+
         else:
             self.task_instance_list.append({'device': instance})
 

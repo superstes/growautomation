@@ -25,21 +25,27 @@ class Go:
 
     def start(self):
         condition_result = GetGroupResult(group=self.instance).go()
-
         self._evaluate(condition_result=condition_result)
 
     def _evaluate(self, condition_result):
-        # todo: reverse type condition implementation
+        # todo: reverse type condition implementation => Ticket#11
 
         if condition_result:
             self.logger.write(f"Conditions for \"{self.instance.name}\" were met", level=6)
 
-            task_instance_list = Check(
-                instance=self.instance,
-                model_obj=GaOutputModel,
-                device_obj=GaOutputDevice,
-                areas=self.instance.area_group_list,
-            ).get()
+            output_list = self.instance.output_object_list
+            output_list.extend(self.instance.output_group_list)
+            task_instance_list = []
+
+            for output in output_list:
+                task_instance_list.extend(
+                    Check(
+                        instance=output,
+                        model_obj=GaOutputModel,
+                        device_obj=GaOutputDevice,
+                        areas=self.instance.area_group_list,
+                    ).get()
+                )
 
             for task_instance in task_instance_list:
                 self._process(task_instance=task_instance)

@@ -7,6 +7,8 @@ from core.utils.debug import Log
 from threading import Thread, Event
 from time import sleep as time_sleep
 from datetime import timedelta
+from sys import exc_info as sys_exc_info
+from traceback import format_exc
 
 
 class Workload(Thread):
@@ -50,7 +52,12 @@ class Workload(Thread):
                         self.logger.write("Starting thread %s" % self.log_name, level=5)
                         self.execute(thread_instance=self.instance, start=True)
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
-            self.logger.write("Thread %s failed with error: \"%s\"" % (self.log_name, error_msg))
+            self.logger.write("Thread %s failed with error: \"%s\"\n%s" % (self.log_name, error_msg, format_exc()))
+            self.run()
+
+        except:
+            exc_type, exc_obj, _ = sys_exc_info()
+            self.logger.write("Thread %s failed with error: \"%s - %s\"\n%s" % (self.log_name, exc_type, exc_obj, format_exc()))
             self.run()
 
 

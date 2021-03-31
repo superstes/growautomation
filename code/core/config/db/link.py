@@ -2,7 +2,6 @@
 # gets connection settings passed from GaDataDb instance
 
 from core.utils.process import subprocess
-from core.utils.debug import debugger
 from core.utils.debug import Log
 
 import mysql.connector
@@ -25,14 +24,11 @@ class Go:
         self.connection_data_dict = connection_data_dict
         self.cursor = None
         self.connection = None
+        self.logger = Log()
         self._connect()
 
     def _connect(self) -> bool:
         try:
-            debugger("config-db-link | _connect | user \"%s\", database \"%s\", ip \"%s\", port \"%s\""
-                     % (self.connection_data_dict['user'], self.connection_data_dict['database'],
-                        self.connection_data_dict['server'], self.connection_data_dict['port']))
-
             if self.connection_data_dict['server'] == '127.0.0.1':
                 if self.connection_data_dict['user'] == 'root':
                     try:
@@ -43,6 +39,8 @@ class Go:
                             unix_socket=self._unixsock(),
                             user=self.connection_data_dict['user'],
                         )
+                        self.logger.write('Initiated sql connection via socket as root without password', level=8)
+
                     except self.SQL_EXCEPTION_TUPLE:
                         # if failed without password, try again with it
                         _connection = mysql.connector.connect(
@@ -50,6 +48,8 @@ class Go:
                             user=self.connection_data_dict['user'],
                             passwd=self.connection_data_dict['secret']
                         )
+                        self.logger.write('Initiated sql connection via socket as root', level=8)
+
                 else:
                     # local logon for default users
                     _connection = mysql.connector.connect(
@@ -58,6 +58,8 @@ class Go:
                         passwd=self.connection_data_dict['secret'],
                         database=self.connection_data_dict['database']
                     )
+                    self.logger.write('Initiated sql connection to localhost', level=8)
+
             else:
                 # remote logon
                 _connection = mysql.connector.connect(
@@ -67,6 +69,7 @@ class Go:
                     passwd=self.connection_data_dict['secret'],
                     database=self.connection_data_dict['database']
                 )
+                self.logger.write('Initiated sql connection to remote server', level=8)
 
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
@@ -75,17 +78,19 @@ class Go:
             self.connection = _connection
             self.cursor = _connection.cursor(buffered=True)
             return True
+
         except UnboundLocalError:
+            self.logger.write('Connection instance could not be created.')
             raise ConnectionError('Connection instance not created')
 
     def get(self, query: [str, list]) -> list:
         if type(query) == str:
             query_list = [query]
+
         else:
             query_list = query
 
-        debugger("config-db-link | get | query to process \"%s\"" % query_list)
-
+        self.logger.write(f"Query to execute: \"{query_list}\"", level=7)
         data_list = []
 
         try:
@@ -94,22 +99,24 @@ class Go:
                 if len(query_list) > 1:
                     if type(data) is not None:
                         data_list.append(data)
+
                 else:
                     data_list = data
+
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
-        debugger("config-db-link | get | output \"%s\"" % data_list)
-
+        self.logger.write(f"Query output: \"{data_list}\"", level=7)
         return data_list  # list of tuples
 
     def put(self, command: [str, list]) -> bool:
         if type(command) == str:
             command_list = [command]
+
         else:
             command_list = command
 
-        debugger("config-db-link | put | command to process \"%s\"" % command_list)
+        self.logger.write(f"Query to execute: \"{command_list}\"", level=7)
 
         try:
             for c in command_list:
@@ -123,8 +130,7 @@ class Go:
         return True
 
     def _error(self, msg: str):
-        debugger("config-db-link | _error | received error \"%s\"" % msg)
-        # log error or whatever
+        self.logger.write(f"SQL connection error: \"{msg}\"", level=3)
 
         try:
             self.connection.rollback()
@@ -132,21 +138,7 @@ class Go:
         except (UnboundLocalError, AttributeError):
             pass
 
-        self.disconnect()
-
         raise ConnectionError(msg)
-
-    def disconnect(self) -> None:
-        # todo: implement destructor and remove all manual disconnect call + make it private
-
-        try:
-            self.cursor.close()
-            self.connection.close()
-
-            debugger('config-db-link | disconnect | disconnected from db')
-
-        except (UnboundLocalError, AttributeError):
-            pass
 
     @lru_cache(maxsize=16)
     def _readcache(self, query: str):
@@ -164,6 +156,7 @@ class Go:
                     if line.find('socket') != -1:
                         sock = line.split('=')[1].strip()
                         break
+
                 if not sock:
                     return False
 
@@ -171,9 +164,19 @@ class Go:
                 if subprocess(command="systemctl status mysql.service | grep 'Active:'").find('Active: inactive') != -1:
                     if subprocess('systemctl start mysql.service').find('Not able to start') != -1:
                         return False
+
                     time_sleep(5)
 
             return sock
 
         except IndexError:
             return False
+
+    def __del__(self):
+        try:
+            self.cursor.close()
+            self.connection.close()
+            self.logger.write('SQL connection closed', level=8)
+
+        except (UnboundLocalError, AttributeError):
+            pass

@@ -8,6 +8,9 @@ SPECIAL_TIME_FORMAT = '%H:%M:%S'
 SPECIAL_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
+# todo: refactor it => Ticket#23
+
+
 def special(condition, device: str) -> tuple:
     logger = device_logger(addition=device)
     speci = condition.special
@@ -32,9 +35,9 @@ def _time(condition) -> tuple:
     error = False
 
     if speci == 'time':
-        value = datetime.strptime(condition.condition_value, SPECIAL_TIME_FORMAT)
+        value = datetime.strptime(condition.value, SPECIAL_TIME_FORMAT)
     elif speci == 'datetime':
-        value = datetime.strptime(condition.condition_value, SPECIAL_DATETIME_FORMAT)
+        value = datetime.strptime(condition.value, SPECIAL_DATETIME_FORMAT)
     else:
         error = True
         value = None
