@@ -26,6 +26,7 @@ class Go:
         else:
             data = self.data_list[0]
 
+        self.logger.write(f"Data of condition match \"{self.condition.name}\": \"{data}\"", level=6)  # 7
         result = self._compare_data(data=data)
         self.logger.write(f"Result of condition match \"{self.condition.name}\": \"{result}\"", level=6)
         return result
@@ -39,9 +40,14 @@ class Go:
 
     def _compare_data(self, data) -> bool:
         operator = self.condition.operator
-        value = self.data_type(self.condition.value)
-        self.logger.write("Condition item \"%s\" comparing data: \"%s %s %s\"" % (self.condition.name, data, operator, value), level=9)
         result = False
+
+        if self.data_type == float:
+            value = round(self.data_type(self.condition.value), 2)
+            data = round(self.data_type(data), 2)
+
+        else:
+            value = self.data_type(self.condition.value)
 
         if operator == '=':
             if value == data:
@@ -60,17 +66,15 @@ class Go:
                 result = True
 
         else:
-            self.logger.write("Condition item \"%s\" has an unsupported operator \"%s\" with value_type \"%s\""
-                              % (self.condition.name, operator, self.data_type), level=4)
-            raise KeyError("Condition \"%s\" has an unsupported operator \"%s\"" % (self.condition.name, operator))
+            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" "
+                              f"with value_type \"{self.data_type}\"", level=4)
+            raise KeyError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        self.logger.write("Condition item \"%s\" result for comparison \"%s %s %s\" => \"%s\"" % (self.condition.name, data, operator, value, result), level=7)
+        self.logger.write(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", level=6)  # 7
         return result
 
     def _get_data(self) -> (float, int):
         value_check = self.condition.check
-        self.logger.write("Getting data for condition item \"%s\" while using value_check \"%s\"" % (self.condition.name, value_check), level=9)
-
         if value_check == 'min':
             data = min(self.data_list)
 
@@ -81,7 +85,9 @@ class Go:
             data = (sum(self.data_list) / len(self.data_list))
 
         else:
-            self.logger.write("Condition item \"%s\" has an unsupported value_check set: \"%s\"" % (self.condition.name, value_check), level=4)
-            raise KeyError("Condition \"%s\" has an unsupported value_check \"%s\"" % (self.condition.name, value_check))
+            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", level=4)
+            raise KeyError(f"Unsupported check type for condition \"{self.condition.name}\"")
+
+        self.logger.write(f"Data for condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=6)  # 7
 
         return data

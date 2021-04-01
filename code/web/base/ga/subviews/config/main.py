@@ -109,24 +109,28 @@ class ConfigView:
         params = '?action=Create'
         _type_dict = sub_type_dict[self.type]
 
-        if switch_action in ['create', 'list']:
-            if switch_sub_type in _type_dict:
-                switch_type = _type_dict[switch_sub_type]['url']
+        try:
+            if switch_action in ['create', 'list']:
+                if switch_sub_type in _type_dict:
+                    switch_type = _type_dict[switch_sub_type]['url']
 
-            else:
-                switch_sub_type = default_switch_sub_type
-                switch_type = _type_dict[default_switch_sub_type]['url']
+                else:
+                    switch_sub_type = default_switch_sub_type
+                    switch_type = _type_dict[default_switch_sub_type]['url']
 
-        if switch_action == 'add':
-            switch_action = 'create'
+            if switch_action == 'add':
+                switch_action = 'create'
 
-            if switch_sub_type in _type_dict:
-                if set_key(_type_dict[switch_sub_type], 'add_url'):
-                    switch_type = _type_dict[switch_sub_type]['add_url']
+                if switch_sub_type in _type_dict:
+                    if set_key(_type_dict[switch_sub_type], 'add_url'):
+                        switch_type = _type_dict[switch_sub_type]['add_url']
 
-            params = f"?group={self.data['group']}&member_type={switch_sub_type}&group_type={self.type}&action=Add"
+                params = f"?group={self.data['group']}&member_type={switch_sub_type}&group_type={self.type}&action=Add"
 
-        return redirect(f"/{self.tmpl_root}/{switch_action}/{switch_type}/{params}")
+            return redirect(f"/{self.tmpl_root}/{switch_action}/{switch_type}/{params}")
+
+        except KeyError:
+            return redirect(self.post_redirect)
 
     def _get_list(self):
         dataset = self.model.objects.all()

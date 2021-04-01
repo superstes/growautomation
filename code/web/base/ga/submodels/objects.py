@@ -86,8 +86,8 @@ class ObjectConditionLinkModel(BareModel):
         ('nand', 'NOT-AND (neither or one correct)'),
         ('or', 'OR (at least one correct)'),
         ('nor', 'NOT-OR (neither correct)'),
-        ('xor', 'XOR (either none or both correct)'),
-        ('xnor', 'NOT-XOR (one of two correct)'),
+        ('xor', 'XOR (one of two correct)'),
+        ('xnor', 'NOT-XOR (either none or both correct)'),
         ('not', 'NOT (first correct second incorrect)')
     ]
 

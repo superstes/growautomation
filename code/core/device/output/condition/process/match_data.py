@@ -38,11 +38,11 @@ class Go:
 
         else:
             self.logger.write("Condition item \"%s\" has an unsupported period_type \"%s\"" % (self.condition.name, period_type), level=4)
-            raise KeyError("Condition \"%s\" has an unsupported period_type \"%s\"" % (self.condition.name, period_type))
+            raise KeyError(f"Unsupported period type for condition match \"{self.condition.name}\"")
 
         if data is None:
-            self.logger.write("No data received for condition item \"%s\"" % self.condition.name, level=5)
-            raise ValueError("No data received for condition item \"%s\" (id \"%s\")" % (self.condition.name, self.condition.object_id))
+            self.logger.write("No data received for condition item \"%s\" (id \"%s\")" % (self.condition.name, self.condition.object_id), level=5)
+            raise ValueError(f"Got no data for condition match \"{self.condition.name}\"")
             # maybe we should let the user decide which data to use if none is found
 
         self.data_type = self._get_data_type(data=data)
@@ -69,7 +69,7 @@ class Go:
         else:
             self.logger.write("Input device/model \"%s\" has an unsupported data data_type set \"%s\""
                               % (self.condition.check_instance.name, data_type), level=4)
-            raise KeyError("Input device/model \"%s\" has an unsupported data data_type set \"%s\"" % (self.condition.check_instance.name, data_type))
+            raise KeyError(f"Unsupported data type for input \"{self.condition.check_instance.name}\"")
 
         self.logger.write("Condition item \"%s\", data \"%s\", type \"%s\"" % (self.condition.name, data, typ), level=9)
 
@@ -84,7 +84,6 @@ class Go:
         stop_time = datetime.now().strftime(timestamp_format)
 
         data_tuple_list = self.database.get(self.SQL_QUERY_TIME % (object_id, start_time, stop_time))
-
         return data_tuple_list
 
     def _get_data_by_range(self) -> list:
@@ -92,5 +91,4 @@ class Go:
         object_id = self.condition.check_instance.object_id
 
         data_tuple_list = self.database.get(self.SQL_QUERY_RANGE % (object_id, range_count))
-
         return data_tuple_list

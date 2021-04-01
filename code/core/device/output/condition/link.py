@@ -2,10 +2,12 @@
 
 from core.config.object.setting.condition import GaConditionGroup, GaConditionLink
 from core.device.output.condition.match import Go as ConditionResult
-from core.device.output.condition.process.link import get_link_result
 from core.device.log import device_logger
 
 from collections import Counter
+
+LINK_ORDER_ID_1 = 1
+LINK_ORDER_ID_2 = 2
 
 
 class Go:
@@ -93,10 +95,9 @@ class Go:
         self.logger.write(f"Getting result of condition-link \"{link.name}\"", level=9)
 
         try:
-            result = get_link_result(
+            result = self._get_result(
                 link=link,
                 result_dict=result_dict,
-                device=self.group.name
             )
 
             self.logger.write(f"Result of condition-link \"{link.name}\": \"{result}\"", level=7)
@@ -220,6 +221,56 @@ class Go:
         check_list = list(link.condition_match_dict.values())
         check_list.extend(list(link.condition_group_dict.values()))
         return check_list
+
+    def _get_result(self, result_dict: dict, link: GaConditionLink) -> bool:
+        """Calculate the link result from its member results.
+        Comparison is done using the link operator.
+        :param result_dict: Results of link members
+        :type result_dict: dict
+        :param link: Link that is currently processed
+        :type link: GaConditionLink
+        :return: Link result
+        :rtype: bool
+        """
+        if len(result_dict) != 2 or LINK_ORDER_ID_1 not in result_dict or LINK_ORDER_ID_2 not in result_dict:
+            self.logger.write("Condition link \"%s\" (id \"%s\") has more or less than 2 results: \"%s\" => could be a configuration error"
+                              % (link.name, link.object_id, result_dict), level=7)
+
+            # allowing a link with only one member
+            if len(result_dict) == 1:
+                return list(result_dict.values())[0]
+
+            raise ValueError(f'Got not acceptable results for members of link \"{link.name}\"')
+
+        op = link.operator
+        self.logger.write(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", level=6)  # 7
+
+        if op == 'and':
+            result = all(result_dict.values())
+
+        elif op == 'nand':
+            result = not all(result_dict.values())
+
+        elif op == 'or':
+            result = any(result_dict.values())
+
+        elif op == 'nor':
+            result = not any(result_dict.values())
+
+        elif op == 'not':
+            result = True if result_dict[LINK_ORDER_ID_1] is True and result_dict[LINK_ORDER_ID_2] is False else False
+
+        elif op == 'xor':
+            result = result_dict[LINK_ORDER_ID_1] != result_dict[LINK_ORDER_ID_2]
+
+        elif op == 'xnor':
+            result = not (result_dict[LINK_ORDER_ID_1] != result_dict[LINK_ORDER_ID_2])
+
+        else:
+            self.logger.write("Condition link \"%s\" (id \"%s\") has an unsupported operator '%s" % (link.name, link.object_id, op), level=3)
+            raise KeyError(f"Unsupported operator for link \"{link.name}\"")
+
+        return result
 
     def __del__(self):
         self._reset_flags(self.group)
