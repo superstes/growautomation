@@ -17,6 +17,11 @@ class ConfigView:
         self.uid = uid
         self.sub_type = sub_type
         self.tmpl_root = 'config'
+        try:
+            self.title = f"{type_dict[self.type]['pretty']} config"
+
+        except KeyError:
+            self.title = 'Config'
 
         if self.type in type_dict and 'redirect' in type_dict[self.type]:
             post_target = type_dict[self.type]['redirect']
@@ -161,12 +166,12 @@ class ConfigView:
             tmpl = 'list/member'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'member_type_dict': _type_dict,
-                'member_type': member_type, 'member_view_active': member_view_active, 'group_tbl': group_tbl, 'member_tbl': member_tbl,
+                'member_type': member_type, 'member_view_active': member_view_active, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
             }
 
         else:
             tmpl = 'list/default'
-            context = {'dataset': dataset, 'typ': self.type, 'request': self.request, 'group_tbl': group_tbl, 'member_tbl': member_tbl}
+            context = {'dataset': dataset, 'typ': self.type, 'request': self.request, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title}
 
         return tmpl, context
 
@@ -199,7 +204,7 @@ class ConfigView:
 
             data_dict[name] = {'value': value, 'info': info}
 
-        context = {'data': data, 'data_dict': data_dict, 'typ': self.type}
+        context = {'data': data, 'data_dict': data_dict, 'typ': self.type, 'title': self.title}
 
         return tmpl, context
 
@@ -222,7 +227,7 @@ class ConfigView:
                 except KeyError:
                     pass
 
-        context = {'form': form, 'typ': self.type}
+        context = {'form': form, 'typ': self.type, 'title': self.title}
         return tmpl, context
 
     def _post_create(self):
@@ -235,10 +240,10 @@ class ConfigView:
                 return redirect(self.post_redirect)
 
             except ValueError as error_msg:
-                return render(self.request, tmpl, context={'form': form, 'typ': self.type, 'form_error': error_msg})
+                return render(self.request, tmpl, context={'form': form, 'typ': self.type, 'form_error': error_msg, 'title': self.title})
 
         else:
-            return render(self.request, tmpl, context={'form': form, 'typ': self.type})
+            return render(self.request, tmpl, context={'form': form, 'typ': self.type, 'title': self.title})
 
     def _get_update(self):
         try:
@@ -249,7 +254,7 @@ class ConfigView:
         form = self.form(instance=existing_instance)
 
         tmpl = 'change'
-        context = {'form': form, 'typ': self.type}
+        context = {'form': form, 'typ': self.type, 'title': self.title}
 
         return tmpl, context
 

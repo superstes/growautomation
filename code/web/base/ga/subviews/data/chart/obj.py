@@ -6,6 +6,8 @@ from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, a
 from ....utils.main import error_formatter, method_user_passes_test
 from ....user import authorized_to_read, authorized_to_write
 
+TITLE = 'Data charts'
+
 
 class Chart:
     def __init__(self, request, html_template: str, model, form):
@@ -68,7 +70,7 @@ class Chart:
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
                 'request': self.request, 'input_device_dict': input_device_dict, 'start_ts': start_ts, 'stop_ts': stop_ts,
                 'input_device': input_device, 'input_model_dict': input_model_dict, 'action': action, 'selected': chart_dict['id'], 'form': chart_dict['form'],
-                'object_list': chart_dict['list'],
+                'object_list': chart_dict['list'], 'title': TITLE,
             })
 
         elif self.html_template == 'dbe':
@@ -94,14 +96,14 @@ class Chart:
                 'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'selected_dataset_ids': selected_dataset_ids,
                 'dataset_link_list': dataset_link_list, 'graph_link_list': graph_link_list, 'dataset_list': dataset_list, 'graph_form': graph_form,
-                'form_error': form_error
+                'form_error': form_error, 'title': TITLE,
             })
 
         else:
 
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
                 'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
-                'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'],
+                'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'title': TITLE,
             })
 
     @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
@@ -159,7 +161,7 @@ class Chart:
             return redirect(redirect_url)
 
         return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-            'request': self.request, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list,
+            'request': self.request, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list, 'title': TITLE,
         })
 
     def _add_form_error(self, url: str, error: str = 'Failed+to+save+form'):

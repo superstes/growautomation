@@ -8,6 +8,8 @@ from ....utils.main import error_formatter, method_user_passes_test
 from ....submodels.helper.matrix import Matrix
 from ....user import authorized_to_read, authorized_to_write
 
+TITLE = 'Dashboard'
+
 
 class DashboardView:
     def __init__(self, request):
@@ -120,7 +122,7 @@ class DashboardView:
             'request': self.request, 'action': action, 'db_dict': db_dict, 'dbe_list': dbe_list, 'default_db': default_db,
             'status': status, 'position_list': position_list, 'selected_dbe_ids': selected_dbe_ids, 'free_positions': free_positions,
             'form_error': form_error, 'grid_areas': grid_areas, 'used_positions': list(used_positions.keys()), 'grid_free_positions': grid_free_positions,
-            'default': default_db,
+            'default': default_db, 'title': TITLE,
         })
 
     @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
@@ -188,7 +190,7 @@ class DashboardView:
             return redirect(redirect_url)
 
         return render(self.request, self.html_template, context={
-            'request': self.request, 'action': action, 'db_dict': db_dict, 'dbe_list': db_dict['list'], 'default_db': default_db,
+            'request': self.request, 'action': action, 'db_dict': db_dict, 'dbe_list': db_dict['list'], 'default_db': default_db, 'title': TITLE,
         })
 
     def _get_config(self) -> tuple:

@@ -1,6 +1,10 @@
 {% load util %}
 {% load static %}
-<title>GrowAutomation</title>
+{% if title %}
+    <title>{{ title }}</title>
+{% else %}
+    <title>GrowAutomation</title>
+{% endif %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -11,6 +11,9 @@ from ...forms import SystemScriptForm
 from ..handlers import handler404
 
 
+TITLE = 'System scripts'
+
+
 def _get_script_list(request, typ) -> list:
     script_list = os_listdir(get_script_dir(request, typ=typ))
     return script_list
@@ -55,7 +58,7 @@ def ScriptView(request):
 
     return render(request, 'system/script/list.html', context={
         'request': request, 'script_type': script_type, 'script_dict': script_dict, 'script_type_options': script_type_options,
-        'script_dir': script_dir,
+        'script_dir': script_dir, 'title': TITLE,
     })
 
 
@@ -83,7 +86,7 @@ def ScriptChangeView(request):
             return handler404(request, msg='A script type must be defined.')
 
         return render(request, 'system/script/change.html', context={
-            'request': request, 'script_type': script_type, 'form': form, 'script_dir': script_dir,
+            'request': request, 'script_type': script_type, 'form': form, 'script_dir': script_dir, 'title': TITLE,
         })
 
 
@@ -126,5 +129,5 @@ def ScriptShow(request):
         return redirect("/system/script/")
 
     return render(request, 'system/script/show.html', context={
-        'request': request, 'script_type': script_type, 'script_content': script_content, 'script_path': script_path,
+        'request': request, 'script_type': script_type, 'script_content': script_content, 'script_path': script_path, 'title': TITLE,
     })

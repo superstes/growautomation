@@ -12,7 +12,7 @@ type_dict = {
     'outputobject': {'model': ObjectOutputModel, 'form': ObjectOutputForm, 'pretty': 'Output object', 'hidden': False},
     'conditionobject': {'model': ObjectConditionModel, 'form': ObjectConditionForm, 'pretty': 'Condition match', 'hidden': False},
     'controllerobject': {'model': ObjectControllerModel, 'form': ObjectControllerForm, 'pretty': 'Controller', 'hidden': False},
-    'timerobject': {'model': ObjectTimerModel, 'form': ObjectTimerForm, 'pretty': 'Timer', 'hidden': False},
+    'timerobject': {'model': ObjectTimerModel, 'form': ObjectTimerForm, 'pretty': 'Task', 'hidden': False},
     # groups
     'connectiongroup': {'model': GroupConnectionModel, 'form': GroupConnectionForm, 'pretty': 'Connection group', 'hidden': False},
     'inputgroup': {'model': GroupInputModel, 'form': GroupInputForm, 'pretty': 'Input group', 'hidden': False},

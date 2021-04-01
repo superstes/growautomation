@@ -18,6 +18,7 @@ SHELL_SERVICE_ENABLED = "/bin/systemctl is-enabled %s"
 SHELL_SERVICE_ACTIVE_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --value %s"
 SHELL_SERVICE_INACTIVE_TIMESTAMP = "/bin/systemctl show -p InactiveEnterTimestamp --value %s"
 DEFAULT_REFRESH_SECS = 120
+TITLE = 'System service'
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -81,7 +82,7 @@ def ServiceView(request):
     return render(request, 'system/service.html', context={
         'request': request, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
         'service_name_options': service_name_options, 'service_status_time': service_status_time, 'service_enabled': service_enabled,
-        'service_runtime': service_runtime, 'reload_time': reload_time, 'non_stop_services': non_stop_services,
+        'service_runtime': service_runtime, 'reload_time': reload_time, 'non_stop_services': non_stop_services, 'title': TITLE,
     })
 
 

@@ -17,6 +17,7 @@ SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
 SHELL_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
 SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
 DEFAULT_REFRESH_SECS = 30
+TITLE = 'System logs'
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -134,5 +135,5 @@ def LogView(request):
     return render(request, 'system/log.html', context={
         'request': request, 'log_data': log_data, 'log_type_options': log_type_options, 'log_type': log_type,
         'log_subtype': log_subtype, 'log_entry_count': log_entry_count, 'log_entry_range': SHELL_MAX_LOG_LINES_RANGE, 'log_file': log_file,
-        'log_subtype_option_list': log_subtype_option_list, 'reload_time': reload_time,
+        'log_subtype_option_list': log_subtype_option_list, 'reload_time': reload_time, 'title': TITLE,
     })

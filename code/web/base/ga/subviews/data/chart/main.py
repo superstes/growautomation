@@ -9,6 +9,7 @@ from .obj import Chart
 
 
 dbe_path = '/data/chart/dbe'
+TITLE = 'Data charts'
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -22,7 +23,7 @@ def DataChartView(request):
 
     return render(request, 'data/chart/main.html', context={
         'request': request, 'status': status, 'what': what, 'graph_list': graph_list, 'dataset_list': dataset_list,
-        'dashboard_list': dashboard_list,
+        'dashboard_list': dashboard_list, 'title': TITLE,
     })
 
 
@@ -30,6 +31,7 @@ def DataChartDatasetView(request):
     chart_option_defaults = {
         'chart_fill': True, 'chart_fill_color': 'rgba(100, 185, 215, 0.6)', 'chart_border_color': 'black', 'chart_border_width': 1, 'chart_type': 'line',
         'chart_point_radius': 0, 'chart_point_color': 'blue', 'chart_point_type': 'rectRounded', 'chart_point_hover_radius': 7, 'chart_point_hit_radius': 7,
+        'title': TITLE,
     }
 
     return Chart(request, html_template='dataset', form=ChartDatasetForm, model=ChartDatasetModel).go(chart_option_defaults)
@@ -38,7 +40,7 @@ def DataChartDatasetView(request):
 def DataChartGraphView(request):
     chart_option_defaults = {
         'chart_type': 'line', 'time_format_min': 'HH:mm', 'time_format_hour': 'HH:mm | DD-MM-YYYY', 'time_format_day': 'DD-MM-YYYY',
-        'time_format_month': 'MM-YYYY', 'chart_x_max_ticks': 15, 'chart_y_max_suggest': None, 'options_json': None,
+        'time_format_month': 'MM-YYYY', 'chart_x_max_ticks': 15, 'chart_y_max_suggest': None, 'options_json': None, 'title': TITLE,
     }
 
     return Chart(request, html_template='graph', form=ChartGraphForm, model=ChartGraphModel).go(chart_option_defaults)

@@ -8,6 +8,7 @@ from ....utils.helper import get_device_parent_setting, get_datetime_w_tz
 
 
 DATA_MAX_ENTRY_RANGE = range(25, 1025, 25)
+TITLE = 'Data table'
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -66,5 +67,5 @@ def DataListView(request):
     return render(request, 'data/raw/input.html', context={
         'request': request, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
         'input_device': input_device, 'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
-        'data_unit': data_unit, 'data_type': data_type, 'stop_ts_ok': stop_ts_ok,
+        'data_unit': data_unit, 'data_type': data_type, 'stop_ts_ok': stop_ts_ok, 'title': TITLE,
     })
