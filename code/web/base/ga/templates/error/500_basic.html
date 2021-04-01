@@ -9,16 +9,11 @@
             <h1>Error 500</h1>
             <h2>Oooooopppsss!</h2><br>
             <strong>
-                {% if error_msg is not None %}
-                    The following error occurred while loading the page:<br>
-                    '{{ error_msg }}'
-                {% else %}
-                    Something did go wrong while loading the page
-                {% endif %}
+                Something did go wrong while loading the page
             </strong>
             <br><hr><br>
             <strong>
-                Last errors: <br>
+                Last error: <br>
             </strong>
             {% get_last_errors %} <br>
             {% include "./500_gif.html" %}

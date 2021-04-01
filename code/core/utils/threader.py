@@ -52,12 +52,14 @@ class Workload(Thread):
                         self.logger.write("Starting thread %s" % self.log_name, level=5)
                         self.execute(thread_instance=self.instance, start=True)
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
-            self.logger.write("Thread %s failed with error: \"%s\"\n%s" % (self.log_name, error_msg, format_exc()))
+            self.logger.write(f"Thread {self.log_name} failed with error: \"{error_msg}\"")
+            self.logger.write(f"{format_exc()}", level=6)
             self.run()
 
         except:
             exc_type, exc_obj, _ = sys_exc_info()
-            self.logger.write("Thread %s failed with error: \"%s - %s\"\n%s" % (self.log_name, exc_type, exc_obj, format_exc()))
+            self.logger.write(f"Thread {self.log_name} failed with error: \"{exc_type} - {exc_obj}\"")
+            self.logger.write(f"{format_exc()}", level=6)
             self.run()
 
 

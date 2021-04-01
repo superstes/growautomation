@@ -12,11 +12,10 @@ class GaBase(object):
         self.object_id = object_id
 
     def __repr__(self):
-        return "%s(id: \"%s\", name: \"%s\")" % (self.__class__.__name__, self.object_id, self.name)
+        return f"{self.__class__.__name__}(id: '{self.object_id}', name: '{self.name}')"
 
     def __str__(self):
-        return "Object \"%s\" as an Instance of \"%s\"; Description: \"%s\"" \
-               % (self.name, self.__class__.__name__, self.description)
+        return f"Object '{self.name}' as an instance of '{self.__class__.__name__}' - description: '{self.description}'"
 
 
 class GaBaseDeviceModel(GaBase):

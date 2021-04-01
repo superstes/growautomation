@@ -37,10 +37,10 @@ def get(config_dict: dict) -> tuple:
                         timer_list.append(obj)
 
                 else:
-                    logger.write("Instance \"%s\" is disabled" % obj, level=4)
+                    logger.write(f"Is disabled: \"{obj}\"", level=6)
 
             else:
-                logger.write("Object \"%s\" is not allowed" % obj, level=6)
+                logger.write(f"Is not allowed: \"{obj}\"", level=7)
 
     timer_list.extend(custom_list)
 
