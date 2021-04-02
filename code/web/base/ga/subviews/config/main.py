@@ -157,6 +157,7 @@ class ConfigView:
             _type_dict = sub_type_dict[member_type]
             member_data = {
                 'condition_link_member': _type_dict['condition_link_member']['model'].objects.all(),
+                'condition_link_member_group': _type_dict['condition_link_member_group']['model'].objects.all(),
             }
             group_tbl = {'name': 'name', 'operator': 'operator', '': ''}
             member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name', 'description': 'description'}
@@ -170,6 +171,7 @@ class ConfigView:
 
         if member_type is not None:
             member_view_active, member_data_dict = member_pre_process(member_data_dict=member_data, request=self.request, type_dict=_type_dict)
+            print(member_data_dict)
             tmpl = 'list/member'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'member_type_dict': _type_dict,

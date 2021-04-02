@@ -109,6 +109,7 @@ class Go:
         )
         def thread_task(data):
             self._process(task_dict=data, reverse=True)
+            thread.stop_thread(description=device.name)
 
         thread.start()
 

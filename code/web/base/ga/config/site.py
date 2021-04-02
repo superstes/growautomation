@@ -65,6 +65,8 @@ sub_type_dict = {
     'conditionlinkmember': {
         'condition_link_member': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditionobject',
                                   'pretty': 'Condition match', 'member_key': 'condition', 'group_key': 'link', 'url': 'conditionobject'},
+        'condition_link_member_group': {'model': MemberConditionLinkModel, 'form': MemberConditionLinkForm, 'member_action': 'conditiongroup',
+                                        'pretty': 'Nested condition', 'member_key': 'group', 'group_key': 'link', 'url': 'conditiongroup'},
     },
     'areamember': {
         'connection_object': {'model': MemberAreaModel, 'form': MemberAreaForm,

@@ -55,11 +55,7 @@ class Workload(Thread):
             if self.once:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
                     self.execute(data=self.data)
-                    Loop.stop_thread(
-                        self.loop_instance,
-                        thread_data=self.data,
-                        description=self.description,
-                    )
+                    Loop.stop_thread(self.loop_instance, description=self.description)
                     break
 
             else:
@@ -97,7 +93,7 @@ class Loop:
         self.jobs = []
         self.logger = Log()
 
-    def start(self, daemon=True, single_thread=None) -> None:
+    def start(self, daemon=True, single_thread: str = None) -> None:
         if daemon:
             self.logger.write('Starting threads in background', level=6)
 
@@ -109,7 +105,7 @@ class Loop:
             else:
                 self.logger.write(f"Starting single thread \"{single_thread}\"", level=6)
 
-                if job.name == single_thread:
+                if job.description == single_thread:
                     job.daemon = daemon
                     job.start()
 
@@ -164,15 +160,15 @@ class Loop:
         self.logger.write('All threads stopped. Exiting loop', level=3)
         return True
 
-    def stop_thread(self, thread_data, description: str):
+    def stop_thread(self, description: str):
         self.logger.write(f"Stopping thread for \"{description}\"", level=6)
         to_process_list = self.jobs
 
         for job in to_process_list:
-            if job.name == thread_data:
+            if job.description == description:
                 job.stop()
                 self.jobs.remove(job)
-                self.logger.write(f"Thread {job.name} stopped.", level=2)
+                self.logger.write(f"Thread {job.description} stopped.", level=2)
 
     def start_thread(self, sleep_time: int, thread_data, description: str) -> None:
         self.thread(
@@ -184,10 +180,7 @@ class Loop:
 
     def reload_thread(self, sleep_time: int, thread_data, description: str) -> None:
         self.logger.write(f"Reloading thread for \"{description}\"", level=6)
-        self.stop_thread(
-            thread_data=thread_data,
-            description=description,
-        )
+        self.stop_thread(description=description)
         self.start_thread(
             sleep_time=sleep_time,
             thread_data=thread_data,
@@ -197,6 +190,3 @@ class Loop:
     def list(self) -> list:
         self.logger.write('Returning thread list', level=8)
         return [job.data for job in self.jobs]
-
-    def __del__(self):
-        self.stop()

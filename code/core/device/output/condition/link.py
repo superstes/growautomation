@@ -52,6 +52,7 @@ class Go:
             last_result = result
 
         self.logger.write(f"Result of condition \"{group.name}\": \"{last_result}\" ", level=6)
+        self._reset_flags(group)
 
         return last_result
 
