@@ -148,7 +148,7 @@ class Go:
 
             if condition not in slm_list:
                 # if the condition will be further processed -> update its data to the link result
-                self.logger.write(f"Updating data for condition \"{condition.name}\" to result \"{result}\"", level=9)
+                self.logger.write(f"Updating data of condition \"{condition.name}\" to result \"{result}\"", level=9)
 
                 condition.data = result
                 nslm = True

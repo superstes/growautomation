@@ -13,8 +13,8 @@ DEVICE_DICT = {
     },
     'output': {
         'data': {
-            'time': "select data, obj_id from ga_inputdatamodel where obj_id = '%s' and created BETWEEN '%s' and '%s' ORDER BY created DESC",
-            'range': "select data, obj_id from ga_inputdatamodel where obj_id = '%s' ORDER BY created DESC LIMIT %s"
+            'time': "select data from ga_inputdatamodel where obj_id = '%s' and created BETWEEN '%s' and '%s' ORDER BY created DESC",
+            'range': "select data from ga_inputdatamodel where obj_id = '%s' ORDER BY created DESC LIMIT %s"
         }
     }
 }

@@ -1,9 +1,7 @@
 # handles single condition processing
 
 from core.device.log import device_logger
-# from core.device.output.condition.process.single_special import special as SpecialData
-# Ticket#23
-from core.device.output.condition.process.match_data import Go as DefaultData
+from core.device.output.condition.process.match_data import Go as MatchData
 
 from datetime import datetime
 
@@ -17,13 +15,14 @@ class Go:
         self.device = device
 
     def get(self) -> bool:
-        self.logger.write(f"Getting data for condition match \"{self.condition.name}\"", level=9)
-        self.data_list, self.data_type = DefaultData(condition=self.condition, device=self.device).get()
+        self.logger.write(f"Getting data of condition match \"{self.condition.name}\"", level=9)
+        self.data_list, self.data_type = MatchData(condition=self.condition, device=self.device).get()
 
         if self.data_type in [int, float]:
             data = self._get_data()
 
         else:
+            # maybe add more functionality for non-number data types (?)
             data = self.data_list[0]
 
         self.logger.write(f"Data of condition match \"{self.condition.name}\": \"{data}\"", level=6)  # 7
@@ -31,7 +30,8 @@ class Go:
         self.logger.write(f"Result of condition match \"{self.condition.name}\": \"{result}\"", level=6)
         return result
 
-        # Ticket#23
+        # todo: special-cases => Ticket#23
+        # from core.device.output.condition.process.single_special import special as SpecialData
         # data, value = SpecialData(
         #     condition=self.condition,
         #     device=self.device
@@ -42,12 +42,18 @@ class Go:
         operator = self.condition.operator
         result = False
 
-        if self.data_type == float:
-            value = round(self.data_type(self.condition.value), 2)
-            data = round(self.data_type(data), 2)
+        try:
+            if self.data_type == float:
+                value = round(self.data_type(self.condition.value), 2)
+                data = round(self.data_type(data), 2)
 
-        else:
-            value = self.data_type(self.condition.value)
+            else:
+                value = self.data_type(self.condition.value)
+
+        except TypeError:
+            self.logger.write(f"Failed to apply data type \"{self.data_type}\" to data \"{data}\" or value \"{self.condition.value}\" "
+                              f"of condition match \"{self.condition.name}\"", level=3)
+            raise KeyError(f"Unsupported data type \"{self.data_type}\" for condition match \"{self.condition.name}\"")
 
         if operator == '=':
             if value == data:
@@ -88,6 +94,6 @@ class Go:
             self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", level=4)
             raise KeyError(f"Unsupported check type for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Data for condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=6)  # 7
+        self.logger.write(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=6)  # 7
 
         return data
