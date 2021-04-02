@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-# This file is part of Growautomation
+# This file is part of GrowAutomation
 #     Copyright (C) 2021  René Pascal Rath
 #
-#     Growautomation is free software: you can redistribute it and/or modify
+#     GrowAutomation is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.7
+# ga_version 0.8
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
 #   (export PYTHONPATH=/usr/sbin/ga)
@@ -84,7 +84,8 @@ class Service:
         self._run()
 
     def reload(self, signum=None, stack=None):
-        self.logger.write('Service reload -> checking for config changes', level=6)
+        self.logger.write(f"Service received signal {signum}", level=3)
+        self.logger.write('Service reload -> checking for config changes', level=4)
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
             object_list=self.CONFIG,
@@ -137,9 +138,13 @@ class Service:
         self.CONFIG_FILE.update()
 
     def _thread(self, instance):
-        @self.THREAD.thread(sleep_time=int(instance.timer), thread_instance=instance)
-        def thread_task(thread_instance, start=False):
-            Decision(instance=thread_instance).start()
+        @self.THREAD.thread(
+            sleep_time=int(instance.timer),
+            thread_data=instance,
+            description=instance.name,
+        )
+        def thread_task(data):
+            Decision(instance=data).start()
 
     @staticmethod
     def _wait(seconds: int):
@@ -150,11 +155,11 @@ class Service:
     def _exit(self) -> None:
         if self.exit_count == 0:
             self.exit_count += 1
-            self.logger.write('Growautomation service: Farewell!')
+            self.logger.write('GrowAutomation service: Farewell!')
         raise SystemExit('Service exited gracefully.')
 
     def _hard_exit(self):
-        self.logger.write("Hard exiting service since it was stopped more than %s times" % self.MAX_STOP_COUNT, level=6)
+        self.logger.write(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
         self.logger.write('Stopping service merciless', level=3)
         self.logger.write('Service stopped.')
         raise SystemExit('Service exited merciless!')
@@ -197,10 +202,12 @@ class Service:
                 if time() > (run_last_reload_time + self.RUN_RELOAD_INTERVAL):
                     self.reload()
                     break
+
                 if time() > (run_last_status_time + self.RUN_STATUS_INTERVAL):
                     self._status()
                     run_last_status_time = time()
                 time_sleep(self.RUN_LOOP_INTERVAL)
+
         except:
             try:
                 error = sys_exc_info()[1]

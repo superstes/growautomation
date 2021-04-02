@@ -13,57 +13,86 @@ from traceback import format_exc
 
 class Workload(Thread):
     JOIN_TIMEOUT = 5
+    MAX_TRACEBACK_LENGTH = 5000
+    FAIL_COUNT_SLEEP = 5
+    FAIL_SLEEP = 600
 
-    def __init__(self, sleep, execute, instance, loop_instance, once=False):
+    def __init__(self, sleep: timedelta, execute, data, loop_instance, description: str, once: bool = False):
         Thread.__init__(self)
         self.sleep = sleep
-        self.execute = execute
-        self.instance = instance
+        self.execute = execute  # function to execute
+        self.data = data
         self.loop_instance = loop_instance
         self.once = once
         self.state_stop = Event()
         self.logger = Log()
-        self.log_name = "\"%s\" (\"%s\")" % (self.name, self.instance.name)
+        self.description = description
+        self.log_name = f"\"{self.name}\" (\"{description}\")"
+        self.fail_count = 0
 
     def stop(self) -> bool:
-        self.logger.write("Thread stopping %s" % self.log_name, level=6)
+        self.logger.write(f"Thread stopping {self.log_name}", level=6)
         self.state_stop.set()
+
         try:
             self.join(self.JOIN_TIMEOUT)
             if self.is_alive():
-                self.logger.write("Unable to join thread %s" % self.log_name, level=5)
+                self.logger.write(f"Unable to join thread {self.log_name}", level=5)
+
         except RuntimeError:
             pass
-        self.logger.write("Stopped thread %s" % self.log_name, level=4)
+
+        self.logger.write(f"Stopped thread {self.log_name}", level=4)
         return True
 
     def run(self) -> None:
+        if self.fail_count >= self.FAIL_COUNT_SLEEP:
+            self.logger.write(f"Thread {self.log_name} failed too often => entering fail-sleep of {self.FAIL_SLEEP} secs", level=3)
+            time_sleep(self.FAIL_SLEEP)
+
+        self.logger.write(f"Entering runtime of thread {self.log_name}", level=7)
         try:
-            self.logger.write("Entering runtime of thread %s" % self.log_name, level=7)
             if self.once:
-                self.execute()
-                Loop.stop_thread(self.loop_instance, thread_instance=self.instance)
+                while not self.state_stop.wait(self.sleep.total_seconds()):
+                    self.execute(data=self.data)
+                    Loop.stop_thread(
+                        self.loop_instance,
+                        thread_data=self.data,
+                        description=self.description,
+                    )
+                    break
+
             else:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
                     if self.state_stop.isSet():
-                        self.logger.write("Exiting thread %s" % self.log_name, level=5)
+                        self.logger.write(f"Exiting thread {self.log_name}", level=5)
                         break
+
                     else:
-                        self.logger.write("Starting thread %s" % self.log_name, level=5)
-                        self.execute(thread_instance=self.instance, start=True)
+                        self.logger.write(f"Starting thread {self.log_name}", level=5)
+                        self.execute(data=self.data)
+
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
+            self.fail_count += 1
             self.logger.write(f"Thread {self.log_name} failed with error: \"{error_msg}\"")
-            self.logger.write(f"{format_exc()}", level=6)
-            self.run()
+            self.logger.write(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=6)
+
+            if not self.once:
+                self.run()
 
         except:
+            self.fail_count += 1
             exc_type, exc_obj, _ = sys_exc_info()
             self.logger.write(f"Thread {self.log_name} failed with error: \"{exc_type} - {exc_obj}\"")
-            self.logger.write(f"{format_exc()}", level=6)
-            self.run()
+            self.logger.write(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=6)
+
+            if not self.once:
+                self.run()
 
 
 class Loop:
+    DEFAULT_SLEEP_TIME = 600
+
     def __init__(self):
         self.jobs = []
         self.logger = Log()
@@ -78,7 +107,7 @@ class Loop:
                 job.start()
 
             else:
-                self.logger.write("Starting single_thread \"%s\"" % single_thread.name, level=6)
+                self.logger.write(f"Starting single thread \"{single_thread}\"", level=6)
 
                 if job.name == single_thread:
                     job.daemon = daemon
@@ -88,19 +117,20 @@ class Loop:
             self.logger.write('Starting threads in foreground', level=3)
             self._block_root_process()
 
-    def thread(self, sleep_time: int, thread_instance, once: bool = False):
-        self.logger.write("Adding thread job \"%s\", interval \"%s\" \"%s\"" % (thread_instance.name, type(sleep_time), sleep_time), level=7)
+    def thread(self, sleep_time: int, thread_data, description: str, once: bool = False):
+        self.logger.write(f"Adding thread for \"{description}\" with interval \"{sleep_time}\"", level=7)
 
         def decorator(function):
             if sleep_time == 0:
-                sleep_time_new = 600
+                sleep_time_new = self.DEFAULT_SLEEP_TIME
                 self.jobs.append(
                     Workload(
                         sleep=timedelta(seconds=sleep_time_new),
                         execute=function,
-                        instance=thread_instance,
+                        data=thread_data,
                         loop_instance=self,
-                        once=True
+                        once=True,
+                        description=description,
                     )
                 )
             else:
@@ -108,9 +138,10 @@ class Loop:
                     Workload(
                         sleep=timedelta(seconds=sleep_time),
                         execute=function,
-                        instance=thread_instance,
+                        data=thread_data,
                         loop_instance=self,
-                        once=once
+                        once=once,
+                        description=description,
                     )
                 )
             return function
@@ -120,6 +151,7 @@ class Loop:
         while True:
             try:
                 time_sleep(1)
+
             except KeyboardInterrupt:
                 self.stop()
 
@@ -132,25 +164,39 @@ class Loop:
         self.logger.write('All threads stopped. Exiting loop', level=3)
         return True
 
-    def stop_thread(self, thread_instance):
-        self.logger.write("Stopping thread \"%s\"" % thread_instance.name, level=6)
+    def stop_thread(self, thread_data, description: str):
+        self.logger.write(f"Stopping thread for \"{description}\"", level=6)
         to_process_list = self.jobs
 
         for job in to_process_list:
-            if job.name == thread_instance:
+            if job.name == thread_data:
                 job.stop()
                 self.jobs.remove(job)
-                self.logger.write("Thread %s stopped." % job.name, level=2)
+                self.logger.write(f"Thread {job.name} stopped.", level=2)
 
-    def start_thread(self, sleep_time: int, thread_instance) -> None:
-        self.thread(sleep_time, thread_instance)
-        self.start(single_thread=thread_instance)
+    def start_thread(self, sleep_time: int, thread_data, description: str) -> None:
+        self.thread(
+            sleep_time=sleep_time,
+            thread_data=thread_data,
+            description=description,
+        )
+        self.start(single_thread=thread_data)
 
-    def reload_thread(self, sleep_time: int, thread_instance) -> None:
-        self.logger.write("Reloading thread \"%s\"" % thread_instance.name, level=6)
-        self.stop_thread(thread_instance)
-        self.start_thread(sleep_time, thread_instance)
+    def reload_thread(self, sleep_time: int, thread_data, description: str) -> None:
+        self.logger.write(f"Reloading thread for \"{description}\"", level=6)
+        self.stop_thread(
+            thread_data=thread_data,
+            description=description,
+        )
+        self.start_thread(
+            sleep_time=sleep_time,
+            thread_data=thread_data,
+            description=description,
+        )
 
     def list(self) -> list:
         self.logger.write('Returning thread list', level=8)
-        return [job.instance for job in self.jobs]
+        return [job.data for job in self.jobs]
+
+    def __del__(self):
+        self.stop()
