@@ -27,14 +27,18 @@ class Go:
         condition_result = GetGroupResult(group=self.instance).go()
         self._evaluate(condition_result=condition_result)
 
-    def _evaluate(self, condition_result):
+    def _evaluate(self, condition_result) -> None:
         # todo: reverse type condition implementation => Ticket#11
 
         if condition_result:
             self.logger.write(f"Conditions for \"{self.instance.name}\" were met", level=6)
 
-            output_list = self.instance.output_object_list
+            output_list = self.instance.output_object_list.copy()
+
+            self.logger.write(f"Output list of \"{self.instance.name}\": \"{output_list}\"", level=7)
             output_list.extend(self.instance.output_group_list)
+            self.logger.write(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", level=7)
+
             task_instance_list = []
 
             for output in output_list:
@@ -47,21 +51,21 @@ class Go:
                     ).get()
                 )
 
-            for task_instance in task_instance_list:
-                self._process(task_instance=task_instance)
+            for task_dict in task_instance_list:
+                self._process(task_dict=task_dict)
 
         else:
-            self.logger.write(f"Conditions for \"{self.instance.name}\" were not met", level=4)
+            self.logger.write(f"Conditions for \"{self.instance.name}\" were not met", level=3)
 
-    def _process(self, task_instance):
-        device = task_instance['device']
+    def _process(self, task_dict: dict, reverse=False) -> None:
+        device = task_dict['device']
         self.logger.write(f"Processing device instance: \"{device.__dict__}\"", level=7)
 
-        if 'downlink' in task_instance:
-            result = Process(instance=task_instance['downlink'], nested_instance=device, script_dir='connection').start()
+        if 'downlink' in task_dict:
+            result = Process(instance=task_dict['downlink'], nested_instance=device, script_dir='connection', reverse=reverse).start()
 
         else:
-            result = Process(instance=device, script_dir='output').start()
+            result = Process(instance=device, script_dir='output', reverse=reverse).start()
 
         if result is None:
             self.logger.write(f"Processing of output-device \"{device.name}\" failed", level=3)
@@ -72,8 +76,11 @@ class Go:
         else:
             self.logger.write(f"Processing of output \"{device.name}\" succeeded", level=7)
 
+            self.logger.write(f"Checking device \"{device.name}\" for reversion: reverseable - {device.reverse}, active - {device.active}, "
+                              f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", level=7)
+
             if device.reverse == 1 and device.active and device.reverse_type == self.REVERSE_KEY_TIME:
-                self._reverse_timer(instance=task_instance)
+                self._reverse_timer(task_dict=task_dict)
 
     def _condition_members(self) -> dict:
         output_dict = {}
@@ -88,18 +95,22 @@ class Go:
 
         return output_dict
 
-    def _reverse_timer(self, instance):
-        device = instance['device']
-        self.logger.write(f"Starting reverse timer for output-device \"{device.name}\" - will be started "
-                          f"in \"{device.reverse_timer}\" secs", level=6)
+    def _reverse_timer(self, task_dict: dict) -> None:
+        device = task_dict['device']
+        self.logger.write(f"Entering wait timer ({device.reverse_type_data} secs) for output-device \"{device.name}\"", level=6)
 
         thread = Thread()
 
-        @thread.thread(sleep_time=int(device.reverse_timer), thread_instance=device, once=True)
-        def thread_task(thread_instance, start=False):
-            self._process(task_instance=thread_instance)
+        @thread.thread(
+            sleep_time=int(device.reverse_type_data),
+            thread_data=task_dict,
+            once=True,
+            description=device.name,
+        )
+        def thread_task(data):
+            self._process(task_dict=data, reverse=True)
 
-        thread_task(thread_instance=instance)
+        thread.start()
 
     def __del__(self):
         self.database.disconnect()
