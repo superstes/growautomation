@@ -7,7 +7,3 @@ crypto = AESCipher(key=get_key())
 
 def encrypt(unencrypted_secret: str) -> str:
     return crypto.encrypt(unencrypted_secret)
-
-
-def decrypt(encrypted_secret: str) -> str:
-    return crypto.decrypt(encrypted_secret)

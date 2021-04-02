@@ -1,14 +1,10 @@
 {% extends "./body.html" %}
 {% load util %}
+{% load static %}
 {% block content %}
-    <h1>
-        Growautomation
-    </h1>
-    <h3>
-        Management interface
-    </h3>
-    <br>
-    <hr>
+    <img src="{% static 'img/ga03.png' %}" alt="" onerror="this.style.display='none'" class="ga-img-float"/>
+    <br><br><hr>
+    <h3>Management interface</h3>
     <p>
         The goal is to automate activities related to the cultivation of plants. <br> <br>
 
@@ -16,7 +12,8 @@
 
         It's simple. And should also remain so if you have little time for it. <br> <br> <br>
 
-        <h3>Thoughts about growing</h3>
+    <br><hr>
+    <h3>Thoughts about growing</h3>
 
         It should not be necessary to check if the plants need water. <br>
           - Watering should be done automatically but only when necessary. <br><br>

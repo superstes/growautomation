@@ -3,8 +3,6 @@ from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime
 from os import listdir as os_listdir
 
-from core.utils.debug import Log
-
 from ...user import authorized_to_read
 from ...utils.helper import check_develop, get_controller_setting, str_to_list, develop_subprocess
 from ..handlers import handler404

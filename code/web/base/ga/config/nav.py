@@ -19,6 +19,7 @@ nav_dict = {
             'Service': '/system/service/',  # status and restart of service(s)
             'Logs': '/system/log/',  # read various log files
             'Scripts': '/system/script/',  # upload or delete scripts
+            'Export': '/system/export/',  # download db dump
         },
     },
     'right': {

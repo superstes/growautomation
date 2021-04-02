@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .config.site import type_dict
@@ -15,6 +15,7 @@ from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataC
 from .subviews.api.data.main import ApiData
 from .subviews.api.chart.main import ApiChart
 from .subviews.data.dashboard.main import DashboardView
+from .subviews.system.export import export_view
 
 
 def view(request, **kwargs):
@@ -105,6 +106,9 @@ class GaView:
                     return logout_check(request=request, default=ScriptShow(request=request))
 
             return logout_check(request=request, default=ScriptView(request=request))
+
+        elif typ == 'export':
+            return export_view(request=request)
 
         return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
 

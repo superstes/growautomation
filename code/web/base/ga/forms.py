@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 
 from .models import *
 from .submodels.helper.matrix import Matrix
-from .submodels.helper.crypto import decrypt, encrypt
+from .submodels.helper.crypto import encrypt
 
 LABEL_DICT = {
     'name': 'Name',
