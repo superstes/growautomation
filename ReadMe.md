@@ -31,12 +31,18 @@ It's simple. And should also remain so if you have little time for it.
 ## Contact
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
+### Found bugs?
+Send us an email at <a href="mailto:bugs@growautomation.eu">bugs@growautomation.eu</a><br>
+Please check out our <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug guidelines</a> first!
+
 ## Documentation
 <img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
 <a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
 
 ## Version
 __The code is currently not in a stable state !__
+
+First 'stable' release coming <strong>SOON</strong>! :D
 
 Version: 0.8
 
@@ -48,6 +54,10 @@ Version: 0.8
 
 
 ### History
+- v0.8 _(2021-03 - 2021-04)_
+  - updated condition workflow
+  - created basic <a href="https://docs.growautomation.eu">documentation</a>
+  - scripting setup using ansible
 - v0.7 _(2020-12 - 2021-03)_
   - created basic _(django)_ web interface => <a href="https://demo.growautomation.at/">DEMO</a>
     - functionality:
@@ -71,6 +81,7 @@ Version: 0.8
   - dark age _(connected scripts)_
 
 ### Planned features
+- installation per pre-configured image for easy setup
 - plant monitoring via nfc-tags and harvest-scale => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
 - documentation via sphinx _(read the docs)_
 - documenting clean hardware setup _(easy wiring via patchpanel)_
