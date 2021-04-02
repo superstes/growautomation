@@ -154,7 +154,8 @@ def dpm_post_delete(sender, instance, **kwargs):
         instance.dashboard.save()
 
     else:
-        print('Unable to update the dashboard matrix')
+        pass
+        # log error or whatever ('Unable to update the dashboard matrix')
 
 
 @receiver(post_save, sender=DashboardPositionModel)
@@ -167,7 +168,8 @@ def dpm_post_save(sender, instance, **kwargs):
         instance.dashboard.save()
 
     else:
-        print('Unable to update the dashboard matrix')
+        pass
+        # log error or whatever ('Unable to update the dashboard matrix')
 
 
 class DashboardDefaultModel(BareModel):

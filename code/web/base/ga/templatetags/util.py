@@ -269,18 +269,3 @@ def found(data: str, search: str) -> bool:
     if data.find(search) != -1:
         return True
     return False
-
-
-@register.filter
-def member_data_custom(key: str, obj):
-    if key == 'order':
-        # print(obj.__dict__)
-        if isinstance(obj, GroupConditionModel):
-            attr = {'group': obj}
-        else:
-            attr = {'condition': obj}
-
-        member_obj = MemberConditionLinkModel.objects.filter(**attr)[0]
-        # print(member_obj.__dict__)
-
-        return getattr(member_obj, key)

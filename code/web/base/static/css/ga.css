@@ -1,3 +1,8 @@
+body {
+    padding: 0 0;
+    margin: 0 0;
+}
+
 .ga-nav-main {
     font-weight: bold;
     text-transform: uppercase;
@@ -10,22 +15,28 @@
 
 .ga-main {
     margin: 2%;
+    height: 100%;
 }
 
 .ga-footer {
     margin: 2%;
+    position: sticky;
 }
 
-.ga-footer-info {
+.ga-footer > div {
+    padding: 0.5% 1%;
     border-radius: 5px;
-    padding: 1% 2%;
 }
 
 .ga-footer-text {
     background-color: #343a40;
-    padding: 1% 2%;
+    text-align: center;
+}
+
+.ga-footer-text > div {
     color: white;
-    border-radius: 5px;
+    font-size: small;
+    display: inline-block;
 }
 
 .ga-file-content {
@@ -86,7 +97,7 @@ form .error-msg {
 
 .ga-img-float {
     width: 85%;
-    max-width: 650px;
+    max-width: 500px;
 }
 
 .ga-db-preview {
@@ -197,4 +208,15 @@ form .error-msg {
     border-radius: 5px;
     max-height: 60vh;
     max-width: 80vw;
+}
+
+.ga-login {
+    margin-left: auto;
+    margin-right: auto;
+    width: 40vw;
+}
+
+.ga-login-fields {
+    width: 40vw;
+    box-sizing: border-box;
 }

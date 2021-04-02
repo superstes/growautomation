@@ -17,27 +17,6 @@ def get_as_string(get_params: dict, add: bool = False) -> str:
     return "?%s" % parse.urlencode(get_params)
 
 
-# def get_route(choose_from, action, typ):
-#     route = None
-#
-#     for choose_type, choose_route in choose_from[action].items():
-#         if choose_type == '*':
-#             continue
-#
-#         elif choose_type == '*list':
-#             for list_dict in choose_route.values():
-#                 if typ in list_dict['option']:
-#                     route = list_dict['value']
-#                     break
-#
-#         else:
-#             if choose_type == typ:
-#                 route = choose_route
-#                 break
-#
-#     return route
-
-
 def redirect_if_overwritten(request, type_dict: dict):
     if 'action' in request.GET:
         overwrite_action = request.GET['action'].lower()
@@ -82,9 +61,8 @@ def member_pre_process(request, member_data_dict: dict, type_dict: dict):
                 member_repr = getattr(member, member_key)
                 if member_group.name == member_view_active and member_repr is not None:
                     if key in output:
-                        _member_list = output[key]
-                        _member_list.append(member)
-                        output[key] = _member_list
+                        output[key].append(member)
+
                     else:
                         output[key] = [member]
 

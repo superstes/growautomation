@@ -64,6 +64,14 @@
         padding-left: 5vw;
     }
 
+    .ga-login {
+        width: 70vw;
+    }
+
+    .ga-login-fields {
+        width: 70vw;
+    }
+
 }
 
 @include media-breakpoint-between(xs,sm){

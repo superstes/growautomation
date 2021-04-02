@@ -137,6 +137,9 @@ class ConfigView:
         context, member_type, member_data, _type_dict = None, None, None, None
         # group_tbl and member_tbl should be the same length
         #   '': '' can be used for empty columns
+        # special table contents:
+        #   ! => pull following key from sub_type_dict
+        #   ? => pull following key from member object
         group_tbl = {'name': 'name', 'description': 'description', 'enabled': 'enabled'}
         member_tbl = {'type': '!pretty', 'name': 'name', 'description': 'description', 'enabled': 'enabled'}
 
@@ -171,11 +174,15 @@ class ConfigView:
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'member_type_dict': _type_dict,
                 'member_type': member_type, 'member_view_active': member_view_active, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
+                'main_type_dict': type_dict,
             }
 
         else:
             tmpl = 'list/default'
-            context = {'dataset': dataset, 'typ': self.type, 'request': self.request, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title}
+            context = {
+                'dataset': dataset, 'typ': self.type, 'request': self.request, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
+                'main_type_dict': type_dict
+            }
 
         return tmpl, context
 

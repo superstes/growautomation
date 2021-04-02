@@ -20,19 +20,19 @@
             {% block content %}
             {% endblock %}
         </main>
+        <br>
         <footer class="ga-footer">
-            <br>
-            <hr>
             {% if not request|get_login_state %}
-                <div class="alert alert-info ga-footer-info">
+                <div class="alert alert-info">
                     <strong>You can login with this demo user to get an overview:</strong><br>
                     <strong>Username:</strong> demo<br>
                     <strong>Password:</strong> grow2020
                 </div>
             {% endif %}
             <div class="ga-footer-text">
-                © 2021 <a href='mailto://contact@growautomation.eu'>contact@growautomation.eu</a> <br>
-                Newest versions: <a href='https://github.com/superstes/growautomation'>git.growautomation.eu</a>
+                <div>
+                    © 2021 Superstes
+                </div>
             </div>
         </footer>
     </body>

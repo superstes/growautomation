@@ -9,7 +9,7 @@
                     {{ member_config|get_item:val }}
                 {% elif value|found:'?' %}
                     {% set_var value|slice:"1:" as val %}
-                    {{ val|member_data_custom:member_obj }}
+                    {{ member|get_item:val }}
                 {% else %}
                     {% set_var value|add:',---' as val %}
                     {{ member_obj|get_item:val }}
@@ -26,7 +26,11 @@
                 <input type="hidden" name="action" value="Update" />
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
+            {% if member_own_sub_type in main_type_dict.keys %}
+                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_own_sub_type }}/{{ member.id }}">
+            {% else %}
+                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
+            {% endif %}
                 {% csrf_token %}
                 {% if request.user|authorized_to_write %}
                     <input type="submit" value="Remove" class="btn btn-danger"/>

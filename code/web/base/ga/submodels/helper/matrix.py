@@ -21,11 +21,11 @@ class Matrix:
                 return self._set_fields(xy_data=xy_data, set_value=set_value)
 
             else:
-                # print("unable to set field '%s' since the following fields are already present: '%s'" % (set_value, used_list))
+                # log error or whatever ("unable to set field '%s' since the following fields are already present: '%s'" % (set_value, used_list))
                 return False
 
         else:
-            # print("invalid xy_data")
+            # log error or whatever ("invalid xy_data")
             return False
 
     def check(self, xy_data: dict) -> tuple:

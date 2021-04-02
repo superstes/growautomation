@@ -21,8 +21,8 @@
         <br>
         <input type="submit" value="Select" class="btn btn-info">
     </form>
-    <br>
     {% if service_name is not None %}
+        <br><hr>
         {% if service_status is not None %}
             <h3>
                 Service status
@@ -108,12 +108,14 @@
         <h3>
             More information
         </h3>
+        <br>
         <a href="/system/log/?log_type=Service&log_subtype={{ service_name }}" class="btn btn-info">Detailed status</a>
         <a href="/system/log/?log_type=Service+journal&log_subtype={{ service_name }}" class="btn btn-info">Service Logs</a>
         {% if service_name == 'Growautomation' %}
             <a href="/system/log/?log_type=Growautomation&log_subtype=Core" class="btn btn-info">Application Logs</a>
         {% endif %}
     {% else %}
+        <br>
         <div class="alert alert-info">Select a service to see more</div>
     {% endif %}
     {% if service_name is not None %}
