@@ -14,6 +14,7 @@ class GaConditionMatch(GaBase):
     #   value -> data to compare to
     #   operator -> operator to use for data comparison
     #   period -> the time period from which to pull the data for the comparison
+    # todo: area filtering => Ticket#10
 
     def __init__(self, check_instance, setting_dict: dict, **kwargs):
         super().__init__(**kwargs)

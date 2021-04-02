@@ -28,14 +28,14 @@ class Go:
             device_obj=GaInputDevice,
         ).get()
 
-        for task_instance in task_instance_list:
-            device = task_instance['device']
+        for task_dict in task_instance_list:
+            device = task_dict['device']
             task_name = device.name
             task_id = device.object_id
             self.logger.write(f"Processing device instance: \"{device.__dict__}\"", level=7)
 
-            if 'downlink' in task_instance:
-                data = Process(instance=task_instance['downlink'], nested_instance=device, script_dir='connection').start()
+            if 'downlink' in task_dict:
+                data = Process(instance=task_dict['downlink'], nested_instance=device, script_dir='connection').start()
 
             else:
                 data = Process(instance=device, script_dir='input').start()

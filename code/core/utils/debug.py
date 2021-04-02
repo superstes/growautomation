@@ -24,7 +24,7 @@ def debugger(command, web_ctrl_obj=None) -> bool:
     debug = shared_vars.SYSTEM.debug
 
     if debug == 1:
-        prefix = "%s debug:" % now("%H:%M:%S")
+        prefix = f'{now("%H:%M:%S")} debug:'
 
         if type(command) == str:
             print(prefix, command)
@@ -59,13 +59,13 @@ class Log:
         if web_ctrl_obj is not None:
             web_shared_vars(web_ctrl_obj)
 
-        self.log_dir = "%s/%s/%s" % (shared_vars.SYSTEM.path_log, self.type, date_year)
+        self.log_dir = f"{shared_vars.SYSTEM.path_log}/{self.type}/{date_year}"
         self.log_level = shared_vars.SYSTEM.log_level
 
         if addition is None:
-            self.log_file = "%s/%s_%s.log" % (self.log_dir, date_month, self.type)
+            self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
         else:
-            self.log_file = "%s/%s_%s_%s.log" % (self.log_dir, date_month, self.type, addition)
+            self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition}.log"
 
         self._file()
 
@@ -81,16 +81,16 @@ class Log:
             try:
                 if level > self.log_level:
                     return False
+
             except AttributeError:
                 pass
+
         else:
             if level > self.log_level:
                 return False
 
         output = self._censor(str(output))
-
         output_formatted = f"{datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT)}{self.SEPARATOR}{self.name}{self.SEPARATOR}{output}"
-
         debugger(command=output_formatted)
 
         with open(self.log_file, 'a') as logfile:
@@ -100,10 +100,11 @@ class Log:
 
     def _file(self) -> None:
         if os_path.exists(self.log_dir) is False:
-            os_system("mkdir -p %s" % self.log_dir)
+            os_system(f"mkdir -p {self.log_dir}")
 
+        # todo: fix for wrong file permissions => Ticket#24
         if os_path.exists(self.log_file) is False:
-            os_system("touch %s" % self.log_file)
+            os_system(f"touch {self.log_file}")
 
     def _censor(self, output: str) -> str:
         for setting in self.SECRET_SETTINGS:
@@ -113,12 +114,8 @@ class Log:
 
                 for data in split_output[1:]:
                     try:
-                        updated_list.append("%s': \"%s\",%s" % (
-                                setting,
-                                self.CENSOR_OUTPUT,
-                                data.split(',', 1)[1]
-                            )
-                        )
+                        updated_list.append(f"{setting}': \"{self.CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
+
                     except IndexError:
                         output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
                                  f"But we were not able to safely censor it. Output was completely replaced.'"
@@ -154,6 +151,7 @@ class FileAndSystemd:
 
     def write(self, output: str, level: int = 1) -> bool:
         from systemd import journal as systemd_journal
+
         if level == 1:
             systemd_journal.write(output)
 

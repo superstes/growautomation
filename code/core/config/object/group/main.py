@@ -3,6 +3,8 @@
 
 from core.config.object.base import *
 
+# todo: area filtering => Ticket#10
+
 
 class GaAreaGroup(GaBase):
     def __init__(self, connection_group_list: list, connection_obj_list: list, input_group_list: list, input_obj_list: list,

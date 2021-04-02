@@ -46,6 +46,8 @@ class Prepare:
     def start(self):
         self._log('Starting service initialization.')
 
+        # todo: test for log permissions => Ticket#24
+
         if self._check_file():
             startup_shared_vars.init()
             from core.utils.debug import Log, FileAndSystemd

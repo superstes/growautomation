@@ -11,11 +11,11 @@ from subprocess import TimeoutExpired
 def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None):
     if web_ctrl_obj is not None:
         logger = Log(typ='web', web_ctrl_obj=web_ctrl_obj)
-        logger.write("Executing command \"%s\"" % command, level=2)
+        logger.write(f"Executing command \"{command}\"", level=2)
 
     else:
         logger = Log()
-        logger.write("Executing command \"%s\"" % command, level=6)
+        logger.write(f"Executing command \"{command}\"", level=6)
 
     if type(command) != list:
         command = [command]
@@ -36,10 +36,10 @@ def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None)
 
     if error in [None, '']:
         error = None
-        logger.write("Process output: \"%s\"" % output, level=6)
+        logger.write(f"Process output: \"{output}\"", level=6)
 
     else:
-        logger.write("Process error: \"%s\" | output: \"%s\"" % (error, output), level=2)
+        logger.write(f"Process error: \"{error}\" | output: \"{output}\"", level=2)
 
     if out_error:
         return output, error

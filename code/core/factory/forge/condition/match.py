@@ -3,6 +3,8 @@
 from core.utils.debug import debugger
 from core.factory import config
 
+# todo: area filtering => Ticket#10
+
 
 class Go:
     def __init__(self, blueprint, supply_list: list, input_object_dict: dict):
