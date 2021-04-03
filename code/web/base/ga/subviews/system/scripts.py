@@ -8,7 +8,7 @@ from datetime import datetime
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.helper import get_script_dir, str_to_list
 from ...forms import SystemScriptForm
-from ..handlers import handler404
+from ..handlers import Pseudo404
 
 
 TITLE = 'System scripts'
@@ -83,7 +83,7 @@ def ScriptChangeView(request):
             script_type = request.GET['script_type']
             script_dir = get_script_dir(request, typ=script_type)
         else:
-            return handler404(request, msg='A script type must be defined.')
+            raise Pseudo404(ga={'request': request, 'msg': 'A script type must be defined.'})
 
         return render(request, 'system/script/change.html', context={
             'request': request, 'script_type': script_type, 'form': form, 'script_dir': script_dir, 'title': TITLE,

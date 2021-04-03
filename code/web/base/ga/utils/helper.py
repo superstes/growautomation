@@ -4,11 +4,12 @@ from pytz import timezone as pytz_timezone
 from django.utils import timezone as django_timezone
 
 from core.utils.process import subprocess
+from core.utils.debug import Log
 
 from ..models import ObjectControllerModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
-from ..subviews.handlers import handler404
+from ..subviews.handlers import Pseudo404
 from ..config.shared import DATETIME_TS_FORMAT
 
 
@@ -40,7 +41,7 @@ def get_controller_setting(request, setting: str):
         return getattr(get_controller_obj(), setting)
 
     except IndexError:
-        raise handler404(request, msg="Can't get controller setting if no controller exists. You must create a controller first.")
+        raise Pseudo404(ga={'request': request, 'msg': "Can't get controller setting if no controller exists. You must create a controller first."})
 
 
 def get_script_dir(request, typ) -> str:
@@ -70,7 +71,13 @@ def develop_subprocess(request, command: str, develop: (str, list) = None) -> st
     if check_develop(request):
         return develop
 
-    return subprocess(command)
+    return subprocess(command, web_ctrl_obj=get_controller_obj())
+
+
+def develop_log(request, output: str, level: int = 1) -> None:
+    if not check_develop(request):
+        logger = Log(typ='web', web_ctrl_obj=get_controller_obj())
+        logger.write(output=output, level=level)
 
 
 def add_timezone(request, datetime_obj):

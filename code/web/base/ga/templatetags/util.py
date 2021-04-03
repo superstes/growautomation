@@ -8,7 +8,6 @@ from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
 from ..config.shared import DATETIME_TS_FORMAT
 from ..config.nav import nav_dict
-from ..models import MemberConditionLinkModel, ObjectConditionModel, GroupConditionModel
 
 register = template.Library()
 
@@ -171,7 +170,7 @@ def get_return_path(request, typ=None) -> str:
 
     else:
         if typ is None:
-            path = request.META.get('HTTP_REFERER')
+            path = request.META['HTTP_REFERER']
 
         else:
             path = f"/config/list/{ typ }/"
@@ -184,7 +183,7 @@ def get_return_path(request, typ=None) -> str:
 
 @register.filter
 def handler500_update(request):
-    if request.META.get('HTTP_REFERER').find('/update') != -1:
+    if request.META['HTTP_REFERER'].find('/update') != -1:
         return True
 
     return False

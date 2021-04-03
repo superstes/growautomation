@@ -3,13 +3,9 @@ from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime, timedelta
 from time import sleep
 
-from core.utils.debug import Log
-
 from ...user import authorized_to_read, authorized_to_write
-from ...utils.helper import get_time_difference, develop_subprocess, get_controller_obj
-from ..handlers import handler404
-
-logger = Log(typ='web', web_ctrl_obj=get_controller_obj())
+from ...utils.helper import get_time_difference, develop_subprocess, develop_log
+from ..handlers import Pseudo404
 
 # need to allow www-data to start/stop/restart/reload services
 
@@ -46,11 +42,12 @@ def ServiceView(request):
     if 'service_name' in request.GET or 'service_name' in request.POST:
         if 'service_name' in request.GET:
             service_name = request.GET['service_name']
+
         else:
             service_name = request.POST['service_name']
 
         if service_name not in service_name_options:
-            return handler404(request, msg="Service '%s' not manageable" % service_name)
+            raise Pseudo404(ga={'request': request, 'msg': f"Service \"{service_name}\" not manageable"})
 
         service_value = service_name_options[service_name]
 
@@ -59,6 +56,7 @@ def ServiceView(request):
 
         if service_status == 'active':
             status_command = SHELL_SERVICE_ACTIVE_TIMESTAMP
+
         else:
             status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
 
@@ -93,17 +91,17 @@ def service_action(request, service: str):
     log_tmpl = f"{meta['PATH_INFO']} - action \"%s service {service}\" was executed by user {request.user} from remote ip {meta['REMOTE_ADDR']}"
 
     if 'service_start' in request.POST:
-        logger.write(log_tmpl % 'start')
+        develop_log(request=request, output=log_tmpl % 'start')
         develop_subprocess(request, command="%s start %s" % (systemctl, service), develop='ok')
 
     elif 'service_reload' in request.POST:
-        logger.write(log_tmpl % 'reload')
+        develop_log(request=request, output=log_tmpl % 'reload')
         develop_subprocess(request, command="%s reload %s" % (systemctl, service), develop='ok')
 
     elif 'service_restart' in request.POST:
-        logger.write(log_tmpl % 'restart')
+        develop_log(request=request, output=log_tmpl % 'restart')
         develop_subprocess(request, command="%s restart %s" % (systemctl, service), develop='ok')
 
     elif 'service_stop' in request.POST:
-        logger.write(log_tmpl % 'stop')
+        develop_log(request=request, output=log_tmpl % 'stop')
         develop_subprocess(request, command="%s stop %s" % (systemctl, service), develop='ok')

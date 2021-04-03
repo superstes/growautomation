@@ -5,7 +5,6 @@ from os import listdir as os_listdir
 
 from ...user import authorized_to_read
 from ...utils.helper import check_develop, get_controller_setting, str_to_list, develop_subprocess
-from ..handlers import handler404
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
 
@@ -34,6 +33,7 @@ def LogView(request):
 
     if develop:
         device_log_list = ['02_device_test1.log', '02_device_earth_humidity.log', '']
+
     else:
         device_log_list = os_listdir("%s/device/%s/" % (path_log, date_year))
 
@@ -46,12 +46,14 @@ def LogView(request):
         try:
             device = device_log.split('_', 2)[2].rsplit('.', 1)[0]
             log_ga_options["Device '%s'" % device] = "%s/device/%s/%s" % (path_log, date_year, device_log)
+
         except IndexError:
             log_ga_options["Log '%s'" % device_log] = "%s/device/%s/%s" % (path_log, date_year, device_log)
 
     if 'log_entry_count' in request.GET and \
             int(request.GET['log_entry_count']) in SHELL_MAX_LOG_LINES_RANGE:
         log_entry_count = int(request.GET['log_entry_count'])
+
     else:
         log_entry_count = SHELL_MAX_LOG_LINES
 
@@ -76,6 +78,7 @@ def LogView(request):
             if log_type == 'Service':
                 if develop:
                     log_data = ['test data', 'data service']
+
                 else:
                     log_data = str_to_list(
                         develop_subprocess(
@@ -87,6 +90,7 @@ def LogView(request):
             elif log_type == 'Service journal':
                 if develop:
                     log_data = ['test data', 'data journal']
+
                 else:
                     log_data = str_to_list(
                         develop_subprocess(
@@ -106,6 +110,7 @@ def LogView(request):
                 # option to view older (truncated) logs?
                 if develop:
                     log_data = [f"log from file '{path_log}' -> test data", 'data ga']
+
                 else:
                     log_data = str_to_list(
                         develop_subprocess(
@@ -115,6 +120,7 @@ def LogView(request):
                         ),
                         reverse=True
                     )
+
         else:
             log_subtype_options = log_service_options
 
@@ -124,8 +130,6 @@ def LogView(request):
 
     if type(log_data) == list and len(log_data) == 0:
         log_data = None
-
-    handler404(request=request, msg='test')
 
     if log_subtype_options is not None:
         log_subtype_option_list = sorted([key for key in log_subtype_options.keys()])

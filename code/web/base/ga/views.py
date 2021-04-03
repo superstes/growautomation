@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .config.site import type_dict
 from .subviews.config.main import ConfigView
 from .utils.main import logout_check
+from .utils.helper import develop_log
 from .user import authorized_to_access
 from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
@@ -29,7 +30,7 @@ class GaView:
                 return self.denied(request=request)
 
             elif a == 'api_denied':
-                return self.api_denied()
+                return self.api_denied(request=request)
 
             elif a == 'api':
                 return self.api(request=request, typ=b)
@@ -62,16 +63,20 @@ class GaView:
             else:
                 return self.home(request=request)
 
-        except (TypeError, KeyError) as error:
+        except (TypeError, KeyError, IndexError) as error:
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
             return handler500(request, msg=error)
 
         except Pseudo404 as exc:
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc} - {exc.ga['msg']}")
             return handler404(request=exc.ga['request'], msg=exc.ga['msg'])
 
         except Pseudo403 as exc:
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 403 - {exc} - {exc.ga['msg']}")
             return handler403(request=exc.ga['request'], msg=exc.ga['msg'])
 
         except Pseudo500 as exc:
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc} - {exc.ga['msg']}")
             return handler500(request=exc.ga['request'], msg=exc.ga['msg'])
 
     @staticmethod
@@ -108,9 +113,9 @@ class GaView:
             return logout_check(request=request, default=ScriptView(request=request))
 
         elif typ == 'export':
-            return export_view(request=request)
+            return logout_check(export_view(request=request))
 
-        return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
+        raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 
     @staticmethod
     @login_required
@@ -146,10 +151,12 @@ class GaView:
 
             return logout_check(request=request, default=DashboardView(request=request).go_main())
 
-        return logout_check(request=request, default=handler404(request=request, msg='Not yet implemented!'))
+        raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 
     @staticmethod
     def denied(request):
+        error_source_url = request.build_absolute_uri(request.META['QUERY_STRING'].split('=', 1)[1])
+        develop_log(request=request, output=f"{error_source_url} - Got error 403 - Access denied for user \"{request.user}\"")
         return logout_check(request=request, default=handler403(request))
 
     @staticmethod
@@ -166,8 +173,11 @@ class GaView:
         elif typ == 'chart':
             return ApiChart(request=request)
 
+        develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - api not implemented")
         return handler404_api()
 
     @staticmethod
-    def api_denied():
+    def api_denied(request):
+        error_source_url = request.build_absolute_uri(request.META['QUERY_STRING'].split('=', 1)[1])
+        develop_log(request=request, output=f"{error_source_url} - Got error 403 - api access denied")
         return handler403_api()
