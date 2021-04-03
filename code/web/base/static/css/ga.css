@@ -3,6 +3,18 @@ body {
     margin: 0 0;
 }
 
+.ga-nav {
+    position: sticky;
+    width: 100%;
+    top: 0;
+    z-index: 999;
+    margin-bottom: 5vh;
+}
+
+.ga-nav-container {
+    border-radius: 0 0 5px 5px;
+}
+
 .ga-nav-main {
     font-weight: bold;
     text-transform: uppercase;
@@ -13,19 +25,29 @@ body {
     text-transform: none;
 }
 
+.ga-nav-icon {
+    border-radius: 50%;
+}
+
 .ga-main {
     margin: 2%;
     height: 100%;
 }
 
+.ga-footer-wrapper {
+    margin-top: 10vh;
+}
+
 .ga-footer {
-    margin: 2%;
-    position: sticky;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 999;
 }
 
 .ga-footer > div {
     padding: 0.5% 1%;
-    border-radius: 5px;
+    border-radius: 5px 5px 0 0;
 }
 
 .ga-footer-text {
@@ -65,10 +87,6 @@ body {
     font-weight: bold;
     padding: 3px 8px;
     border-radius: 3px;
-}
-
-.ga-nav-icon {
-    border-radius: 50%;
 }
 
 .ga-chart {

@@ -1,59 +1,61 @@
 {% load util %}
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">
-        <img src="{% static 'img/ga10c.svg' %}" alt="HOME" width="40" height="40" class="ga-nav-icon">
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    {% if request|get_login_state %}
-        {% set_var ''|nav_config as nav_dict %}
-        {% set_var nav_dict|get_item:'left' as nav_left %}
-        {% set_var nav_dict|get_item:'right' as nav_right %}
-        <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
-            <!-- START left navbar -->
-            <ul class="navbar-nav">
-                {% for nav_key, nav_config in nav_left.items %}
-                    {% if nav_config|get_type == 'str' %}
-                        <!-- START basic link -->
-                        <li class="nav-item ga-nav-main">
-                            <a class="nav-link" href="{{ nav_config }}">
-                                {{ nav_key }}
-                            </a>
-                        </li>
-                        <!-- END basic link -->
-                    {% elif nav_config|get_type == 'dict' %}
-                        {% set_var nav_config|get_dict_depth as navi_depth %}
-                        {% if navi_depth == 1 %}
-                            <!-- START dropdown link -->
-                            <li class="nav-item dropdown ga-nav-main">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                  {{ nav_key }}
+<div class="ga-nav">
+    <nav class="ga-nav-container navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            <img src="{% static 'img/ga10c.svg' %}" alt="HOME" width="40" height="40" class="ga-nav-icon">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        {% if request|get_login_state %}
+            {% set_var ''|nav_config as nav_dict %}
+            {% set_var nav_dict|get_item:'left' as nav_left %}
+            {% set_var nav_dict|get_item:'right' as nav_right %}
+            <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
+                <!-- START left navbar -->
+                <ul class="navbar-nav">
+                    {% for nav_key, nav_config in nav_left.items %}
+                        {% if nav_config|get_type == 'str' %}
+                            <!-- START basic link -->
+                            <li class="nav-item ga-nav-main">
+                                <a class="nav-link" href="{{ nav_config }}">
+                                    {{ nav_key }}
                                 </a>
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
-                                    {% for key, value in nav_config.items %}
-                                        <a class="dropdown-item ga-nav-main-a" href="{{ value }}">
-                                            {{ key }}
-                                        </a>
-                                    {% endfor %}
-                                </div>
                             </li>
-                            <!-- END dropdown link -->
+                            <!-- END basic link -->
+                        {% elif nav_config|get_type == 'dict' %}
+                            {% set_var nav_config|get_dict_depth as navi_depth %}
+                            {% if navi_depth == 1 %}
+                                <!-- START dropdown link -->
+                                <li class="nav-item dropdown ga-nav-main">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      {{ nav_key }}
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
+                                        {% for key, value in nav_config.items %}
+                                            <a class="dropdown-item ga-nav-main-a" href="{{ value }}">
+                                                {{ key }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </li>
+                                <!-- END dropdown link -->
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                {% endfor %}
-            </ul>
-            <!-- END left navbar -->
-            <!-- START right navbar -->
-            <ul class="navbar-nav ml-auto">
-                {% for nav_key, nav_href in nav_right.items %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ nav_href }}">{{ nav_key }}</a>
-                    </li>
-                {% endfor %}
-            </ul>
-            <!-- END right navbar -->
-        </div>
-    {% endif %}
-</nav>
+                    {% endfor %}
+                </ul>
+                <!-- END left navbar -->
+                <!-- START right navbar -->
+                <ul class="navbar-nav ml-auto">
+                    {% for nav_key, nav_href in nav_right.items %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ nav_href }}">{{ nav_key }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <!-- END right navbar -->
+            </div>
+        {% endif %}
+    </nav>
+</div>

@@ -25,7 +25,8 @@ nav_dict = {
     'right': {
         'Docs': 'https://docs.growautomation.eu',
         'GitHub': 'https://github.com/superstes/growautomation',
-        'Submit bugs': 'https://docs.growautomation.eu/en/latest/basic/bugs.html',
+        'Support': 'https://www.patreon.com/growautomation/',
+        'Bugs': 'https://docs.growautomation.eu/en/latest/basic/bugs.html',
         'Logout': '/logout/',
     }
 }

@@ -21,19 +21,21 @@
             {% endblock %}
         </main>
         <br>
-        <footer class="ga-footer">
-            {% if not request|get_login_state %}
-                <div class="alert alert-info">
-                    <strong>You can login with this demo user to get an overview:</strong><br>
-                    <strong>Username:</strong> demo<br>
-                    <strong>Password:</strong> grow2020
+        <div class="ga-footer-wrapper">
+            <footer class="ga-footer">
+                {% if not request|get_login_state %}
+                    <div class="alert alert-info">
+                        <strong>You can login with this demo user to get an overview:</strong><br>
+                        <strong>Username:</strong> demo<br>
+                        <strong>Password:</strong> grow2020
+                    </div>
+                {% endif %}
+                <div class="ga-footer-text">
+                    <div>
+                        © 2021 Superstes
+                    </div>
                 </div>
-            {% endif %}
-            <div class="ga-footer-text">
-                <div>
-                    © 2021 Superstes
-                </div>
-            </div>
-        </footer>
+            </footer>
+        </div>
     </body>
 </html>
