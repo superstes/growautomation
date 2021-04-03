@@ -112,6 +112,3 @@ class Go:
             thread.stop_thread(description=device.name)
 
         thread.start()
-
-    def __del__(self):
-        self.database.disconnect()

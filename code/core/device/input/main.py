@@ -49,6 +49,3 @@ class Go:
             else:
                 self.database.put(command=self.SQL_DATA_COMMAND % (datetime.now(), data, task_id))
                 self.logger.write(f"Processing of input-device \"{task_name}\" succeeded", level=7)
-
-    def __del__(self):
-        self.database.disconnect()

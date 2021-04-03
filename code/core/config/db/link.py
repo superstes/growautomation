@@ -175,8 +175,13 @@ class Go:
     def __del__(self):
         try:
             self.cursor.close()
+
+        except (UnboundLocalError, AttributeError, ReferenceError):
+            pass
+
+        try:
             self.connection.close()
             self.logger.write('SQL connection closed', level=8)
 
-        except (UnboundLocalError, AttributeError):
+        except (UnboundLocalError, AttributeError, ReferenceError):
             pass

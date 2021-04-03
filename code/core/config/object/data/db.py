@@ -55,6 +55,3 @@ class GaDataDb:
     def _error(self, msg):
         self.logger.write(f"Received error \"{msg}\"")
         raise ConnectionError(msg)
-
-    def disconnect(self):
-        self.link.disconnect()

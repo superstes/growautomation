@@ -132,8 +132,6 @@ When the error occurred on the web-interface => you can check the web logs for e
 |log_web|
 
 
-At first you ca
-
 App/Core
 ________
 
