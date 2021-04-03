@@ -49,7 +49,7 @@ Second
 
 Basic troubleshooting.
 
-You can check out our extended troubleshooting guide mentioned above.
+You could reach out to the community to get help with those basic problems: `Community (not yet online) <https://community.growautomation.eu/>`_
 
 The problem might occur due to one of these components:
 
@@ -57,6 +57,8 @@ The problem might occur due to one of these components:
 - the server (*raspberry/linux*)
 - the basic software needed to run GrowAutomation (*database/webserver*)
 - hardware like sensors or wiring
+
+Best to divide and conquer. Test it step by step to find the point where it breaks.
 
 Third
 =====
