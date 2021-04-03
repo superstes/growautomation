@@ -13,7 +13,7 @@ Description
 ***********
 Overview of the detailed workflow used in the GrowAutomation core.
 
-This workflow is relatively complex and **you don't need to know it as a user**.
+This workflow is relatively complex and **you don't need to know it as an user**.
 
 This information is for developers and diy-enthusiasts that want to extend or troubleshoot it.
 

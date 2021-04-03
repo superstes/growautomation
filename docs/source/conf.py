@@ -1,9 +1,7 @@
 project = 'GrowAutomation'
-copyright = '2021, René Pascal Rath'
+copyright = '2021, Superstes'
 author = 'René Pascal Rath'
-extensions = [
-    'sphinx_rtd_theme',
-]
+extensions = ['sphinx_rtd_theme']
 templates_path = ['_templates']
 exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
@@ -12,3 +10,4 @@ html_static_path = ['_static']
 html_logo = '_static/img/ga02c.svg'
 navtree_shift = True
 navtree_root_links = True
+html_css_files = ['css/ga.css']

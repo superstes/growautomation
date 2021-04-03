@@ -35,6 +35,10 @@ It's simple. And should also remain so if you have little time for it.
 Send us an email at <a href="mailto:bugs@growautomation.eu">bugs@growautomation.eu</a><br>
 Please check out our <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug guidelines</a> first!
 
+### Support
+Want to support the project?<br>
+<a href="https://www.patreon.com/growautomation">Become a patron</a>
+
 ## Documentation
 <img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
 <a href="https://docs.growautomation.eu">docs.growautomation.eu</a>

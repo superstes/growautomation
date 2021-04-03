@@ -1,0 +1,22 @@
+.ga-img-basic {
+    width: 70%;
+    margin: 5px 0px;
+}
+
+.ga-img-border {
+    border-radius: 5px;
+    border-style: solid;
+    border-color: #343a40;
+    border-width: 3px;
+}
+
+.ga-img-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.ga-img-right-small {
+    width: 150pt;
+    float: right;
+}

@@ -1,14 +1,11 @@
 .. _device-connection:
 
 .. |ads1115| image:: ../_static/img/devices/connection/ads1115.jpg
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 .. |mcp3008| image:: ../_static/img/devices/connection/mcp3008.png
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 .. |mcp3008_pin| image:: ../_static/img/devices/connection/mcp3008_pinout.png
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 
 ==========
 Connection

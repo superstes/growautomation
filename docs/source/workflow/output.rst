@@ -16,7 +16,7 @@ Actions can be anything you can script. Per example:
 
 * starting a water pump
 * opening a windows
-* starting a air heater
+* starting an air heater
 
 The sky is the limit.
 
@@ -35,7 +35,7 @@ That can be handy per example for:
 Types
 ^^^^^
 
-There are multiple ways a actor can be reversed:
+There are multiple ways an actor can be reversed:
 
 * **time**
 
@@ -51,15 +51,15 @@ There are multiple ways a actor can be reversed:
   * if the reverse condition is met => it will be reversed
   * this can be useful for:
 
-    * a air heater which will only stop if the air temperature is suitable
+    * an air heater which will only stop if the air temperature is suitable
     * open a windows when the temperature is too high, close it when it gets too cold
 
 Conditions
 **********
 
-You can configure complex condition that must be matched before a action is executed or reversed.
+You can configure complex condition that must be matched before an action is executed or reversed.
 
-A condition **must be linked** at least with a **output device** or a **output model**.
+A condition **must be linked** at least with an **output device** or an **output model**.
 
 The matching rules are connected to the condition via **condition links**.
 

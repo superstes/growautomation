@@ -1,17 +1,13 @@
 .. _device-input:
 
 .. |soil_moisture_capacitive| image:: ../_static/img/devices/input/soil_humidity_capacitive.png
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 .. |soil_moisture_resistance| image:: ../_static/img/devices/input/soil_moisture_resistance.webp
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 .. |dht22| image:: ../_static/img/devices/input/dht22.png
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 .. |light_photo_resistance| image:: ../_static/img/devices/input/light_sensor_photo_resistance.jpg
-   :width: 150pt
-   :class: float-right
+   :class: ga-img-right-small
 
 =====
 Input
@@ -126,7 +122,7 @@ Dependencies
 Implementation
 --------------
 
-This ia a analogue sensor.
+This ia an analogue sensor.
 
 You need to connect it via a :ref:`connection-device <device-connection>` .
 

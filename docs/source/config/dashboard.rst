@@ -1,7 +1,7 @@
 .. _config-dashboard:
 
 .. |element| image:: ../_static/img/config/dashboard/element.svg
-   :width: 50%
+   :class: ga-img-basic ga-img-center
 
 =========
 Dashboard

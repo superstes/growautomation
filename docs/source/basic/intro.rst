@@ -9,6 +9,7 @@ Links
 * `Source on GitHub <https://github.com/superstes/growautomation>`_
 * `Video tutorials <https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw>`_
 * `Demo system <https://demo.growautomation.at/>`_
+* `Support the project => Become a patreon <https://www.patreon.com/growautomation/>`_
 
 ----
 
@@ -35,7 +36,6 @@ Aim of this project
 This project is not
 ===================
 * yet in a stable state
-
 
 ----
 
