@@ -54,7 +54,7 @@ class Go:
 
         else:
             self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported period_type \"{period_type}\"", level=4)
-            raise KeyError(f"Unsupported period type for condition match \"{self.condition.name}\"")
+            raise ValueError(f"Unsupported period type for condition match \"{self.condition.name}\"")
 
         return data_method
 
@@ -121,7 +121,7 @@ class Go:
 
         else:
             self.logger.write(f"Input device/model \"{self.condition.check_instance.name}\" has an unsupported data data_type set \"{data_type}\"", level=4)
-            raise KeyError(f"Unsupported data type for input \"{self.condition.check_instance.name}\"")
+            raise ValueError(f"Unsupported data type for input \"{self.condition.check_instance.name}\"")
 
         return typ
 

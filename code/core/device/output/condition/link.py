@@ -244,7 +244,7 @@ class Go:
             raise ValueError(f'Got not acceptable results for members of link \"{link.name}\"')
 
         op = link.operator
-        self.logger.write(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", level=6)  # 7
+        self.logger.write(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", level=7)
 
         if op == 'and':
             result = all(result_dict.values())
@@ -269,7 +269,7 @@ class Go:
 
         else:
             self.logger.write("Condition link \"%s\" (id \"%s\") has an unsupported operator '%s" % (link.name, link.object_id, op), level=3)
-            raise KeyError(f"Unsupported operator for link \"{link.name}\"")
+            raise ValueError(f"Unsupported operator for link \"{link.name}\"")
 
         return result
 

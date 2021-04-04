@@ -2,8 +2,8 @@
 
 from core.device.log import device_logger
 from core.device.output.condition.process.match_data import Go as MatchData
-
-from datetime import datetime
+from core.device.output.condition.process.match_special import Go as SpecialMatch
+from core.config.object.setting.condition import GaConditionMatchSpecial
 
 
 class Go:
@@ -16,6 +16,10 @@ class Go:
 
     def get(self) -> bool:
         self.logger.write(f"Getting data of condition match \"{self.condition.name}\"", level=9)
+
+        if isinstance(self.condition.check_instance, GaConditionMatchSpecial):
+            return SpecialMatch(condition=self.condition, device=self.device).get()
+
         self.data_list, self.data_type = MatchData(condition=self.condition, device=self.device).get()
 
         if self.data_type in [int, float]:
@@ -25,18 +29,10 @@ class Go:
             # maybe add more functionality for non-number data types (?)
             data = self.data_list[0]
 
-        self.logger.write(f"Data of condition match \"{self.condition.name}\": \"{data}\"", level=6)  # 7
+        self.logger.write(f"Data of condition match \"{self.condition.name}\": \"{data}\"", level=7)
         result = self._compare_data(data=data)
         self.logger.write(f"Result of condition match \"{self.condition.name}\": \"{result}\"", level=6)
         return result
-
-        # todo: special-cases => Ticket#23
-        # from core.device.output.condition.process.single_special import special as SpecialData
-        # data, value = SpecialData(
-        #     condition=self.condition,
-        #     device=self.device
-        # )
-        # return self._compare_data(data=data, speci_value=value)
 
     def _compare_data(self, data) -> bool:
         operator = self.condition.operator
@@ -53,7 +49,7 @@ class Go:
         except TypeError:
             self.logger.write(f"Failed to apply data type \"{self.data_type}\" to data \"{data}\" or value \"{self.condition.value}\" "
                               f"of condition match \"{self.condition.name}\"", level=3)
-            raise KeyError(f"Unsupported data type \"{self.data_type}\" for condition match \"{self.condition.name}\"")
+            raise ValueError(f"Unsupported data type \"{self.data_type}\" for condition match \"{self.condition.name}\"")
 
         if operator == '=':
             if value == data:
@@ -63,20 +59,19 @@ class Go:
             if value != data:
                 result = True
 
-        elif operator == '>' and self.data_type in [int, float, datetime]:
+        elif operator == '>' and self.data_type in [int, float]:
             if value > data:
                 result = True
 
-        elif operator == '<' and self.data_type in [int, float, datetime]:
+        elif operator == '<' and self.data_type in [int, float]:
             if value < data:
                 result = True
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" "
-                              f"with value_type \"{self.data_type}\"", level=4)
-            raise KeyError(f"Unsupported operator for condition \"{self.condition.name}\"")
+            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" with value_type \"{self.data_type}\"", level=4)
+            raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", level=6)  # 7
+        self.logger.write(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", level=7)
         return result
 
     def _get_data(self) -> (float, int):
@@ -92,8 +87,8 @@ class Go:
 
         else:
             self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", level=4)
-            raise KeyError(f"Unsupported check type for condition \"{self.condition.name}\"")
+            raise ValueError(f"Unsupported check type for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=6)  # 7
+        self.logger.write(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=7)
 
         return data
