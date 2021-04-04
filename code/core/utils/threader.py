@@ -168,7 +168,7 @@ class Loop:
             if job.description == description:
                 job.stop()
                 self.jobs.remove(job)
-                self.logger.write(f"Thread {job.description} stopped.", level=2)
+                self.logger.write(f"Thread {job.description} stopped.", level=4)
 
     def start_thread(self, sleep_time: int, thread_data, description: str) -> None:
         self.thread(

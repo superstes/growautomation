@@ -20,6 +20,8 @@ def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None)
     if type(command) != list:
         command = [command]
 
+    error = None
+
     try:
         output, error = subprocess_popen(
             command,

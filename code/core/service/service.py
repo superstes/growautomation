@@ -55,7 +55,7 @@ class Service:
         self.exit_count = 0
         self.stop_count = 0
         signal.signal(signal.SIGUSR1, self.reload)
-        signal.signal(signal.SIGTERM, self.stop)
+        signal.signal(signal.SIGTERM, self.hard_exit)
         signal.signal(signal.SIGINT, self.stop)
         self.CONFIG, self.current_config_dict = factory()
         self._init_shared_vars()
@@ -66,8 +66,6 @@ class Service:
         self.THREAD = Thread()
 
     def start(self):
-        self._config_dump()
-
         try:
             self.logger.write("Service has process id %s" % os_getpid(), level=7)
 
@@ -81,11 +79,13 @@ class Service:
         except TypeError as error_msg:
             self.logger.write("Service encountered an error while starting:\n\"%s\"" % error_msg)
             self.stop()
+
         self._run()
 
     def reload(self, signum=None, stack=None):
         self.logger.write(f"Service received signal {signum}", level=3)
         self.logger.write('Service reload -> checking for config changes', level=4)
+
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
             object_list=self.CONFIG,
@@ -107,31 +107,40 @@ class Service:
             self._wait(seconds=self.WAIT_TIME)
             # re-create all the threads
             self.start()
+
         else:
             self.logger.write('Reload - config is up-to-date.')
             self._run()
 
     def stop(self, signum=None, stack=None):
         if self.stop_count >= self.MAX_STOP_COUNT:
-            self._hard_exit()
-        self.stop_count += 1
-        self.logger.write('Service is stopping', level=6)
-        self.logger.write('Stopping service.')
-        if signum is not None:
-            try:
-                self.logger.write("Service received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__), level=3)
-            except AttributeError:
-                self.logger.write("Service received signal %s" % signum, level=3)
-        self.logger.write('Stopping timer threads', level=6)
-        self.THREAD.stop()
-        self._wait(seconds=self.WAIT_TIME)
+            self.hard_exit(signum=signum)
+
+        else:
+            self.stop_count += 1
+            self.logger.write('Service is stopping', level=6)
+            self.logger.write('Stopping service.')
+            self._signum_log(signum=signum)
+            self.logger.write('Stopping timer threads', level=6)
+            self.THREAD.stop()
+            self._wait(seconds=self.WAIT_TIME)
+            self.logger.write('Service stopped.')
+            self._exit()
+
+    def hard_exit(self, signum=None, stack=None):
+        self._signum_log(signum)
+
+        if self.stop_count >= self.MAX_STOP_COUNT:
+            self.logger.write(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
+
+        self.logger.write('Stopping service merciless', level=3)
         self.logger.write('Service stopped.')
-        self._exit()
+
+        raise SystemExit('Service exited merciless!')
 
     def _init_shared_vars(self):
         shared_vars.init()
         shared_vars.CONFIG = self.CONFIG
-
         shared_vars.SYSTEM = self.CONFIG[factory_config.KEY_OBJECT_CONTROLLER][0]
 
     def _update_config_file(self):
@@ -149,6 +158,7 @@ class Service:
     @staticmethod
     def _wait(seconds: int):
         start_time = time()
+
         while time() < start_time + seconds:
             time_sleep(1)
 
@@ -156,41 +166,32 @@ class Service:
         if self.exit_count == 0:
             self.exit_count += 1
             self.logger.write('GrowAutomation service: Farewell!')
+
         raise SystemExit('Service exited gracefully.')
 
-    def _hard_exit(self):
-        self.logger.write(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
-        self.logger.write('Stopping service merciless', level=3)
-        self.logger.write('Service stopped.')
-        raise SystemExit('Service exited merciless!')
+    def _signum_log(self, signum):
+        if signum is not None:
+            try:
+                self.logger.write(f"Service received signal {signum} \"{sys_exc_info()[0].__name__}\"", level=3)
 
-    def _config_dump(self):
-        self.logger.write("\n\n#############################\nCONFIG DUMP:\n\n", level=7)
-        self.logger.write("OBJECT CONFIG:\n", level=7)
-        typ_counter = 0
-        for typ in self.CONFIG.keys():
-            typ_counter += 1
-            obj_counter = 0
-            self.logger.write("Config object type \"%s\"" % typ, level=7)
-            for obj in self.CONFIG[typ]:
-                obj_counter += 1
-                self.logger.write("Object \"%s\"" % obj, level=7)
-                self.logger.write("Config: \"%s\"" % obj.__dict__, level=7)
-                if obj_counter == len(self.CONFIG[typ]):
-                    self.logger.write("\n", level=7)
-            if typ_counter == len(self.CONFIG.keys()):
-                self.logger.write("\n", level=7)
-
-        self.logger.write("SUPPLY CONFIG:\n", level=7)
-        self.logger.write(self.current_config_dict, level=7)
-        self.logger.write("\n\nCONFIG DUMP END\n#############################\n", level=7)
+            except AttributeError:
+                self.logger.write(f"Service received signal {signum}", level=3)
 
     def _status(self):
         thread_list = self.THREAD.list()
-        detailed_thread_list = [str(thread.__dict__) for thread in thread_list]
+        detailed_thread_list = '\n'.join([str(thread.__dict__) for thread in thread_list])
         simple_thread_list = [thread.name for thread in thread_list]
-        self.logger.write("Status - threads running: %s" % simple_thread_list)
-        self.logger.write("Detailed info on running threads:\n\n\n\"%s\"\n\n" % "\n\n".join(detailed_thread_list), level=7)
+        self.logger.write(f"Status - threads running: {simple_thread_list}")
+        self.logger.write(f"Detailed info on running threads:\n{detailed_thread_list}", level=7)
+        # self._test_properties(instances=thread_list, query='script')
+
+    def _test_properties(self, instances: list, query: str):
+        _ = {}
+        for instance in instances:
+            if hasattr(instance, query):
+                _[instance.name] = instance.script
+
+        self.logger.write(f"TEST PROPERTY: {_}")
 
     def _run(self):
         try:
@@ -198,6 +199,7 @@ class Service:
             self.logger.write('Entering service runtime', level=7)
             run_last_reload_time = time()
             run_last_status_time = time()
+
             while True:
                 if time() > (run_last_reload_time + self.RUN_RELOAD_INTERVAL):
                     self.reload()
@@ -206,6 +208,7 @@ class Service:
                 if time() > (run_last_status_time + self.RUN_STATUS_INTERVAL):
                     self._status()
                     run_last_status_time = time()
+
                 time_sleep(self.RUN_LOOP_INTERVAL)
 
         except:

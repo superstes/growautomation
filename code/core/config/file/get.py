@@ -12,14 +12,17 @@ def go(file: str, encrypted: bool):
         file_data_dict = {}
 
         for line in _.readlines():
+
             if encrypted:
                 decrypted_line = crypto.decrypt(str.encode(line))
+
             else:
                 decrypted_line = line
 
             try:
                 key, value = decrypted_line.split('=')
                 file_data_dict[key] = value.strip()
+
             except ValueError as error_msg:
                 # log error or whatever
                 pass

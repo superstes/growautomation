@@ -29,7 +29,7 @@ class Go:
 
     def _connect(self) -> bool:
         try:
-            if self.connection_data_dict['server'] == '127.0.0.1':
+            if self.connection_data_dict['server'] in ['127.0.0.1', 'localhost']:
                 if self.connection_data_dict['user'] == 'root':
                     try:
                         # local logon as root
@@ -119,8 +119,8 @@ class Go:
         self.logger.write(f"Query to execute: \"{command_list}\"", level=7)
 
         try:
-            for c in command_list:
-                self.cursor.execute(c)
+            for cmd in command_list:
+                self.cursor.execute(cmd)
 
             self.connection.commit()
 
@@ -143,8 +143,10 @@ class Go:
     @lru_cache(maxsize=16)
     def _readcache(self, query: str):
         self.cursor.execute(query)
+
         if self.cursor.rowcount < 1:
             return None
+
         else:
             return self.cursor.fetchall()
 

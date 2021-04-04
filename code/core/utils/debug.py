@@ -1,6 +1,4 @@
-# provides:
-#   shell debugging
-#   error logging
+# logging and debugging
 
 from core.config import shared as shared_vars
 from core.config.web_shared import init as web_shared_vars
@@ -17,25 +15,6 @@ def now(time_format: str):
 date_year, date_month = now("%Y"), now("%m")
 
 
-def debugger(command, web_ctrl_obj=None) -> bool:
-    if web_ctrl_obj is not None:
-        web_shared_vars(web_ctrl_obj)
-
-    debug = shared_vars.SYSTEM.debug
-
-    if debug == 1:
-        prefix = f'{now("%H:%M:%S")} debug:'
-
-        if type(command) == str:
-            print(prefix, command)
-        elif type(command) == list:
-            [print(prefix, call) for call in command]
-
-        return True
-    else:
-        return False
-
-
 class Log:
     LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
     SEPARATOR = ' | '
@@ -44,6 +23,7 @@ class Log:
     SECRET_SETTINGS = ['sql_secret']
     try:
         SECRET_DATA = [shared_vars.SYSTEM.sql_secret]
+
     except AttributeError:
         SECRET_DATA = []
 
@@ -64,6 +44,7 @@ class Log:
 
         if addition is None:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
+
         else:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition}.log"
 
@@ -75,23 +56,14 @@ class Log:
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
 
         if shared_vars.SYSTEM.debug == 1:
-            level = 9
+            level = 10
 
-        if self.type == 'core':
-            try:
-                if level > self.log_level:
-                    return False
-
-            except AttributeError:
-                pass
-
-        else:
-            if level > self.log_level:
-                return False
+        if level > self.log_level:
+            return False
 
         output = self._censor(str(output))
         output_formatted = f"{datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT)}{self.SEPARATOR}{self.name}{self.SEPARATOR}{output}"
-        debugger(command=output_formatted)
+        self._debugger(command=output_formatted)
 
         with open(self.log_file, 'a') as logfile:
             logfile.write(f"{level}{self.SEPARATOR}{output_formatted}\n")
@@ -127,6 +99,15 @@ class Log:
             output.replace(data, self.CENSOR_OUTPUT)
 
         return output
+
+    @staticmethod
+    def _debugger(command):
+        if shared_vars.SYSTEM.debug == 1:
+            print(f'DEBUG: {command}')
+            return True
+
+        else:
+            return False
 
 
 class MultiLog:

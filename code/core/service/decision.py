@@ -2,7 +2,7 @@
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
-from core.config.object.core.timer import GaTimerDevice
+from core.config.object.core.task import GaTaskDevice
 from core.config.object.setting.condition import GaConditionGroup
 
 from core.utils.debug import Log
@@ -16,10 +16,13 @@ class Go:
     def start(self):
         if isinstance(self.instance, (GaInputDevice, GaInputModel)):
             self._device_input()
+
         elif isinstance(self.instance, GaConditionGroup):
             self._device_output()
-        elif isinstance(self.instance, GaTimerDevice):
+
+        elif isinstance(self.instance, GaTaskDevice):
             self._core_timer()
+
         else:
             self.logger.write(f"Service could not find a matching decision for instance: '{self.instance}'", level=5)
 

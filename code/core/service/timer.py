@@ -6,7 +6,7 @@
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
-from core.config.object.core.timer import GaTimerDevice
+from core.config.object.core.task import GaTaskDevice
 from core.utils.debug import Log
 
 logger = Log()
@@ -16,7 +16,7 @@ ALLOWED_OBJECT_TUPLE = (
     GaInputDevice,
     GaInputModel,
     GaConditionGroup,
-    GaTimerDevice
+    GaTaskDevice
 )
 
 
