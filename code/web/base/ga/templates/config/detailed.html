@@ -41,5 +41,5 @@
         </table>
     </div>
     <hr>
-    <a href='{{ request|get_return_path:typ }}' class="btn btn-info">Back</a>
+    {% include "../btn/back.html" %}
 {% endblock %}

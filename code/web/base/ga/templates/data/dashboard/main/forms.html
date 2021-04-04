@@ -23,7 +23,7 @@
             {% endfor %}
         </select>
     </label>
-    <input type="submit" value="Go" class="btn btn-primary">
+    {% include "../../../btn/select.html" %}
 </form>
 <form method="post" class="ga-form-inline ga-form-inline-right">
     <label>
@@ -41,10 +41,6 @@
     </label>
     <input type="hidden" name="user" value="{{ request.user.id }}" />
     <input type="hidden" name="default" value="1" />
-    {% if request.user|authorized_to_write %}
-        <input type="submit" value="Save" class="btn btn-success">
-    {% else %}
-        <input type="submit" value="Save" class="btn btn-success" disabled>
-    {% endif %}
+    {% include "../../../btn/save.html" %}
     {% csrf_token %}
 </form>

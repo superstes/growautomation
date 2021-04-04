@@ -43,11 +43,7 @@
                         <td>
                             <form class="ga-form-inline" method="post" action="/data/dashboard/config/dp">
                                 {% csrf_token %}
-                                {% if request.user|authorized_to_write %}
-                                    <input type="submit" value="Remove" class="btn btn-danger"/>
-                                {% else %}
-                                    <input type="submit" value="Remove" class="btn btn-danger" disabled/>
-                                {% endif %}
+                                {% include "../../../btn/delete.html" %}
                                 <input type="hidden" name="selected" value="{{ position.id }}" />
                                 <input type="hidden" name="dashboard" value="{{ selected }}" />
                                 <input type="hidden" name="do" value="delete" />
@@ -86,11 +82,7 @@
                             {% endfor %}
                         </select>
                     </label>
-                    {% if request.user|authorized_to_write %}
-                        <input type="submit" value="Add" class="btn btn-success"/>
-                    {% else %}
-                        <input type="submit" value="Add" class="btn btn-success" disabled/>
-                    {% endif %}
+                    {% include "../../../btn/save.html" %}
                     <input type="hidden" name="do" value="create" />
                     <input type="hidden" name="dashboard" value="{{ selected }}" />
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />

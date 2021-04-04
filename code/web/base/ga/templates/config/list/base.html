@@ -8,11 +8,11 @@
             <tr>
                 <td colspan="100%">
                     <form class="ga-form-inline" method="get" action="/config/create/{{ typ }}/">
-                        <input type="submit" value="Create" class="btn btn-success"/>
+                        {% include "../../btn/create.html" %}
                         <input type="hidden" name="action" value="Create" />
                         <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                     </form>
-                    <a href='{{ request|get_return_path:typ }}' class="btn btn-info">Back</a>
+                    {% include "../../btn/back.html" %}
                 </td>
             </tr>
         </table>

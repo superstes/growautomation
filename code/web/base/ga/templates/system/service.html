@@ -19,7 +19,7 @@
             {% include "../miniform/reload_time.html" %}
         {% endif %}
         <br>
-        <input type="submit" value="Select" class="btn btn-info">
+       {% include "../btn/select.html" %}
     </form>
     {% if service_name is not None %}
         <br><hr>

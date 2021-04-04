@@ -1,0 +1,10 @@
+{% load util %}
+{% if request.user|authorized_to_write %}
+    <button type="submit" value="upload" title="Upload file" class="btn btn-warning ga-btn-action">
+        <i class="fas fa-file-upload fa-2x ga-btn-action-icon"></i>
+    </button>
+{% else %}
+    <button type="submit" value="upload" title="Upload file" class="btn btn-warning ga-btn-action" disabled>
+        <i class="fas fa-file-upload fa-2x ga-btn-action-icon"></i>
+    </button>
+{% endif %}

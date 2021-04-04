@@ -6,12 +6,7 @@
             <h1>Error 500</h1>
             <h2>Oooooopppsss!</h2><br>
             <strong>
-                {% if request|handler500_update %}
-                    An unexpected error occurred while saving your configuration.<br>
-                    Please check if it meets the requirements.
-                {% else %}
-                    Something did go wrong while loading the page:
-                {% endif %}
+                Something did go wrong while loading the page:
                 <br><br>
                 '{{ request|get_full_uri }}'
             </strong>
@@ -27,5 +22,5 @@
             {% include "./500_gif.html" %}
         </div>
     </div>
-    <a href='{{ request|get_return_path }}' class="btn btn-info">Back</a>
+    {% include "../btn/back.html" %}
 {% endblock %}

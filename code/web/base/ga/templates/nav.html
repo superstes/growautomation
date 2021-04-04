@@ -20,7 +20,7 @@
                             <!-- START basic link -->
                             <li class="nav-item ga-nav-main">
                                 <a class="nav-link" href="{{ nav_config }}">
-                                    {{ nav_key }}
+                                    {{ nav_key | safe }}
                                 </a>
                             </li>
                             <!-- END basic link -->
@@ -35,7 +35,7 @@
                                     <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
                                         {% for key, value in nav_config.items %}
                                             <a class="dropdown-item ga-nav-main-a" href="{{ value }}">
-                                                {{ key }}
+                                                {{ key | safe }}
                                             </a>
                                         {% endfor %}
                                     </div>
@@ -50,7 +50,7 @@
                 <ul class="navbar-nav ml-auto">
                     {% for nav_key, nav_href in nav_right.items %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ nav_href }}">{{ nav_key }}</a>
+                            <a class="nav-link" href="{{ nav_href }}">{{ nav_key | safe }}</a>
                         </li>
                     {% endfor %}
                 </ul>

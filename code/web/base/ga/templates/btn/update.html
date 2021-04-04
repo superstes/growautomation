@@ -1,0 +1,10 @@
+{% load util %}
+{% if request.user|authorized_to_write %}
+    <button type="submit" class="btn btn-warning ga-btn-action" title="Update">
+        <i class="fas fa-pen-square fa-2x ga-btn-action-icon"></i>
+    </button>
+{% else %}
+    <button type="submit" class="btn btn-warning ga-btn-action" title="Update" disabled>
+        <i class="fas fa-pen-square fa-2x ga-btn-action-icon"></i>
+    </button>
+{% endif %}

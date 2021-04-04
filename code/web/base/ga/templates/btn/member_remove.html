@@ -1,0 +1,10 @@
+{% load util %}
+{% if request.user|authorized_to_write %}
+    <button type="submit" class="btn btn-danger ga-btn-action" title="Remove">
+        <i class="fas fa-minus-circle fa-2x ga-btn-action-icon"></i>
+    </button>
+{% else %}
+    <button type="submit" class="btn btn-danger ga-btn-action" disabled title="Remove">
+        <i class="fas fa-minus-circle fa-2x ga-btn-action-icon"></i>
+    </button>
+{% endif %}

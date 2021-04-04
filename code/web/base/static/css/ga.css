@@ -238,3 +238,59 @@ form .error-msg {
     width: 40vw;
     box-sizing: border-box;
 }
+
+.ga-btn-action {
+    padding: 0.35rem 0.4rem !important;
+    opacity: 75%;
+    border-radius: .35rem !important;
+    border-width: 0 !important;
+}
+
+.ga-btn-action:hover {
+    background-color: #121212 !important;
+    opacity: 87%;
+    -webkit-transition: background-color 0.3s ease-in-out;
+    -moz-transition: background-color 0.3s ease-in-out;
+    -ms-transition: background-color 0.3s ease-in-out;
+    -o-transition: background-color 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.ga-btn-action:disabled {
+    background-color: #121212 !important;
+    opacity: 87%;
+}
+
+.ga-btn-action:disabled .ga-btn-action-icon {
+    color: #FFFFFF;
+    opacity: 60%;
+}
+
+
+.ga-btn-action-icon {
+    color: #121212;
+}
+
+.ga-btn-action:hover:not([disabled]) .ga-btn-action-icon {
+    color: #FFFFFF;
+    opacity: 87%;
+    -webkit-transition: color 0.3s ease-in-out;
+    -moz-transition: color 0.3s ease-in-out;
+    -ms-transition: color 0.3s ease-in-out;
+    -o-transition: color 0.3s ease-in-out;
+    transition: color 0.3s ease-in-out;
+}
+
+.ga-icon-nav {
+    color: #FFFFFF;
+    opacity: 60%;
+}
+
+.ga-icon-nav:hover {
+    opacity: 87%;
+    -webkit-transition: opacity 0.3s ease-in-out;
+    -moz-transition: opacity 0.3s ease-in-out;
+    -ms-transition: opacity 0.3s ease-in-out;
+    -o-transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.3s ease-in-out;
+}

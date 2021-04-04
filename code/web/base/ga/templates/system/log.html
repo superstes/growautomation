@@ -47,7 +47,7 @@
             {% include "../miniform/reload_time.html" %}
         {% endif %}
         <br>
-        <input type="submit" value="Show" class="btn btn-info">
+        {% include "../btn/select.html" %}
     </form>
 
     {% if log_subtype is not None %}

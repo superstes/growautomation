@@ -13,5 +13,5 @@
             <br><br>
             '{{ request|get_full_uri }}'</strong>
     </div>
-    <a href='{{ request|get_return_path }}' class="btn btn-info">Back</a>
+    {% include "../btn/back.html" %}
 {% endblock %}

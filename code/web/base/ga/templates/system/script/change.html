@@ -16,12 +16,8 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|as_bootstrap }}
-        {% if request.user|authorized_to_write %}
-            <input type="hidden" name="script_type" value="{{ script_type }}" />
-            <input type="submit" value="Upload" class="btn btn-warning">
-        {% else %}
-            <input type="submit" value="Upload" class="btn btn-warning" disabled>
-        {% endif %}
-        | <a href='{{ return_path }}' class="btn btn-info">Cancel</a>
+        <input type="hidden" name="script_type" value="{{ script_type }}" />
+        {% include "../../btn/upload.html" %}
+        {% include "../../btn/abort.html" %}
     </form>
 {% endblock %}

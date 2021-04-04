@@ -31,21 +31,17 @@
             </td>
             <td>
                 <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
-                    <input type="submit" value="More info" class="btn btn-info"/>
+                    {% include "../../btn/detailed.html" %}
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
                 <form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
-                    <input type="submit" value="Change" class="btn btn-warning"/>
+                    {% include "../../btn/edit.html" %}
                     <input type="hidden" name="action" value="Update" />
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
                 <form class="ga-form-inline" method="post" action="/config/delete/{{ typ }}/{{ data.id }}">
                     {% csrf_token %}
-                    {% if request.user|authorized_to_write %}
-                        <input type="submit" value="Delete" class="btn btn-danger"/>
-                    {% else %}
-                        <input type="submit" value="Delete" class="btn btn-danger" disabled/>
-                    {% endif %}
+                    {% include "../../btn/delete.html" %}
                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                 </form>
             </td>

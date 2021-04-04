@@ -68,16 +68,16 @@ class GaView:
                 return self.home(request=request)
 
         except Pseudo404 as exc:
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc} - {exc.ga['msg']}")
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc.ga['msg']}")
             return handler404(request=exc.ga['request'], msg=exc.ga['msg'])
 
         except Pseudo403 as exc:
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 403 - {exc} - {exc.ga['msg']}")
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 403 - {exc.ga['msg']}")
             return handler403(request=exc.ga['request'], msg=exc.ga['msg'])
 
         except Pseudo500 as exc:
             trace = format_exc()
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc} - {exc.ga['msg']}")
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc.ga['msg']}")
             if get_controller_setting(request=request, setting='security') == 0:
                 develop_log(request=request, output=f"{trace}"[:self.MAX_TRACEBACK_LENGTH], level=2)
             return handler500(request=exc.ga['request'], msg=exc.ga['msg'], tb=trace)

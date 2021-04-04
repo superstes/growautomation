@@ -1,18 +1,9 @@
 {% load util %}
-<input type="submit" value="Show" class="btn btn-primary" formmethod='GET'>
+{% include "../../btn/select.html" %}
 <input type="hidden" name="do" value="{{ action }}">
-{% if request.user|authorized_to_write %}
-    {% if action == 'create' %}
-        <input name="do" type="submit" value="Create" class="btn btn-success">
-    {% else %}
-        <input name="do" type="submit" value="Update" class="btn btn-warning">
-        <input name="do" type="submit" value="Delete" class="btn btn-danger">
-    {% endif %}
+{% if action == 'create' %}
+    {% include "../../btn/save.html" %}
 {% else %}
-    {% if action == 'create' %}
-        <input type="submit" value="Create" class="btn btn-success" disabled>
-    {% else %}
-        <input type="submit" value="Update" class="btn btn-warning" disabled>
-        <input type="submit" value="Delete" class="btn btn-danger" disabled>
-    {% endif %}
+    {% include "../../btn/update.html" %}
+    {% include "../../btn/delete.html" %}
 {% endif %}

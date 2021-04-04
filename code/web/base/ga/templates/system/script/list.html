@@ -17,7 +17,7 @@
             </select>
         </label>
         <br>
-        <input type="submit" value="Show" class="btn btn-info"/>
+        {% include "../../btn/select.html" %}
     </form>
     <br><br>
     {% if script_type is not None %}
@@ -52,20 +52,16 @@
                             <td>
                                 <form class="ga-form-inline" method="post" action="/system/script/delete/">
                                     {% csrf_token %}
-                                    {% if request.user|authorized_to_write %}
-                                        <input type="submit" value="Delete" class="btn btn-danger"/>
-                                        <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                                        <input type="hidden" name="script_type" value="{{ script_type }}" />
-                                        <input type="hidden" name="script_name" value="{{ script_name }}" />
-                                    {% else %}
-                                        <input type="submit" value="Delete" class="btn btn-danger" disabled/>
-                                    {% endif %}
+                                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+                                    <input type="hidden" name="script_type" value="{{ script_type }}" />
+                                    <input type="hidden" name="script_name" value="{{ script_name }}" />
+                                    {% include "../../btn/delete.html" %}
                                 </form>
                                 <form class="ga-form-inline" method="get" action="/system/script/show/">
                                     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                                     <input type="hidden" name="script_type" value="{{ script_type }}" />
                                     <input type="hidden" name="script_name" value="{{ script_name }}" />
-                                    <input type="submit" value="Show content" class="btn btn-info"/>
+                                    {% include "../../btn/select.html" %}
                                 </form>
                             </td>
                         </tr>
@@ -74,7 +70,7 @@
                 <tr>
                     <td colspan="100%">
                         <form class="ga-form-inline" method="get" action="/system/script/change/">
-                            <input type="submit" value="Upload" class="btn btn-primary"/>
+                            {% include "../../btn/upload.html" %}
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                             <input type="hidden" name="script_type" value="{{ script_type }}" />
                         </form>

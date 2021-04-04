@@ -35,7 +35,7 @@
             </label>
             <br>
             <input type="hidden" name="do" value="{{ action }}" />
-            <input type="submit" value="Select" class="btn btn-primary">
+            {% include "../../btn/select.html" %}
         </form>
         <br><hr><br>
     {% elif action != 'create' %}
@@ -70,6 +70,6 @@
     {% endif %}
     {% include "../tmpl/chartjs_info.html" %}
     <hr>
-    <a href="/data/dashboard/" class="btn btn-primary">Back to the Dashboard</a>
+    {% include "../../btn/back.html" %}
     {% include "./js.html" %}
 {% endblock %}

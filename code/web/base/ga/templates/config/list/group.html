@@ -31,38 +31,34 @@
                         {% if member_view_active %}
                             {% if member_view_active == data.name %}
                                 <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
-                                    <input type="submit" value="Hide members" class="btn btn-secondary"/>
+                                    {% include "../../btn/collapse.html" %}
                                 </form>
                             {% else %}
                                 <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
-                                    <input type="submit" value="Show members" class="btn btn-info"/>
+                                    {% include "../../btn/expand.html" %}
                                     <input type="hidden" name="list_member" value="{{ data.name }}" />
                                 </form>
                             {% endif %}
                         {% else %}
                             <form method="get" class="ga-form-inline" action="{{ request.REFERER }}">
-                                <input type="submit" value="Show members" class="btn btn-info"/>
+                                {% include "../../btn/expand.html" %}
                                 <input type="hidden" name="list_member" value="{{ data.name }}" />
                             </form>
                         {% endif %}
                     </td>
                     <td>
                         <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
-                            <input type="submit" value="More info" class="btn btn-info"/>
+                            {% include "../../btn/detailed.html" %}
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
                         <form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
-                            <input type="submit" value="Change" class="btn btn-warning"/>
+                            {% include "../../btn/edit.html" %}
                             <input type="hidden" name="action" value="Update" />
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
                         <form method="post" class="ga-form-inline" action="/config/delete/{{ typ }}/{{ data.id }}">
                             {% csrf_token %}
-                            {% if request.user|authorized_to_write %}
-                                <input type="submit" value="Delete" class="btn btn-danger" data-toggle="confirmation"/>
-                            {% else %}
-                                <input type="submit" value="Delete" class="btn btn-danger" disabled data-toggle="confirmation"/>
-                            {% endif %}
+                            {% include "../../btn/delete.html" %}
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
                         </form>
                     </td>

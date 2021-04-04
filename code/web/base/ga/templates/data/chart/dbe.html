@@ -20,11 +20,7 @@
             {{ graph_form|as_bootstrap }}
             <input type="hidden" name="do" value="update" />
             <input type="hidden" name="group" value="{{ selected }}" />
-            {% if request.user|authorized_to_write %}
-                <input type="submit" value="Save" class="btn btn-warning">
-            {% else %}
-                <input type="submit" value="Save" class="btn btn-warning" disabled/>
-            {% endif %}
+            {% include "../../btn/save.html" %}
             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
         </form>
         <br><br>
@@ -61,11 +57,7 @@
                                 <td>
                                     <form class="ga-form-inline" method="post" action="/data/chart/dbe/dataset">
                                         {% csrf_token %}
-                                        {% if request.user|authorized_to_write %}
-                                            <input type="submit" value="Remove" class="btn btn-danger"/>
-                                        {% else %}
-                                            <input type="submit" value="Remove" class="btn btn-danger" disabled/>
-                                        {% endif %}
+                                        {% include "../../btn/delete.html" %}
                                         <input type="hidden" name="selected" value="{{ dataset_link.id }}" />
                                         <input type="hidden" name="do" value="delete" />
                                         <input type="hidden" name="return" value="{{ request.get_full_path }}" />
@@ -88,11 +80,7 @@
                                     {% endfor %}
                                 </select>
                             </label>
-                            {% if request.user|authorized_to_write %}
-                                <input type="submit" value="Add" class="btn btn-success"/>
-                            {% else %}
-                                <input type="submit" value="Add" class="btn btn-success" disabled/>
-                            {% endif %}
+                            {% include "../../btn/save.html" %}
                             <input type="hidden" name="do" value="create" />
                             <input type="hidden" name="group" value="{{ selected }}" />
                             <input type="hidden" name="return" value="{{ request.get_full_path }}" />
