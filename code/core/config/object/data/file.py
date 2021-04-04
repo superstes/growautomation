@@ -22,7 +22,9 @@ class GaDataFile:
 
     @staticmethod
     def _validate(data) -> dict:
-        return Validate(data).get()
+        return data
+        # todo: implement validation
+        # return Validate(data).get()
 
     @classmethod
     def _config_path(cls) -> str:
@@ -50,12 +52,15 @@ class GaDataFile:
     def _check_encryption(self) -> bool:
         try:
             return shared_var.SYSTEM.security
+
         except AttributeError:
             with open(self.file, 'r') as _:
                 first_line = _.readline().strip()
+
                 if first_line == shared_var.CRYPTO_RECOGNITION_TEXT:
                     # debug unencrypted
                     return False
+
                 else:
                     # debug encrypted
                     return True

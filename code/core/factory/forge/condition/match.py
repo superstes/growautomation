@@ -1,45 +1,51 @@
 # creates instances for single-conditions
 
-from core.utils.debug import debugger
 from core.factory import config
-
-# todo: area filtering => Ticket#10
+from core.utils.debug import Log
 
 
 class Go:
-    def __init__(self, blueprint, supply_list: list, input_object_dict: dict):
+    def __init__(self, blueprint, supply_list: list):
         self.blueprint = blueprint
         self.supply_list = supply_list
-        self.input_object_dict = input_object_dict
-
-        self.key_id = config.DB_ALL_KEY_ID
-        self.key_name = config.DB_ALL_KEY_NAME
-        self.key_desc = config.DB_ALL_KEY_DESCRIPTION
-        self.key_setting = config.SUPPLY_KEY_SETTING_DICT
+        self.logger = Log()
 
     def get(self) -> list:
         output_list = []
+        self.logger.write(f'Building condition match objects', level=8)
 
         for data_dict in self.supply_list:
             instance = self.blueprint(
-                name=data_dict[self.key_name],
-                description=data_dict[self.key_desc],
-                setting_dict=data_dict[self.key_setting],
-                check_instance=self._get_check_instance(data_dict=data_dict),
-                object_id=data_dict[self.key_id],
+                name=data_dict[config.DB_ALL_KEY_NAME],
+                description=data_dict[config.DB_ALL_KEY_DESCRIPTION],
+                setting_dict=data_dict[config.SUPPLY_KEY_SETTING_DICT],
+                object_id=data_dict[config.DB_ALL_KEY_ID],
+                area=data_dict[config.SUPPLY_CM_KEY_AR],
             )
 
             output_list.append(instance)
 
         return output_list
 
-    def _get_check_instance(self, data_dict: dict):
-        for key, instance_list in self.input_object_dict.items():
-            if key == config.KEY_GROUP_INPUT:
-                check_key = config.DB_CONDITION_MATCH_KEY_INPUT_GROUP
-            else:
-                check_key = config.DB_CONDITION_MATCH_KEY_INPUT_OBJECT
 
-            for instance in instance_list:
-                if data_dict[check_key] is not None and instance.object_id == data_dict[check_key]:
-                    return instance
+class GoSpecial:
+    def __init__(self, blueprint, supply_list: list):
+        self.blueprint = blueprint
+        self.supply_list = supply_list
+        self.logger = Log()
+
+    def get(self):
+        output_list = []
+        self.logger.write(f'Building condition special-match objects', level=8)
+
+        for data_dict in self.supply_list:
+            instance = self.blueprint(
+                object_id=data_dict[config.DB_ALL_KEY_ID],
+                name=data_dict[config.DB_ALL_KEY_NAME],
+                description=data_dict[config.DB_ALL_KEY_DESCRIPTION],
+            )
+
+            output_list.append(instance)
+
+        return output_list
+

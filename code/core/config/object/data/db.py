@@ -23,10 +23,10 @@ class GaDataDb:
             }
 
             self.logger.write(f"DB connection config: "
-                              f"\"server={self.connection_data_dict['server']}\""
-                              f"\"port={self.connection_data_dict['port']}\""
-                              f"\"user={self.connection_data_dict['user']}\""
-                              f"\"database={self.connection_data_dict['database']}\"", level=7)
+                              f"server => \"{self.connection_data_dict['server']}\" "
+                              f"port => \"{self.connection_data_dict['port']}\" "
+                              f"user => \"{self.connection_data_dict['user']}\" "
+                              f"database => \"{self.connection_data_dict['database']}\"", level=7)
 
         except IndexError as error_msg:
             self._error(error_msg)

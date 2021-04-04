@@ -1,8 +1,23 @@
 # input device objects (devices used to get data)
 #   hold their model or device specific settings
 
-from core.config.object.base import *
-from core.config.object.helper import *
+from core.config.object.base import GaBaseDeviceModel, GaBaseDevice
+from core.config.object.helper import set_attribute, set_parent_attribute, overwrite_inherited_attribute
+from core.config.object.device.connection import GaConnectionDevice
+
+
+class GaInputModel(GaBaseDeviceModel):
+    def __init__(self, **kwargs):
+        # inheritance from superclasses
+        super().__init__(**kwargs)
+        self.setting_list.extend(['unit', 'datatype', 'timer'])
+        # model specific vars
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=GaInputModel
+        )
 
 
 class GaInputDevice(GaBaseDevice):
@@ -10,7 +25,7 @@ class GaInputDevice(GaBaseDevice):
     inheritance_setting_list = ['timer']
     setting_list = ['connection']
 
-    def __init__(self, parent_instance, downlink, **kwargs):
+    def __init__(self, downlink: GaConnectionDevice = None, parent_instance: GaInputModel = None, **kwargs):
         # inheritance from superclasses
         super().__init__(parent_instance=parent_instance, **kwargs)
         # specific vars
@@ -35,16 +50,3 @@ class GaInputDevice(GaBaseDevice):
             obj=GaInputDevice
         )
 
-
-class GaInputModel(GaBaseDeviceModel):
-    def __init__(self, **kwargs):
-        # inheritance from superclasses
-        super().__init__(**kwargs)
-        self.setting_list.extend(['unit', 'datatype', 'timer'])
-        # model specific vars
-        set_attribute(
-            setting_dict=self.setting_dict,
-            setting_list=self.setting_list,
-            instance=self,
-            obj=GaInputModel
-        )

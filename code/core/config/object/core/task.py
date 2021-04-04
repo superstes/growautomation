@@ -1,10 +1,11 @@
 # core timer objects
 #   generic timers like output-timer (how often should all output-conditions be checked) or backup-timer
 
-from core.config.object.base import *
+from core.config.object.base import GaBase
+from core.config.object.helper import set_attribute
 
 
-class GaTimerDevice(GaBase):
+class GaTaskDevice(GaBase):
     setting_list = ['timer', 'enabled', 'interval', 'target', 'interval']
 
     def __init__(self, setting_dict: dict, **kwargs):
@@ -17,7 +18,7 @@ class GaTimerDevice(GaBase):
             setting_dict=self.setting_dict,
             setting_list=self.setting_list,
             instance=self,
-            obj=GaTimerDevice
+            obj=GaTaskDevice
         )
 
 # i see currently no use for the grouping of system timers

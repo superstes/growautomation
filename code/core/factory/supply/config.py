@@ -1,6 +1,10 @@
 from core.factory.config import *
 
 
+# provides configuration for factory supply
+#   what data to query
+#   how to parse it to 'raw' data dict
+
 DJANGO_PROJECT = 'ga'
 
 supply_sql_dict = {
@@ -12,18 +16,15 @@ supply_sql_dict = {
     # OBJECTS
     KEY_OBJECT_CONDITION_LINK: {
         'queries': {
-            'base': "SELECT * FROM %s_objectconditionlinkmodel;" % DJANGO_PROJECT,
-            SUPPLY_CL_KEY_MEMBER_CM: "SELECT id, created, updated, `order`, condition_id, link_id FROM %s_memberconditionlinkmodel;" % DJANGO_PROJECT,
-            SUPPLY_CL_KEY_MEMBER_CG: "SELECT id, created, updated, `order`, group_id, link_id FROM %s_memberconditionlinkmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectconditionlinkmodel;",
+            SUPPLY_CL_KEY_MEMBER_CM: f"SELECT id, created, updated, `order`, condition_id, link_id FROM {DJANGO_PROJECT}_memberconditionlinkmodel;",
+            SUPPLY_CL_KEY_MEMBER_CG: f"SELECT id, created, updated, `order`, group_id, link_id FROM {DJANGO_PROJECT}_memberconditionlinkmodel;",
         },
         'fields': {
             'base': ['name', 'operator'],
             SUPPLY_CL_KEY_MEMBER_CM: ['order', 'condition_id', 'link_id'],
             SUPPLY_CL_KEY_MEMBER_CG: ['order', 'group_id', 'link_id'],
         },
-        # 'optional_fields': {
-        #     'member': ['condition_id', 'group_id']
-        # },
         'setting_fields': {
             'base': ['operator'],
             SUPPLY_CL_KEY_MEMBER_CM: ['order'],
@@ -42,21 +43,27 @@ supply_sql_dict = {
     },
     KEY_OBJECT_CONDITION_MATCH: {
         'queries': {
-            'base': "SELECT * FROM %s_objectconditionmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectconditionmodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'value', 'operator', 'check', 'period', 'period_data', 'special', 'input_group_id', 'input_obj_id'],
+            'base': ['name', 'description', 'value', 'operator', 'check', 'period', 'period_data', 'area_id', 'input_group_id', 'input_obj_id', 'special_obj_id'],
         },
-        # 'optional_fields': {
-        #     'member': ['input_group_id', 'input_obj_id']
-        # },
         'setting_fields': {
-            'base': ['value', 'operator', 'check', 'period', 'period_data', 'special'],
+            'base': ['value', 'operator', 'check', 'period', 'period_data'],
         },
+    },
+    KEY_OBJECT_CONDITION_MATCH_SPECIAL: {
+        'queries': {
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectspecialconditionmodel;",
+        },
+        'fields': {
+            'base': ['name', 'description'],
+        },
+        'setting_fields': {},
     },
     KEY_OBJECT_CONNECTION: {
         'queries': {
-            'base': "SELECT * FROM %s_objectconnectionmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectconnectionmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'connection'],
@@ -67,7 +74,7 @@ supply_sql_dict = {
     },
     KEY_OBJECT_INPUT: {
         'queries': {
-            'base': "SELECT * FROM %s_objectinputmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectinputmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'connection', 'downlink', 'timer'],
@@ -78,7 +85,7 @@ supply_sql_dict = {
     },
     KEY_OBJECT_OUTPUT: {
         'queries': {
-            'base': "SELECT * FROM %s_objectoutputmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectoutputmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'connection', 'downlink'],
@@ -89,7 +96,7 @@ supply_sql_dict = {
     },
     KEY_OBJECT_CONTROLLER: {
         'queries': {
-            'base': "SELECT * FROM %s_objectcontrollermodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectcontrollermodel;",
         },
         'fields': {
             'base': ['name', 'description', 'path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
@@ -100,9 +107,9 @@ supply_sql_dict = {
                      'log_level', 'debug', 'security', 'backup', 'timezone'],
         },
     },
-    KEY_OBJECT_TIMER: {
+    KEY_OBJECT_TASK: {
         'queries': {
-            'base': "SELECT * FROM %s_objecttimermodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_objecttaskmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'timer', 'target', 'interval'],
@@ -114,8 +121,8 @@ supply_sql_dict = {
     # GROUPS
     KEY_GROUP_CONNECTION: {
         'queries': {
-            'base': "SELECT * FROM %s_groupconnectionmodel;" % DJANGO_PROJECT,
-            'member1': "SELECT * FROM %s_memberconnectionmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_groupconnectionmodel;",
+            'member1': f"SELECT * FROM {DJANGO_PROJECT}_memberconnectionmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg'],
@@ -133,8 +140,8 @@ supply_sql_dict = {
     },
     KEY_GROUP_INPUT: {
         'queries': {
-            'base': "SELECT * FROM %s_groupinputmodel;" % DJANGO_PROJECT,
-            'member1': "SELECT * FROM %s_memberinputmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_groupinputmodel;",
+            'member1': f"SELECT * FROM {DJANGO_PROJECT}_memberinputmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg', 'unit', 'datatype', 'timer'],
@@ -152,8 +159,8 @@ supply_sql_dict = {
     },
     KEY_GROUP_OUTPUT: {
         'queries': {
-            'base': "SELECT * FROM %s_groupoutputmodel;" % DJANGO_PROJECT,
-            'member1': "SELECT * FROM %s_memberoutputmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_groupoutputmodel;",
+            'member1': f"SELECT * FROM {DJANGO_PROJECT}_memberoutputmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg', 'reverse', 'reverse_type', 'reverse_type_data',
@@ -173,11 +180,11 @@ supply_sql_dict = {
     },
     KEY_GROUP_CONDITION: {
         'queries': {
-            'base': "SELECT * FROM %s_groupconditionmodel;" % DJANGO_PROJECT,
-            SUPPLY_CG_KEY_MEMBER_CL: "SELECT * FROM %s_memberconditionmodel;" % DJANGO_PROJECT,
-            SUPPLY_CG_KEY_MEMBER_OO: "SELECT * FROM %s_memberconditionoutputmodel;" % DJANGO_PROJECT,
-            SUPPLY_CG_KEY_MEMBER_OG: "SELECT * FROM %s_memberconditionoutputgroupmodel;" % DJANGO_PROJECT,
-            SUPPLY_CG_KEY_MEMBER_AG: "SELECT * FROM %s_memberconditionareagroupmodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_groupconditionmodel;",
+            SUPPLY_CG_KEY_MEMBER_CL: f"SELECT * FROM {DJANGO_PROJECT}_memberconditionmodel;",
+            SUPPLY_CG_KEY_MEMBER_OO: f"SELECT * FROM {DJANGO_PROJECT}_memberconditionoutputmodel;",
+            SUPPLY_CG_KEY_MEMBER_OG: f"SELECT * FROM {DJANGO_PROJECT}_memberconditionoutputgroupmodel;",
+            SUPPLY_CG_KEY_MEMBER_AG: f"SELECT * FROM {DJANGO_PROJECT}_memberconditionareagroupmodel;",
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'timer'],
@@ -210,14 +217,14 @@ supply_sql_dict = {
     },
     KEY_GROUP_AREA: {
         'queries': {
-            'base': "SELECT * FROM %s_groupareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_CG: "SELECT id, created, updated, area_id, connection_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_CO: "SELECT id, created, updated, area_id, connection_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_IG: "SELECT id, created, updated, area_id, input_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_IO: "SELECT id, created, updated, area_id, input_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_OG: "SELECT id, created, updated, area_id, output_group_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_AR_KEY_MEMBER_OO: "SELECT id, created, updated, area_id, output_obj_id FROM %s_memberareamodel;" % DJANGO_PROJECT,
-            SUPPLY_GENERIC_KEY_MEMBER_NESTED: "SELECT * FROM %s_nestedareamodel;" % DJANGO_PROJECT,
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_groupareamodel;",
+            SUPPLY_AR_KEY_MEMBER_CG: f"SELECT id, created, updated, area_id, connection_group_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_AR_KEY_MEMBER_CO: f"SELECT id, created, updated, area_id, connection_obj_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_AR_KEY_MEMBER_IG: f"SELECT id, created, updated, area_id, input_group_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_AR_KEY_MEMBER_IO: f"SELECT id, created, updated, area_id, input_obj_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_AR_KEY_MEMBER_OG: f"SELECT id, created, updated, area_id, output_group_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_AR_KEY_MEMBER_OO: f"SELECT id, created, updated, area_id, output_obj_id FROM {DJANGO_PROJECT}_memberareamodel;",
+            SUPPLY_GENERIC_KEY_MEMBER_NESTED: f"SELECT * FROM {DJANGO_PROJECT}_nestedareamodel;",
         },
         'fields': {
             'base': ['name', 'description'],

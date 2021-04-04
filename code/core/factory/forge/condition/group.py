@@ -1,35 +1,29 @@
 from core.factory import config
+from core.utils.debug import Log
 
 
 class Go:
     def __init__(self, blueprint, supply_list: list):
         self.blueprint = blueprint
         self.supply_list = supply_list
-
-        self.key_id = config.DB_ALL_KEY_ID
-        self.key_name = config.DB_ALL_KEY_NAME
-        self.key_desc = config.DB_ALL_KEY_DESCRIPTION
-        self.key_setting = config.SUPPLY_KEY_SETTING_DICT
         self.key_member = config.SUPPLY_KEY_MEMBER_DICT
-        self.key_member_link = config.SUPPLY_CG_KEY_MEMBER_CL
-        self.key_member_og = config.SUPPLY_CG_KEY_MEMBER_OG
-        self.key_member_oo = config.SUPPLY_CG_KEY_MEMBER_OO
-        self.key_member_ag = config.SUPPLY_CG_KEY_MEMBER_AG
+        self.logger = Log()
 
     def get(self):
         output_list = []
+        self.logger.write(f'Building condition group objects', level=8)
 
         for data_dict in self.supply_list:
 
             instance = self.blueprint(
-                member_list=data_dict[self.key_member][self.key_member_link],
-                output_object_list=data_dict[self.key_member][self.key_member_oo],
-                output_group_list=data_dict[self.key_member][self.key_member_og],
-                area_group_list=data_dict[self.key_member][self.key_member_ag],
-                setting_dict=data_dict[self.key_setting],
-                object_id=data_dict[self.key_id],
-                name=data_dict[self.key_name],
-                description=data_dict[self.key_desc],
+                member_list=data_dict[self.key_member][config.SUPPLY_CG_KEY_MEMBER_CL],
+                output_object_list=data_dict[self.key_member][config.SUPPLY_CG_KEY_MEMBER_OO],
+                output_group_list=data_dict[self.key_member][config.SUPPLY_CG_KEY_MEMBER_OG],
+                area_group_list=data_dict[self.key_member][config.SUPPLY_CG_KEY_MEMBER_AG],
+                setting_dict=data_dict[config.SUPPLY_KEY_SETTING_DICT],
+                object_id=data_dict[config.DB_ALL_KEY_ID],
+                name=data_dict[config.DB_ALL_KEY_NAME],
+                description=data_dict[config.DB_ALL_KEY_DESCRIPTION],
             )
 
             output_list.append(instance)

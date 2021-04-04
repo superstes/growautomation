@@ -12,6 +12,8 @@
 
 from core.factory.main import get as factory
 
+from json import dumps as json_dumps
+
 
 class Go:
     def __init__(self, object_list: list, config_dict: dict):
@@ -20,16 +22,15 @@ class Go:
         self.new_object_list, self.new_config_dict = factory()
 
     def get(self) -> tuple:
-        return self._compare(), self.new_object_list, self.new_config_dict
+        return self._reload_check(), self.new_object_list, self.new_config_dict
 
-    def _compare(self) -> bool:
-        change_dict = {}
+    def _reload_check(self) -> bool:
+        # True = must reload
+        # False = is ok
+        new_json = json_dumps(self.new_config_dict, sort_keys=True, default=str)
+        old_json = json_dumps(self.config_dict, sort_keys=True, default=str)
 
-        for key, value in self.config_dict.items():
-            if value != self.new_config_dict[key]:
-                change_dict[key] = self.new_config_dict[key]
-
-        if len(change_dict) > 0:
+        if new_json == old_json:
             return False
-        else:
-            return True
+
+        return True

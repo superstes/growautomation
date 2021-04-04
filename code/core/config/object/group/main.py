@@ -1,7 +1,7 @@
 # group objects (used to group/filter devices generically)
 #   hold the information of their members
 
-from core.config.object.base import *
+from core.config.object.base import GaBase
 
 # todo: area filtering => Ticket#10
 

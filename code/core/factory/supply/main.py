@@ -24,8 +24,6 @@ class Go:
             _data_dict = self._get_data(config=config, typ=typ)
             data_dict[typ] = _data_dict
 
-        # self._test(data_dict=data_dict)
-
         return data_dict
 
     def _get_data_list(self, query_typ: str, config: dict) -> list:
@@ -114,6 +112,7 @@ class Go:
 
                 if len(setting_list) == 1:
                     numbered_key = setting_list[0]
+
                 else:
                     # log error or whatever ?
                     numbered_key = False
@@ -132,6 +131,7 @@ class Go:
                         if data_dict[id_key] == member_dict[group_key]:
                             if numbered_key:
                                 numbered_data = member_dict[numbered_key]
+
                             else:
                                 numbered_data = len(_dict) + 1
 
@@ -139,6 +139,7 @@ class Go:
 
                     if supply_member_key in data_dict:
                         data_dict[supply_member_key].update({query_key: _dict})
+
                     else:
                         data_dict[supply_member_key] = {query_key: _dict}
 
@@ -146,22 +147,14 @@ class Go:
 
     def _get_data(self, config: dict, typ: str) -> list:
         query_typ = 'base'
-    
+
         data_list = self._get_data_list(query_typ=query_typ, config=config)
         data_list = self._add_settings(data_list=data_list, config=config, query_typ=query_typ)
+
         if typ == factory_config.KEY_OBJECT_CONDITION_LINK:
             data_list = self._add_numbered_members(data_list=data_list, config=config)
+
         else:
             data_list = self._add_members(data_list=data_list, config=config)
     
         return data_list
-
-    @staticmethod
-    def _test(data_dict: dict):
-        print("#########################\nOUTPUT\n\n")
-        for typ, results in data_dict.items():
-            print("####\nTYP: %s" % typ)
-            for data in results:
-                print(data)
-        print("#########################\n\nEND OUTPUT")
-

@@ -1,10 +1,12 @@
 # base objects
 #   are setting some basic functions and variables that should be inherited
 
-from core.config.object.helper import *
+from core.config.object.helper import SETTING_DICT_EXCEPTION, SETTING_DICT_ERROR, set_attribute
 
 
 class GaBase(object):
+    reserved = ['name', 'description', 'state', 'object_id']
+
     def __init__(self, name, description, object_id):
         self.name = name
         self.description = description
@@ -53,6 +55,8 @@ class GaBaseDevice(GaBase):
 
     @property
     def enabled(self):
+        if self.parent_instance is None and self.device_enabled:
+            return True
         if self.parent_instance.enabled and self.device_enabled:
             return True
         return False

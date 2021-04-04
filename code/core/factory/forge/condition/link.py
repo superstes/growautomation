@@ -1,32 +1,27 @@
 # handles creation of condition link instances
 
-from core.utils.debug import debugger
 from core.factory import config
+from core.utils.debug import Log
 
 
 class Go:
     def __init__(self, blueprint, supply_list: list):
         self.blueprint = blueprint
         self.supply_list = supply_list
-
-        self.key_id = config.DB_ALL_KEY_ID
-        self.key_name = config.DB_ALL_KEY_NAME
-        self.key_setting = config.SUPPLY_KEY_SETTING_DICT
-
         self.key_member = config.SUPPLY_KEY_MEMBER_DICT
-        self.key_member_cm = config.SUPPLY_CL_KEY_MEMBER_CM
-        self.key_member_cg = config.SUPPLY_CL_KEY_MEMBER_CG
+        self.logger = Log()
 
     def get(self):
         output_list = []
+        self.logger.write(f'Building condition link objects', level=8)
 
         for data_dict in self.supply_list:
             instance = self.blueprint(
-                condition_match_dict=data_dict[self.key_member][self.key_member_cm],
-                condition_group_dict=data_dict[self.key_member][self.key_member_cg],
-                setting_dict=data_dict[self.key_setting],
-                object_id=data_dict[self.key_id],
-                name=data_dict[self.key_name],
+                condition_match_dict=data_dict[self.key_member][config.SUPPLY_CL_KEY_MEMBER_CM],
+                condition_group_dict=data_dict[self.key_member][config.SUPPLY_CL_KEY_MEMBER_CG],
+                setting_dict=data_dict[config.SUPPLY_KEY_SETTING_DICT],
+                object_id=data_dict[config.DB_ALL_KEY_ID],
+                name=data_dict[config.DB_ALL_KEY_NAME],
             )
 
             output_list.append(instance)

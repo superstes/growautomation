@@ -4,21 +4,29 @@
 #     if it correlates with other conditions
 #     the output device for which it is checked for
 
-from core.config.object.base import *
-from core.config.object.helper import *
+from core.config.object.base import GaBase
+from core.config.object.helper import set_attribute
+from core.config.object.device.input import GaInputDevice, GaInputModel
+from core.config.object.group.main import GaAreaGroup
+
+
+class GaConditionMatchSpecial(GaBase):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.enabled = 1
 
 
 class GaConditionMatch(GaBase):
-    setting_list = ['special', 'value', 'operator', 'period', 'period_data', 'check']
+    setting_list = ['value', 'operator', 'period', 'period_data', 'check']
     #   check -> how to process the data pulled from the period (max-/min-/avg-value)
     #   value -> data to compare to
     #   operator -> operator to use for data comparison
     #   period -> the time period from which to pull the data for the comparison
-    # todo: area filtering => Ticket#10
 
-    def __init__(self, check_instance, setting_dict: dict, **kwargs):
+    def __init__(self, setting_dict: dict, check_instance: (GaInputDevice, GaInputModel, GaConditionMatchSpecial) = None, area: GaAreaGroup = None, **kwargs):
         super().__init__(**kwargs)
         self.check_instance = check_instance
+        self.area = area
         self.setting_dict = setting_dict
         # dynamic instance vars
         set_attribute(
