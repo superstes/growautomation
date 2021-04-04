@@ -68,33 +68,30 @@ class BaseNestedGroupModel(BareModel):
         abstract = True
 
 
-# objects ##############################
+# devices ##############################
 
-from .submodels.objects import ObjectConnectionModel, ObjectInputModel, ObjectOutputModel, ObjectConditionLinkModel, ObjectConditionModel, ObjectControllerModel
-from .submodels.objects import ObjectTimerModel
+from .submodels.device import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupConnectionModel, GroupInputModel, GroupOutputModel
+from .submodels.device import MemberConnectionModel, MemberInputModel, MemberOutputModel
+
+# system ##############################
+
+from .submodels.system import ObjectTaskModel, ObjectControllerModel
+
+# condition ##############################
+
+from .submodels.condition_min import GroupConditionModel
+from .submodels.condition import ObjectConditionModel, ObjectConditionLinkModel, MemberConditionLinkModel, MemberConditionModel
+from .submodels.condition import MemberConditionOutputGroupModel, MemberConditionOutputModel, MemberConditionAreaGroupModel, ObjectSpecialConditionModel
 
 # data ##############################
 
 from .submodels.data import InputDataModel, ChartGraphModel, ChartDatasetModel, ChartDashboardModel, ChartDatasetLinkModel, ChartGraphLinkModel
 from .submodels.data import DashboardModel, DashboardPositionModel, DashboardDefaultModel
 
-# groups ##############################
+# area ##############################
 
-from .submodels.groups import GroupConnectionModel, GroupInputModel, GroupOutputModel, GroupConditionModel, GroupAreaModel
-
-# member ##############################
-
-from .submodels.members import MemberConnectionModel, MemberInputModel, MemberOutputModel, MemberConditionLinkModel, MemberConditionModel
-from .submodels.members import MemberConditionOutputGroupModel, MemberConditionOutputModel, MemberAreaModel, MemberConditionAreaGroupModel
-
-# nested member ##############################
-
-from .submodels.nestedmembers import NestedAreaModel
-
-# settings ##############################
-
-# from .submodels.settings import *
+from .submodels.area import MemberAreaModel, GroupAreaModel, NestedAreaModel
 
 # test ##############################
 
-from .submodels.test import *
+from .submodels.test import Test

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from .models import *
 from .submodels.helper.matrix import Matrix
 from .submodels.helper.crypto import encrypt
+from .config.shared import CENSOR_SYMBOL
 
 LABEL_DICT = {
     'name': 'Name',
@@ -20,6 +21,7 @@ LABEL_DICT = {
     'reverse': 'Reverse action',
     'reverse_type': 'Reverse type',
     'reverse_type_data': 'Reverse after',
+    'reverse_condition': 'Reverse condition',
     'reverse_script': 'Reverse script',
     'reverse_script_arg': 'Reverse script argument',
     'reverse_script_bin': 'Reverse script binary',
@@ -33,7 +35,7 @@ LABEL_DICT = {
     'check': 'Check type',
     'period': 'Period type',
     'period_data': 'Period',
-    'special': 'Is special',
+    'special_obj': 'Special match',
     'path_root': 'GA root path',
     'path_log': 'GA log path',
     'backup': 'Enable backup',
@@ -60,7 +62,9 @@ LABEL_DICT = {
     'options_json': 'Chart.js options in json format',
     'dataset_json': 'Chart.js dataset options in json format',
     'input_device': 'Input device',
-    'input_model': 'Input model',
+    'input_obj': 'Input device',
+    'input_model': 'Input device model',
+    'input_group': 'Input device model',
     'area': 'Area',
     'start_ts': 'Start timestamp',
     'stop_ts': 'Stop timestamp',
@@ -91,6 +95,7 @@ HELP_DICT = {
     'reverse': 'If the action needs to be reversed actively',
     'reverse_type': 'How to reverse the action [can be empty]',
     'reverse_type_data': 'When to reverse the action [can be empty]',
+    'reverse_condition': 'Condition that is evaluated to decide whether the action should be reversed [can be empty]',
     'reverse_script': 'Script to run when reversing the action (if empty -> the normal script will be run) [can be empty, max length 50]',
     'reverse_script_arg': 'Script argument to pass when reversing the action (if empty -> the normal script argument will be used) [can be empty, max length 255]',
     'reverse_script_bin': 'Script binary to use to run the script when reversing the action (if empty -> the normal script binary will be used) [can be empty, max length 100]',
@@ -104,7 +109,6 @@ HELP_DICT = {
     'check': 'Method used to calculate the comparison data from the datapool',
     'period': 'Method used to retrieve datapoints for the datapool',
     'period_data': 'Used in combination with the period type in the data retrieval process',
-    'special': 'Generic special flag',
     'path_root': 'Path to the growautomation core installation [max length 255]',
     'path_log': 'Path for growautomation log creation [max length 255]',
     'backup': 'Should the integrated backup task be enabled?',
@@ -143,6 +147,12 @@ HELP_DICT = {
     'device_log': 'If a per-device logfile should be created',
     'rows': 'How many rows there should be [max 100]',
     'columns': 'How many columns there should be [max 30]',
+    'area': 'Area to filter devices on [can be empty]',
+    'input_obj': 'Input device [can be empty]',
+    'input_device': 'Input device [can be empty]',
+    'input_group': 'Input device model [can be empty]',
+    'input_model': 'Input device model [can be empty]',
+    'special_obj': 'Special condition match [can be empty]',
 }
 
 
@@ -153,7 +163,27 @@ class BaseForm(forms.ModelForm):
         abstract = True
 
 
-# objects ##############################
+class BaseMultiFKForm(BaseForm):
+    def clean(self):
+        super().clean()
+
+        to_check = {}
+
+        for field in self._meta.model.optional_list:
+            label = LABEL_DICT[field] if field in LABEL_DICT else field
+            to_check[label] = self.cleaned_data[field]
+
+        fill_count = 0
+
+        for value in to_check.values():
+            if value is not None:
+                fill_count += 1
+
+        if fill_count != 1:
+            raise ValidationError(f"You must fill exactly one of the following fields: \"{[label for label in to_check.keys()]}\"")
+
+
+# devices ##############################
 
 class ObjectConnectionForm(BaseForm):
     class Meta:
@@ -179,17 +209,96 @@ class ObjectOutputForm(BaseForm):
         help_texts = HELP_DICT
 
 
-class ObjectConditionForm(BaseForm):
+class GroupConnectionForm(BaseForm):
+    class Meta:
+        model = GroupConnectionModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class GroupInputForm(BaseForm):
+    class Meta:
+        model = GroupInputModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class GroupOutputForm(BaseForm):
+    class Meta:
+        model = GroupOutputModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConnectionForm(BaseForm):
+    class Meta:
+        model = MemberConnectionModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberInputForm(BaseForm):
+    class Meta:
+        model = MemberInputModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberOutputForm(BaseForm):
+    class Meta:
+        model = MemberOutputModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+# area ##############################
+
+class GroupAreaForm(BaseForm):
+    class Meta:
+        model = GroupAreaModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberAreaForm(BaseMultiFKForm):
+    class Meta:
+        model = MemberAreaModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class NestedAreaForm(BaseForm):
+    class Meta:
+        model = NestedAreaModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+# condition ##############################
+
+class ObjectConditionForm(BaseMultiFKForm):
     class Meta:
         model = ObjectConditionModel
         fields = model.field_list
         labels = LABEL_DICT
         help_texts = HELP_DICT
-#    todo: form error should be shown if more than one optional_field is filled
-#     def clean(self):
-#         cleaned_data = super().clean()
-#         if not cleaned_data.get('obj') and not cleaned_data.get('group'):
-#             raise ValidationError({'obj': "You can't leave both fields as null"})
+
+
+class ObjectSpecialConditionForm(BaseForm):
+    class Meta:
+        model = ObjectSpecialConditionModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
 
 
 class ObjectConditionLinkForm(BaseForm):
@@ -199,6 +308,56 @@ class ObjectConditionLinkForm(BaseForm):
         labels = LABEL_DICT
         help_texts = HELP_DICT
 
+
+class GroupConditionForm(BaseForm):
+    class Meta:
+        model = GroupConditionModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConditionLinkForm(BaseMultiFKForm):
+    class Meta:
+        model = MemberConditionLinkModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConditionForm(BaseForm):
+    class Meta:
+        model = MemberConditionModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConditionOutputForm(BaseForm):
+    class Meta:
+        model = MemberConditionOutputModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConditionOutputGroupForm(BaseForm):
+    class Meta:
+        model = MemberConditionOutputGroupModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+class MemberConditionAreaGroupForm(BaseForm):
+    class Meta:
+        model = MemberConditionAreaGroupModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
+# system ##############################
 
 class ObjectControllerForm(BaseForm):
     class Meta:
@@ -215,13 +374,12 @@ class ObjectControllerForm(BaseForm):
         super().clean()
 
         submitted_plain_secret = self.cleaned_data['sql_secret']  # decrypt(instance.sql_secret)
+        if self.instance is None:
+            raise ValidationError('You must provide a valid sql password!')
         current_encrypted_secret = self.instance.sql_secret
 
         # if password was not changed -> set same one again
-        if submitted_plain_secret.find('●') != -1:
-            if self.instance is None:
-                raise ValidationError('You must provide a valid sql password!')
-
+        if submitted_plain_secret.find(CENSOR_SYMBOL) != -1:
             self.cleaned_data['sql_secret'] = current_encrypted_secret
 
         # encrypt secret/password for storage in db if it was changed (else it is already encrypted)
@@ -229,12 +387,17 @@ class ObjectControllerForm(BaseForm):
             self.cleaned_data['sql_secret'] = encrypt(submitted_plain_secret)
 
 
-class ObjectTimerForm(BaseForm):
+class ObjectTaskForm(BaseForm):
     class Meta:
-        model = ObjectTimerModel
+        model = ObjectTaskModel
         fields = model.field_list
         labels = LABEL_DICT
         help_texts = HELP_DICT
+
+
+class SystemScriptForm(forms.Form):
+    script_name = forms.CharField(max_length=50)
+    script_file = forms.FileField()
 
 
 # data ##############################
@@ -343,136 +506,3 @@ class DashboardDefaultForm(BaseForm):
         fields = model.field_list
         help_texts = HELP_DICT
         labels = LABEL_DICT
-
-
-# groups ##############################
-
-class GroupConnectionForm(BaseForm):
-    class Meta:
-        model = GroupConnectionModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class GroupInputForm(BaseForm):
-    class Meta:
-        model = GroupInputModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class GroupOutputForm(BaseForm):
-    class Meta:
-        model = GroupOutputModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class GroupConditionForm(BaseForm):
-    class Meta:
-        model = GroupConditionModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class GroupAreaForm(BaseForm):
-    class Meta:
-        model = GroupAreaModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-# members ##############################
-
-class MemberConnectionForm(BaseForm):
-    class Meta:
-        model = MemberConnectionModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberInputForm(BaseForm):
-    class Meta:
-        model = MemberInputModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberOutputForm(BaseForm):
-    class Meta:
-        model = MemberOutputModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberConditionLinkForm(BaseForm):
-    class Meta:
-        model = MemberConditionLinkModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberConditionForm(BaseForm):
-    class Meta:
-        model = MemberConditionModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberConditionOutputForm(BaseForm):
-    class Meta:
-        model = MemberConditionOutputModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberConditionOutputGroupForm(BaseForm):
-    class Meta:
-        model = MemberConditionOutputGroupModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberAreaForm(BaseForm):
-    class Meta:
-        model = MemberAreaModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-class MemberConditionAreaGroupForm(BaseForm):
-    class Meta:
-        model = MemberConditionAreaGroupModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-# nested groups ##############################
-
-class NestedAreaForm(BaseForm):
-    class Meta:
-        model = NestedAreaModel
-        fields = model.field_list
-        labels = LABEL_DICT
-        help_texts = HELP_DICT
-
-
-# system ##############################
-
-class SystemScriptForm(forms.Form):
-    script_name = forms.CharField(max_length=50)
-    script_file = forms.FileField()

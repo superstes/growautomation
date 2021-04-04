@@ -1,11 +1,11 @@
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMemberModel, BareModel
-from .objects import ObjectInputModel
-from .groups import GroupAreaModel, GroupInputModel
+from .device import ObjectInputModel, GroupInputModel
+from .area import GroupAreaModel
 from .helper.matrix import Matrix
 
 CHART_TYPE_CHOICES = [
@@ -92,8 +92,8 @@ class ChartGraphLinkModel(BaseMemberModel):
     obj_model = ChartGraphModel
     initials = 'cglm'
 
-    group = models.OneToOneField(grp_model, on_delete=models.CASCADE, related_name="%s_fk_group" % initials)
-    obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
+    group = models.OneToOneField(grp_model, on_delete=models.CASCADE, related_name=f"{initials}_fk_group")
+    obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
 
     class Meta:
         constraints = [
@@ -106,8 +106,8 @@ class ChartDatasetLinkModel(BaseMemberModel):
     obj_model = ChartDatasetModel
     initials = 'cdlm'
 
-    group = models.ForeignKey(grp_model, on_delete=models.CASCADE, related_name="%s_fk_group" % initials)
-    obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
+    group = models.ForeignKey(grp_model, on_delete=models.CASCADE, related_name=f"{initials}_fk_group")
+    obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
 
     class Meta:
         constraints = [
@@ -136,8 +136,8 @@ class DashboardPositionModel(BareModel):
     ]
     initials = 'dpm'
     # obj = models.ForeignKey(obj_model, on_delete=models.CASCADE, related_name="%s_fk_obj" % initials)
-    dashboard = models.ForeignKey(DashboardModel, on_delete=models.CASCADE, related_name="%s_fk_dashboard" % initials)
-    element = models.ForeignKey(ChartDashboardModel, on_delete=models.CASCADE, related_name="%s_fk_element" % initials)
+    dashboard = models.ForeignKey(DashboardModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_dashboard")
+    element = models.ForeignKey(ChartDashboardModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_element")
     y0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(DashboardModel.max_rows - 1)])
     y1 = models.PositiveSmallIntegerField(default=2, validators=[MaxValueValidator(DashboardModel.max_rows)])
     x0 = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(DashboardModel.max_columns - 1)])
