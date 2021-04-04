@@ -1,10 +1,12 @@
+from traceback import format_exc
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .config.site import type_dict
 from .subviews.config.main import ConfigView
 from .utils.main import logout_check
-from .utils.helper import develop_log
+from .utils.helper import develop_log, get_controller_setting
 from .user import authorized_to_access
 from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
@@ -24,6 +26,8 @@ def view(request, **kwargs):
 
 
 class GaView:
+    MAX_TRACEBACK_LENGTH = 5000
+
     def start(self, request, a: str = None, b: str = None, c: str = None, d: str = None, e: str = None):
         try:
             if a == 'denied':
@@ -63,10 +67,6 @@ class GaView:
             else:
                 return self.home(request=request)
 
-        except (TypeError, KeyError, IndexError) as error:
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
-            return handler500(request, msg=error)
-
         except Pseudo404 as exc:
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc} - {exc.ga['msg']}")
             return handler404(request=exc.ga['request'], msg=exc.ga['msg'])
@@ -76,8 +76,18 @@ class GaView:
             return handler403(request=exc.ga['request'], msg=exc.ga['msg'])
 
         except Pseudo500 as exc:
+            trace = format_exc()
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc} - {exc.ga['msg']}")
-            return handler500(request=exc.ga['request'], msg=exc.ga['msg'])
+            if get_controller_setting(request=request, setting='security') == 0:
+                develop_log(request=request, output=f"{trace}"[:self.MAX_TRACEBACK_LENGTH], level=2)
+            return handler500(request=exc.ga['request'], msg=exc.ga['msg'], tb=trace)
+
+        except Exception as error:
+            trace = format_exc()
+            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
+            if get_controller_setting(request=request, setting='security') == 0:
+                develop_log(request=request, output=f"{trace}"[:self.MAX_TRACEBACK_LENGTH], level=2)
+            return handler500(request=request, msg=error, tb=trace)
 
     @staticmethod
     @login_required
@@ -113,7 +123,7 @@ class GaView:
             return logout_check(request=request, default=ScriptView(request=request))
 
         elif typ == 'export':
-            return logout_check(export_view(request=request))
+            return logout_check(request=request, default=export_view(request=request))
 
         raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 

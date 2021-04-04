@@ -15,6 +15,7 @@ SHELL_SERVICE_ACTIVE_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --
 SHELL_SERVICE_INACTIVE_TIMESTAMP = "/bin/systemctl show -p InactiveEnterTimestamp --value %s"
 DEFAULT_REFRESH_SECS = 120
 TITLE = 'System service'
+SERVICE_ACTION_COOLDOWN = 30
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -71,7 +72,7 @@ def ServiceView(request):
 
     if request.method == 'POST':
         if 'service_name' in request.POST:
-            if service_runtime is not None and service_runtime > 60:
+            if service_runtime is not None and service_runtime > SERVICE_ACTION_COOLDOWN:
                 service_action(request, service=service_value)
                 sleep(1)
 

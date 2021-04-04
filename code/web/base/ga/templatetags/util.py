@@ -200,6 +200,11 @@ def hide_warning(request):
 
 
 @register.filter
+def security_mode(request):
+    return get_controller_setting(request, setting='security')
+
+
+@register.filter
 def client_is_public(request):
     client_ip = get_client_ip(request)
     ip_is_public = not IPAddress(client_ip).is_reserved()

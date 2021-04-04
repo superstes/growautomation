@@ -12,10 +12,14 @@
                 Something did go wrong while loading the page
             </strong>
             <br><hr><br>
-            <strong>
-                Last error: <br>
-            </strong>
-            {% get_last_errors %} <br>
+            <strong>Last error:</strong><br>
+            {% get_last_errors %}
+            <br><hr><br>
+            {% if error_trace is not None and request|security_mode == 0 %}
+                <strong>Error traceback:</strong><br>
+                <pre>{{ error_trace }}</pre>
+                <br><hr><br>
+            {% endif %}
             {% include "./500_gif.html" %}
         </div>
     </body>

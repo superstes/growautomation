@@ -49,11 +49,11 @@ def handler404_api(msg=None):
     return JsonResponse(data={'message': msg}, status=404)
 
 
-def handler500(request, msg=None):
+def handler500(request, msg=None, tb=None):
     if request is None:
-        return render(request, 'error/500_basic.html', context={'error_msg': msg})
+        return render(request, 'error/500_basic.html', context={'error_msg': msg, 'error_trace': tb})
 
-    return render(request, 'error/500.html', context={'request': request, 'error_msg': msg})
+    return render(request, 'error/500.html', context={'request': request, 'error_msg': msg, 'error_trace': tb})
 
 
 def handler500_api(msg=None):

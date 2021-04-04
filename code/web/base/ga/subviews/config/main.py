@@ -7,6 +7,7 @@ from ...config.site import type_dict, sub_type_dict
 from ...utils.main import member_pre_process
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.helper import set_key
+from ...config.shared import CENSOR_SYMBOL
 
 
 class ConfigView:
@@ -25,6 +26,7 @@ class ConfigView:
 
         if self.type in type_dict and 'redirect' in type_dict[self.type]:
             post_target = type_dict[self.type]['redirect']
+
         else:
             post_target = self.type
 
@@ -90,6 +92,7 @@ class ConfigView:
         if self.type in type_dict:
             self.form = type_dict[self.type]['form']
             self.model = type_dict[self.type]['model']
+
         else:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['type']})
 
@@ -171,7 +174,6 @@ class ConfigView:
 
         if member_type is not None:
             member_view_active, member_data_dict = member_pre_process(member_data_dict=member_data, request=self.request, type_dict=_type_dict)
-            print(member_data_dict)
             tmpl = 'list/member'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'member_type_dict': _type_dict,
@@ -201,17 +203,20 @@ class ConfigView:
         for attribute in data.field_list:
             form_widget = self.form.base_fields[attribute].widget
             if hasattr(form_widget, 'render_value'):
-                value = '●●●●●●●●●●●●'
+                value = f'{CENSOR_SYMBOL * 12}'
+
             else:
                 value = getattr(data, attribute)
 
             if attribute in LABEL_DICT:
                 name = LABEL_DICT[attribute]
+
             else:
                 name = attribute.capitalize()
 
             if attribute in HELP_DICT:
                 info = HELP_DICT[attribute]
+
             else:
                 info = '---'
 
@@ -261,6 +266,7 @@ class ConfigView:
     def _get_update(self):
         try:
             existing_instance = get_object_or_404(self.model, id=self.uid)
+
         except Exception:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['id']})
 
@@ -274,6 +280,7 @@ class ConfigView:
     def _post_update(self):
         try:
             existing_instance = get_object_or_404(self.model, id=self.uid)
+
         except Exception:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['id']})
 
@@ -286,6 +293,7 @@ class ConfigView:
     def _post_delete(self):
         try:
             data = get_object_or_404(self.model, id=self.uid)
+
         except Exception:
             raise Pseudo404(ga={'request': self.request, 'msg': self.error_msgs['id']})
 
