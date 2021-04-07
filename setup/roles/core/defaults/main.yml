@@ -5,4 +5,4 @@ ga_core_mods:
   - 'mysql.connector'
   - 'systemd'
 
-ga_core_path_log: "{{ path_log }}/core"
+ga_core_path_log: "{{ ga_path_log }}/core"

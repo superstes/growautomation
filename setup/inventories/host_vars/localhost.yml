@@ -1,4 +1,4 @@
 ---
 
 ansible_host: 'localhost'
-ansible_connection: localhost
+ansible_connection: local

@@ -6,26 +6,46 @@
   vars_files:
     - "./vars/main.yml"
   tasks:
-    - name: "Adding info to password file (user {{ ga_sql_user_core }})"
-      shell: "echo '{{ ga_sql_user_core }}' >> {{ ga_sql_pwd_random_file }}"
+    - name: Cleaning old password file
+      file:
+        path: "{{ ga_sql_pwd_random_file }}"
+        state: absent
+
+    - name: Generating random password for core
+      set_fact:
+        ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+      no_log: true
       when: ga_sql_pwd_core == ga_sql_pwd_random_key
 
-    - name: "Generating random password for user {{ ga_sql_user_core }}"
-      set_fact:
-        ga_sql_pwd_core: "{{ lookup('password', ga_sql_pwd_random_file + ' length=20 chars=ascii_letters,digits,punctuation') }}"
-      when: ga_sql_pwd_core == ga_sql_pwd_random_key
+    - name: Adding password info for core to file
+      lineinfile:
+        line: "{{ item }}"
+        path: "{{ ga_sql_pwd_random_file }}"
+        create: yes
+        state: present
+      no_log: true
+      with_items:
+        - "{{ ga_sql_user_core }}"
+        - "{{ ga_sql_pwd_core }}"
 
-    - name: "Adding info to password file (user {{ ga_sql_user_web }})"
-      shell: "echo '{{ ga_sql_user_web }}' >> {{ ga_sql_pwd_random_file }}"
+    - name: Generating random password for web
+      set_fact:
+        ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+      no_log: true
       when: ga_sql_pwd_web == ga_sql_pwd_random_key
 
-    - name: "Generating random password for user {{ ga_sql_user_web }}"
-      set_fact:
-        ga_sql_pwd_web: "{{ lookup('password', ga_sql_pwd_random_file + ' length=20 chars=ascii_letters,digits,punctuation') }}"
-      when: ga_sql_pwd_web == ga_sql_pwd_random_key
+    - name: Adding password info for web to file
+      lineinfile:
+        line: "{{ item }}"
+        path: "{{ ga_sql_pwd_random_file }}"
+        state: present
+      no_log: true
+      with_items:
+        - "{{ ga_sql_user_web }}"
+        - "{{ ga_sql_pwd_web }}"
 
     - name: Database
-      include_role:
+      import_role:
         name: db
       when:
         - ga_sql_server == 'localhost'
@@ -33,11 +53,6 @@
         - ga_sql_install
 
     - name: GA Core
-      include_role:
+      import_role:
         name: core
       when: ga_core_install
-
-    - name: GA Web
-      include_role:
-        name: web
-      when: ga_web_install

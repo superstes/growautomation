@@ -1,8 +1,8 @@
 ---
 
-- name: Apache | Install apache
+- name: GA | Web | Installing packages
   apt:
-    name: 'apache2'
+    name: ['apache2', 'python-setuptools']
     state: present
   register: first_run
   notify: 'enable_apache'
@@ -18,11 +18,16 @@
     validate: 'apachectl -t -f %s'
   notify: 'restart_apache'
 
+- name: GA | Web | Adding service group
+  group:
+    name: "{{ ga_service_group }}"
+    state: present
+
 - name: GA | Web | Adding service user
-  ansible.builtin.user:
+  user:
     name: "{{ ga_web_service_user }}"
     shell: '/usr/sbin/nologin'
-    home: "{{ ga_home_dir }}/{{ ga_web_service_user }}"
+    home: "/home/{{ ga_web_service_user }}"
     groups: "{{ ga_web_groups }}"
     append: yes
 
@@ -39,16 +44,22 @@
     - "{{ ga_web_path_static }}"
     - "{{ ga_web_path_venv }}"
 
+- name: GA | Web | Checking if repo was already cloned
+  stat:
+    path: "{{ setup_clone_dir }}"
+  register: tmp_clone_dir
+
 - name: GA | Web | Cloning ga code
-  ansible.builtin.git:
+  git:
     repo: 'https://github.com/superstes/growautomation.git'
-    dest: '/tmp/'
+    dest: "{{ setup_clone_dir }}"
     depth: 1
-    version: "{{ ga_version }}"
+  when: not tmp_clone_dir.stat.exists
+#    version: "{{ ga_version }}"
 
 - name: GA | Web | Copying core-code
-  ansible.builtin.copy:
-    src: '/tmp/growautomation/code/web'
+  copy:
+    src: "{{ setup_clone_dir }}/code/web"
     dest: "{{ ga_web_path }}"
     remote_src: yes
     owner: "{{ ga_web_service_user }}"

@@ -5,14 +5,15 @@
     name: "{{ ga_device_apt }}"
     state: present
 
-- name: GA | Devices | Install python modules
+- name: GA | Devices | Install python modules into venv
   pip:
     name: "{{ ga_device_pip }}"
-    executable: pip3
+    virtualenv: "{{ ga_core_path_venv }}"
+    virtualenv_python: "{{ ga_python_version }}"
     state: present
 
 - name: GA | Devices | Adding service user to groups
-  ansible.builtin.user:
+  user:
     name: "{{ ga_core_service_user }}"
     groups: "{{ ga_device_groups }}"
     append: yes

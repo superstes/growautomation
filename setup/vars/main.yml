@@ -7,23 +7,22 @@ ga_path_backup: '/var/backups/ga'
 ga_ufw_manage: true  # if the ufw (software firewall) should be configure => NOT RECOMMENDED if you run other software on the same server
 ga_ufw_allow_ssh: true
 ga_service_group: 'ga'
-ga_home_dir: '/var/lib/ga'
 ga_python_version: '3.7'  # venv version
 ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timezones.txt'
 
 # ga core
 ga_core_install: true
-ga_core_path: '/usr/sbin/ga'
+ga_core_path: '/var/lib/ga'
 ga_core_service_user: 'ga_core'
-ga_core_path_venv: "{{ ga_home_dir }}/{{ ga_core_service_user }}/venv"
+ga_core_path_venv: "/home/{{ ga_core_service_user }}/venv"
 ga_core_device_support: true  # if support for basic devices should be provided
 
 # ga django web
-ga_web_install: true
+ga_web_install: false
 ga_web_path: '/var/www/ga'
 ga_web_path_static: '/var/www/ga_static'
 ga_web_service_user: 'ga_web'
-ga_web_path_venv: "{{ ga_home_dir }}/{{ web_service_user }}/venv"
+ga_web_path_venv: "/home/{{ web_service_user }}/venv"
 ga_web_ssl_mode: 'self_signed'  # or letsencrypt
   # if letsencrypt is used as ssl_mode:
   #   1. dns-name and -aliases MUST BE VALID and set to the server-(public)-ip
@@ -37,7 +36,10 @@ ga_sql_install: true
 ga_sql_server: 'localhost'
 ga_sql_port: 3306
 ga_sql_pwd_random_key: 'WILL_BE_RANDOM'
-ga_sql_pwd_random_file: "{{ ga_core_path }}/.setup"
+ga_sql_pwd_random_file: '/etc/.ga_setup'
+ga_sql_user_host: 'localhost'
+  # host that will be used for sql user creation -> login will be restricted on this host
+  # needs to be changed if a remote database server is used
 ga_sql_user_core: "{{ ga_core_service_user }}"
 ga_sql_pwd_core: "{{ ga_sql_pwd_random_key }}"
   # you can apply your own password; random pwd could be found at: '${ga_pwd_random_file}'
@@ -45,4 +47,4 @@ ga_sql_user_web: "{{ ga_web_service_user }}"
 ga_sql_pwd_web: "{{ ga_sql_pwd_random_key }}"
   # you can apply your own password; random pwd could be found at: '${ga_pwd_random_file}'
 ga_sql_db: 'ga'
-ga_sql_socket: '/var/run/mysqld/mysqld.sock'
+ga_sql_socket: '/var/run/mysqld/mysqld.sock'  # socket used to locally connect to database

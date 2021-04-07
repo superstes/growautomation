@@ -1,7 +1,7 @@
 ---
 
 - name: GA | LetsEncrypt | Checking if key
-  ansible.builtin.stat:
+  stat:
     path: "{{ ga_ssl_path_key }}"
   register: domain_key
 

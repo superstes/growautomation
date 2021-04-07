@@ -4,23 +4,27 @@
 
 - name: GA | DB | Install mariadb
   apt:
-    name: ['mariadb-server', 'mariadb-client']
+    name: ['mariadb-server', 'mariadb-client', 'python-pymysql']
     state: present
   notify: 'enable_mariadb'
 
 - name: GA | DB | Creating database
-  community.mysql.mysql_db:
+  mysql_db:
     name: "{{ ga_sql_db }}"
     state: present
     login_unix_socket: "{{ ga_sql_socket }}"
 
 - name: GA | DB | Creating users
-  community.mysql.mysql_user:
+  mysql_user:
     name: "{{ item.user }}"
     password: "{{ item.pwd }}"
     priv: "{{ ga_sql_db }}.*:ALL"
     state: present
     login_unix_socket: "{{ ga_sql_socket }}"
+    host: "{{ ga_sql_user_host }}"
+    update_password: on_create
+  no_log: true
+  ignore_errors: true  # if user already exist it will fail tue to a bug
   with_items:
     - {user: "{{ ga_sql_user_core }}", pwd: "{{ ga_sql_pwd_core }}"}
     - {user: "{{ ga_sql_user_web }}", pwd: "{{ ga_sql_pwd_web }}"}

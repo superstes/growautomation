@@ -2,14 +2,19 @@
 
 - name: GA | Core | Installing packages
   apt:
-    name: ['git', 'python3', 'python3-pip']
+    name: ['git', 'python3', 'python3-pip', 'python-setuptools']
+    state: present
+
+- name: GA | Core | Adding service group
+  group:
+    name: "{{ ga_service_group }}"
     state: present
 
 - name: GA | Core | Adding service user
-  ansible.builtin.user:
+  user:
     name: "{{ ga_core_service_user }}"
     shell: '/usr/sbin/nologin'
-    home: "{{ ga_home_dir }}/{{ ga_core_service_user }}"
+    home: "/home/{{ ga_core_service_user }}"
     groups: "{{ ga_service_group }}"
     append: yes
 
@@ -20,26 +25,43 @@
     owner: "{{ ga_core_service_user }}"
     group: "{{ ga_service_group }}"
     mode: 0755
+    recurse: yes
   with_items:
   - "{{ ga_core_path }}"
-  - "{{ ga_path_log }}"
+  - "{{ ga_core_path_log }}"
   - "{{ ga_core_path_venv }}"
 
+- name: GA | Core | Checking if repo was already cloned
+  stat:
+    path: "{{ setup_clone_dir }}"
+  register: tmp_clone_dir
+
 - name: GA | Core | Cloning ga code
-  ansible.builtin.git:
+  git:
     repo: 'https://github.com/superstes/growautomation.git'
-    dest: '/tmp/'
+    dest: "{{ setup_clone_dir }}"
     depth: 1
-    version: "{{ ga_version }}"
+  when: not tmp_clone_dir.stat.exists
+#    version: "{{ ga_version }}"
 
 - name: GA | Core | Copying core-code
-  ansible.builtin.copy:
-    src: '/tmp/growautomation/code/core'
-    dest: "{{ ga_core_path }}"
-    remote_src: yes
-    owner: "{{ ga_core_service_user }}"
-    group: "{{ ga_service_group }}"
-    mode: 0755
+  shell: "cp -r {{ setup_clone_dir }}/code/core {{ ga_core_path }} &&
+  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }} &&
+  chmod 755 -R {{ ga_core_path }}"
+
+- name: GA | Core | Checking if random key file exists
+  stat:
+    path: "{{ ga_core_path }}/core/secret/random.key"
+  register: random_key_file
+
+- name: GA | Core | Generating random encryption key
+  lineinfile:
+    line: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=50') }}"
+    path: "{{ ga_core_path }}/core/secret/random.key"
+    state: present
+    create: yes
+  no_log: true
+  when: not random_key_file.stat.exists
 
 - name: GA | Core | Install python virtualenv
   pip:
@@ -63,5 +85,6 @@
     - 'enable_core'
 
 - name: GA | Configure device support
-  import_role: devices
+  import_role:
+    name: devices
   when: ga_core_device_support

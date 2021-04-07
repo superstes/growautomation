@@ -19,7 +19,7 @@
     - apache_alias | length == 0
 
 - name: GA | LetsEncrypt | Debug => the following command will be issued
-  ansible.builtin.debug:
+  debug:
     msg: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ certbot_email }} --cert-name {{ ga_web_key }}
              --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ _apache_alias }} --cert-path {{ _path_cert }}"
 

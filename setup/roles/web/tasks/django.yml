@@ -30,7 +30,7 @@
   notify: 'restart_apache'
 
 - name: GA | Web | Django | Configuring django settings
-  ansible.builtin.lineinfile:
+  lineinfile:
     path: "{{ ga_web_path }}/base/settings.py"
     regexp: '{{ item.search }}'
     line: '{{ item.replace }}'
