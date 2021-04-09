@@ -4,8 +4,11 @@ from core.config import shared as shared_vars
 from core.config.web_shared import init as web_shared_vars
 
 from datetime import datetime
-from os import system as os_system
+from os import getuid as os_getuid
 from os import path as os_path
+from pathlib import Path
+from os import chmod as os_chmod
+from os import chown as os_chown
 
 
 def now(time_format: str):
@@ -16,11 +19,6 @@ date_year, date_month = now("%Y"), now("%m")
 
 
 class Log:
-    LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
-    SEPARATOR = ' | '
-
-    CENSOR_OUTPUT = '●●●●●●●●●'
-    SECRET_SETTINGS = ['sql_secret']
     try:
         SECRET_DATA = [shared_vars.SYSTEM.sql_secret]
 
@@ -48,7 +46,7 @@ class Log:
         else:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition}.log"
 
-        self._file()
+        self.status = self._check()
 
     def write(self, output: str, level: int = 1) -> bool:
         # log levels:
@@ -58,35 +56,44 @@ class Log:
         if shared_vars.SYSTEM.debug == 1:
             level = 10
 
-        if level > self.log_level:
+        if level > self.log_level or not self.status:
             return False
 
         output = self._censor(str(output))
-        output_formatted = f"{datetime.now().strftime(self.LOG_TIMESTAMP_FORMAT)}{self.SEPARATOR}{self.name}{self.SEPARATOR}{output}"
+        output_formatted = f"{datetime.now().strftime(shared_vars.LOG_TIMESTAMP_FORMAT)}{shared_vars.LOG_SEPARATOR}{self.name}{shared_vars.LOG_SEPARATOR}{output}"
         self._debugger(command=output_formatted)
 
-        with open(self.log_file, 'a') as logfile:
-            logfile.write(f"{level}{self.SEPARATOR}{output_formatted}\n")
+        with open(self.log_file, 'a+') as logfile:
+            logfile.write(f"{level}{shared_vars.LOG_SEPARATOR}{output_formatted}\n")
 
         return True
 
-    def _file(self) -> None:
-        if os_path.exists(self.log_dir) is False:
-            os_system(f"mkdir -p {self.log_dir}")
+    def _check(self) -> bool:
+        try:
+            if not os_path.exists(self.log_file):
+                Path(self.log_dir).mkdir(parents=True, exist_ok=True)
 
-        # todo: fix for wrong file permissions => Ticket#24
-        if os_path.exists(self.log_file) is False:
-            os_system(f"touch {self.log_file}")
+                with open(self.log_file, 'a+') as logfile:
+                    logfile.write('init')
+
+            os_chown(path=self.log_file, uid=os_getuid(), gid=shared_vars.GA_GROUP)
+            os_chmod(path=self.log_file, mode=int(f'{shared_vars.LOG_FILE_PERMS}', base=8))
+
+            return True
+
+        except PermissionError:
+            print(f"LOG ERROR: Unable to access/modify log file '{self.log_file}'")
+            return False
 
     def _censor(self, output: str) -> str:
-        for setting in self.SECRET_SETTINGS:
+        for setting in shared_vars.LOG_SECRET_SETTINGS:
             if output.find(setting) != -1:
                 split_output = output.split(setting)
                 updated_list = [split_output[0]]
 
                 for data in split_output[1:]:
                     try:
-                        updated_list.append(f"{setting}': \"{self.CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
+                        updated_list.append(f"{setting}': \"{shared_vars.LOG_CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
 
                     except IndexError:
                         output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
@@ -96,7 +103,7 @@ class Log:
                     output = ''.join(updated_list)
 
         for data in self.SECRET_DATA:
-            output.replace(data, self.CENSOR_OUTPUT)
+            output.replace(data, shared_vars.LOG_CENSOR_OUTPUT)
 
         return output
 

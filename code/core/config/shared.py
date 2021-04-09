@@ -1,5 +1,7 @@
 # defines global variables
 
+from os import environ as os_environ
+
 
 # config set by service
 def init():
@@ -19,3 +21,13 @@ TEST = False
 SUBPROCESS_TIMEOUT = 15
 LOCK_MAX_WAIT = 120
 LOCK_CHECK_INTERVAL = 15
+GA_GROUP = 'ga'
+
+if 'ga_group' in os_environ:
+    GA_GROUP = os_environ['ga_group']
+
+LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
+LOG_SEPARATOR = ' | '
+LOG_CENSOR_OUTPUT = '●●●●●●●●●'
+LOG_SECRET_SETTINGS = ['sql_secret']
+LOG_FILE_PERMS = 644

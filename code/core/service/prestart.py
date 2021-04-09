@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://git.growautomation.at
 
-# ga_version 0.7
+# ga_version 0.8
 
 from core.utils.connectivity import test_tcp_stream
 from core.config import startup_shared as startup_shared_vars
@@ -29,12 +29,20 @@ from sys import exc_info as sys_exc_info
 from os import path as os_path
 from os import stat as os_stat
 from os import getuid as os_getuid
-from os import getgid as os_getgid
+from os import environ as os_environ
 from pathlib import Path
 import signal
+from traceback import format_exc
+from datetime import datetime
+from grp import getgrnam
+from os import chmod as os_chmod
+from os import chown as os_chown
 
 
 class Prepare:
+    MAX_TRACEBACK_LENGTH = 5000
+    GA_GROUP = ''
+
     def __init__(self):
         signal.signal(signal.SIGTERM, self._stop)
         signal.signal(signal.SIGINT, self._stop)
@@ -43,131 +51,168 @@ class Prepare:
         self.logger = None
         self.log_cache = []
 
+        if 'ga_group' in os_environ:
+            group = os_environ['ga_group']
+
+        else:
+            group = self.GA_GROUP
+
+        self.uid = os_getuid()
+        self.ga_gid = getgrnam(group)[2]
+
     def start(self):
         self._log('Starting service initialization.')
 
-        # todo: test for log permissions => Ticket#24
-
-        if self._check_file():
+        if self._check_file_config():
             startup_shared_vars.init()
-            from core.utils.debug import Log, FileAndSystemd
-            self.logger = FileAndSystemd(Log())
-            if self._check_networking():
-                if self._check_database():
-                    if self._check_factory():
-                        self._log('Finished service pre-checks successfully.')
+            if self._check_file_log():
+                from core.utils.debug import Log, FileAndSystemd
+                self.logger = FileAndSystemd(Log())
+                if self._check_networking():
+                    if self._check_database():
+                        if self._check_factory():
+                            self._log('Finished service pre-checks successfully.')
+
+                        else:
+                            self._error('Factory check failed! Unable to start service!!')
 
                     else:
-                        self._error('Factory check failed! Unable to start service!!')
+                        self._error('Database check failed! Unable to start service!!')
 
                 else:
-                    self._error('Database check failed! Unable to start service!!')
+                    self._error('Network check failed! Unable to start service!!')
 
             else:
-                self._error('Network check failed! Unable to start service!!')
+                self._error('Log file check failed! Unable to start service!!')
 
         else:
-            self._error('File check failed! Unable to start service!!')
+            self._error('Config file check failed! Unable to start service!!')
 
     def _stop(self, signum=None, stack=None):
         if signum is not None:
             try:
-                self._log("Service received signal %s - \"%s\"" % (signum, sys_exc_info()[0].__name__), level=3)
+                self._log(f"Service received signal {signum} - \"{sys_exc_info()[0].__name__}\"", level=3)
+
             except AttributeError:
-                self._log("Service received signal %s" % signum, level=3)
+                self._log(f"Service received signal {signum}", level=3)
 
         self._log('Service stopped.')
 
-    def _check_file(self) -> bool:
-        ga_uid = os_getuid()
-        ga_gid = os_getgid()
-
+    def _check_file_config(self) -> bool:
         service_dir = Path(__file__).parent.absolute()
         subtract_to_root = 2  # how many dirs are it to get from here down to the ga root path
         ga_root_path = '/'.join(str(service_dir).split('/')[:-subtract_to_root])
 
-        file_dict = {
-            'config': {
-                'path': '/core/config/file/core.conf',
-                'type': 'text',
-                'access': 'rw',
-                'perms': 640,
-                'owner': ga_uid,
-                'group': ga_gid,
-            },
-            'secret': {
-                'path': '/core/secret/random.key',
-                'type': 'text',
-                'access': 'r',
-                'perms': 440,
-                'owner': ga_uid,
-                'group': ga_gid,
+        return self._check_file(
+            files={
+                'config': {
+                    'path': f'{ga_root_path}/core/config/file/core.conf',
+                    'type': 'text',
+                    'access': 'rw',
+                    'perms': 640,
+                    'owner': self.uid,
+                    'group': self.ga_gid,
+                },
+                'secret': {
+                    'path': f'{ga_root_path}/core/secret/random.key',
+                    'type': 'text',
+                    'access': 'r',
+                    'perms': 440,
+                    'owner': self.uid,
+                    'group': self.ga_gid,
+                },
             }
-        }
+        )
 
+    def _check_file_log(self) -> bool:
+        return self._check_file(
+            files={
+                'log': {
+                    'path': f'{shared_vars.SYSTEM.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
+                    'type': 'text',
+                    'access': 'rw',
+                    'perms': 644,
+                    'owner': self.uid,
+                    'group': self.ga_gid,
+                    'none': True,
+                }
+            }
+        )
+
+    def _check_file(self, files: dict) -> bool:
         result_dict = {}
 
-        for file, config in file_dict.items():
-            full_path = "%s%s" % (ga_root_path, config['path'])
+        for file, config in files.items():
+            path = config['path']
             result_dict[file] = False
 
-            if os_path.exists(full_path):
-                perms = int(oct(os_stat(full_path).st_mode)[-3:])
-                owner = os_stat(full_path).st_uid
-                group = os_stat(full_path).st_gid
+            if not os_path.exists(path) and config['none']:
+                result_dict[file] = True
+
+            elif os_path.exists(path):
+                perms = int(oct(os_stat(path).st_mode)[-3:])
+                owner_perm, group_perm, other_perm = [int(num) for num in str(perms)]
+
+                owner = os_stat(path).st_uid
+                group = os_stat(path).st_gid
 
                 if perms != config['perms'] or owner != config['owner'] or group != config['group']:
-                    self._log("Permissions for file \"%s\" are not set as expected" % full_path)
+                    self._log("Permissions for file \"%s\" are not set as expected" % path)
                     self._log("Permissions for file \"%s\" are \"owner '%s', group '%s', perms '%s'\" but should be \"owner '%s', group '%s', perms '%s'\""
-                              % (full_path, owner, group, perms, config['owner'], config['group'], config['perms']), level=6)
+                              % (path, owner, group, perms, config['owner'], config['group'], config['perms']), level=6)
 
                     # extended check
-                    owner_perm = int(str(perms)[0])
-                    group_perm = int(str(perms)[1])
-                    other_perm = int(str(perms)[2])
-
                     if config['access'] == 'rw':
                         target_perm = 6
+
                     else:
                         target_perm = 4
 
-                    sub_check_dict = {'owner': False, 'group': False}
+                    sub_check_dict = {'owner': False, 'group': False, 'other': False}
 
-                    if owner == config['owner'] or owner_perm >= target_perm:
+                    if owner == config['owner'] and owner_perm == target_perm:
                         sub_check_dict['owner'] = True
 
-                    if owner == config['group'] or group_perm >= target_perm:
+                    if owner == config['group'] and group_perm == target_perm:
                         sub_check_dict['group'] = True
 
-                    if other_perm >= target_perm:
+                    if other_perm == target_perm:
                         sub_check_dict['other'] = True
 
-                    if any(sub_check_dict.values()):
-                        result_dict[file] = True
+                    if not all(sub_check_dict.values()):
+                        try:
+                            os_chown(path=path, uid=config['owner'], gid=config['group'])
+                            os_chmod(path=path, mode=int(f"{config['perms']}", base=8))
+                            result_dict[file] = True
+
+                        except PermissionError:
+                            result_dict[file] = False
 
                     # log info
 
                 if 'type' in config and config['type'] == 'text':
                     if config['access'] == 'rw':
                         try:
-                            with open(full_path, 'r+') as _:
+                            with open(path, 'r+') as _:
                                 _data = _.read()
 
                             result_dict[file] = True
 
                         except PermissionError:
-                            self._log("Failed to open file \"%s\" for writing" % full_path)
+                            self._log(f"Failed to open file \"{path}\" for writing")
+                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
                             continue
 
                     if config['access'] == 'r':
                         try:
-                            with open(full_path, 'r') as _:
+                            with open(path, 'r') as _:
                                 _data = _.read()
 
                             result_dict[file] = True
 
                         except PermissionError:
-                            self._log("Failed to open file \"%s\" for reading" % full_path)
+                            self._log(f"Failed to open file \"{path}\" for reading")
+                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
                             continue
 
         if all(result_dict.values()):
@@ -189,7 +234,7 @@ class Prepare:
             result, error = test_tcp_stream(host=config['host'], port=config['port'], out_error=True)
 
             if error is not None:
-                self._log("Error while testing connection to %s (\"host: '%s', port '%s'\")" % (connection, config['host'], config['port']))
+                self._log(f"Error while testing connection to {connection} (\"host: '{config['host']}', port '{config['port']}'\")")
 
             result_dict[connection] = result
 
@@ -213,8 +258,9 @@ class Prepare:
             return DBCheck(db_connection_data_dict).get()
 
         except ConnectionError as error:
-            self._log("Error while testing database connection (\"host: '%s', port '%s'\"): \"%s\""
-                      % (db_connection_data_dict['server'], db_connection_data_dict['port'], error))
+            self._log(f"Error while testing database connection (\"host: '{db_connection_data_dict['server']}', port '{db_connection_data_dict['port']}'"
+                      f"\"): \"{error}\"")
+            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
             return False
 
     def _error(self, msg: str):
@@ -226,6 +272,7 @@ class Prepare:
             if len(self.log_cache) > 0:
                 from core.utils.debug import Log
                 _logger = Log()
+
                 for _log in self.log_cache:
                     _logger.write(output=_log['output'], level=_log['level'])
 
@@ -250,9 +297,9 @@ class Prepare:
             if len(self.CONFIG) > 0:
                 return True
 
-        except:
-            error = sys_exc_info()[0]
-            self._log("An error occurred while processing factory: \"%s\"" % error)
+        except Exception as error:
+            self._log(f"An error occurred while processing factory: \"{error}\"")
+            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
 
         return False
 
