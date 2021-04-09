@@ -6,43 +6,71 @@
   vars_files:
     - "./vars/main.yml"
   tasks:
-    - name: Cleaning old password file
-      file:
+    - name: Checking if password file exists
+      stat:
         path: "{{ ga_sql_pwd_random_file }}"
-        state: absent
+      register: random_pwd_file
 
-    - name: Generating random password for core
-      set_fact:
-        ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
-      no_log: true
-      when: ga_sql_pwd_core == ga_sql_pwd_random_key
+    - name: Generating passwords
+      block:
+        - name: Creating random core password
+          set_fact:
+            ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+          no_log: true
+          when: ga_sql_pwd_core == ga_sql_pwd_random_key
 
-    - name: Adding password info for core to file
-      lineinfile:
-        line: "{{ item }}"
-        path: "{{ ga_sql_pwd_random_file }}"
-        create: yes
-        state: present
-      no_log: true
-      with_items:
-        - "{{ ga_sql_user_core }}"
-        - "{{ ga_sql_pwd_core }}"
+        - name: Adding core password to file
+          lineinfile:
+            line: "{{ ga_sql_user_core }}={{ ga_sql_pwd_core }}"
+            path: "{{ ga_sql_pwd_random_file }}"
+            create: yes
+            state: present
+          no_log: true
 
-    - name: Generating random password for web
-      set_fact:
-        ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
-      no_log: true
-      when: ga_sql_pwd_web == ga_sql_pwd_random_key
+        - name: Creating random web password
+          set_fact:
+            ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+          no_log: true
+          when: ga_sql_pwd_web == ga_sql_pwd_random_key
 
-    - name: Adding password info for web to file
-      lineinfile:
-        line: "{{ item }}"
-        path: "{{ ga_sql_pwd_random_file }}"
-        state: present
-      no_log: true
-      with_items:
-        - "{{ ga_sql_user_web }}"
-        - "{{ ga_sql_pwd_web }}"
+        - name: Adding web password to file
+          lineinfile:
+            line: "{{ ga_sql_user_web }}={{ ga_sql_pwd_web }}"
+            path: "{{ ga_sql_pwd_random_file }}"
+            state: present
+          no_log: true
+
+      when: not random_pwd_file.stat.exists
+
+    - name: Pulling existing passwords
+      block:
+        - name: Getting core password
+          shell: "cat {{ ga_sql_pwd_random_file | quote }} | grep {{ ga_sql_user_core | quote }}"
+          register: raw_core_pwd
+          when: ga_sql_pwd_core == ga_sql_pwd_random_key
+          no_log: true
+          changed_when: False
+
+        - name: Setting core password
+          set_fact:
+            ga_sql_pwd_core: "{{ raw_core_pwd.stdout.split('=', 1)[1] }}"
+          no_log: true
+          when: ga_sql_pwd_core == ga_sql_pwd_random_key
+
+        - name: Getting web password
+          shell: "cat {{ ga_sql_pwd_random_file | quote }} | grep {{ ga_sql_user_web | quote }}"
+          register: raw_web_pwd
+          when: ga_sql_pwd_web == ga_sql_pwd_random_key
+          no_log: true
+          changed_when: False
+
+        - name: Setting web password
+          set_fact:
+            ga_sql_pwd_web: "{{ raw_web_pwd.stdout.split('=', 1)[1] }}"
+          no_log: true
+          when: ga_sql_pwd_web == ga_sql_pwd_random_key
+
+      when: random_pwd_file.stat.exists
 
     - name: Database
       import_role:
@@ -51,6 +79,11 @@
         - ga_sql_server == 'localhost'
         - ga_core_install or ga_web_install
         - ga_sql_install
+
+    - name: GA Web
+      import_role:
+        name: web
+      when: ga_web_install
 
     - name: GA Core
       import_role:

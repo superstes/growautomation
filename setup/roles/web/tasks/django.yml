@@ -1,11 +1,5 @@
 ---
 
-- name: GA | Web | Django | Install packages
-  apt:
-    name: ['python3-pip', 'libapache2-mod-wsgi-py3']
-    state: present
-  notify: 'restart_apache'
-
 - name: GA | Web | Django | Install python virtualenv
   pip:
     name: 'virtualenv'

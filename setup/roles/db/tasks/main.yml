@@ -25,6 +25,12 @@
     update_password: on_create
   no_log: true
   ignore_errors: true  # if user already exist it will fail tue to a bug
+  register: user_creation_failed
   with_items:
     - {user: "{{ ga_sql_user_core }}", pwd: "{{ ga_sql_pwd_core }}"}
     - {user: "{{ ga_sql_user_web }}", pwd: "{{ ga_sql_pwd_web }}"}
+
+- name: GA | DB | Displaying info
+  debug:
+    msg: "INFO: The creation of database users might fail if they already exist. In that case you can ignore this error!"
+  when: user_creation_failed.failed

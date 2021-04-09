@@ -2,9 +2,8 @@
 
 - name: GA | Web | Installing packages
   apt:
-    name: ['apache2', 'python-setuptools']
+    name: ['apache2', 'python-setuptools', 'python3-pip', 'libapache2-mod-wsgi-py3']
     state: present
-  register: first_run
   notify: 'enable_apache'
 
 - name: GA | Web | Add custom config options
@@ -57,17 +56,13 @@
   when: not tmp_clone_dir.stat.exists
 #    version: "{{ ga_version }}"
 
-- name: GA | Web | Copying core-code
-  copy:
-    src: "{{ setup_clone_dir }}/code/web"
-    dest: "{{ ga_web_path }}"
-    remote_src: yes
-    owner: "{{ ga_web_service_user }}"
-    group: "{{ ga_service_group }}"
-    mode: 0755
+- name: GA | Core | Copying web-code
+  shell: "cp -r {{ setup_clone_dir }}/code/web {{ ga_web_path }} &&
+  chown -R {{ ga_web_service_user }}:{{ ga_service_group }} {{ ga_web_path }} &&
+  chmod 755 -R {{ ga_web_path }}"
 
 - name: GA | Web | Enabling apache mods
-  community.general.apache2_module:
+  apache2_module:
     state: present
     name: "{{ item }}"
   with_items:
@@ -75,9 +70,10 @@
     - 'ssl'
     - 'rewrite'
   notify: 'reload_apache'
+  ignore_errors: true
 
 - name: GA | Web | Disabling autoindex
-  community.general.apache2_module:
+  apache2_module:
     state: absent
     name: 'autoindex'
     force: yes
@@ -90,7 +86,7 @@
   with_items:
     - '000-default.conf'
     - 'default-ssl.conf'
-  when: first_run.changed
+  when: ga_web_disable_apache_default_sites
   notify: 'reload_apache'
 
 - name: GA | Web | Configure apache site
@@ -100,7 +96,6 @@
     owner: 'root'
     group: 'root'
     mode: 0644
-    validate: 'apachectl -t -f %s'
   notify: 'reload_apache'
 
 - name: GA | Web | Enable apache site
@@ -114,5 +109,6 @@
   notify: 'reload_apache'
 
 - name: GA | Configure UFW
-  import_role: ufw
+  import_role:
+    name: ufw
   when: ga_ufw_manage

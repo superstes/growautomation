@@ -24,8 +24,8 @@
     src: "templates/lib/systemd/system/{{ item }}"
     dest: "/lib/systemd/system/{{ item }}"
   with_items:
-    - 'ga_letsEncryptCertbot.service'
-    - 'ga_letsEncryptCertbot.timer'
+    - 'ga_web_certRenewal.service'
+    - 'ga_web_certRenewal.timer'
   notify:
     - 'reload_systemd_deamon'
     - 'enable_certbot'

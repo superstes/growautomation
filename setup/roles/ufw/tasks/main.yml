@@ -1,23 +1,11 @@
 ---
 
-- name: UFW | Install package
+- name: GA | UFW | Install package
   apt:
     name: ['ufw']
     state: present
 
-- name: UFW | Reset rules
-  community.general.ufw:
-    state: reset
-
-- name: UFW | Allow ssh connection
-  community.general.ufw:
-    rule: 'allow'
-    port: "{{ ansible_port | default('22') }}"
-    proto: 'tcp'
-    comment: 'Ansible managed ssh rule'
-  when: ga_ufw_allow_ssh
-
-- name: UFW | Set defaults
+- name: GA | UFW | Set defaults
   template:
     src: 'templates/etc/default/ufw.j2'
     dest: '/etc/default/ufw'
@@ -25,24 +13,24 @@
     group: 'root'
     mode: 0644
 
-- name: UFW | Allow web ports
-  community.general.ufw:
+- name: GA | UFW | Configuring ssh rule
+  import_tasks: ssh.yml
+  when: ga_ufw_allow_ssh
+
+- name: GA | UFW | Allowing web ports
+  ufw:
     rule: 'allow'
-    port: "{{ item }}"
+    port: "{{ item.value }}"
     proto: 'tcp'
-    comment: 'Ansible managed ga web port'
+    comment: 'GrowAutomation {{ item.key }} rule'
   with_items:
-    - "{{ ga_web_port_http }}"
-    - "{{ ga_web_port_https }}"
+    - {'django_http': "{{ ga_web_port_http }}"}
+    - {'django_https': "{{ ga_web_port_https }}"}
 
-- name: UFW | Set logging
-  community.general.ufw:
-    logging: "{{ ga_ufw_logging }}"
-
-- name: UFW | Enable ufw
-  community.general.ufw:
+- name: GA | UFW | Enable ufw
+  ufw:
     state: enabled
 
-- name: UFW | Reload
-  community.general.ufw:
+- name: GA | UFW | Reload
+  ufw:
     state: reloaded

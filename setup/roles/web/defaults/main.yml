@@ -1,13 +1,13 @@
 ---
 
 ga_ssl_path_ca: "/etc/ssl/certs/ga.ca.pem"  # needed if self-signed
-ga_ssl_path_key: "/etc/ssl/private/{{ web_dns }}.pem"
-ga_ssl_path_cert: "/etc/ssl/certs/{{ web_dns }}.pem"
-ga_ssl_path_chain: "/etc/ssl/certs/{{ web_dns }}.chain.pem"
-ga_ssl_path_fullchain: "/etc/ssl/certs/{{ web_dns }}.fullchain.pem"
+ga_ssl_path_key: "/etc/ssl/private/{{ ga_web_dns }}.pem"
+ga_ssl_path_cert: "/etc/ssl/certs/{{ ga_web_dns }}.pem"
+ga_ssl_path_chain: "/etc/ssl/certs/{{ ga_web_dns }}.chain.pem"
+ga_ssl_path_fullchain: "/etc/ssl/certs/{{ ga_web_dns }}.fullchain.pem"
 
-ga_web_path_log: "{{ path_log }}/web"
-ga_web_key: "{{ web_dns | replace('.', '_') }}"
+ga_web_path_log: "{{ ga_path_log }}/web"
+ga_web_key: "{{ ga_web_dns | replace('.', '_') }}"
 ga_web_port_http: 80
 ga_web_port_https: 443
 ga_web_autoindex: false
@@ -28,7 +28,7 @@ ga_apache_config_additions:
 
 ga_web_groups:
   - 'systemd-journal'
-  - "{{ service_group }}"
+  - "{{ ga_service_group }}"
 
 ga_django_setting_replacement:
   - {search: '^DEBUG = True$',

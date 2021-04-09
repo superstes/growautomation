@@ -1,0 +1,31 @@
+---
+
+- name: GA | UFW | SSH | Pulling ssh port from config
+  shell: 'cat /etc/ssh/sshd_config | grep "^Port "'
+  register: configured_ssh_port
+
+- name: GA | UFW | SSH | Setting configured ssh port
+  set_fact:
+    tmp_ssh_port: "{{ configured_ssh_port.stdout_lines[0].split(' ', 1)[1] }}"
+  when: configured_ssh_port.stdout_lines|length > 0
+
+- name: GA | UFW | SSH | Setting ansible ssh port
+  set_fact:
+    tmp_ssh_port: "{{ ansible_port }}"
+  when:
+    - ansible_port is defined
+    - tmp_ssh_port is undefined
+
+- name: GA | UFW | SSH | Setting default ssh port
+  set_fact:
+    tmp_ssh_port: 22
+  when:
+    - ansible_port is undefined
+    - tmp_ssh_port is undefined
+
+- name: GA | UFW | SSH | Allowing ssh port
+  ufw:
+    rule: 'allow'
+    port: "{{ tmp_ssh_port }}"
+    proto: 'tcp'
+    comment: 'GrowAutomation ssh rule'
