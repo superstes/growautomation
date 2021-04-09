@@ -23,8 +23,8 @@ LOCK_MAX_WAIT = 120
 LOCK_CHECK_INTERVAL = 15
 GA_GROUP = 'ga'
 
-if 'ga_group' in os_environ:
-    GA_GROUP = os_environ['ga_group']
+if 'GA_GROUP' in os_environ:
+    GA_GROUP = os_environ['GA_GROUP']
 
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
 LOG_SEPARATOR = ' | '

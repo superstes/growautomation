@@ -41,7 +41,7 @@ from os import chown as os_chown
 
 class Prepare:
     MAX_TRACEBACK_LENGTH = 5000
-    GA_GROUP = ''
+    GA_GROUP = 'ga'
 
     def __init__(self):
         signal.signal(signal.SIGTERM, self._stop)
@@ -51,8 +51,8 @@ class Prepare:
         self.logger = None
         self.log_cache = []
 
-        if 'ga_group' in os_environ:
-            group = os_environ['ga_group']
+        if 'GA_GROUP' in os_environ:
+            group = os_environ['GA_GROUP']
 
         else:
             group = self.GA_GROUP
@@ -112,6 +112,7 @@ class Prepare:
                     'perms': 640,
                     'owner': self.uid,
                     'group': self.ga_gid,
+                    'exists': True,
                 },
                 'secret': {
                     'path': f'{ga_root_path}/core/secret/random.key',
@@ -120,6 +121,7 @@ class Prepare:
                     'perms': 440,
                     'owner': self.uid,
                     'group': self.ga_gid,
+                    'exists': True,
                 },
             }
         )
@@ -134,7 +136,7 @@ class Prepare:
                     'perms': 644,
                     'owner': self.uid,
                     'group': self.ga_gid,
-                    'none': True,
+                    'exists': False,
                 }
             }
         )
@@ -146,7 +148,7 @@ class Prepare:
             path = config['path']
             result_dict[file] = False
 
-            if not os_path.exists(path) and config['none']:
+            if not os_path.exists(path) and not config['exists']:
                 result_dict[file] = True
 
             elif os_path.exists(path):
@@ -186,9 +188,9 @@ class Prepare:
                             result_dict[file] = True
 
                         except PermissionError:
+                            self._log(f"Failed to set permissions for file \"{path}\"")
+                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
                             result_dict[file] = False
-
-                    # log info
 
                 if 'type' in config and config['type'] == 'text':
                     if config['access'] == 'rw':

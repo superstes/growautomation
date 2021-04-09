@@ -9,6 +9,7 @@ from os import path as os_path
 from pathlib import Path
 from os import chmod as os_chmod
 from os import chown as os_chown
+from grp import getgrnam
 
 
 def now(time_format: str):
@@ -76,7 +77,7 @@ class Log:
                 with open(self.log_file, 'a+') as logfile:
                     logfile.write('init')
 
-            os_chown(path=self.log_file, uid=os_getuid(), gid=shared_vars.GA_GROUP)
+            os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(shared_vars.GA_GROUP)[2])
             os_chmod(path=self.log_file, mode=int(f'{shared_vars.LOG_FILE_PERMS}', base=8))
 
             return True
