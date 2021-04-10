@@ -47,6 +47,13 @@
   when: init_script.changed
   ignore_errors: true  # if executed more than once -> it will fail
 
+- name: GA | Web | Init | Displaying info
+  debug:
+    msg: "INFO: The database initialization might fail if it was already run. In that case you can ignore this error!"
+  when:
+    - init_script.failed is defined
+    - init_script.failed
+
 - name: GA | Web | Init | Creating ga groups
   shell: "source {{ ga_web_path_venv }}/bin/activate &&
   {{ ga_web_path_venv }}/bin/python3 /tmp/create_group.py {{ group | quote }}"

@@ -1,0 +1,6 @@
+---
+
+- name: 'start_core_service'
+  service:
+    name: 'ga_core.service'
+    state: started

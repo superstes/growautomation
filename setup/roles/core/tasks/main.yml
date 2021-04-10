@@ -60,15 +60,11 @@
     path: "{{ ga_core_path }}/core/secret/random.key"
     state: present
     create: yes
-  no_log: true
-  when: not random_key_file.stat.exists
-
-- name: GA | Core | Setting privileges for secret files
-  file:
-    path: "{{ ga_core_path }}/core/secret/random.key"
     mode: 0440
     owner: "{{ ga_core_service_user }}"
     group: "{{ ga_service_group }}"
+  no_log: true
+  when: not random_key_file.stat.exists
 
 - name: GA | Core | Adding core config file
   template:
@@ -104,7 +100,7 @@
   service:
     name: 'ga_core.service'
     enabled: yes
-    state: started
+  notify: 'start_core_service'
 
 - name: GA | Configure device support
   import_role:

@@ -5,6 +5,13 @@
   register: configured_ssh_port
   ignore_errors: true
 
+- name: GA | UFW | SSH | Displaying info
+  debug:
+    msg: "INFO: The ssh port cannot be pulled from config if it was not customized. In that case you can ignore this error!"
+  when:
+    - configured_ssh_port.failed is defined
+    - configured_ssh_port.failed
+
 - name: GA | UFW | SSH | Setting configured ssh port
   set_fact:
     tmp_ssh_port: "{{ configured_ssh_port.stdout_lines[0].split(' ', 1)[1] }}"
