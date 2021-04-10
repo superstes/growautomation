@@ -1,0 +1,103 @@
+---
+
+- name: GA | Web | Init | Building database schema
+  shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 manage.py makemigrations"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+
+- name: GA | Web | Init | Importing database schema
+  shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 manage.py migrate"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+
+- name: GA | Web | Init | Installing dependencies
+  package:
+    name: 'python-pexpect'
+
+- name: GA | Web | Init | Creating django admin
+  expect:
+    command: "source {{ ga_web_path_venv }}/bin/activate &&
+    {{ ga_web_path_venv }}/bin/python3 manage.py createsuperuser"
+    responses:
+      Username: "{{ ga_web_admin }}"
+      Email address: "{{ ga_web_admin }}@{{ ga_web_dns }}"
+      Password: "{{ ga_sql_pwd_web }}"
+      Password (again): "{{ ga_sql_pwd_web }}"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  no_log: true
+
+- name: GA | Web | Init | Creating django admin
+  shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 manage.py createsuperuser"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+
+- name: GA | Web | Init | Copying crypto helper
+  copy:
+    src: "files/tmp/crypto.py"
+    dest: '/tmp/crypto.py'
+    mode: 0500
+  register: init_script
+
+- name: GA | Web | Init | Getting encrypted password
+  shell: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
+  no_log: true
+  register: ga_sql_pwd_core_encrypted
+
+- name: GA | Web | Init | Copying database initialization script
+  template:
+    src: "templates/tmp/config_init.sql.j2"
+    dest: '/tmp/config_init.sql'
+    mode: 0755
+  register: init_script
+
+- name: GA | Web | Init | Executing database initialization script
+  shell: "mysql --defaults-file={{ ga_web_path }}/database.cnf < /tmp/config_init.sql"
+  notify: 'restart_apache'
+  when: init_script.changed
+  ignore_errors: true  # if executed more than once -> it will fail
+
+- name: GA | Web | Init | Copying user/group helpers
+  copy:
+    src: "files/tmp/{{ item }}"
+    dest: '/tmp/{{ item }}'
+    mode: 0500
+  with_items:
+    - 'create_group.py'
+    - 'create_user.py'
+
+- name: GA | Web | Init | Creating ga groups
+  shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 /tmp/create_group.py {{ group | quote }}"
+  args:
+    executable: '/bin/bash'
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+  loop_control:
+    loop_var: group
+  with_items: "{{ ga_django_groups }}"
+
+- name: GA | Web | Init | Creating ga users
+  shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 /tmp/create_user.py {{ user.name | quote }} {{ user.pwd | quote }} {{ ga_web_dns | quote }}
+  {% if user.access is defined and user.access == 'rw' %}\"ga_user,ga_read,ga_write\"{% else %}\"ga_user,ga_read\"{% endif %}"
+  args:
+    executable: '/bin/bash'
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+  loop_control:
+    loop_var: user
+  with_items: "{{ ga_web_users }}"

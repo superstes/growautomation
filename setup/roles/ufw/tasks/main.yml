@@ -23,7 +23,7 @@
     port: "{{ item.value }}"
     proto: 'tcp'
     comment: 'GrowAutomation {{ item.key }} rule'
-  with_items:
+  with_dict:
     - {'django_http': "{{ ga_web_port_http }}"}
     - {'django_https': "{{ ga_web_port_https }}"}
 

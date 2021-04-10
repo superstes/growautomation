@@ -29,14 +29,3 @@
     regexp: '{{ item.search }}'
     line: '{{ item.replace }}'
   with_items: "{{ ga_django_setting_replacement }}"
-
-- name: GA | Web | Django | Building database schema
-  shell:
-    cmd: "python3 manage.py makemigrations"
-    chdir: "{{ ga_web_path }}"
-
-- name: GA | Web | Django | Applying database schema
-  shell:
-    cmd: "python3 manage.py migrate"
-    chdir: "{{ ga_web_path }}"
-  notify: 'restart_apache'

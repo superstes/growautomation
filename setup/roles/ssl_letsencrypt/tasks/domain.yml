@@ -1,11 +1,11 @@
 ---
 
-- name: GA | LetsEncrypt | Checking if key
+- name: GA | Cert LetsEncrypt | Checking if key
   stat:
     path: "{{ ga_ssl_path_key }}"
   register: domain_key
 
-- name: GA | LetsEncrypt | Creating key/cert directories
+- name: GA | Cert LetsEncrypt | Creating key/cert directories
   file:
     path: "{{ item }}"
     state: directory
@@ -16,11 +16,11 @@
   - '/etc/ssl/private'
   - '/etc/ssl/certs'
 
-- name: GA | LetsEncrypt | Getting cert
+- name: GA | Cert LetsEncrypt | Getting cert
   include_tasks: domain_new.yml
   when: not domain_key.stat.exists
 
-- name: GA | LetsEncrypt | Linking certificates
+- name: GA | Cert LetsEncrypt | Linking certificates
   file:
     state: link
     src: "{{ item.value.src }}"

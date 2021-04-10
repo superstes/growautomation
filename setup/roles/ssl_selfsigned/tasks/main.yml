@@ -1,3 +1,86 @@
 ---
 
+# dependencies for 'expect' ansible module
+- name: GA | Cert SelfSigned | Installing dependencies
+  package:
+    name: 'python-pexpect'
+
+- name: GA | Cert SelfSigned | Deploying PKIs
+  include_tasks: looper.yml
+  args:
+    apply:
+      vars:
+        loop_instance: "{{ ca.value }}"
+        loop_instance_name: "{{ ca.key }}"
+        loop_easyrsa_path: "{{ loop_instance.path | default(easyrsa_path) }}"
+        loop_easyrsa_path_pki: "{{ loop_instance.path_pki | default(easyrsa_path_pki) }}"
+        loop_easyrsa_cert_owner: "{{ loop_instance.cert_owner | default(easyrsa_cert_owner) }}"
+        loop_easyrsa_cert_group: "{{ loop_instance.cert_group | default(easyrsa_cert_group) }}"
+        loop_easyrsa_req_country: "{{ loop_instance.req_country | default(easyrsa_req_country) }}"
+        loop_easyrsa_req_province: "{{ loop_instance.req_province | default(easyrsa_req_province) }}"
+        loop_easyrsa_req_city: "{{ loop_instance.req_city | default(easyrsa_req_city) }}"
+        loop_easyrsa_req_org: "{{ loop_instance.req_org | default(easyrsa_req_org) }}"
+        loop_easyrsa_req_email: "{{ loop_instance.req_email | default(easyrsa_req_email) }}"
+        loop_easyrsa_req_ou: "{{ loop_instance.req_ou | default(easyrsa_req_ou) }}"
+        loop_easyrsa_key_size: "{{ loop_instance.key_size | default(easyrsa_key_size) }}"
+        loop_easyrsa_key_algo: "{{ loop_instance.key_algo | default(easyrsa_key_algo) }}"
+        loop_easyrsa_ca_runtime_days: "{{ loop_instance.ca_runtime_days | default(easyrsa_ca_runtime_days) }}"
+        loop_easyrsa_cert_runtime_days: "{{ loop_instance.cert_runtime_days | default(easyrsa_cert_runtime_days) }}"
+        loop_easyrsa_crl_days: "{{ loop_instance.crl_days | default(easyrsa_crl_days) }}"
+        loop_easyrsa_renew_days: "{{ loop_instance.renew_days | default(easyrsa_renew_days) }}"
+        loop_easyrsa_key_digest: "{{ loop_instance.key_digest | default(easyrsa_key_digest) }}"
+        loop_easyrsa_ca_cn: "{{ loop_instance.ca_cn | default(easyrsa_ca_cn) }}"
+        loop_easyrsa_ca_pwd: "{{ loop_instance.ca_pwd | default(easyrsa_ca_pwd) }}"
+        loop_easyrsa_cert_pwd: "{{ loop_instance.cert_pwd | default(easyrsa_cert_pwd) }}"
+        loop_easyrsa_perms_pub: "{{ loop_instance.perms_pub | default(easyrsa_perms_pub) }}"
+        loop_easyrsa_perms_priv: "{{ loop_instance.perms_priv | default(easyrsa_perms_priv) }}"
+
+        loop_random_pwd_file: "{{ loop_easyrsa_path }}/{{ easyrsa_pwd_file }}"
+
+  loop_control:
+    loop_var: ca
+  with_dict: "{{ easyrsa.ca }}"
+  when: easyrsa.ca is defined
+
+- name: GA | Cert SelfSigned | Setting cert paths
+  set_fact:
+    selfsigned_key: "{{ easyrsa_path_pki }}/private/{{ ga_web_ssl_selfsigned_cn }}.key"
+    selfsigned_cert: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.crt"
+    selfsigned_fullchain: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.fullchain.crt"
+    selfsigned_ca: "{{ easyrsa_path_pki }}/ca.crt"
+
+- name: GA | Cert SelfSigned | Checking if fullchain exists
+  stat:
+    path: "{{ selfsigned_fullchain }}"
+  register: fullchain_file
+
+- name: GA | Cert SelfSigned | Pulling ca cert
+  shell: "cat {{ selfsigned_ca | quote }}"
+  register: raw_ca_cert
+  when: not fullchain_file.stat.exists
+
+- name: GA | Cert SelfSigned | Pulling server cert
+  shell: "cat {{ selfsigned_cert | quote }}"
+  register: raw_srv_cert
+  when: not fullchain_file.stat.exists
+
+- name: GA | Cert SelfSigned | Creating fullchain
+  template:
+    src: "templates/var/lib/easyrsa/pki/issued/fullchain.crt.j2"
+    dest: "{{ selfsigned_fullchain }}"
+    owner: "{{ easyrsa_cert_owner }}"
+    group: "{{ easyrsa_cert_group }}"
+    mode: "0{{ easyrsa_perms_pub }}"
+  when: not fullchain_file.stat.exists
+
+- name: GA | Cert SelfSigned | Linking certs
+  file:
+    state: link
+    src: "{{ item.key }}"
+    dest: "{{ item.value }}"
+  with_dict:
+    - {"{{ selfsigned_ca }}": "{{ ga_ssl_path_ca }}"}
+    - {"{{ selfsigned_key }}": "{{ ga_ssl_path_key }}"}
+    - {"{{ selfsigned_cert }}": "{{ ga_ssl_path_cert }}"}
+    - {"{{ selfsigned_fullchain }}": "{{ ga_ssl_path_fullchain }}"}
 

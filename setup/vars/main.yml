@@ -1,5 +1,23 @@
 ---
 
+# !! IMPORTANT NOTICE !!
+# These are the MUST CHANGE settings:
+
+# basic
+ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timezones.txt'
+
+# web
+ga_web_users:
+  - {name: 'ga', pwd: 'GrowMe!', access: 'rw'}  # !! PLEASE CHANGE THE PASSWORD !!
+  - {name: 'demo', pwd: 'Test!', access: 'r'}
+  # access:
+  #   'r' = read-only
+  #   'rw' = read-write
+
+#
+# the following settings can be changed; but are not too important
+#
+
 # basic
 ga_version: '1.0'
 ga_path_log: '/var/log/ga'
@@ -8,7 +26,6 @@ ga_ufw_manage: true  # if the ufw (software firewall) should be configure => NOT
 ga_ufw_allow_ssh: true
 ga_service_group: 'ga'
 ga_python_version: '3.7'  # venv version
-ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timezones.txt'
 ga_log_level: 3
 ga_security_mode: false
 
@@ -19,7 +36,6 @@ ga_core_service_user: 'ga_core'
 ga_core_path_venv: "/home/{{ ga_core_service_user }}/venv"
 ga_core_device_support: true  # if support for basic devices should be provided
 ga_core_controller_name: 'con01'
-ga_core_path_backup: '/mnt/backup/ga'
 ga_core_device_log: true
 
 # ga django web
@@ -30,12 +46,15 @@ ga_web_service_user: 'ga_web'
 ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
 ga_web_ssl_mode: 'self_signed'  # or letsencrypt
   # if letsencrypt is used as ssl_mode:
-  #   1. dns-name and -aliases MUST BE VALID and set to the server-(public)-ip
+  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-(public)-ip
   #   2. server must have port 80/443 publicly available
   #   (for details see => https://letsencrypt.org/docs/)
+ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # do not use whitespaces !
 ga_web_dns: 'ga.lan'
 ga_web_alias: []  # list of dns-aliases
 ga_web_disable_apache_default_sites: true
+ga_web_init_db: true  # if django should initialize the database schema
+ga_web_admin: 'admin'  # password will be the same as for the database as seen below
 
 # mariadb/mysql
 ga_sql_install: true

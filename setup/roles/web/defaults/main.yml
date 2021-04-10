@@ -3,7 +3,6 @@
 ga_ssl_path_ca: "/etc/ssl/certs/ga.ca.pem"  # needed if self-signed
 ga_ssl_path_key: "/etc/ssl/private/{{ ga_web_dns }}.pem"
 ga_ssl_path_cert: "/etc/ssl/certs/{{ ga_web_dns }}.pem"
-ga_ssl_path_chain: "/etc/ssl/certs/{{ ga_web_dns }}.chain.pem"
 ga_ssl_path_fullchain: "/etc/ssl/certs/{{ ga_web_dns }}.fullchain.pem"
 
 ga_web_path_log: "{{ ga_path_log }}/web"
@@ -26,6 +25,12 @@ ga_apache_config_additions:
   ServerTokens: 'Prod'
   ServerSignature: 'Off'
 
+ga_apache_envvar_replacement:
+  - { search: '^export APACHE_RUN_USER',
+      replace: "export APACHE_RUN_USER={{ ga_web_service_user }}" }
+  - { search: '^export APACHE_RUN_GROUP',
+      replace: "export APACHE_RUN_GROUP={{ ga_web_service_user }}" }
+
 ga_web_groups:
   - 'systemd-journal'
   - "{{ ga_service_group }}"
@@ -33,9 +38,14 @@ ga_web_groups:
 ga_django_setting_replacement:
   - {search: '^DEBUG = True$',
      replace: 'DEBUG = False'}
-  - {search: '^ALLOWED_HOSTS = [',
-     replace: "ALLOWED_HOSTS = ['localhost', '{{ ga_web_dns }}'{% for alias in ga_web_alias %}, '{{ alias}}' {% endfor %}]"}
+  - {search: '^ALLOWED_HOSTS = ',
+     replace: "ALLOWED_HOSTS = [own_ip, 'localhost', '{{ ga_web_dns }}'{% for alias in ga_web_alias %}, '{{ alias }}' {% endfor %}]"}
   - {search: "^SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'$",
-     replace: "SECRET_KEY = '{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits,punctuation') }}'"}
-  - {search: "^TIME_ZONE = 'Europe/Vienna'$",
+     replace: "SECRET_KEY = '{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=30') }}'"}
+  - {search: "^TIME_ZONE = 'Europe\/Vienna'$",
      replace: "TIME_ZONE = '{{ ga_timezone }}'"}
+
+ga_django_groups:
+  - 'ga_read'
+  - 'ga_user'
+  - 'ga_write'

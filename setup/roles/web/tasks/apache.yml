@@ -1,0 +1,65 @@
+---
+
+- name: GA | Web | Apache | Add custom config options
+  blockinfile:
+    path: '/etc/apache2/apache2.conf'
+    block: |
+      {% for setting, value in ga_apache_config_additions.items() %}
+        {{ setting }} {{ value }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - custom config"
+    validate: 'apachectl -t -f %s'
+  notify: 'restart_apache'
+
+- name: GA | Web | Apache | Enabling apache mods
+  apache2_module:
+    state: present
+    name: "{{ item }}"
+  with_items:
+    - 'wsgi'
+    - 'ssl'
+    - 'rewrite'
+  notify: 'reload_apache'
+
+- name: GA | Web | Apache | Disabling autoindex
+  apache2_module:
+    state: absent
+    name: 'autoindex'
+    force: yes
+  when: not ga_web_autoindex
+
+- name: GA | Web | Apache | Disabling default apache sites
+  file:
+    state: absent
+    dest: "/etc/apache2/sites-enabled/{{ item }}"
+  with_items:
+    - '000-default.conf'
+    - 'default-ssl.conf'
+  when: ga_web_disable_apache_default_sites
+  notify: 'reload_apache'
+
+- name: GA | Web | Apache | Configure apache site
+  template:
+    src: 'templates/etc/apache2/sites-available/ga.conf.j2'
+    dest: '/etc/apache2/sites-available/ga.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  notify: 'reload_apache'
+
+- name: GA | Web | Apache | Enable apache site
+  file:
+    state: link
+    src: '/etc/apache2/sites-available/ga.conf'
+    dest: '/etc/apache2/sites-enabled/ga.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  notify: 'reload_apache'
+
+- name: GA | Web | Apache | Configuring apache user and group
+  lineinfile:
+    path: '/etc/apache2/envvars'
+    regexp: '{{ item.search }}'
+    line: '{{ item.replace }}'
+  with_items: "{{ ga_apache_envvar_replacement }}"

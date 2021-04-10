@@ -1,6 +1,6 @@
 ---
 
-- name: GA | LetsEncrypt | Dependencies | Deploying temporary apache site
+- name: GA | Cert LetsEncrypt | Dependencies | Deploying temporary apache site
   template:
     src: 'templates/etc/apache2/sites-available/lets_encrypt.conf.j2'
     dest: "/etc/apache2/sites-available/tmp_lets_encrypt.conf"
@@ -10,7 +10,7 @@
   ignore_errors: yes
   register: tmp_site_config
 
-- name: GA | LetsEncrypt | Dependencies | Enable apache site
+- name: GA | Cert LetsEncrypt | Dependencies | Enable apache site
   file:
     state: link
     src: "/etc/apache2/sites-available/tmp_lets_encrypt.conf"
@@ -19,7 +19,7 @@
     group: 'root'
     mode: 0644
 
-- name: GA | LetsEncrypt | Dependencies | Reload apache
+- name: GA | Cert LetsEncrypt | Dependencies | Reload apache
   service:
     name: 'apache2.service'
     state: reloaded

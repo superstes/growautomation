@@ -3,11 +3,14 @@
 - name: GA | UFW | SSH | Pulling ssh port from config
   shell: 'cat /etc/ssh/sshd_config | grep "^Port "'
   register: configured_ssh_port
+  ignore_errors: true
 
 - name: GA | UFW | SSH | Setting configured ssh port
   set_fact:
     tmp_ssh_port: "{{ configured_ssh_port.stdout_lines[0].split(' ', 1)[1] }}"
-  when: configured_ssh_port.stdout_lines|length > 0
+  when:
+    - not configured_ssh_port.failed
+    - configured_ssh_port.stdout_lines|length > 0
 
 - name: GA | UFW | SSH | Setting ansible ssh port
   set_fact:

@@ -1,0 +1,72 @@
+---
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Getting passwords"
+  include_tasks: pwd.yml
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Copying easyrsa base"
+  copy:
+    src: 'files/var/lib/easyrsa/'
+    dest: "{{ loop_easyrsa_path }}/"
+    owner: "{{ loop_easyrsa_cert_owner }}"
+    group: "{{ loop_easyrsa_cert_group }}"
+    mode: 0755
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Copying easyrsa config"
+  template:
+    src: "templates/var/lib/easyrsa/vars.j2"
+    dest: "{{ loop_easyrsa_path }}/vars"
+    owner: "{{ loop_easyrsa_cert_owner }}"
+    group: "{{ loop_easyrsa_cert_group }}"
+    mode: 0644
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Initializing PKI"
+  shell: "echo 'yes' | {{ loop_easyrsa_path }}/easyrsa init-pki --vars='{{ loop_easyrsa_path }}/vars'"
+  args:
+    creates: "{{ loop_easyrsa_path_pki }}"
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Creating directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ loop_easyrsa_cert_owner }}"
+    group: "{{ loop_easyrsa_cert_group }}"
+    mode: 0755
+  with_items:
+    - "{{ loop_easyrsa_path_pki }}"
+    - "{{ loop_easyrsa_path_pki }}/issued"
+    - "{{ loop_easyrsa_path_pki }}/private"
+    - "{{ loop_easyrsa_path_pki }}/reqs"
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building CA"
+  expect:
+    command: "{{ loop_easyrsa_path }}/easyrsa build-ca"
+    responses:
+      Enter New CA Key Passphrase : "{{ loop_easyrsa_ca_pwd }}"
+      Re-Enter New CA Key Passphrase : "{{ loop_easyrsa_ca_pwd }}"
+      Country Name: "{{ loop_easyrsa_req_country }}"
+      State or Province Name: "{{ loop_easyrsa_req_province }}"
+      Locality Name: "{{ loop_easyrsa_req_city }}"
+      Organization Name: "{{ loop_easyrsa_req_org }}"
+      Organizational Unit Name: "{{ loop_easyrsa_req_ou }}"
+      Common Name: "{{ loop_easyrsa_ca_cn }}"
+      Email Address: "{{ loop_easyrsa_req_email }}"
+    creates: "{{ loop_easyrsa_path_pki }}/private/ca.key"
+  no_log: true
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building CRL"
+  expect:
+    command: "{{ loop_easyrsa_path }}/easyrsa gen-crl"
+    responses:
+      Enter pass phrase for: "{{ loop_easyrsa_ca_pwd }}"
+    creates: "{{ loop_easyrsa_path_pki }}/crl.pem"
+  no_log: true
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building Certificates"
+  include_tasks: certs.yml
+  when: "'certs' in loop_instance"
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Updating privileges"
+  shell: "chown -R {{ loop_easyrsa_cert_owner }}:{{ loop_easyrsa_cert_group }} {{ loop_easyrsa_path_pki }} &&
+  chmod -R {{ loop_easyrsa_perms_pub }} {{ loop_easyrsa_path_pki }} &&
+  chmod -R {{ loop_easyrsa_perms_priv }} {{ loop_easyrsa_path_pki }}/private/* &&
+  find {{ loop_easyrsa_path_pki }} -type d -print0 |xargs -0 chmod 755"

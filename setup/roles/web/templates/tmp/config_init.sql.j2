@@ -1,0 +1,7 @@
+INSERT IGNORE INTO {{ ga_sql_db }}.ga_objectcontrollermodel
+(created, updated, name, description, path_root, path_log, path_backup, sql_server, sql_port, sql_user, sql_secret, sql_database,
+log_level, debug, security, backup, timezone, device_fail_count, device_fail_sleep, device_log, web_cdn, web_warn)
+VALUES
+(NOW(), NOW(), '{{ ga_core_controller_name }}', 'Controller created by setup', '{{ ga_core_path }}', '{{ ga_path_log }}', '{{ ga_path_backup }}',
+'{{ ga_sql_server }}', {{ ga_sql_port }}, '{{ ga_sql_user_core }}', '{{ ga_sql_pwd_core_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0,
+{% if ga_security_mode %}1{% else %}0{% endif %}, 0, '{{ ga_timezone }}', 5, 3600, 1, 0, 1);

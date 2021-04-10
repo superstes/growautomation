@@ -6,17 +6,6 @@
     state: present
   notify: 'enable_apache'
 
-- name: GA | Web | Add custom config options
-  blockinfile:
-    path: '/etc/apache2/apache2.conf'
-    block: |
-      {% for setting, value in ga_apache_config_additions.items() %}
-        {{ setting }} {{ value }}
-      {% endfor %}
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - custom config"
-    validate: 'apachectl -t -f %s'
-  notify: 'restart_apache'
-
 - name: GA | Web | Adding service group
   group:
     name: "{{ ga_service_group }}"
@@ -56,57 +45,35 @@
   when: not tmp_clone_dir.stat.exists
 #    version: "{{ ga_version }}"
 
-- name: GA | Core | Copying web-code
-  shell: "cp -r {{ setup_clone_dir }}/code/web {{ ga_web_path }} &&
+- name: GA | Web | Copying web-code
+  shell: "cp -r {{ setup_clone_dir }}/code/web/base/* {{ ga_web_path }} &&
   chown -R {{ ga_web_service_user }}:{{ ga_service_group }} {{ ga_web_path }} &&
   chmod 755 -R {{ ga_web_path }}"
 
-- name: GA | Web | Enabling apache mods
-  apache2_module:
-    state: present
-    name: "{{ item }}"
-  with_items:
-    - 'wsgi'
-    - 'ssl'
-    - 'rewrite'
-  notify: 'reload_apache'
-  ignore_errors: true
+- name: GA | Web | Moving static content
+  shell: "cp -r {{ ga_web_path }}/static/* {{ ga_web_path_static }} &&
+  rm -rf {{ ga_web_path }}/static"
+  ignore_errors: true   # when running more than once -> it will fail
 
-- name: GA | Web | Disabling autoindex
-  apache2_module:
-    state: absent
-    name: 'autoindex'
-    force: yes
-  when: not ga_web_autoindex
+- name: GA | Web | Configure SelfSign-CA
+  import_role:
+    name: ssl_selfsigned
+  when: ga_web_ssl_mode == 'self_signed'
 
-- name: GA | Web | Disabling default apache sites
-  file:
-    state: absent
-    dest: "/etc/apache2/sites-enabled/{{ item }}"
-  with_items:
-    - '000-default.conf'
-    - 'default-ssl.conf'
-  when: ga_web_disable_apache_default_sites
-  notify: 'reload_apache'
+- name: GA | Web | Configure LetsEncrypt
+  import_role:
+    name: ssl_letsencrypt
+  when: ga_web_ssl_mode == 'letsencrypt'
 
-- name: GA | Web | Configure apache site
-  template:
-    src: 'templates/etc/apache2/sites-available/ga.conf.j2'
-    dest: '/etc/apache2/sites-available/ga.conf'
-    owner: 'root'
-    group: 'root'
-    mode: 0644
-  notify: 'reload_apache'
+- name: GA | Web | Configuring apache
+  import_tasks: apache.yml
 
-- name: GA | Web | Enable apache site
-  file:
-    state: link
-    src: '/etc/apache2/sites-available/ga.conf'
-    dest: '/etc/apache2/sites-enabled/ga.conf'
-    owner: 'root'
-    group: 'root'
-    mode: 0644
-  notify: 'reload_apache'
+- name: GA | Web | Configuring django
+  import_tasks: django.yml
+
+- name: GA | Web | Initialize database schema
+  import_tasks: init_db.yml
+  when: ga_web_init_db
 
 - name: GA | Configure UFW
   import_role:

@@ -1,0 +1,47 @@
+---
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building user certificate '{{ cert.cn }}'"
+  expect:
+    command: "{{ loop_easyrsa_path }}/easyrsa build-client-full {{ cert.cn | quote }}"
+    responses:
+      Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
+      Verifying - Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
+      Enter pass phrase for: "{{ loop_easyrsa_ca_pwd }}"
+    creates: "{{ loop_easyrsa_path_pki }}/private/{{ cert.cn }}.key"
+  no_log: true
+  when:
+    - cert.state is undefined or cert.state == 'present'
+    - cert.sub_alt is undefined
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building user certificate '{{ cert.cn }}' (with subject alternative names)"
+  expect:
+    command: "{{ loop_easyrsa_path }}/easyrsa --subject-alt-name={{ cert.sub_alt | quote }} build-client-full {{ cert.cn | quote }}"
+    responses:
+      Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
+      Verifying - Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
+      Enter pass phrase for: "{{ loop_easyrsa_ca_pwd }}"
+    creates: "{{ loop_easyrsa_path_pki }}/private/{{ cert.cn }}.key"
+  no_log: true
+  when:
+    - cert.state is undefined or cert.state == 'present'
+    - cert.sub_alt is defined
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Checking if cert exists '{{ cert.cn }}'"
+  stat:
+    path: "{{ loop_easyrsa_path_pki }}/private/{{ cert.cn }}.key"
+  register: cert_key_file
+  when:
+    - cert.state is defined
+    - cert.state == 'absent'
+
+- name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Revoking user certificate '{{ cert.cn }}'"
+  expect:
+    command: "{{ loop_easyrsa_path }}/easyrsa revoke {{ cert.cn | quote }}"
+    responses:
+      Continue with revocation: 'yes'
+      Enter pass phrase for: "{{ loop_easyrsa_ca_pwd }}"
+  no_log: true
+  when:
+    - cert.state is defined
+    - cert.state == 'absent'
+    - cert_key_file.stat.exists
