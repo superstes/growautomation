@@ -95,9 +95,16 @@
   template:
     src: "templates/lib/systemd/system/ga_core.service.j2"
     dest: "/lib/systemd/system/ga_core.service"
-  notify:
-    - 'reload_systemd_deamon'
-    - 'enable_core'
+
+- name: GA | Core | Reloading systemd
+  systemd:
+    daemon_reload: yes
+
+- name: GA | Core | Enabling service
+  service:
+    name: 'ga_core.service'
+    enabled: yes
+    state: started
 
 - name: GA | Configure device support
   import_role:

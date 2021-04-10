@@ -41,7 +41,7 @@ ga_django_setting_replacement:
   - {search: '^ALLOWED_HOSTS = ',
      replace: "ALLOWED_HOSTS = [own_ip, 'localhost', '{{ ga_web_dns }}'{% for alias in ga_web_alias %}, '{{ alias }}' {% endfor %}]"}
   - {search: "^SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'$",
-     replace: "SECRET_KEY = '{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=30') }}'"}
+     replace: "SECRET_KEY = '{{ lookup('password', '/dev/null chars=ascii_letters,digits length=50') }}'"}
   - {search: "^TIME_ZONE = 'Europe\/Vienna'$",
      replace: "TIME_ZONE = '{{ ga_timezone }}'"}
 
@@ -49,3 +49,5 @@ ga_django_groups:
   - 'ga_read'
   - 'ga_user'
   - 'ga_write'
+
+ga_django_superuser: 'admin'

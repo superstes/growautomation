@@ -80,12 +80,12 @@
         - ga_core_install or ga_web_install
         - ga_sql_install
 
-    - name: GA Web
-      import_role:
-        name: web
-      when: ga_web_install
-
     - name: GA Core
       import_role:
         name: core
       when: ga_core_install
+
+    - name: GA Web
+      import_role:
+        name: web
+      when: ga_web_install
