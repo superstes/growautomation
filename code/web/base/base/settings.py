@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from os import path as os_path
+from socket import socket, AF_INET, SOCK_DGRAM
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +22,13 @@ SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['demo.growautomation.at', 'localhost']
+
+s = socket(AF_INET, SOCK_DGRAM)
+s.connect(("1.1.1.1", 80))
+own_ip = s.getsockname()[0]
+s.close()
+
+ALLOWED_HOSTS = [own_ip, 'demo.growautomation.at', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [

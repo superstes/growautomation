@@ -23,7 +23,7 @@ class ObjectControllerModel(BaseModel):
         (9, '9 (GIMMEE all you got!!)'),
     ]
 
-    path_root = models.CharField(max_length=255, default='/usr/sbin/ga')
+    path_root = models.CharField(max_length=255, default='/var/lib/ga')
     path_log = models.CharField(max_length=255, default='/var/log/ga')
     path_backup = models.CharField(max_length=255, default='/mnt/backup/ga')
 

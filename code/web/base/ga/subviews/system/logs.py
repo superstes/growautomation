@@ -35,7 +35,11 @@ def LogView(request):
         device_log_list = ['02_device_test1.log', '02_device_earth_humidity.log', '']
 
     else:
-        device_log_list = os_listdir("%s/device/%s/" % (path_log, date_year))
+        try:
+            device_log_list = os_listdir("%s/device/%s/" % (path_log, date_year))
+
+        except FileNotFoundError:
+            device_log_list = []
 
     log_ga_options = {
         'Core': "%s/core/%s/%s_core.log" % (path_log, date_year, date_month),

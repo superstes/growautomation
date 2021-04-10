@@ -123,7 +123,10 @@ class GaView:
             return logout_check(request=request, default=ScriptView(request=request))
 
         elif typ == 'export':
-            return logout_check(request=request, default=export_view(request=request))
+            if sub_type is not None:
+                return logout_check(request=request, default=export_view(request=request, process=sub_type))
+
+            return logout_check(request=request, default=export_view(request=request, process='config'))
 
         raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 

@@ -21,7 +21,7 @@ SERVICE_ACTION_COOLDOWN = 30
 @user_passes_test(authorized_to_read, login_url='/denied/')
 def ServiceView(request):
     service_name_options = {
-        'Growautomation': 'ga.service',
+        'GrowAutomation': 'ga_core.service',
         'Apache webserver': 'apache2.service',
         'Mariadb database': 'mariadb.service',
     }

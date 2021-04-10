@@ -19,7 +19,9 @@ nav_dict = {
             'Service': '/system/service/',  # status and restart of service(s)
             'Logs': '/system/log/',  # read various log files
             'Scripts': '/system/script/',  # upload or delete scripts
-            'Export': '/system/export/',  # download db dump
+            'Config Export': '/system/export/config/',  # download db dump of config
+            'Data Export': '/system/export/data/',  # download db dump of data
+            'Full Export': '/system/export/full/',  # download db dump of all ga tables
         },
     },
     'right': {
@@ -28,6 +30,6 @@ nav_dict = {
         '<i class="fas fa-coins fa-2x ga-icon-nav" title="Donate"></i>': 'https://www.patreon.com/growautomation/',
         '<i class="fas fa-bug fa-2x ga-icon-nav" title="Report bugs"></i>': 'https://docs.growautomation.eu/en/latest/basic/bugs.html',
         '<i class="fas fa-book fa-2x ga-icon-nav" title="Documentation"></i>': 'https://docs.growautomation.eu',
-        '<i class="fas fa-sign-out-alt fa-2x ga-icon-nav" title="Logout"></i>': '/logout/',
+        '<i class="fas fa-sign-out-alt fa-2x ga-icon-nav ga-icon-logout" title="Logout"></i>': '/logout/',
     }
 }

@@ -11,30 +11,58 @@ from ...subviews.handlers import Pseudo404
 
 
 @user_passes_test(authorized_to_write, login_url='/denied/')
-def export_view(request):
-    dump_file = f"dump_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.sql.xz"
+def export_view(request, process: str):
+    dump_file = f"dump_{process}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.sql.xz"
     dump_file_path = f'/tmp/{dump_file}'
     sql_config_file = f'{settings.BASE_DIR}/database.cnf'
     dump_db = get_controller_setting(request=request, setting='sql_database')
 
-    exclude_tables = [
-        '',
-        'auth_group',
-        'auth_group_permissions',
-        'auth_permission',
-        'auth_user',
-        'auth_user_groups',
-        'auth_user_user_permissions',
-        'django_admin_log',
-        'django_content_type',
-        'django_migrations',
-        'django_session',
-        'ga_inputdatamodel',
-        'ga_dashboardmodel',
-        'ga_test',
-    ]
-    exclude_string = ' --ignore-table=ga.'.join(exclude_tables)
-    dump_command = f"mysqldump --defaults-file={sql_config_file} {dump_db} --single-transaction {exclude_string} | xz -7 > {dump_file_path}"
+    if process == 'config':
+        exclude_tables = [
+            '',
+            'auth_group',
+            'auth_group_permissions',
+            'auth_permission',
+            'auth_user',
+            'auth_user_groups',
+            'auth_user_user_permissions',
+            'django_admin_log',
+            'django_content_type',
+            'django_migrations',
+            'django_session',
+            'ga_inputdatamodel',
+            'ga_dashboardmodel',
+            'ga_test',
+        ]
+        exclude_string = ' --ignore-table=ga.'.join(exclude_tables)
+        dump_command = f"mysqldump --defaults-file={sql_config_file} {dump_db} --single-transaction {exclude_string} | xz -7 > {dump_file_path}"
+
+    elif process == 'data':
+        include_tables = [
+            'ga_inputdatamodel',
+        ]
+        dump_command = f"mysqldump --defaults-file={sql_config_file} {dump_db} --single-transaction {' '.join(include_tables)} | xz -7 > {dump_file_path}"
+
+    elif process == 'full':
+        exclude_tables = [
+            '',
+            'auth_group',
+            'auth_group_permissions',
+            'auth_permission',
+            'auth_user',
+            'auth_user_groups',
+            'auth_user_user_permissions',
+            'django_admin_log',
+            'django_content_type',
+            'django_migrations',
+            'django_session',
+            'ga_test',
+        ]
+        exclude_string = ' --ignore-table=ga.'.join(exclude_tables)
+        dump_command = f"mysqldump --defaults-file={sql_config_file} {dump_db} --single-transaction {exclude_string} | xz -7 > {dump_file_path}"
+
+    else:
+        raise Pseudo404(ga={'request': request, 'msg': f"Unsupported export type '{process}'!"})
 
     develop_subprocess(request, command=dump_command, develop='nope!')
 
@@ -44,4 +72,4 @@ def export_view(request):
             response['Content-Disposition'] = f'inline; filename={dump_file}'
             return response
 
-    raise Pseudo404(ga={'request': request, 'msg': f'Could not dump database config!'})
+    raise Pseudo404(ga={'request': request, 'msg': f'Could not dump database {process}!'})
