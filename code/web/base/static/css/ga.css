@@ -286,11 +286,15 @@ form .error-msg {
     opacity: 60%;
 }
 
-.ga-icon-nav:hover {
-    opacity: 87%;
-    -webkit-transition: opacity 0.3s ease-in-out;
-    -moz-transition: opacity 0.3s ease-in-out;
-    -ms-transition: opacity 0.3s ease-in-out;
-    -o-transition: opacity 0.3s ease-in-out;
-    transition: opacity 0.3s ease-in-out;
+.ga-nav-right-li:hover .ga-icon-nav {
+    color: rgb(195, 188, 49);
+    -webkit-transition: color 0.3s ease-in-out;
+    -moz-transition: color 0.3s ease-in-out;
+    -ms-transition: color 0.3s ease-in-out;
+    -o-transition: color 0.3s ease-in-out;
+    transition: color 0.3s ease-in-out;
+}
+
+.ga-nav-right-li:hover .ga-icon-logout {
+    color: #B00020;
 }

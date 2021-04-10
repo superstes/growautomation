@@ -47,9 +47,9 @@
                 </ul>
                 <!-- END left navbar -->
                 <!-- START right navbar -->
-                <ul class="navbar-nav ml-auto">
+                <ul class="navbar-nav ml-auto ga-nav-right">
                     {% for nav_key, nav_href in nav_right.items %}
-                        <li class="nav-item">
+                        <li class="nav-item ga-nav-right-li">
                             <a class="nav-link" href="{{ nav_href }}">{{ nav_key | safe }}</a>
                         </li>
                     {% endfor %}

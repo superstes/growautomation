@@ -23,6 +23,19 @@
         text-transform: uppercase;
     }
 
+    .ga-nav-right {
+        flex-direction: row !important;
+        align-items: center;
+        justify-content: center;
+        border-top: 2px solid rgba(255, 255, 255, 0.6);
+        margin-top: 10px;
+    }
+
+    .ga-nav-right-li {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
 }
 
 @media only screen and (max-width: 801px) {  /* tablets */
