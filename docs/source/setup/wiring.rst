@@ -1,4 +1,4 @@
-.. _device-wiring:
+.. _setup-wiring:
 
 ======
 Wiring
@@ -6,6 +6,7 @@ Wiring
 
 Description
 ***********
+
 How cleanly wire devices.
 
 .. warning::

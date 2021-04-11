@@ -178,4 +178,4 @@ Therefore we are documenting known issues and their solutions for some of the de
 
 We also want to create a clean way of wiring those devices to save troubles.
 
-- :ref:`wiring <device-wiring>`
+- :ref:`wiring <setup-wiring>`

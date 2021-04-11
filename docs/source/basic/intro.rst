@@ -49,7 +49,7 @@ Features
 * output workflow
 
   * support for complex conditions
-  * self-reverseable actors
+  * self-reversible actors
 
 * webinterface for user interactions
 

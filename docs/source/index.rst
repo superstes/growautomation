@@ -29,3 +29,10 @@ Index
    :maxdepth: 1
 
    device/*
+
+.. toctree::
+   :caption: Setup
+   :glob:
+   :maxdepth: 1
+
+   setup/*
