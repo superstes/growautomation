@@ -7,7 +7,7 @@
   register: tmp_site_config
 
 - name: GA | Cert LetsEncrypt | Cleanup | Reload apache
-  service:
+  systemd:
     name: 'apache2.service'
     state: reloaded
   when: tmp_site_config.changed

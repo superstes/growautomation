@@ -3,6 +3,7 @@ from netaddr import IPAddress
 from datetime import datetime, timedelta
 from random import randint
 from sys import exc_info as sys_exc_info
+from os import environ as os_environ
 
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
@@ -162,31 +163,35 @@ def to_uppercase(data: str) -> str:
 
 @register.filter
 def get_return_path(request, typ=None) -> str:
-    if 'return' in request.GET:
-        path = request.GET['return']
+    # todo: refactor => Ticket#26
+    return '/'
+    # path = None
+    #
+    # if 'return' in request.GET:
+    #     path = request.GET['return']
+    #
+    # elif 'return' in request.POST:
+    #     path = request.POST['return']
+    #
+    # # else:
+    # #     if typ is None:
+    # #         path = request.META['HTTP_REFERER']
+    # #
+    # #     else:
+    # #         path = f"/config/list/{ typ }/"
+    #
+    # if path is None:
+    #     path = '/'
+    #
+    # return path
 
-    elif 'return' in request.POST:
-        path = request.POST['return']
 
-    else:
-        if typ is None:
-            path = request.META['HTTP_REFERER']
-
-        else:
-            path = f"/config/list/{ typ }/"
-
-    if path is None:
-        path = '/'
-
-    return path
-
-
-@register.filter
-def handler500_update(request):
-    if request.META['HTTP_REFERER'].find('/update') != -1:
-        return True
-
-    return False
+# @register.filter
+# def handler500_update(request):
+#     if request.META['HTTP_REFERER'].find('/update') != -1:
+#         return True
+#
+#     return False
 
 
 @register.filter
@@ -263,13 +268,21 @@ def get_last_errors() -> str:
 
 
 @register.filter
-def nav_config(_) -> dict:
+def get_nav(key: str) -> dict:
     # serves navigation config to template
-    return nav_dict
+    return nav_dict[key]
 
 
 @register.filter
 def found(data: str, search: str) -> bool:
     if data.find(search) != -1:
         return True
+    return False
+
+
+@register.simple_tag
+def demo_mode() -> bool:
+    if 'GA_DEMO' in os_environ:
+        return True
+
     return False

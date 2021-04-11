@@ -20,6 +20,6 @@
     mode: 0644
 
 - name: GA | Cert LetsEncrypt | Dependencies | Reload apache
-  service:
+  systemd:
     name: 'apache2.service'
     state: reloaded

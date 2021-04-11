@@ -4,12 +4,15 @@ from core.config import shared as shared_vars
 from core.config.web_shared import init as web_shared_vars
 
 from datetime import datetime
-from os import getuid as os_getuid
 from os import path as os_path
 from pathlib import Path
-from os import chmod as os_chmod
-from os import chown as os_chown
-from grp import getgrnam
+from sys import platform as sys_platform
+
+if sys_platform != 'win32':
+    from os import getuid as os_getuid
+    from os import chmod as os_chmod
+    from os import chown as os_chown
+    from grp import getgrnam
 
 
 def now(time_format: str):
@@ -75,10 +78,11 @@ class Log:
                 Path(self.log_dir).mkdir(parents=True, exist_ok=True)
 
                 with open(self.log_file, 'a+') as logfile:
-                    logfile.write('init')
+                    logfile.write('init\n')
 
-            os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(shared_vars.GA_GROUP)[2])
-            os_chmod(path=self.log_file, mode=int(f'{shared_vars.LOG_FILE_PERMS}', base=8))
+            if sys_platform != 'win32':
+                os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(shared_vars.GA_GROUP)[2])
+                os_chmod(path=self.log_file, mode=int(f'{shared_vars.LOG_FILE_PERMS}', base=8))
 
             return True
 

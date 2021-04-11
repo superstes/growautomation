@@ -9,9 +9,8 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         {% if request|get_login_state %}
-            {% set_var ''|nav_config as nav_dict %}
-            {% set_var nav_dict|get_item:'left' as nav_left %}
-            {% set_var nav_dict|get_item:'right' as nav_right %}
+            {% set_var 'left'|get_nav as nav_left %}
+            {% set_var 'right'|get_nav as nav_right %}
             <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
                 <!-- START left navbar -->
                 <ul class="navbar-nav">

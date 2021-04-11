@@ -20,7 +20,7 @@ def go(file: str, encrypted: bool):
                 decrypted_line = line
 
             try:
-                key, value = decrypted_line.split('=')
+                key, value = decrypted_line.split('=', 1)
                 file_data_dict[key] = value.strip()
 
             except ValueError as error_msg:

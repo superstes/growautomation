@@ -97,7 +97,7 @@
     daemon_reload: yes
 
 - name: GA | Core | Enabling service
-  service:
+  systemd:
     name: 'ga_core.service'
     enabled: yes
   notify: 'start_core_service'

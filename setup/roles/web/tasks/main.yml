@@ -55,15 +55,20 @@
   rm -rf {{ ga_web_path }}/static"
   ignore_errors: true   # when running more than once -> it will fail
 
-- name: GA | Web | Configure SelfSign-CA
-  import_role:
-    name: ssl_selfsigned
-  when: ga_web_ssl_mode == 'self_signed'
-
 - name: GA | Web | Configure LetsEncrypt
   import_role:
     name: ssl_letsencrypt
   when: ga_web_ssl_mode == 'letsencrypt'
+
+- name: GA | Web | Checking if web cert exists
+  stat:
+    path: "{{ ga_ssl_path_key }}"
+  register: cert_key_file
+
+- name: GA | Web | Configure SelfSign-CA
+  import_role:
+    name: ssl_selfsigned
+  when: ga_web_ssl_mode == 'self_signed' or not cert_key_file.stat.exists
 
 - name: GA | Web | Configuring apache
   import_tasks: apache.yml

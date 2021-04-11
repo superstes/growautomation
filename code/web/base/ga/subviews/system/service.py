@@ -24,6 +24,7 @@ def ServiceView(request):
         'GrowAutomation': 'ga_core.service',
         'Apache webserver': 'apache2.service',
         'Mariadb database': 'mariadb.service',
+        'LetsEncrypt renewal': 'ga_web_certRenewal.timer',
     }
     non_stop_services = ['Apache webserver', 'Mariadb database']
 

@@ -7,15 +7,24 @@
 ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timezones.txt'
 
 # web
+ga_web_dns: 'ga.lan'  # if you want to access the web-interface by name
+ga_web_alias: []  # list of dns-aliases
 ga_web_users:
   - {name: 'ga', pwd: 'GrowMe!', access: 'rw'}  # !! PLEASE CHANGE THE PASSWORD !!
-  - {name: 'demo', pwd: 'Test!', access: 'r'}
+  - {name: 'demo', pwd: 'Grow2021', access: 'r'}
   # access:
   #   'r' = read-only
   #   'rw' = read-write
+ga_web_ssl_mode: 'self_signed'  # self_signed or letsencrypt
+  # if letsencrypt is used as ssl_mode:
+  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-(public)-ip
+  #   2. server must have port 80/443 publicly available
+  #   (for details see => https://letsencrypt.org/docs/)
+
+###############################################################################################
 
 #
-# the following settings can be changed; but are not too important
+# the following settings CAN be changed; but are not too important
 #
 
 # basic
@@ -44,14 +53,8 @@ ga_web_path: '/var/www/ga'
 ga_web_path_static: '/var/www/ga_static'
 ga_web_service_user: 'ga_web'
 ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
-ga_web_ssl_mode: 'self_signed'  # or letsencrypt
-  # if letsencrypt is used as ssl_mode:
-  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-(public)-ip
-  #   2. server must have port 80/443 publicly available
-  #   (for details see => https://letsencrypt.org/docs/)
 ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # do not use whitespaces !
-ga_web_dns: 'ga.lan'
-ga_web_alias: []  # list of dns-aliases
+ga_web_ssl_letsencrypt_mail: "webmaster@{{ ga_web_dns }}"  # change if you want to receive info mails
 ga_web_disable_apache_default_sites: true
 ga_web_init_db: true  # if django should initialize the database schema
 ga_web_admin: 'admin'  # password will be the same as for the database as seen below

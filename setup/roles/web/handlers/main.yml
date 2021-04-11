@@ -1,16 +1,16 @@
 ---
 
 - name: 'restart_apache'
-  service:
+  systemd:
     name: 'apache2.service'
     state: restarted
 
 - name: 'reload_apache'
-  service:
+  systemd:
     name: 'apache2.service'
     state: reloaded
 
 - name: 'enable_apache'
-  service:
+  systemd:
     name: 'apache2.service'
     enabled: yes

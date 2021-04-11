@@ -23,11 +23,11 @@
         <br>
         <div class="ga-footer-wrapper">
             <footer class="ga-footer">
-                {% if not request|get_login_state %}
+                {% if not request|get_login_state and demo_mode %}
                     <div class="alert alert-info">
                         <strong>You can login with this demo user to get an overview:</strong><br>
                         <strong>Username:</strong> demo<br>
-                        <strong>Password:</strong> grow2020
+                        <strong>Password:</strong> Grow2021
                     </div>
                 {% endif %}
                 <div class="ga-footer-text">

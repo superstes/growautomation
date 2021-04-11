@@ -2,29 +2,24 @@
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (1/3)
   set_fact:
-    _alias: "{{ apache_alias | join(' --domain ') }}"
-  when:
-    - apache_alias | length > 0
+    _alias: "{{ ga_web_alias | join(' --domain ') }}"
+  when: ga_web_alias | length > 0
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (2/3)
   set_fact:
-    _apache_alias: "{{ '--domain ' + _alias }}"
-  when:
-    - apache_alias | length > 0
+    certbot_alias: "{{ '--domain ' + _alias }}"
+  when: ga_web_alias | length > 0
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (3/3)
   set_fact:
-    _apache_alias: ''
-  when:
-    - apache_alias | length == 0
+    certbot_alias: ''
+  when: ga_web_alias | length == 0
 
 - name: GA | Cert LetsEncrypt | Debug => the following command will be issued
   debug:
-    msg: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ certbot_email }} --cert-name {{ ga_web_key }}
-             --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ _apache_alias }} --cert-path {{ _path_cert }}"
+    msg: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ ga_web_ssl_letsencrypt_mail }} --cert-name {{ ga_web_key }}
+             --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ certbot_alias }}"
 
-- name: GA | Cert LetsEncrypt | Certbot | Starting certbot
-  shell: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ certbot_email }} --cert-name {{ ga_web_key }}
-           --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ _apache_alias }}"
-  ignore_errors: yes
-  notify: 'reload_apache'
+- name: GA | Cert LetsEncrypt | Certbot | Starting certbot initialization (this might take some time)
+  shell: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ ga_web_ssl_letsencrypt_mail }} --cert-name {{ ga_web_key }}
+           --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ certbot_alias }}"

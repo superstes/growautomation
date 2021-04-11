@@ -24,11 +24,12 @@ def LogView(request):
     date_month = datetime.now().strftime('%m')
     path_log = get_controller_setting(request, 'path_log')
 
-    log_type_options = ['Service', 'Service journal', 'Growautomation']
+    log_type_options = ['Service', 'Service journal', 'GrowAutomation']
     log_service_options = {
-        'Growautomation': 'ga.service',
+        'GrowAutomation': 'ga_core.service',
         'Apache webserver': 'apache2.service',
         'Mariadb database': 'mariadb.service',
+        'LetsEncrypt renewal': 'ga_web_certRenewal.service',
     }
 
     if develop:
@@ -104,7 +105,7 @@ def LogView(request):
                         )
                     )
 
-        if log_type == 'Growautomation':
+        if log_type == 'GrowAutomation':
             log_subtype_options = log_ga_options
 
             if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_ga_options:

@@ -29,3 +29,12 @@
     regexp: '{{ item.search }}'
     line: '{{ item.replace }}'
   with_items: "{{ ga_django_setting_replacement }}"
+
+- name: GA | Web | Django | Adding privileges
+  template:
+    src: 'templates/etc/sudoers.d/gaweb.j2'
+    dest: '/etc/sudoers.d/gaweb'
+    owner: 'root'
+    group: 'root'
+    mode: 0440
+    validate: "/usr/sbin/visudo -cf %s"
