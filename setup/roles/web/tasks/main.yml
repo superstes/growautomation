@@ -6,6 +6,10 @@
     state: present
   notify: 'enable_apache'
 
+- name: GA | Web | Setting system timezone
+  timezone:
+    name: "{{ ga_timezone }}"
+
 - name: GA | Web | Adding service group
   group:
     name: "{{ ga_service_group }}"

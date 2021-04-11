@@ -15,7 +15,7 @@
       block:
         - name: Creating random core password
           set_fact:
-            ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+            ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"  # adding punctuation-characters might break it
           no_log: true
           when: ga_sql_pwd_core == ga_sql_pwd_random_key
 
@@ -29,7 +29,7 @@
 
         - name: Creating random web password
           set_fact:
-            ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=20') }}"
+            ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"  # adding punctuation-characters might break it
           no_log: true
           when: ga_sql_pwd_web == ga_sql_pwd_random_key
 

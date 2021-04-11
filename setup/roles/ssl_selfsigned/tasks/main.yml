@@ -42,13 +42,6 @@
   with_dict: "{{ easyrsa.ca }}"
   when: easyrsa.ca is defined
 
-- name: GA | Cert SelfSigned | Setting cert paths
-  set_fact:
-    selfsigned_key: "{{ easyrsa_path_pki }}/private/{{ ga_web_ssl_selfsigned_cn }}.key"
-    selfsigned_cert: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.crt"
-    selfsigned_fullchain: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.fullchain.crt"
-    selfsigned_ca: "{{ easyrsa_path_pki }}/ca.crt"
-
 - name: GA | Cert SelfSigned | Checking if fullchain exists
   stat:
     path: "{{ selfsigned_fullchain }}"
@@ -83,4 +76,3 @@
     - {"{{ selfsigned_key }}": "{{ ga_ssl_path_key }}"}
     - {"{{ selfsigned_cert }}": "{{ ga_ssl_path_cert }}"}
     - {"{{ selfsigned_fullchain }}": "{{ ga_ssl_path_fullchain }}"}
-

@@ -5,6 +5,10 @@
     name: ['git', 'python3', 'python3-pip', 'python-setuptools']
     state: present
 
+- name: GA | Core | Setting system timezone
+  timezone:
+    name: "{{ ga_timezone }}"
+
 - name: GA | Core | Adding service group
   group:
     name: "{{ ga_service_group }}"
@@ -46,8 +50,8 @@
 
 - name: GA | Core | Copying core-code
   shell: "cp -r {{ setup_clone_dir }}/code/core {{ ga_core_path }} &&
-  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }} &&
-  chmod 755 -R {{ ga_core_path }}"
+  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }}/core &&
+  chmod 775 -R {{ ga_core_path }}/core"
 
 - name: GA | Core | Checking if random key file exists
   stat:
@@ -65,6 +69,13 @@
     group: "{{ ga_service_group }}"
   no_log: true
   when: not random_key_file.stat.exists
+
+- name: GA | Core | Setting privileges for encryption key
+  file:
+    path: "{{ ga_core_path }}/core/secret/random.key"
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+    mode: 0440
 
 - name: GA | Core | Adding core config file
   template:

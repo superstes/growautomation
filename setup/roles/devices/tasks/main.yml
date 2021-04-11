@@ -12,6 +12,11 @@
     virtualenv_python: "{{ ga_python_version }}"
     state: present
 
+- name: GA | Core | Copying device-code
+  shell: "cp -r {{ setup_clone_dir }}/code/device {{ ga_core_path }} &&
+  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }}/device &&
+  chmod 775 -R {{ ga_core_path }}/device"
+
 - name: GA | Devices | Adding service user to groups
   user:
     name: "{{ ga_core_service_user }}"

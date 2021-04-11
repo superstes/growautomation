@@ -40,3 +40,8 @@ key_generate_random_pwd_cert: 'cert'
 easyrsa_pwd_file: ".pwd_file"
 easyrsa_ca_pwd: "{{ key_generate_random_pwd }}"
 easyrsa_cert_pwd: "{{ key_generate_random_pwd }}"
+
+selfsigned_key: "{{ easyrsa_path_pki }}/private/{{ ga_web_ssl_selfsigned_cn }}.key"
+selfsigned_cert: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.crt"
+selfsigned_fullchain: "{{ easyrsa_path_pki }}/issued/{{ ga_web_ssl_selfsigned_cn }}.fullchain.crt"
+selfsigned_ca: "{{ easyrsa_path_pki }}/ca.crt"
