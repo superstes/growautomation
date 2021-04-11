@@ -31,7 +31,7 @@
             </select>
         {% endif %}
 
-        {% if log_type == 'Service journal' or log_type == 'Growautomation' %}
+        {% if log_type == 'Service journal' or log_type == 'GrowAutomation' %}
             <label for="log_entry_count">Max entries</label>
             <select class="form-control" id="log_entry_count" name="log_entry_count" >
                 {% for option in log_entry_range %}
@@ -71,7 +71,7 @@
             </ol>
         {% endif %}
     {% endif %}
-    {% if log_type == 'Growautomation' and log_file is not None %}
+    {% if log_type == 'GrowAutomation' and log_file is not None %}
         <div class="ga-sideinfo">
             <p>
                 Current log file: '{{ log_file }}'

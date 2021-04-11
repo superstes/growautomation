@@ -13,7 +13,7 @@ class GroupConnectionModel(BaseDeviceModel):
     field_list = ['name', 'description', 'script', 'script_arg', 'script_bin', 'enabled']
 
     script = models.CharField(max_length=50)
-    script_bin = models.CharField(max_length=100, default='/usr/bin/python3')
+    script_bin = models.CharField(max_length=100, default='python3')
     script_arg = models.CharField(max_length=255, blank=True, null=True, default=None)
 
 
@@ -53,7 +53,7 @@ class GroupInputModel(BaseDeviceModel):
     ]
 
     script = models.CharField(max_length=50, blank=True, null=True, default=None)
-    script_bin = models.CharField(max_length=100, blank=True, null=True, default='/usr/bin/python3')
+    script_bin = models.CharField(max_length=100, blank=True, null=True, default='python3')
     script_arg = models.CharField(max_length=255, blank=True, null=True, default=None)
     unit = models.CharField(max_length=15, blank=True, null=True, default=None)
     timer = models.SmallIntegerField(default=600)
@@ -95,7 +95,7 @@ class GroupOutputModel(BaseDeviceModel):
     ]
 
     script = models.CharField(max_length=50, blank=True, null=True, default=None)
-    script_bin = models.CharField(max_length=100, blank=True, null=True, default='/usr/bin/python3')
+    script_bin = models.CharField(max_length=100, blank=True, null=True, default='python3')
     script_arg = models.CharField(max_length=255, blank=True, null=True, default=None)
     reverse = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
     reverse_type = models.CharField(max_length=20, choices=REVERSE_TYPE_CHOICES, blank=True, null=True, default=None)

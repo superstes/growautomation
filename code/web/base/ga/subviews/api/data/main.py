@@ -15,6 +15,8 @@ MAX_DATA_POINTS_SHORT = 150
 MAX_DATA_POINTS_MEDIUM = 500
 MAX_DATA_POINTS_LONG = 1000
 
+# todo: summer time not working
+
 
 @user_passes_test(authorized_to_read, login_url='/api/denied/')
 def ApiData(request, input_device: int = None, period: str = None, period_data: int = None, start_ts: str = None, stop_ts: str = None, out_dict: bool = False):
@@ -54,7 +56,7 @@ def ApiData(request, input_device: int = None, period: str = None, period_data: 
             obj=input_device
         ).order_by('-created')
 
-        data_dict = _prepare_data(data_list, data_type)
+        data_dict = _prepare_data(request, data_list, data_type)
 
         if len(data_dict) > max_data_points:
             data_dict = _thin_out_data_points(data_dict, count=max_data_points)
@@ -71,6 +73,7 @@ def ApiData(request, input_device: int = None, period: str = None, period_data: 
 
         if out_dict:
             return json_dict
+
         else:
             return JsonResponse(data=json_dict)
 
@@ -95,7 +98,7 @@ def _thin_out_data_points(data_dict: dict, count: int) -> dict:
     return out_dict
 
 
-def _prepare_data(data_list, data_type: str) -> dict:
+def _prepare_data(request, data_list, data_type: str) -> dict:
     out_dict = {}
 
     if data_type == 'float':
@@ -108,7 +111,8 @@ def _prepare_data(data_list, data_type: str) -> dict:
         typ = str
 
     for data_obj in data_list:
-        out_dict[datetime.strftime(data_obj.created, DATETIME_TS_FORMAT)] = typ(data_obj.data)
+        formatted_datetime = add_timezone(request, datetime_obj=data_obj.created)
+        out_dict[datetime.strftime(formatted_datetime, DATETIME_TS_FORMAT)] = typ(data_obj.data)
 
     return out_dict
 
@@ -159,5 +163,7 @@ def _get_time(request, _period, _period_data, _start_ts, _stop_ts):
 
     if start_ts is None:
         return handler400_api(msg='No supported filter provided')
+
     else:
+
         return start_ts, stop_ts

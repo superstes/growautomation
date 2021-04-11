@@ -1,7 +1,6 @@
 from sys import platform
 from datetime import datetime
 from pytz import timezone as pytz_timezone
-from django.utils import timezone as django_timezone
 
 from core.utils.process import subprocess
 from core.utils.debug import Log
@@ -80,9 +79,21 @@ def develop_log(request, output: str, level: int = 1) -> None:
         logger.write(output=output, level=level)
 
 
-def add_timezone(request, datetime_obj):
-    dt_w_tz = django_timezone.make_aware(datetime_obj, timezone=pytz_timezone(get_controller_setting(request, setting='timezone')))
-    return dt_w_tz
+def add_timezone(request, datetime_obj: datetime, tz: str = None) -> datetime:
+    configured_tz = get_controller_setting(request, setting='timezone')
+
+    if tz is not None:
+        _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))
+        output = _tz_aware.astimezone(pytz_timezone(configured_tz))
+
+    else:
+        output = datetime_obj.replace(tzinfo=pytz_timezone(configured_tz))
+
+    return output
+
+
+def time_as_str(datetime_obj: datetime) -> str:
+    return datetime_obj.strftime(DATETIME_TS_FORMAT)
 
 
 def get_device_parent(child_obj):
@@ -159,6 +170,7 @@ def get_device_parent_setting(child_obj, setting: str):
 def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
     if type(dt_str) != str:
         return None
+
     try:
         _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
         ts_w_tz = add_timezone(request, datetime_obj=_ts_wo_tz)
