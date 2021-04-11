@@ -33,6 +33,7 @@ CORE_ID_ATTRIBUTE = 'object_id'
 DB_ALL_KEY_ID = 'id'
 DB_ALL_KEY_NAME = 'name'
 DB_ALL_KEY_DESCRIPTION = 'description'
+DB_KEY_DOWNLINK = 'downlink_id'
 
 DB_ENCRYPTED_SETTING_LIST = ['sql_secret']
 

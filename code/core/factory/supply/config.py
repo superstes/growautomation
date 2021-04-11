@@ -77,7 +77,7 @@ supply_sql_dict = {
             'base': f"SELECT * FROM {DJANGO_PROJECT}_objectinputmodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'enabled', 'connection', 'downlink', 'timer'],
+            'base': ['name', 'description', 'enabled', 'connection', 'timer', 'downlink_id'],
         },
         'setting_fields': {
             'base': ['enabled', 'connection', 'timer'],
@@ -88,7 +88,7 @@ supply_sql_dict = {
             'base': f"SELECT * FROM {DJANGO_PROJECT}_objectoutputmodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'enabled', 'connection', 'downlink'],
+            'base': ['name', 'description', 'enabled', 'connection', 'downlink_id', 'reverse_condition_id'],
         },
         'setting_fields': {
             'base': ['enabled', 'connection'],
@@ -144,11 +144,11 @@ supply_sql_dict = {
             'member1': f"SELECT * FROM {DJANGO_PROJECT}_memberinputmodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg', 'unit', 'datatype', 'timer'],
+            'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg', 'unit', 'timer', 'datatype'],
             'member1': ['group_id', 'obj_id'],
         },
         'setting_fields': {
-            'base': ['enabled', 'script', 'script_bin', 'script_arg', 'unit', 'datatype', 'timer'],
+            'base': ['enabled', 'script', 'script_bin', 'script_arg', 'unit', 'timer', 'datatype'],
         },
         'member': {
             'member1': {
@@ -164,7 +164,7 @@ supply_sql_dict = {
         },
         'fields': {
             'base': ['name', 'description', 'enabled', 'script', 'script_bin', 'script_arg', 'reverse', 'reverse_type', 'reverse_type_data',
-                     'reverse_script', 'reverse_script_bin', 'reverse_script_arg'],
+                     'reverse_script', 'reverse_script_bin', 'reverse_script_arg', 'reverse_condition_id'],  # todo: condition linking => Ticket#11
             'member1': ['group_id', 'obj_id'],
         },
         'setting_fields': {

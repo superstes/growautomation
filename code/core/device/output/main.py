@@ -76,7 +76,7 @@ class Go:
         else:
             self.logger.write(f"Processing of output \"{device.name}\" succeeded", level=7)
 
-            self.logger.write(f"Checking device \"{device.name}\" for reversion: reverseable - {device.reverse}, active - {device.active}, "
+            self.logger.write(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
                               f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", level=7)
 
             if device.reverse == 1 and device.active and device.reverse_type == self.REVERSE_KEY_TIME:

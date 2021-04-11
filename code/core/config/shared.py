@@ -31,3 +31,6 @@ LOG_SEPARATOR = ' | '
 LOG_CENSOR_OUTPUT = '●●●●●●●●●'
 LOG_SECRET_SETTINGS = ['sql_secret']
 LOG_FILE_PERMS = 644
+
+# todo: set as controller setting
+PYTHON_VENV = '/home/ga_core/venv/bin'

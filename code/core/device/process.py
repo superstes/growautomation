@@ -122,6 +122,9 @@ class Go:
         bad_values = [None, '', 'None']
         params_dict = {'script': self.instance.script, 'bin': self.instance.script_bin, 'arg': self.instance.script_arg}
 
+        if params_dict['bin'] == 'python3':
+            params_dict['bin'] = f'{shared_vars.PYTHON_VENV}/python3'
+
         if isinstance(self.instance, GaOutputDevice):
             if self.instance.reverse == 1 and self.instance.active:
                 if self.reverse:
@@ -135,7 +138,7 @@ class Go:
                         params_dict['bin'] = self.instance.reverse_script_bin
 
                 else:
-                    self.logger.write(f"Device \"{self.instance.name}\" is reverseable and active, but should not be reversed", level=4)
+                    self.logger.write(f"Device \"{self.instance.name}\" is reversible and active, but should not be reversed", level=4)
                     return None
 
         if params_dict['script'] in bad_values or params_dict['bin'] in bad_values:  # it should only be possible to be NoneType-None
@@ -163,11 +166,11 @@ class Go:
                 if self.instance.reverse == 1:
                     if self.reverse:
                         self.instance.active = False
-                        self.logger.write(f"Reverseable device \"{self.instance.name}\" was stopped", level=6)
+                        self.logger.write(f"Reversible device \"{self.instance.name}\" was stopped", level=6)
 
                     else:
                         self.instance.active = True
-                        self.logger.write(f"Reverseable device \"{self.instance.name}\" entered the active state", level=6)
+                        self.logger.write(f"Reversible device \"{self.instance.name}\" entered the active state", level=6)
 
                 return True
 
@@ -178,12 +181,12 @@ class Go:
 
     def _reverse_check(self):
         if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1 and self.instance.active and not self.reverse:
-            self.logger.write(f"Reverseable device \"{self.instance.name}\" is active and should not be reversed", level=5)
+            self.logger.write(f"Reversible device \"{self.instance.name}\" is active and should not be reversed", level=5)
             return False
 
         elif isinstance(self.instance, GaConnectionDevice) and isinstance(self.nested_instance, GaOutputDevice) \
                 and self.nested_instance.reverse == 1 and self.nested_instance.active and not self.reverse:
-            self.logger.write(f"Reverseable device \"{self.nested_instance.name}\" is active and should not be reversed", level=5)
+            self.logger.write(f"Reversible device \"{self.nested_instance.name}\" is active and should not be reversed", level=5)
             return False
 
         return True

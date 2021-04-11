@@ -13,7 +13,7 @@ class Go:
         self.key_desc = config.DB_ALL_KEY_DESCRIPTION
         self.key_setting = config.SUPPLY_KEY_SETTING_DICT
 
-        self.downlink_attribute = config.CORE_DOWNLINK_ATTRIBUTE
+        self.downlink_attribute = config.DB_KEY_DOWNLINK
 
     def get_model(self):
         output_list = []
