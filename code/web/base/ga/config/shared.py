@@ -1,2 +1,3 @@
 DATETIME_TS_FORMAT = '%Y-%m-%d %H:%M:%S'
 CENSOR_SYMBOL = '●'
+VERSION = 0.8

@@ -7,7 +7,7 @@ from os import environ as os_environ
 
 from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 from ..utils.helper import get_controller_setting, get_client_ip
-from ..config.shared import DATETIME_TS_FORMAT
+from ..config.shared import DATETIME_TS_FORMAT, VERSION
 from ..config.nav import nav_dict
 
 register = template.Library()
@@ -280,9 +280,22 @@ def found(data: str, search: str) -> bool:
     return False
 
 
-@register.simple_tag
-def demo_mode() -> bool:
+@register.filter
+def demo_mode(nope: None) -> bool:
     if 'GA_DEMO' in os_environ:
         return True
 
     return False
+
+
+@register.filter
+def beta_mode(nope: None) -> bool:
+    if 'GA_BETA' in os_environ:
+        return True
+
+    return False
+
+
+@register.filter
+def get_version(nope: None) -> float:
+    return VERSION
