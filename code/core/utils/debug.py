@@ -48,7 +48,7 @@ class Log:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
 
         else:
-            self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition}.log"
+            self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition.replace(' ', '_')}.log"
 
         self.status = self._check()
 
