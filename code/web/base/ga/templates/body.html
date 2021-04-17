@@ -17,6 +17,9 @@
             {% include "./info/read_only.html" %}
         {% endif %}
         <main class="ga-main">
+            {% if title %}
+            <h1 class="ga-header">{{ title }}</h1>
+            {% endif %}
             {% block content %}
             {% endblock %}
         </main>

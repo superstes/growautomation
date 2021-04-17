@@ -19,7 +19,7 @@ class ConfigView:
         self.sub_type = sub_type
         self.tmpl_root = 'config'
         try:
-            self.title = f"{type_dict[self.type]['pretty']} config"
+            self.title = f"{type_dict[self.type]['pretty']}"
 
         except KeyError:
             self.title = 'Config'

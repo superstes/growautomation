@@ -8,8 +8,6 @@
     {% set_var db_dict|get_item:'list' as object_list %}
     {% set_var db_dict|get_item:'id' as selected %}
     {% set_var db_dict|get_item:'obj' as dashboard %}
-    <h1>Dashboard</h1>
-    <br><hr><br>
     {% include "./main/forms.html" %}
     {% include "./main/dashboard.html" %}
     {% include "./js.html" %}

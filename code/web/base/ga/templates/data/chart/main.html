@@ -4,8 +4,6 @@
 {% load static %}
 {% load bootstrap4 %}
 {% block content %}
-    <h1>Charts</h1>
-    <br><hr><br>
     {% if status is not None and what is not None %}
         <div class="alert alert-success">
             <strong>{{ status|title }} {{ what }}</strong>

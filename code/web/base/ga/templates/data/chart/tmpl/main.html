@@ -4,9 +4,6 @@
     {% include "../../tmpl/chart_head.html" %}
 {% endblock %}
 {% block content %}
-    {% block title %}
-    {% endblock %}
-    <br><hr><br>
     {% include "../../../error/form.html" %}
     {% if action != 'create' and object_list|length != 0 %}
         <form method="get">

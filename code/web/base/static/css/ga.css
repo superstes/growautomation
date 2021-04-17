@@ -299,3 +299,14 @@ form .error-msg {
 .ga-nav-right-li:hover .ga-icon-logout {
     color: #B00020;
 }
+
+.ga-header {
+    color: #121212;
+    padding-bottom: 15px;
+    margin-bottom: 35px;
+    font-family: 'Open Sans Condensed', sans-serif;
+    letter-spacing: 3px;
+    text-transform: capitalize;
+    font-weight: bold;
+    border-bottom: 3px solid #121212;
+}

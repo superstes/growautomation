@@ -6,8 +6,6 @@ from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, a
 from ....utils.main import error_formatter, method_user_passes_test
 from ....user import authorized_to_read, authorized_to_write
 
-TITLE = 'Data charts'
-
 
 class Chart:
     def __init__(self, request, html_template: str, model, form):
@@ -17,12 +15,22 @@ class Chart:
         self.root_path = 'data/chart'
         self.model = model
         self.form = form
+        self.title = 'Data charts'
 
     def go(self, chart_option_defaults: dict):
         if self.request.method == 'POST':
             return self.post()
 
         else:
+            if self.html_template == 'dataset':
+                self.title = 'Chart datasets'
+
+            elif self.html_template == 'dbe':
+                self.title = 'Chart dashboard elements'
+
+            elif self.html_template == 'graph':
+                self.title = 'Chart graphs'
+
             return self.get(chart_option_defaults)
 
     @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
@@ -70,7 +78,7 @@ class Chart:
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
                 'request': self.request, 'input_device_dict': input_device_dict, 'start_ts': start_ts, 'stop_ts': stop_ts,
                 'input_device': input_device, 'input_model_dict': input_model_dict, 'action': action, 'selected': chart_dict['id'], 'form': chart_dict['form'],
-                'object_list': chart_dict['list'], 'title': TITLE,
+                'object_list': chart_dict['list'], 'title': self.title,
             })
 
         elif self.html_template == 'dbe':
@@ -96,14 +104,14 @@ class Chart:
                 'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'selected_dataset_ids': selected_dataset_ids,
                 'dataset_link_list': dataset_link_list, 'graph_link_list': graph_link_list, 'dataset_list': dataset_list, 'graph_form': graph_form,
-                'form_error': form_error, 'title': TITLE,
+                'form_error': form_error, 'title': self.title,
             })
 
         else:
 
             return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
                 'request': self.request, 'input_device_dict': input_device_dict, 'input_model_dict': input_model_dict, 'action': action,
-                'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'title': TITLE,
+                'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'title': self.title,
             })
 
     @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
@@ -161,7 +169,7 @@ class Chart:
             return redirect(redirect_url)
 
         return render(self.request, f'{self.root_path}/{self.html_template}.html', context={
-            'request': self.request, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list, 'title': TITLE,
+            'request': self.request, 'form': form, 'action': action, 'selected': chart_id, 'object_list': chart_list, 'title': self.title,
         })
 
     def _add_form_error(self, url: str, error: str = 'Failed+to+save+form'):
