@@ -7,12 +7,14 @@ from core.utils.debug import Log
 
 from ..models import ObjectControllerModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
+from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import Pseudo404
 from ..config.shared import DATETIME_TS_FORMAT
 
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
+ALL_DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupInputModel, GroupOutputModel, GroupConnectionModel]
 
 
 def check_develop(request) -> bool:
@@ -119,7 +121,7 @@ def get_device_parent(child_obj):
 
 
 def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):
-    if obj in [None, '', 'None']:
+    if obj in [None, '', 'None'] or type(obj) not in (str, int):
         return None
 
     for check_obj in typ.objects.all():
@@ -151,19 +153,17 @@ def get_instance_from_field(typ, field: str, data, target_type):
     return None
 
 
-def get_device_instance(obj: (str, int)):
-    for typ in DEVICE_TYPES:
-        result = get_instance_from_id(typ=typ, obj=obj)
-        if result is not None:
-            return result
+def get_device_type(device: DEVICE_TYPES):
+    for typ in ALL_DEVICE_TYPES:
+        if isinstance(device, typ):
+            return typ
 
 
-def get_device_parent_setting(child_obj, setting: str):
-    if type(child_obj) in [str, int]:
-        child_obj = get_device_instance(obj=child_obj)
+def get_device_parent_setting(child_obj: DEVICE_TYPES, setting: str):
+    if not isinstance(child_obj, tuple(DEVICE_TYPES)):
+        return None
 
     parent = get_device_parent(child_obj)
-
     return getattr(parent, setting)
 
 
@@ -200,22 +200,6 @@ def str_to_list(data: (list, str), reverse: bool = False) -> list:
         _.reverse()
 
     return _
-
-
-# replaced by css counter
-# def add_line_numbers(data: (list, str), reverse: bool = False) -> list:
-#     data = str_to_list(data, reverse=reverse)
-#
-#     output = []
-#
-#     count = 1
-#     _zfill_count = len(str(len(data)))
-#
-#     for line in data:
-#         output.append("%s | %s" % (str(count).zfill(_zfill_count), line))
-#         count += 1
-#
-#     return output
 
 
 def empty_key(search, param: str) -> bool:

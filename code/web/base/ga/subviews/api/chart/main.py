@@ -27,10 +27,13 @@ def ApiChart(request):
 
         if chart_type == 'graph':
             typ = ChartGraphModel
+
         elif chart_type == 'dataset':
             typ = ChartDatasetModel
+
         elif chart_type == 'dbe':
             typ = ChartDashboardModel
+
         else:
             return handler400_api(msg="Specified type '%s' not found" % chart_type)
 
@@ -48,6 +51,7 @@ def ApiChart(request):
             if type(value) in [ObjectInputModel, GroupInputModel]:
                 input_obj = value
                 value = value.id
+
             elif field == 'options_json' and value == 'None':
                 value = None
 
@@ -61,27 +65,35 @@ def ApiChart(request):
 
             if data_dict['period'] is not None and data_dict['period_data'] is not None:
                 filter_params = {'period': data_dict['period'], 'period_data': data_dict['period_data']}
+
             else:
                 if data_dict['start_ts'] is not None and data_dict['stop_ts'] is not None:
                     filter_params = {'start_ts': data_dict['start_ts'], 'stop_ts': data_dict['stop_ts']}
+
                 elif data_dict['start_ts'] is not None:
                     filter_params = {'start_ts': data_dict['start_ts']}
 
             if filter_params is None:
                 return handler400_api(msg='No suitable data filter found')
 
-            api_params = {'input_device': input_obj.id}
+            # todo: input group support => Ticket#15
+            api_params = {'input_id': input_obj.id, 'input_type': ObjectInputModel}
             api_params.update(filter_params)
 
-            data_dict['data'] = ApiData(request, **api_params, out_dict=True)
+            data_dict['data'] = ApiData(request, **api_params, return_dict=True).go()
+
+            if type(data_dict['data']) == JsonResponse:
+                return data_dict['data']
 
         elif chart_type == 'dbe':
             dataset_list = []
+
             for link in ChartDatasetLinkModel.objects.all():
                 if link.group.id == chart_id:
                     dataset_list.append(link.obj.id)
 
             graph_id = None
+
             for link in ChartGraphLinkModel.objects.all():
                 if link.group.id == chart_id:
                     graph_id = link.obj.id

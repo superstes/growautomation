@@ -89,6 +89,9 @@ def add_graph_params_to_url(request, chart_dict: dict, redirect_path: str) -> (N
 
             if field not in existing_params:
                 if field == 'input_device':
+                    if chart_dict['obj'].input_device is None:
+                        return None
+
                     data = chart_dict['obj'].input_device.id
 
                 missing_params[field] = data

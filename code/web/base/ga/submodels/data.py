@@ -47,7 +47,8 @@ class ChartGraphModel(BaseModel):
 
 class ChartDatasetModel(BaseModel):
     field_list = [
-        'name', 'description', 'input_device', 'area', 'period', 'period_data',  'start_ts', 'stop_ts',  # 'input_model'  -> removed from form view
+        'name', 'description', 'input_device', 'area', 'period', 'period_data', 'period_function', 'start_ts', 'stop_ts',
+        # 'input_model'  -> removed from form view  # todo: implement input group => Ticket#15
         'chart_fill', 'chart_fill_color', 'chart_border_color', 'chart_border_width', 'chart_type', 'chart_point_radius', 'chart_point_color', 'chart_point_type',
         'dataset_json',
     ]
@@ -57,6 +58,7 @@ class ChartDatasetModel(BaseModel):
         ('circle', 'Circle'), ('cross', 'Cross'), ('crossRot', 'Cross rot'), ('dash', 'Dash'), ('line', 'Line'), ('rect', 'Rect'), ('rectRounded', 'Rect rounded'),
         ('rectRot', 'Rect rot'), ('star', 'Star'), ('triangle', 'Triangle')
     ]
+    FUNCTION_CHOICES = [('avg', 'Average'), ('min', 'Minimum'), ('max', 'Maximum')]
 
     area = models.ForeignKey(GroupAreaModel, on_delete=models.CASCADE, related_name='cd_fk_area', blank=True, null=True, default=None)
     input_device = models.ForeignKey(ObjectInputModel, on_delete=models.CASCADE, related_name='cd_fk_input_device', blank=True, null=True, default=None)
@@ -67,6 +69,7 @@ class ChartDatasetModel(BaseModel):
     stop_ts = models.DateTimeField(blank=True, null=True, default=None)
     period = models.CharField(max_length=1, choices=PERIOD_CHOICES, blank=True, null=True, default=None)
     period_data = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
+    period_function = models.CharField(max_length=3, choices=FUNCTION_CHOICES, default='avg')
 
     # chart options
     chart_type = models.CharField(choices=CHART_TYPE_CHOICES, max_length=10, blank=True, null=True, default=None)

@@ -1,65 +1,101 @@
 from django.http import JsonResponse
-from django.contrib.auth.decorators import user_passes_test
 from datetime import datetime, timedelta
-from itertools import islice
 from math import ceil
 
-from ....models import InputDataModel
-from ...handlers import handler400_api
-from ....utils.helper import get_device_parent_setting, add_timezone, get_device_instance, get_datetime_w_tz
+from ....models import InputDataModel, ObjectInputModel, GroupInputModel
+from ...handlers import handler400_api, handler500_api
+from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz
+from ....utils.main import method_user_passes_test
 from ....user import authorized_to_read
 from ....config.shared import DATETIME_TS_FORMAT
-
-
-MAX_DATA_POINTS_SHORT = 150
-MAX_DATA_POINTS_MEDIUM = 500
-MAX_DATA_POINTS_LONG = 1000
 
 # todo: summer time not working
 
 
-@user_passes_test(authorized_to_read, login_url='/api/denied/')
-def ApiData(request, input_device: int = None, period: str = None, period_data: int = None, start_ts: str = None, stop_ts: str = None, out_dict: bool = False):
-    error = None
+class ApiData:
+    MEASURE_TS_FORMAT = '%H:%M:%S:%f'
 
-    if request.method == 'GET':
-        if input_device is None:
-            if 'input_device' not in request.GET:
-                return handler400_api(msg='Need to specify input_device')
+    MAX_DATA_POINTS_SHORT = 150
+    MAX_DATA_POINTS_MEDIUM = 500
+    MAX_DATA_POINTS_LONG = 1000
 
-            input_device = int(request.GET['input_device'])
+    THIN_OUT_FUNCTIONS = ['avg', 'max', 'min']
 
-        input_device_obj = get_device_instance(input_device)
-        data_unit = get_device_parent_setting(child_obj=input_device, setting='unit')
-        data_type = get_device_parent_setting(child_obj=input_device, setting='datatype')
+    def __init__(self, request, input_id: int = None, period: str = None, period_data: int = None, start_ts: str = None, stop_ts: str = None,
+                 return_dict: bool = False, input_type=None):
+        self.request = request
+        self.input_id = input_id
+        self.input_type = input_type
+        self.return_dict = return_dict
+        self.error = None
+        self.measurement = []
 
-        _time = _get_time(request, _period=period, _period_data=period_data, _start_ts=start_ts, _stop_ts=stop_ts)
+        if (period is not None or start_ts is not None) and input_id is not None:
+            self.data = {'period': period, 'period_data': period_data, 'start_ts': start_ts, 'stop_ts': stop_ts}
+
+        else:
+            self.data = request.GET
+
+    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    def go(self) -> (dict, JsonResponse):
+        if self.request.method == 'GET':
+            if self.input_id is None:
+                if 'input_device' in self.data:
+                    self.input_id = int(self.data['input_device'])
+                    self.input_type = ObjectInputModel
+
+                elif 'input_model' in self.data:
+                    self.input_id = int(self.data['input_model'])
+                    self.input_type = GroupInputModel
+
+                else:
+                    return handler400_api(msg='Need to specify either input_device or input_model')
+
+            return self.get()
+
+        else:
+            return handler400_api(msg='Only GET method supported')
+
+    def get(self):
+        input_obj = get_instance_from_id(typ=self.input_type, obj=self.input_id)
+        data_unit = get_device_parent_setting(child_obj=input_obj, setting='unit')
+        data_type = get_device_parent_setting(child_obj=input_obj, setting='datatype')
+
+        _time = self._get_time()
 
         if type(_time) != tuple:
-            return _time
+            return handler500_api(msg='Error processing time period')
 
         start_ts, stop_ts = _time
 
         time_span = stop_ts - start_ts
         if time_span > timedelta(days=30):
-            max_data_points = MAX_DATA_POINTS_LONG
+            max_data_points = self.MAX_DATA_POINTS_LONG
 
         elif time_span > timedelta(days=7):
-            max_data_points = MAX_DATA_POINTS_MEDIUM
+            max_data_points = self.MAX_DATA_POINTS_MEDIUM
 
         else:
-            max_data_points = MAX_DATA_POINTS_SHORT
+            max_data_points = self.MAX_DATA_POINTS_SHORT
+
+        self._add_measurement('Pulling data')
 
         data_list = InputDataModel.objects.filter(
             created__gte=start_ts,
             created__lte=stop_ts,
-            obj=input_device
+            obj=input_obj
         ).order_by('-created')
 
-        data_dict = _prepare_data(request, data_list, data_type)
+        self._add_measurement('Preparing data')
+
+        data_dict = self._prepare_data(data_list=data_list, data_type=data_type)
+
+        self._add_measurement('Thinning data')
 
         if len(data_dict) > max_data_points:
-            data_dict = _thin_out_data_points(data_dict, count=max_data_points)
+            data_dict = self._thin_out_data_points(data_dict, wanted=max_data_points)
+
+        self._add_measurement('Post processing')
 
         xy_data_list = []
 
@@ -67,103 +103,125 @@ def ApiData(request, input_device: int = None, period: str = None, period_data: 
             xy_data_list.append({'x': time, 'y': data})
 
         json_dict = {
-            'device_id': int(input_device), 'device_name': input_device_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'error': error,
-            'xy_data': xy_data_list,
+            'device_id': int(self.input_id), 'device_name': input_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'error': self.error,
+            'xy_data': xy_data_list, 'measurement': self.measurement,
         }
 
-        if out_dict:
+        if self.return_dict:
             return json_dict
 
         else:
             return JsonResponse(data=json_dict)
 
-    else:
-        return handler400_api(msg='Only GET method supported')
+    def _add_measurement(self, msg: str):
+        # for troubleshooting
+        self.measurement.append(f'{datetime.now().strftime(self.MEASURE_TS_FORMAT)} | {msg}')
 
+    @classmethod
+    def _thin_out_data_points(cls, data_dict: dict, wanted: int, function: str = 'avg') -> dict:
+        """
+        :param data_dict: {time: data}
+        :param wanted: Data points wanted
+        :param function: Function to apply to the filtered data points
+        :return: filtered data
+        :rtype: dict
+        """
 
-def _thin_out_data_points(data_dict: dict, count: int) -> dict:
-    data_point_count = len(data_dict)
+        data_point_count = len(data_dict)
+        interval = ceil(data_point_count / wanted)
+        thin_out_function = function if function in cls.THIN_OUT_FUNCTIONS else 'avg'
 
-    interval = ceil(data_point_count / count)
+        filtered = {}
+        counter = 0
+        tmp = {}
+        for key, value in data_dict.items():
+            if counter % interval == 0 and len(tmp) != 0:
+                if thin_out_function == 'avg':
+                    index = ceil(len(tmp) / 2)
+                    filtered[list(tmp.keys())[index]] = "{:.2f}".format(sum(tmp.values()) / len(tmp))
 
-    # if a dict will be needed again
-    _winners = dict(islice(enumerate(data_dict), None, None, interval))
+                elif thin_out_function == 'max':
+                    max_val = max(tmp.values())
+                    filtered[[key for key, val in tmp.items() if val == max_val][0]] = max_val
 
-    out_dict = {}
+                elif thin_out_function == 'min':
+                    min_val = min(tmp.values())
+                    filtered[[key for key, val in tmp.items() if val == min_val][0]] = min_val
 
-    for _ in _winners.values():
-        out_dict[_] = data_dict[_]
+                tmp = {}
 
-    # return data_list[0::interval]
-    return out_dict
+            counter += 1
+            tmp[key] = value
 
+        return filtered
 
-def _prepare_data(request, data_list, data_type: str) -> dict:
-    out_dict = {}
+    @staticmethod
+    def _prepare_data(data_list, data_type: str) -> dict:
+        out_dict = {}
 
-    if data_type == 'float':
-        typ = float
-    elif data_type == 'int':
-        typ = int
-    elif data_type == 'bool':
-        typ = bool
-    else:
-        typ = str
+        if data_type == 'float':
+            typ = float
 
-    for data_obj in data_list:
-        formatted_datetime = add_timezone(request, datetime_obj=data_obj.created)
-        out_dict[datetime.strftime(formatted_datetime, DATETIME_TS_FORMAT)] = typ(data_obj.data)
+        elif data_type == 'int':
+            typ = int
 
-    return out_dict
-
-
-def _get_time(request, _period, _period_data, _start_ts, _stop_ts):
-    start_ts = None
-    stop_ts = None
-
-    if 'start_ts' in request.GET:
-        _start_ts = request.GET['start_ts']
-
-    if 'stop_ts' in request.GET:
-        _stop_ts = request.GET['stop_ts']
-
-    if _start_ts is not None:
-        start_ts = get_datetime_w_tz(request, dt_str=_start_ts)
-
-        if _stop_ts is not None:
-            stop_ts = get_datetime_w_tz(request, dt_str=_stop_ts)
-
-        else:
-            stop_ts = add_timezone(request, datetime_obj=datetime.now())
-
-    if 'period' in request.GET and 'period_data' in request.GET:
-        _period = request.GET['period']
-        _period_data = int(request.GET['period_data'])
-
-    if _period is not None and _period_data is not None:
-        stop_ts = add_timezone(request, datetime_obj=datetime.now())
-
-        if _period == 'y':
-            start_ts = stop_ts - timedelta(days=(_period_data * 365))
-
-        elif _period == 'm':
-            start_ts = stop_ts - timedelta(days=(_period_data * 31))  # todo: should be exact
-
-        elif _period == 'd':
-            start_ts = stop_ts - timedelta(days=_period_data)
-
-        elif _period == 'H':
-            start_ts = stop_ts - timedelta(hours=_period_data)
-
-        elif _period == 'M':
-            start_ts = stop_ts - timedelta(minutes=_period_data)
+        elif data_type == 'bool':
+            typ = bool
 
         else:
-            return handler400_api(msg='Unsupported time period type')
+            typ = str
 
-    if start_ts is None:
-        return handler400_api(msg='No supported filter provided')
+        for data_obj in data_list:
+            out_dict[datetime.strftime(data_obj.created, DATETIME_TS_FORMAT)] = typ(data_obj.data)
 
-    else:
+        return out_dict
 
-        return start_ts, stop_ts
+    def _get_time(self):
+        start_ts, _start_ts = None, None
+        stop_ts, _stop_ts = None, None
+        _period, _period_data = None, None
+
+        if 'start_ts' in self.data:
+            _start_ts = self.data['start_ts']
+
+        if 'stop_ts' in self.data:
+            _stop_ts = self.data['stop_ts']
+
+        if _start_ts is not None:
+            start_ts = get_datetime_w_tz(self.request, dt_str=_start_ts)
+
+            if _stop_ts is not None:
+                stop_ts = get_datetime_w_tz(self.request, dt_str=_stop_ts)
+
+            else:
+                stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
+
+        if 'period' in self.data and 'period_data' in self.data:
+            _period = self.data['period']
+            _period_data = int(self.data['period_data'])
+            stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
+
+            if _period == 'y':
+                start_ts = stop_ts - timedelta(days=(_period_data * 365))
+
+            elif _period == 'm':
+                start_ts = stop_ts - timedelta(days=(_period_data * 31))  # todo: should be exact
+
+            elif _period == 'd':
+                start_ts = stop_ts - timedelta(days=_period_data)
+
+            elif _period == 'H':
+                start_ts = stop_ts - timedelta(hours=_period_data)
+
+            elif _period == 'M':
+                start_ts = stop_ts - timedelta(minutes=_period_data)
+
+            else:
+                return handler400_api(msg='Unsupported time period type')
+
+        if start_ts is None:
+            return handler400_api(msg='No supported time period provided')
+
+        else:
+
+            return start_ts, stop_ts

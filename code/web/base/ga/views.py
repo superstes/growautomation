@@ -181,7 +181,7 @@ class GaView:
     def api(request, typ: str):
         # no logout check needed since there is no logout button at this route
         if typ == 'data':
-            return ApiData(request=request)
+            return ApiData(request=request).go()
 
         elif typ == 'chart':
             return ApiChart(request=request)

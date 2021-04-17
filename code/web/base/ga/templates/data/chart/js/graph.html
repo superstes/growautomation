@@ -25,12 +25,12 @@
     rand_time.sort(function(a,b){return a.getTime() - b.getTime()});
 
     // get random data points
-    if (chart_y_max_suggest === null) {
-        var min_rand_data = 20;
-        var max_rand_data = 50;
-    } else {
+    if (typeof chart_y_max_suggest == 'number') {
         var min_rand_data = chart_y_max_suggest * 0.2;
         var max_rand_data = chart_y_max_suggest;
+    } else {
+        var min_rand_data = 20;
+        var max_rand_data = 50;
     }
     var rand_data = Array.from({length: random_datapoints}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
 

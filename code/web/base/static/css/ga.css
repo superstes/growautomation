@@ -32,6 +32,7 @@ body {
 .ga-main {
     margin: 2%;
     height: 100%;
+    margin-bottom: 150px;
 }
 
 .ga-footer-wrapper {

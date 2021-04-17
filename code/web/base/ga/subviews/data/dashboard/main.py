@@ -107,7 +107,7 @@ class DashboardView:
                         try:
                             dbp_id = [dbe['value'] for dbe in position_used if dbe['x'] == col and dbe['y'] == row][0]
                             _cols.append(grid_item_used_tmpl % dbp_id)
-                            dbp_obj = get_instance_from_id(DashboardPositionModel, dbp_id)
+                            dbp_obj = get_instance_from_id(typ=DashboardPositionModel, obj=dbp_id)
 
                             if dbp_obj is not None:
                                 used_positions[dbp_obj] = 'NonDuplicationWA'
