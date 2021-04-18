@@ -90,11 +90,8 @@ body {
     border-radius: 3px;
 }
 
-.ga-chart {
+.ga-chart-config {
     position: relative;
-}
-
-.ga-chart-main {
     height: 45vh;
     width: 90vw;
     margin: 3vh auto;

@@ -1,5 +1,5 @@
 
-### DISCLAIMOR ###
+### DISCLAIMER ###
 
 I have little experience with the django framework, the mvc software design, UI-design and web-development itself.
 

@@ -299,3 +299,11 @@ def beta_mode(nope: None) -> bool:
 @register.filter
 def get_version(nope: None) -> float:
     return VERSION
+
+
+@register.filter
+def empty_if_none(check: str) -> str:
+    if check in [None, 'None']:
+        return ''
+
+    return check

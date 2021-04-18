@@ -28,7 +28,13 @@ class BaseModel(BareModel):
     description = models.CharField(max_length=255, blank=True, null=True, default=None)
 
     def __str__(self):
-        return f"{self.name} | {self.description}"
+        if self.description is not None:
+            out = f'{self.name} | {self.description}'
+
+        else:
+            out = f'{self.name}'
+
+        return out
 
     class Meta:
         abstract = True
