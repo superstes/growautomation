@@ -1,6 +1,8 @@
 <script>
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    const ga_element_chart = "ga_dbp_chart";
+    const ga_element_error = "ga_dbp_error";
+
+    const urlParams = new URLSearchParams(window.location.search);
 
     var input_device = urlParams.get('input_device');
     var chart_type = urlParams.get('chart_type');
@@ -13,49 +15,79 @@
     var options_json = urlParams.get('options_json');
     var chart_unit = urlParams.get('unit');
 
-    var random_datapoints = 75;
+    var ga_hardcoded = {
+        type: 'line',
+        fill: true,
+        fill_color: 'rgba(100, 185, 215, 0.6)',
+        border_color: 'black',
+        border_width: 1,
+        point_radius: 0,
+        point_color: 'blue',
+        point_type: 'rectRounded',
+        point_hover_radius: 7,
+        point_hit_radius: 7,
+    }
+
+    // get random data
+    var random_datapoints = 100;
+    var days_back = 14;
+    const milli_secs_per_day = 86400000;
 
     // get random times between seven days ago and now
-    function randomDate(start, end) {
-        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    var stop_ts = Date.now();
+    var start_ts = stop_ts - days_back * milli_secs_per_day;
+
+    function randomTs(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) ) + min;
     }
-    var seven_days_ago = new Date();
-    seven_days_ago.setDate(seven_days_ago.getDate()-7);
-    var rand_time = Array.from({length: random_datapoints}, () => randomDate(seven_days_ago, new Date()));
-    rand_time.sort(function(a,b){return a.getTime() - b.getTime()});
+
+    var rand_time = Array.from({length: random_datapoints}, () => randomTs(start_ts, stop_ts));
+    rand_time.sort(function(a,b){return a - b});
 
     // get random data points
-    if (typeof chart_y_max_suggest == 'number') {
-        var min_rand_data = chart_y_max_suggest * 0.2;
-        var max_rand_data = chart_y_max_suggest;
-    } else {
+    if (isNaN(chart_y_max_suggest)) {
         var min_rand_data = 20;
         var max_rand_data = 50;
+
+    } else {
+        var min_rand_data = chart_y_max_suggest * 0.2;
+        var max_rand_data = chart_y_max_suggest - 5;
+
     }
     var rand_data = Array.from({length: random_datapoints}, () => Math.floor(Math.random() * (max_rand_data - min_rand_data)) + min_rand_data);
 
-    var ga_config = {
-        "device_id": 1,
-        "time_list": rand_time,
-        "data_list": rand_data,
-        "error": null
-    }
+    // merging time with data
+    function rand_merge(list, values) {
+        var result = [];
+        for (var i = 0, l = list.length; i < l; i++) {
+            result.push({'x': list[i], 'y': values[i]});
+        }
+        return result;
+    };
+
+    var ga_xy_data = rand_merge(rand_time, rand_data);
 
     if (options_json && options_json != 'None') {
         var option_array = options_json
+
     } else {
         var option_array = {
             responsive: true,
             maintainAspectRatio: false,
             parsing: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            },
             scales: {
-                xAxes: [{
+                x: {
                     type: 'time',
                     ticks: {
-                        autoSkip: true,
                         maxTicksLimit: chart_x_max_ticks,
                     },
                     time: {
+                        tooltipFormat: time_format_hour,  // todo: make customizable
                         displayFormats: {
                             'millisecond': time_format_min,
                             'second': time_format_min,
@@ -66,64 +98,53 @@
                             'month': time_format_month,
                             'quarter': time_format_month,
                             'year': time_format_month,
-                            }
+                        }
                     },
-                }],
-                yAxes: [{
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: chart_y_max_suggest,
                     ticks: {
-                        beginAtZero: true,
                         callback: function(tick) {
                             if (chart_unit === null || chart_unit == 'None' ) {
                                 return `${tick.toString()} UNIT`;
                             } else {
                                 return `${tick.toString()} ${chart_unit}`;
                             }
-                        },
-                        suggestedMax: chart_y_max_suggest,
                         }
-                    }]
+                    }
                 }
             }
+        }
     }
+    console.log('graph options:');
     console.log(option_array);
 
-    var cart_type = null;
-    var chart_fill = true;
-    var chart_fill_color = 'rgba(100, 185, 215, 0.6)';
-    var chart_border_color = 'black';
-    var chart_border_width = 1;
-    var chart_point_radius = 0;
-    var chart_point_color = 'blue';
-    var chart_point_type = 'rectRounded';
-    var chart_point_hover_radius = 7;
-    var chart_point_hit_radius = 7;
-
     try {
-            console.log(ga_config);
-            let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
+            let chartCanvas = document.getElementById(ga_element_chart).getContext('2d');
             let chartObject = new Chart(chartCanvas, {
-                type: chart_type,
+                type: ga_hardcoded.type,
                 data: {
-                    labels: ga_config.time_list,
                     datasets: [{
-                        label: `Input object 'random'`,
-                        data: ga_config.data_list,
-                        borderWidth: chart_border_width,
-                        borderColor: chart_border_color,
-                        fill: chart_fill,
-                        backgroundColor: chart_fill_color,
-                        pointStyle: chart_point_type,
-                        pointRadius: chart_point_radius,
-                        pointHoverRadius: chart_point_hover_radius,
-                        pointHitRadius: chart_point_hit_radius,
-                        pointBorderColor: chart_point_color,
+                        label: `Random data`,
+                        data: ga_xy_data,
+                        borderWidth: ga_hardcoded.border_width,
+                        borderColor: ga_hardcoded.border_color,
+                        fill: ga_hardcoded.fill,
+                        backgroundColor: ga_hardcoded.fill_color,
+                        pointStyle: ga_hardcoded.point_type,
+                        pointRadius: ga_hardcoded.point_radius,
+                        pointHoverRadius: ga_hardcoded.point_hover_radius,
+                        pointHitRadius: ga_hardcoded.point_hit_radius,
+                        pointBorderColor: ga_hardcoded.point_color,
                     }],
                 },
                 options: option_array
                 });
-    } catch(err) {
-        console.log(`error: ${err}`);
-        document.getElementById("ga_error_noresult").style.display = "block";
-        document.getElementById("ga_chart_div").style.display = "none";
+
+    } catch(error) {
+        console.log(`error: ${error.message}`);
+        document.getElementById(ga_element_error).style.display = "block";
+        document.getElementById(ga_element_chart).style.display = "none";
 }
 </script>

@@ -2,6 +2,8 @@
 {% load bootstrap_tags %}
 {% block extrahead %}
     {% include "../../tmpl/chart_head.html" %}
+    {% block charthead %}
+    {% endblock %}
 {% endblock %}
 {% block content %}
     {% include "../../../error/form.html" %}
@@ -42,14 +44,13 @@
         <h2>
             Preview:
         </h2>
-        <div class="ga-chart ga-chart-main" id="ga_chart_div">
-            <canvas id="ga_chart_canvas"></canvas>
+        <div class="ga-chart-config">
+            <canvas id="ga_dbp_chart"></canvas>
         </div>
-
-        <div id="ga_warn_noresult" style="display: none;">
+        <div id="ga_dbp_warn" style="display: none;">
             {% include "../../../warn/no_results.html" %}
         </div>
-        <div id="ga_error_noresult" style="display: none;">
+        <div id="ga_dbp_error" style="display: none;">
             {% if form_error is None and form.erros is None %}
                 <div class="alert alert-info">
                     Check chart options

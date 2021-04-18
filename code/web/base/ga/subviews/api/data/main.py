@@ -1,15 +1,13 @@
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from math import ceil
+from pytz import utc as pytz_utc
 
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
-from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz
+from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz, get_controller_setting
 from ....utils.main import method_user_passes_test
 from ....user import authorized_to_read
-from ....config.shared import DATETIME_TS_FORMAT
-
-# todo: summer time not working
 
 
 class ApiData:
@@ -18,6 +16,7 @@ class ApiData:
     MAX_DATA_POINTS_SHORT = 150
     MAX_DATA_POINTS_MEDIUM = 500
     MAX_DATA_POINTS_LONG = 1000
+    MAX_DATA_POINTS_HUGE = 3000
 
     THIN_OUT_FUNCTIONS = ['avg', 'max', 'min']
 
@@ -69,7 +68,10 @@ class ApiData:
         start_ts, stop_ts = _time
 
         time_span = stop_ts - start_ts
-        if time_span > timedelta(days=30):
+        if time_span > timedelta(days=365):
+            max_data_points = self.MAX_DATA_POINTS_HUGE
+
+        elif time_span > timedelta(days=30):
             max_data_points = self.MAX_DATA_POINTS_LONG
 
         elif time_span > timedelta(days=7):
@@ -155,8 +157,7 @@ class ApiData:
 
         return filtered
 
-    @staticmethod
-    def _prepare_data(data_list, data_type: str) -> dict:
+    def _prepare_data(self, data_list, data_type: str) -> dict:
         out_dict = {}
 
         if data_type == 'float':
@@ -171,8 +172,12 @@ class ApiData:
         else:
             typ = str
 
+        own_tz = get_controller_setting(self.request, setting='timezone')
         for data_obj in data_list:
-            out_dict[datetime.strftime(data_obj.created, DATETIME_TS_FORMAT)] = typ(data_obj.data)
+            # converting datetime to utc millisecond-timestamp since that is the default time-format in chartjs
+            tz_aware_dt = add_timezone(request=self.request, datetime_obj=data_obj.created, tz=own_tz, ctz=own_tz)
+            ts_milli_utc = round(tz_aware_dt.astimezone(pytz_utc).timestamp() * 1000)
+            out_dict[ts_milli_utc] = typ(data_obj.data)
 
         return out_dict
 
@@ -197,6 +202,7 @@ class ApiData:
                 stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
 
         if 'period' in self.data and 'period_data' in self.data:
+            # todo: support for 'last week' etc. (period=d,data=7,shift=d,shift_data:7)  => Ticket#33
             _period = self.data['period']
             _period_data = int(self.data['period_data'])
             stop_ts = add_timezone(self.request, datetime_obj=datetime.now())

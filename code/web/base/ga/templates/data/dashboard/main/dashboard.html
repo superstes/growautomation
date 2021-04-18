@@ -10,7 +10,7 @@
                         <p>{{ position_obj.element.name }}</p>
                     </div>
                     <div class="ga-dbp-description">
-                        <p>{{ position_obj.element.description }}</p>
+                        <p>{{ position_obj.element.description | empty_if_none }}</p>
                     </div>
                 </div>
                 <canvas class="ga-dbp-chart" id="ga_dbp_{{ position_obj.id }}_chart"></canvas>

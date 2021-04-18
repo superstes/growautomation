@@ -1,6 +1,9 @@
 <script>
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    const ga_element_chart = "ga_dbp_chart";
+    const ga_element_warn = "ga_dbp_warn";
+    const ga_element_error = "ga_dbp_error";
+
+    const urlParams = new URLSearchParams(window.location.search);
 
     var period = urlParams.get('period');
     var input_device = urlParams.get('input_device');
@@ -14,8 +17,8 @@
 
     if ( (input_device === null || input_device == '' ) && (input_model === null || input_model == '' ) ) {
         console.log(`error: neither input device nor input model is set`);
-        document.getElementById("ga_error_noresult").style.display = "block";
-        document.getElementById("ga_chart_div").style.display = "none";
+        document.getElementById(ga_element_error).style.display = "block";
+        document.getElementById(ga_element_chart).style.display = "none";
 
     } else {
         var chart_fill = (urlParams.get('chart_fill') == 'True');
@@ -32,8 +35,10 @@
         async function fetchData() {
             if (period && period_data) {
                 var url = `/api/data/?period=${period}&period_data=${period_data}&input_device=${input_device}`;
+
             } else if (start_ts && stop_ts) {
                 var url = `/api/data/?start_ts=${start_ts}&stop_ts=${stop_ts}&input_device=${input_device}`;
+
             } else {
                 var url = `/api/data/?start_ts=${start_ts}&input_device=${input_device}`;
             }
@@ -49,16 +54,16 @@
                 console.log(ga_config);
                 if (ga_config.xy_data.length == 0) {
                     console.log('warning: no results found');
-                    document.getElementById("ga_warn_noresult").style.display = "block";
-                    document.getElementById("ga_chart_div").style.display = "none";
+                    document.getElementById(ga_element_warn).style.display = "block";
+                    document.getElementById("ga_dbp_chart").style.display = "none";
 
                 } else if (ga_config.error != null) {
                     console.log(`error: ${ga_config.error}`);
-                    document.getElementById("ga_error_noresult").style.display = "block";
-                    document.getElementById("ga_chart_div").style.display = "none";
+                    document.getElementById(ga_element_error).style.display = "block";
+                    document.getElementById(ga_element_chart).style.display = "none";
 
                 } else {
-                    let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
+                    let chartCanvas = document.getElementById(ga_element_chart).getContext('2d');
                     let chartObject = new Chart(chartCanvas, {
                         type: 'line',
                         data: {
@@ -80,15 +85,14 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            parsing: false,
                             scales: {
-                                xAxes: [{
+                                x: {
                                     type: 'time',
                                     ticks: {
-                                        autoSkip: true,
                                         maxTicksLimit: 15,
                                     },
                                     time: {
+                                        tooltipFormat: 'HH:mm | DD-MM-YYYY',
                                         displayFormats: {
                                             'millisecond': 'HH:mm',
                                             'second': 'HH:mm',
@@ -99,18 +103,18 @@
                                             'month': 'MM-YYYY',
                                             'quarter': 'MM-YYYY',
                                             'year': 'MM-YYYY',
-                                            }
+                                        }
                                     },
-                                }],
-                                yAxes: [{
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    suggestedMax: 50,
                                     ticks: {
-                                        beginAtZero: true,
                                         callback: function(tick) {
                                             return `${tick.toString()} ${ga_config.data_unit}`;
                                         },
-                                        suggestedMax: 50,
                                     }
-                                }]
+                                }
                             }
                         }
                     });
@@ -119,8 +123,9 @@
 
         } catch(error) {
             console.log(`error: ${ga_config.error}`);
-            document.getElementById("ga_error_noresult").style.display = "block";
-            document.getElementById("ga_chart_div").style.display = "none";
+            console.log(`error: ${error.message}`);
+            document.getElementById(ga_element_error).style.display = "block";
+            document.getElementById(ga_element_chart).style.display = "none";
         }
     }
 </script>

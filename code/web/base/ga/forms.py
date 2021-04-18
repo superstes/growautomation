@@ -126,9 +126,10 @@ HELP_DICT = {
     'debug': 'If the debug mode should be enabled',
     'timer': 'Interval (in seconds) to execute the device script or system task',
     'interval': 'Custom interval in which to execute system task',
-    'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks',
+    'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks; '
+               'might speed-up loading times when accessing the website over the internet',
     'web_warn': 'If the webinterface should hide warnings',
-    'chart_type': 'Chart.js chart-type => DISCLAIMOR: The GA config was only optimized for line charts',
+    'chart_type': 'Chart.js chart-type => DISCLAIMER: The GA config was only optimized for line charts',
     'time_format_min': 'Time format if the range is shown in minutes [must be valid moment.js format]',
     'time_format_hour': 'Time format if the range is shown in hours [must be valid moment.js format]',
     'time_format_day': 'Time format if the range is shown in days [must be valid moment.js format]',

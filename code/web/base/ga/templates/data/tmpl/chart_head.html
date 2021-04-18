@@ -2,21 +2,13 @@
 {% load util %}
 {% load bootstrap4 %}
 {% if request|use_cdn %}
-    <!-- css -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css" type="text/css" media="all" rel="stylesheet">
-    <link href="{% static 'css/datepicker-widget-4.17.47.css' %}" type="text/css" media="all" rel="stylesheet">
-    <!-- js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
-    <script src="{% static 'js/datepicker-widget-4.17.47.js' %}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <!-- chart js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.1.0/chart.min.js" integrity="sha512-RGbSeD/jDcZBWNsI1VCvdjcDULuSfWTtIva2ek5FtteXeSjLfXac4kqkDRHVGf1TwsXCAqPTF7/EYITD0/CTqw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js" integrity="sha512-LGXaggshOkD/at6PFNcp2V2unf9LzFq6LE+sChH7ceMTDP0g2kn6Vxwgg7wkPP7AAtX+lmPqPdxB47A0Nz0cMQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.0/chartjs-adapter-moment.min.js" integrity="sha512-oh5t+CdSBsaVVAvxcZKy3XJdP7ZbYUBSRCXDTVn0ODewMDDNnELsrG9eDm8rVZAQg7RsDD/8K3MjPAFB13o6eA==" crossorigin="anonymous"></script>
 {% else %}
-    <!-- css -->
-    <link href="{% static 'css/bootstrap-datetimepicker-4.17.47.css' %}" type="text/css" media="all" rel="stylesheet">
-    <link href="{% static 'css/datepicker-widget-4.17.47.css' %}" type="text/css" media="all" rel="stylesheet">
-    <!-- js -->
-    <script src="{% static 'js/moment-with-locales-2.9.0.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap-datetimepicker-4.17.47.min.js' %}"></script>
-    <script src="{% static 'js/datepicker-widget-4.17.47.js' %}"></script>
-    <script src="{% static 'js/chart-2.9.4.min.js' %}"></script>
+    <!-- chart js -->
+    <script src="{% static 'js/chart-3.1.1.min.js' %}"></script>
+    <script src="{% static 'js/moment-with-locales-2.29.1.min.js' %}"></script>
+    <script src="{% static 'js/chartjs-adapter-moment-1.0.0.min.js' %}"></script>
 {% endif %}

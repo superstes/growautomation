@@ -1,7 +1,21 @@
 {% extends "./tmpl/main.html" %}
+{% load util %}
+{% load static %}
+{% block charthead %}
+    <!-- dataset css -->
+    <!-- icons not showing (?)
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    -->
+    <link href="{% static 'css/datetimepicker-4.17.47.css' %}" type="text/css" rel="stylesheet">
+    <link href="{% static 'css/datetimepicker-widget-4.17.47.css' %}" type="text/css" rel="stylesheet">
+    <!-- dataset js -->
+    <script src="{% static 'js/datetimepicker-4.17.47.min.js' %}"></script>
+    <script src="{% static 'js/datetimepicker-widget-4.17.47.js' %}"></script>
+{% endblock %}
 {% block options %}
-        {% include "../tmpl/filter_start_stop.html" %}
-        <br>
+    {% include "../tmpl/filter_start_stop.html" %}
+    <br>
 {% endblock %}
 {% block js %}
     {% include "./js/dataset.html" %}

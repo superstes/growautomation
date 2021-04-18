@@ -34,7 +34,7 @@ def get_time_difference(time_data: str, time_format: str) -> int:
 
 
 def get_controller_obj():
-    return [cont for cont in ObjectControllerModel.objects.all()][0]
+    return ObjectControllerModel.objects.all()[0]
 
 
 def get_controller_setting(request, setting: str):
@@ -81,15 +81,17 @@ def develop_log(request, output: str, level: int = 1) -> None:
         logger.write(output=output, level=level)
 
 
-def add_timezone(request, datetime_obj: datetime, tz: str = None) -> datetime:
-    configured_tz = get_controller_setting(request, setting='timezone')
+def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:
+    if ctz is None:
+        # takes A LOT of time if done in a loop
+        ctz = get_controller_setting(request, setting='timezone')
 
     if tz is not None:
         _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))
-        output = _tz_aware.astimezone(pytz_timezone(configured_tz))
+        output = _tz_aware.astimezone(pytz_timezone(ctz))
 
     else:
-        output = datetime_obj.replace(tzinfo=pytz_timezone(configured_tz))
+        output = datetime_obj.replace(tzinfo=pytz_timezone(ctz))
 
     return output
 

@@ -1,14 +1,17 @@
 <script>
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    // chart preparations
+    const ga_element_chart = "ga_dbp_chart";
+    const ga_element_warn = "ga_dbp_warn";
+    const ga_element_error = "ga_dbp_error";
 
     async function fetchData() {
+        let urlParams = new URLSearchParams(window.location.search);
         var ga_dbe = urlParams.get('selected');
 
         if (ga_dbe === null || ga_dbe == '') {
             console.log(`error: dashboard element must be set`);
-            document.getElementById("ga_error_noresult").style.display = "block";
-            document.getElementById("ga_chart_div").style.display = "none";
+            document.getElementById(ga_element_error).style.display = "block";
+            document.getElementById(ga_element_chart).style.display = "none";
         } else {
             var url = `/api/chart/?type=dbe&id=${ga_dbe}`;
         }
@@ -23,145 +26,6 @@
         console.log('chart data received:');
         console.log(ga_dbe_config);
 
-        var ga_graph = ga_dbe_config['data_dict']['graph'];
-        var ga_dataset = ga_dbe_config['data_dict']['dataset'];
-
-        if ( ga_graph === null || ga_graph == '' || ga_dataset === null || ga_dataset == '' ) {
-            console.log(`error: graph and dataset must be set`);
-            document.getElementById("ga_warn_noresult").style.display = "block";
-            document.getElementById("ga_chart_div").style.display = "none";
-
-        } else {
-            var ga_hardcoded = {
-                pointHoverRadius: 7,
-                pointHitRadius: 7,
-                pointBorderColor: 'black',
-            }
-            var ga_fetch = [fetch(`/api/chart/?type=graph&id=${ga_graph}`),]
-
-            for (index in ga_dataset) {
-                ga_fetch.push(fetch(`/api/chart/?type=dataset&id=${ga_dataset[index]}`))
-            };
-
-            Promise.all(ga_fetch).then(function (responses) {
-                return Promise.all(responses.map(function (response) {
-                    return response.json();
-                }));
-
-            }).then(function (data) {
-                var graph_data = data[0].data_dict;
-                var dataset_data_list = data.slice(1);
-
-                // graph config
-                // console.log(`graph data: ${graph_data}`);
-
-                var options_json = graph_data['options_json'];
-
-                if (options_json != null) {
-                    var chart_options = options_json;
-
-                } else {
-                    var chart_options = {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        parsing: false,
-                        scales: {
-                            xAxes: [{
-                                type: 'time',
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: graph_data.chart_x_max_ticks,
-                                },
-                                time: {
-                                    displayFormats: {
-                                        'millisecond': graph_data.time_format_min,
-                                        'second': graph_data.time_format_min,
-                                        'minute': graph_data.time_format_min,
-                                        'hour': graph_data.time_format_hour,
-                                        'day': graph_data.time_format_day,
-                                        'week': graph_data.time_format_day,
-                                        'month': graph_data.time_format_month,
-                                        'quarter': graph_data.time_format_month,
-                                        'year': graph_data.time_format_month,
-                                        }
-                                },
-                            }],
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true,
-                                    callback: function(tick) {
-                                        if (graph_data.unit != null) {
-                                            return `${tick.toString()} ${graph_data.unit}`;
-                                        } else {
-                                            return tick.toString();
-                                        }
-                                    },
-                                suggestedMax: graph_data.chart_y_max_suggest,
-                                }
-                            }]
-                        }
-                    }
-                }
-
-                // dataset config
-                // console.log(`dataset data: ${dataset_data_list}`);
-
-                var dataset_list = [];
-
-                for (index in dataset_data_list) {
-                    dataset = dataset_data_list[index].data_dict;
-                    // console.log(`dataset item data: ${dataset}`);
-
-                    var dataset_json = graph_data['dataset_json'];
-
-                    if (dataset != null) {
-                        if (dataset_json != null) {
-                            let data = {
-                                label: dataset.data.device_name,
-                                data: dataset.data.xy_data,
-                            }
-                            let merged_dataset = Object.assign({}, dataset_json, data);
-                            dataset_list.push(merged_dataset);
-
-                        } else {
-                            dataset_list.push({
-                                label: dataset.data.device_name,
-                                data: dataset.data.xy_data,
-                                borderColor: dataset.chart_border_color,
-                                borderWidth: dataset.chart_border_width,
-                                fill: dataset.chart_fill,
-                                backgroundColor: dataset.chart_fill_color,
-                                pointColor: dataset.chart_point_color,
-                                pointRadius: dataset.chart_point_radius,
-                                pointStyle: dataset.chart_point_type,
-                                type: dataset.chart_type,
-                                // hardcoded
-                                pointHoverRadius: ga_hardcoded.pointHoverRadius,
-                                pointHitRadius: ga_hardcoded.pointHitRadius,
-                                pointBorderColor: ga_hardcoded.pointBorderColor,
-                            })
-                        }
-                    }
-                }
-
-                // console.log(`dataset data list: ${dataset_list}`);
-
-                // chart construct
-
-                let chartCanvas = document.getElementById('ga_chart_canvas').getContext('2d');
-                let chartObject = new Chart(chartCanvas, {
-                    type: graph_data.chart_type,
-                    data: {
-                        datasets: dataset_list,
-                    },
-                    options: chart_options,
-                });
-
-            }).catch(function (error) {
-                console.log(`error: ${error}`);
-                document.getElementById("ga_error_noresult").style.display = "block";
-                document.getElementById("ga_chart_div").style.display = "none";
-            });
-        }
+        {% include "../../tmpl/js/dashboard.html" %}
     })
 </script>
