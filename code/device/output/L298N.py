@@ -2,6 +2,12 @@
 
 # source: https://github.com/superstes/growautomation
 
+# dependencies
+#   privileges
+#     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
+#
+# for detailed information see the external documentation:
+#   adafruit dht22: https://learn.adafruit.com/dht/dht-circuitpython-code
 # call:
 #    python3 L298N.py forward/reverse "{\"connection\": $FWD+REV-PINS+RUNTIME}"
 #   p.e.
@@ -60,6 +66,10 @@ class Device:
 
         except (Exception, KeyboardInterrupt) as error:
             self._cleanup()
+
+            if str(error).find('Not running on a RPi') != -1:
+                self._error('Executing user is not member of gpio group!')
+
             self._error(msg=f"Got unexpected error: \"{error}\"\n{print_exc()}")
 
     def _cleanup(self):
