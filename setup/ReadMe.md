@@ -8,6 +8,8 @@
 
 There are basically two ways of installing the GrowAutomation software:
 
+----
+
 ### Setup script
 
 #### Base setup
@@ -66,6 +68,8 @@ cat /etc/.ga_setup
 Now you can access the web-interface and configure your devices.
 
 More information to the configuration can be found <a href="https://docs.growautomation.eu/en/latest/index.html">here</a>.
+
+----
 
 ### Image
 

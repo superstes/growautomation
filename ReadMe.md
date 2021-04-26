@@ -8,40 +8,56 @@ The goal is to automate activities related to the cultivation of plants.
 
 And thus to minimize the associated repetitive tasks and optimize the process.
 
-It's simple. And should also remain so if you have little time for it.
+It's simple! And should remain so if you have little time for it.
 
-## Thoughts about growing
+----
 
-- It should not be necessary to check if the plants need water.
-  - Watering should be done automatically but only when necessary.
+## But what can it do?
 
-- Nor should there be a need to know if the temperature is optimal.
-  - Windows should open when it is too hot and close when it gets colder.
+### It provides:
+* Simplified use of a <b>raspberry pi</b>
+* A '<a href="https://docs.growautomation.eu/en/latest/workflow/input.html">input</a> => 
+  <a href="https://docs.growautomation.eu/en/latest/workflow/output.html#conditions">condition</a> => 
+  <a href="https://docs.growautomation.eu/en/latest/workflow/output.html#actions">output</a>' 
+  <b>framework</b>
+* Easy interaction through a <a href="https://demo.growautomation.eu"><b>web interface</b></a>
+* Independence
+  * The software-system has no need for external resources like cloud-services nor internet access
+* A customizable <b>dashboard-system</b>
 
-- A storm is coming?
-  - The windows should close by themselves.
 
-- Would you like to know what conditions have led to more or less yield?
-  - We should analyze the data and find correlations.
-  - That's how we can learn from our mistakes.
+### It empowers you to:
+* <b>Add</b> your <b>custom devices and actions</b>
+* <b>Visually monitor</b> your sensor <b>data</b> via dashboards
+* Use the web-ui to <b>easily troubleshoot</b> your hardware setup
 
-- Want to know how your plants are doing?
-  - Just check the stats on the website - comfortably from your smartphone.
+
+### It can help you:
+* Getting started with your own automation system
+* Prevent <a href="https://docs.growautomation.eu/en/latest/basic/troubleshoot.html">common mistakes</a> with your <a href="https://docs.growautomation.eu/en/latest/device/input.html">hardware</a> and <a href="https://docs.growautomation.eu/en/latest/setup/wiring.html">wiring</a>
+* Optimizing your growing environment
+* Having a great time growing
+
+----
+
+## Documentation
+<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
+<a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
+
+----
 
 ## Contact
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
 ### Found bugs?
-Send us an email at <a href="mailto:bugs@growautomation.eu">bugs@growautomation.eu</a><br>
 Please check out our <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug guidelines</a> first!
 
 ### Support
-Want to support the project?<br>
+Want to support the project?
+
 <a href="https://www.patreon.com/growautomation">Become a patron</a>
 
-## Documentation
-<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
-<a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
+----
 
 ## Version
 __The code is currently not in a stable state !__
@@ -87,7 +103,6 @@ Version: 0.8
 ### Planned features
 - installation per pre-configured image for easy setup
 - plant monitoring via nfc-tags and harvest-scale => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
-- documentation via sphinx _(read the docs)_
 - documenting clean hardware setup _(easy wiring via patchpanel)_
 - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
 - builtin notification tasks
@@ -99,3 +114,23 @@ Version: 0.8
   - server should be able to run as vm or on dedicated hardware
   - cloud-hosted server component
 - create plans for 3d printable parts
+
+----
+
+## Thoughts about growing
+
+- It should not be necessary to check if the plants need water.
+  - Watering should be done automatically but only when necessary.
+
+- Nor should there be a need to know if the temperature is optimal.
+  - Windows should open when it is too hot and close when it gets colder.
+
+- A storm is coming?
+  - The windows should close by themselves.
+
+- Would you like to know what conditions have led to more or less yield?
+  - We should analyze the data and find correlations.
+  - That's how we can learn from our mistakes.
+
+- Want to know how your plants are doing?
+  - Just check the stats on the website - comfortably from your smartphone.
