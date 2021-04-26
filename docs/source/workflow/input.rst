@@ -9,7 +9,7 @@ Description
 
 Inputs are used to **gather sensor data**.
 
-The data collection is done in a **time interval** :ref:`as configured <config-input>`.
+The data collection is done in a **time interval** :ref:`as configured <config-device-input>`.
 
 This data inserted and stored in the database.
 
@@ -22,7 +22,7 @@ There are basically two types of sensors:
 
 * Analogue sensors
 
-  * can only be connected via :ref:`analogue-to-digital converters <config-connection>`, since the raspberry pi has no support for reading those directly
+  * can only be connected via :ref:`analogue-to-digital converters <device-connection>`, since the raspberry pi has no support for reading those directly
 
 * Digital sensors
 

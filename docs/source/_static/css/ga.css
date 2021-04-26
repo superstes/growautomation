@@ -23,6 +23,13 @@
     width: 60%;
 }
 
+.ga-img-center-large {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
 .ga-img-right-small {
     width: 150pt;
     float: right;

@@ -17,6 +17,7 @@ Actions can be anything you can script. Per example:
 * starting a water pump
 * opening a windows
 * starting an air heater
+* executing an api call
 
 The sky is the limit.
 
@@ -25,7 +26,7 @@ You can add custom, not natively supported, actors by using a :ref:`custom scrip
 Reverse
 =======
 
-Actors can also be **reversable**.
+Actors can also be **reversible**.
 
 That can be handy per example for:
 
@@ -61,7 +62,7 @@ You can configure complex condition that must be matched before an action is exe
 
 A condition **must be linked** at least with an **output device** or an **output model**.
 
-The matching rules are connected to the condition via **condition links**.
+The **matching rules** are connected to the condition via **condition links**.
 
 It can also be **linked to areas**. This will filter the output devices, that would be started, to the ones that are a member of this area.
 

@@ -12,6 +12,7 @@ Output
 
 Description
 ***********
+
 Here you can find information to the implementation and maintenance of output-devices.
 
 .. note::
