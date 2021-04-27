@@ -105,6 +105,8 @@ The **following steps are needed** to configure such a condition:
 
 |default_condition|
 
+----
+
 Reverse
 =======
 
@@ -150,6 +152,7 @@ The **following steps are needed** to configure such a condition:
 
 |reverse_condition|
 
+----
 
 Info
 ****
@@ -164,14 +167,16 @@ Links allow conditions to have complex structures.
 They are used to calculate the result of two member-items.
 
 
-**It links** one of the following:
+Linking targets
+---------------
 
 * two condition matches,
 * one match and a nested condition or
 * two nested conditions
 
 
-Supported **processing types** are:
+Processing types
+----------------
 
 * **AND** => both members must match
 * **NOT-AND** => neither or just one member must match
@@ -181,11 +186,61 @@ Supported **processing types** are:
 * **NOT-XOR** => either both or none of the members must match
 * **NOT** => the first one must match, the second one must not
 
+----
 
 Condition match
 ===============
 
 .. _config-condition-match:
 
-.. warning::
-   Documentation is not yet finished.
+A condition match is a single rule to match.
+
+It will compare data to some given value using an operator.
+
+Sources of data
+---------------
+
+* **Input device** => a single sensor device
+* **Input model** => all devices of a given sensor model
+
+  * They can be **filtered by an area** => only the devices in the given area will be used for the data selection
+
+* **Special match** => some other comparison like:
+
+  * **time** => comparison with the current **time of the day**
+  * **date** => comparison with the **current date**
+  * **datetime** => comparison with the **current date and time**
+  * **day_week** => comparison with the current **day of the week**
+  * **day_month** => comparison with the current **day of the month**
+
+
+Periods
+-------
+
+Periods are used to pull data-points for the match comparison.
+
+There currently are **two types of periods** to use.
+
+* **RANGE** => the last N data-points of the given device(s)
+* **TIME** => all data-points in a given time period (*in seconds*)
+
+
+Check types
+-----------
+
+These check types are used to calculate the final data for comparison from the given pool of datapoint pulled from the database.
+
+If the **data type** is **neither integer nor float** those **calculations will be skipped**.
+
+* **AVG** => get the average value
+* **MIN** => get the smallest value
+* **MAX** => get the largest value
+
+
+Operators
+---------
+
+* **EQUALS** => whether the calculated data is equal to the configured value
+* **NOT** => the data must not be equal to the value
+* **BIGGER** (*<*) => whether the data is bigger than the value
+* **SMALLER** (*>*) => whether the data is smaller than the value
