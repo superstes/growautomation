@@ -70,31 +70,7 @@ class Go:
         return True
 
     def _execute(self):
-        if isinstance(self.instance, (GaInputDevice, GaOutputDevice)):
-            config_dict = {
-                'connection': self.instance.connection,
-            }
-
-        elif isinstance(self.instance, GaConnectionDevice):
-            try:
-                try:
-                    connection = json_loads(self.instance.connection)
-
-                except (TypeError, JSONDecodeError):
-                    connection_json = self.instance.connection.replace("'", "\"")
-                    connection = json_loads(connection_json)
-
-            except (TypeError, JSONDecodeError):
-                connection = self.instance.connection
-
-            config_dict = {
-                'connection': connection,
-                'downlink_pin': self.nested_instance.connection
-            }
-
-        else:
-            config_dict = {}
-
+        config_dict = self._get_config()
         params_dict = self._get_script_params()
 
         if params_dict is None or not self._reverse_check:
@@ -117,6 +93,43 @@ class Go:
             return reverse_result
 
         return result
+
+    def _get_config(self) -> dict:
+        if self.instance.connection.find('ga_json') != -1:
+            raw = self.instance.connection.split('[', 1)[1].rsplit(']', 1)[0]
+            if raw.find(',') != -1:
+                raw_list = raw.split(',')
+                raw_dict = {}
+
+                for raw_item in raw_list:
+                    key, value = raw_item.split('=')
+                    raw_dict[key] = value
+
+                connection = raw_dict
+
+            else:
+                connection = raw
+
+        else:
+            try:
+                try:
+                    connection = json_loads(self.instance.connection)
+
+                except (TypeError, JSONDecodeError):
+                    connection_json = self.instance.connection.replace("'", "\"")
+                    connection = json_loads(connection_json)
+
+            except (TypeError, JSONDecodeError):
+                connection = self.instance.connection
+
+        config_dict = {
+            'connection': connection,
+        }
+
+        if isinstance(self.instance, GaConnectionDevice):
+            config_dict['downlink_pin'] = self.nested_instance.connection
+
+        return config_dict
 
     def _get_script_params(self) -> (None, dict):
         bad_values = [None, '', 'None']
