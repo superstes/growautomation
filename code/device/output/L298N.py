@@ -35,9 +35,14 @@ class Device:
             # if not supplied => we'll assume that it is already connected to 3.3V
             self.pin_pwm = None
 
-        self.pin_fwd = int(self.CONFIG['connection']['fwd'])
-        self.pin_rev = int(self.CONFIG['connection']['rev'])
-        self.runtime = int(self.CONFIG['connection']['time'])
+        try:
+            self.pin_fwd = int(self.CONFIG['connection']['fwd'])
+            self.pin_rev = int(self.CONFIG['connection']['rev'])
+            self.runtime = int(self.CONFIG['connection']['time'])
+
+        except KeyError as error:
+            self._error(f"At least one of the following arguments was not supported: fwd, rev, time\n"
+                        f"Error: '{error}'")
 
         if self.ACTION not in self.SUPPORTED_ACTIONS:
             self._error(f"Got unsupported action \"{self.ACTION}\" -> must be one of \"{self.SUPPORTED_ACTIONS}\"")
