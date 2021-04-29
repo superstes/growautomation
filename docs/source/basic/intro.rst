@@ -41,19 +41,19 @@ This project is not
 
 Features
 ********
-* support for custom scripts used in the input and output workflow
+* support for **custom scripts** used in the input and output workflows
 * input workflow
 
   * timed loop to pull data from sensors
 
 * output workflow
 
-  * support for complex conditions
+  * support for **complex conditions**
   * self-reversible actors
 
-* webinterface for user interactions
+* **web-interface** for user interactions
 
   * configuration management
-  * data visualization
+  * data visualization via **dashboard system**
   * system management
   * mobile support

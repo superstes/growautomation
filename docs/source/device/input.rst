@@ -64,6 +64,24 @@ Dependencies
 
   * executing user must be a member of group **gpio** (*usermod -a -G gpio USERNAME*)
 
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Script: dht22.py
+* Script argument: temperature or humidity
+* Data unit: °C
+* Data type: FLOAT
+* Timer: Measurement interval in seconds
+
+Device
+^^^^^^
+
+* Connection: GPIO_PIN
+
+
 Implementation
 --------------
 
@@ -119,6 +137,22 @@ Dependencies
 
 * analogue to digital converter
 
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Data unit: % RH
+* Data type: FLOAT
+* Timer: Measurement interval in seconds
+
+Device
+^^^^^^
+
+* Connection: ADC_PIN
+* Downlink device: Analogue to digital converter (*must be configured as connection device previously*)
+
 Implementation
 --------------
 
@@ -172,6 +206,22 @@ Dependencies
 
 * analogue to digital converter
 
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Data unit: % illumination
+* Data type: FLOAT
+* Timer: Measurement interval in seconds
+
+Device
+^^^^^^
+
+* Connection: ADC_PIN
+* Downlink device: Analogue to digital converter (*must be configured as connection device previously*)
+
 Implementation
 --------------
 
@@ -220,6 +270,22 @@ Dependencies
 ------------
 
 * analogue to digital converter
+
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Data unit: % RH
+* Data type: FLOAT
+* Timer: Measurement interval in seconds
+
+Device
+^^^^^^
+
+* Connection: ADC_PIN
+* Downlink device: Analogue to digital converter (*must be configured as connection device previously*)
 
 Implementation
 --------------

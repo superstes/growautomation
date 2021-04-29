@@ -55,6 +55,8 @@ There are multiple ways an actor can be reversed:
     * an air heater which will only stop if the air temperature is suitable
     * open a windows when the temperature is too high, close it when it gets too cold
 
+----
+
 Conditions
 **********
 

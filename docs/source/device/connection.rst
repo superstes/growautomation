@@ -73,6 +73,23 @@ Dependencies
 
   * i2c must be enabled (*raspi-config nonint do_i2c 0*)
 
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Script: ads1115.py
+
+Device
+^^^^^^
+
+* Connection:
+
+  * If empty => the default i2c will be used
+  * Else => ga_json[scl=GPIO_PIN,sda=GPIO_PIN]
+
+
 Implementation
 --------------
 
@@ -150,6 +167,23 @@ Dependencies
 * **raspi-config**
 
   * spi must be enabled (*raspi-config nonint do_spi 0*)
+
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Script: mcp3008.py
+* Script argument: spi number
+
+  * If empty => the default spi will be used
+
+Device
+^^^^^^
+
+* Connection: GPIO_PIN
+
 
 Implementation
 --------------

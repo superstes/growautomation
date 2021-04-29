@@ -64,6 +64,23 @@ Dependencies
 
     * group **gpio** (*usermod -a -G gpio USERNAME*)
 
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Script: L298N.py
+* Script argument: forward
+* Reverse script argument: reverse
+* Reverse type: condition or time
+* Reverse after: if the reverse type is 'time' you need to specify an active time in seconds
+
+Device
+^^^^^^
+
+* Connection: ga_json[fwd=GPIO_PIN,rev=GPIO_PIN,time=SECONDS]
+
 
 Implementation
 --------------
