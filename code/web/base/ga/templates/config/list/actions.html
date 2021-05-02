@@ -1,0 +1,25 @@
+{% load util %}
+<form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
+    {% include "../../btn/detailed.html" %}
+    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+</form>
+<form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
+    {% include "../../btn/edit.html" %}
+    <input type="hidden" name="action" value="Update" />
+    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+</form>
+<form method="post" class="ga-form-inline" action="/config/delete/{{ typ }}/{{ data.id }}">
+    {% csrf_token %}
+    {% include "../../btn/delete.html" %}
+    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
+</form>
+{% if device_actions %}
+<form class="ga-form-inline" method="post" action="/api/device/?type={{ typ }}&id={{ data.id }}&do=start">
+    {% csrf_token %}
+    {% include "../../btn/start.html" %}
+</form>
+<form class="ga-form-inline" method="post" action="/api/device/?type={{ typ }}&id={{ data.id }}&do=stop">
+    {% csrf_token %}
+    {% include "../../btn/stop.html" %}
+</form>
+{% endif %}

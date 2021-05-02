@@ -30,20 +30,7 @@
                 {{ data|get_item:'enabled,---' }}
             </td>
             <td>
-                <form method="get" class="ga-form-inline" action="/config/detailed/{{ typ }}/{{ data.id }}">
-                    {% include "../../btn/detailed.html" %}
-                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                </form>
-                <form method="get" class="ga-form-inline" action="/config/update/{{ typ }}/{{ data.id }}">
-                    {% include "../../btn/edit.html" %}
-                    <input type="hidden" name="action" value="Update" />
-                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                </form>
-                <form class="ga-form-inline" method="post" action="/config/delete/{{ typ }}/{{ data.id }}">
-                    {% csrf_token %}
-                    {% include "../../btn/delete.html" %}
-                    <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                </form>
+                {% include "./actions.html" %}
             </td>
         </tr>
     {% endfor %}

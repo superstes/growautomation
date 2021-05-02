@@ -1,0 +1,11 @@
+{% load util %}
+{% if request.user|authorized_to_write %}
+    <button type="submit" class="btn btn-success ga-btn-action" title="Start" disabled>
+        <i class="fas fa-play fa-2x ga-btn-action-icon"></i>
+    </button>
+    <!-- Ticket#35 -->
+{% else %}
+    <button type="submit" class="btn btn-success ga-btn-action" disabled title="Start">
+        <i class="fas fa-play fa-2x ga-btn-action-icon"></i>
+    </button>
+{% endif %}
