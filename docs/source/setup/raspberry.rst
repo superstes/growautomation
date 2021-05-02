@@ -19,6 +19,8 @@ There is a `setup script <https://github.com/superstes/growautomation/tree/dev/s
 
 ----
 
+.. _setup-raspberry-ssd:
+
 SSD
 ***
 
@@ -62,7 +64,7 @@ ______________
 * Flash RaspberryPi OS on the usb-ssd (*lite version is recommended but has no graphical user interface*)
 * Un- and re-plug both so they get automatically mounted on your computer
 
-  * Add a empty 'ssh' file on each of the boot partitions as seen `in this tutorial <https://learn.adafruit.com/adafruits-raspberry-pi-lesson-6-using-ssh/enabling-ssh>`_
+  * Add an empty 'ssh' file on each of the boot partitions as seen `in this tutorial <https://learn.adafruit.com/adafruits-raspberry-pi-lesson-6-using-ssh/enabling-ssh>`_
   * If you are using windows make sure you `enable it to show common file extensions <https://support.microsoft.com/en-us/windows/common-file-name-extensions-in-windows-da4a4430-8e76-89c5-59f7-1cdbbc75cb01>`_
 
 * Find the device in the network and connect to it via ssh per powershell (*windows*) or bash (*linux*) (*default password is 'raspberry'*)
@@ -78,7 +80,7 @@ ____________
 * Flash RaspberryPi OS on the sd card and usb-ssd (*lite version is recommended but has no graphical user interface*)
 * Un- and re-plug both so they get automatically mounted on your computer
 
-  * Add a empty 'ssh' file on each of the boot partitions as seen `in this tutorial <https://learn.adafruit.com/adafruits-raspberry-pi-lesson-6-using-ssh/enabling-ssh>`_
+  * Add an empty 'ssh' file on each of the boot partitions as seen `in this tutorial <https://learn.adafruit.com/adafruits-raspberry-pi-lesson-6-using-ssh/enabling-ssh>`_
   * If you are using windows make sure you `enable it to show common file extensions <https://support.microsoft.com/en-us/windows/common-file-name-extensions-in-windows-da4a4430-8e76-89c5-59f7-1cdbbc75cb01>`_
 
 * Plug in the sd card and start the raspberry
@@ -90,7 +92,7 @@ ____________
 
 * Now we will set-up the usb device to be bootable as described `in this raspi doc <https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/msd.md>`_
 
-  1. If you have a older board you might want to install all updates
+  1. If you have an older board you might want to install all updates
 
     .. code-block:: bash
 

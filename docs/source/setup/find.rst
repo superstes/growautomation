@@ -1,13 +1,17 @@
 .. _setup-find:
 
-===========
-Find device
-===========
+====
+Find
+====
 
 Description
 ***********
 
 How to find a raspberry on the network.
+
+
+.. warning::
+   Documentation is not yet finished.
 
 
 Scanning
@@ -66,8 +70,3 @@ If the raspberry pi is connected to the same network as your computer you can ju
       .. code-block:: bash
 
         $ sudo nmap -sS -p 22 192.168.1.0/24
-
-
-
-.. warning::
-   Documentation is not yet finished.

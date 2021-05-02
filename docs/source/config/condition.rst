@@ -107,10 +107,10 @@ The **following steps are needed** to configure such a condition:
 
 ----
 
+.. _config-condition-output:
+
 Reverse
 =======
-
-.. _config-condition-output:
 
 A reverse condition is evaluated when it comes to stopping the actor.
 
@@ -157,10 +157,10 @@ The **following steps are needed** to configure such a condition:
 Info
 ****
 
+.. _config-condition-link:
+
 Condition link
 ==============
-
-.. _config-condition-link:
 
 Links allow conditions to have complex structures.
 
@@ -188,10 +188,10 @@ Processing types
 
 ----
 
+.. _config-condition-match:
+
 Condition match
 ===============
-
-.. _config-condition-match:
 
 A condition match is a single rule to match.
 
