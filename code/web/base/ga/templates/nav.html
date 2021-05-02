@@ -24,23 +24,41 @@
                             </li>
                             <!-- END basic link -->
                         {% elif nav_config|get_type == 'dict' %}
-                            {% set_var nav_config|get_dict_depth as navi_depth %}
-                            {% if navi_depth == 1 %}
-                                <!-- START dropdown link -->
-                                <li class="nav-item dropdown ga-nav-main">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                      {{ nav_key }}
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
-                                        {% for key, value in nav_config.items %}
-                                            <a class="dropdown-item ga-nav-main-a" href="{{ value }}">
-                                                {{ key | safe }}
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </li>
-                                <!-- END dropdown link -->
-                            {% endif %}
+                            <!-- START dropdown link -->
+                            <li class="nav-item dropdown ga-nav-main">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ nav_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                  {{ nav_key }}
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}">
+                                    {% for dd_key, dd_config in nav_config.items %}
+                                        {% if dd_config|get_type == 'dict' %}
+                                            <!-- START nested dropdown link -->
+                                            <li class="dropdown-submenu">
+                                                <a class="dropdown-toggle dropdown-item ga-nav-main-a" onClick="display_submenu('{{ nav_key }}{{ dd_key }}')" href="#" id="navbarDropdown{{ nav_key }}{{ dd_key }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    {{ dd_key }}
+                                                </a>
+                                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown{{ nav_key }}{{ dd_key }}">
+                                                    {% for key, value in dd_config.items %}
+                                                    <li>
+                                                        <a class="dropdown-item ga-nav-main-a-sub" href="{{ value }}">
+                                                            {{ key | safe }}
+                                                        </a>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </li>
+                                            <!-- END nested dropdown link -->
+                                        {% else %}
+                                            <li>
+                                                <a class="dropdown-item ga-nav-main-a" href="{{ dd_config }}">
+                                                    {{ dd_key | safe }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            <!-- END dropdown link -->
                         {% endif %}
                     {% endfor %}
                 </ul>
@@ -58,3 +76,18 @@
         {% endif %}
     </nav>
 </div>
+<script type="text/javascript">
+    $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
+        if (!$(this).next().hasClass('show')) {
+            $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
+        }
+        var $subMenu = $(this).next(".dropdown-menu");
+        $subMenu.toggleClass('show');
+
+        $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
+            $('.dropdown-submenu .show').removeClass("show");
+        });
+
+        return false;
+    });
+</script>

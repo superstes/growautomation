@@ -51,6 +51,7 @@
     .ga-db-grid {
         grid-auto-rows: 45w;
     }
+
 }
 
 @media only screen and (max-width: 500px) {  /* mobile devices */
