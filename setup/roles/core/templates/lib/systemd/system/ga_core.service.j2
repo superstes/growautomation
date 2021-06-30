@@ -20,6 +20,7 @@ StandardOutput=append:{{ ga_core_path_log }}/service.log
 StandardError=append:{{ ga_core_path_log }}/service.log
 
 Environment="PYTHONPATH={{ ga_core_path }}"
+Environment="PYTHONUNBUFFERED=1"
 Environment="GA_GROUP={{ ga_service_group }}"
 
 [Install]
