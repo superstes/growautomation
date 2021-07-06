@@ -14,14 +14,17 @@
     state: present
   notify: 'restart_apache'
 
-- name: GA | Web | Django | Adding database config
+- name: GA | Web | Django | Adding database config and update script
   template:
-    src: "templates/var/www/ga/database.cnf.j2"
-    dest: "{{ ga_web_path }}/database.cnf"
+    src: "templates/var/www/ga/{{ item }}.j2"
+    dest: "{{ ga_web_path }}/{{ item }}"
     owner: "{{ ga_web_service_user }}"
     group: "{{ ga_service_group }}"
     mode: 0440
   notify: 'restart_apache'
+  with_items:
+    - 'database.cnf'
+    - 'update_schema.sh'
 
 - name: GA | Web | Django | Configuring django settings
   lineinfile:
