@@ -9,7 +9,7 @@ from ..data.main import ApiData
 
 
 @user_passes_test(authorized_to_read, login_url='/api/denied/')
-def ApiChart(request):
+def api_chart(request):
     if request.method == 'GET':
         if 'id' not in request.GET:
             return handler400_api(msg='Need to specify id')
@@ -21,7 +21,7 @@ def ApiChart(request):
             chart_id = int(request.GET['id'])
 
         except ValueError:
-            return handler400_api(msg="Need to specify a valid id; got '%s'" % request.GET['id'])
+            return handler400_api(msg=f"Need to specify a valid id; got '{request.GET['id']}'")
 
         chart_type = request.GET['type']
 
@@ -35,12 +35,12 @@ def ApiChart(request):
             typ = ChartDashboardModel
 
         else:
-            return handler400_api(msg="Specified type '%s' not found" % chart_type)
+            return handler400_api(msg=f"Specified type '{chart_type}' not found")
 
         chart_obj = get_instance_from_id(typ=typ, obj=chart_id)
 
         if chart_obj is None:
-            return handler400_api(msg="No object found with id '%s'; available: '%s'" % (chart_id, [_.id for _ in list(typ.objects.all())]))
+            return handler400_api(msg=f"No object found with id '{chart_id}'; available: '{[_.id for _ in list(typ.objects.all())]}'")
 
         data_dict = {}
         input_obj = None

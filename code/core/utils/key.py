@@ -13,7 +13,7 @@ def _file():
         ga_root_path = '/'.join(str(current_path).split('/')[:-subdir_count])
         secret_file_path = '/core/secret/random.key'
 
-    return "%s%s" % (ga_root_path, secret_file_path)
+    return f'{ga_root_path}{secret_file_path}'
 
 
 def get():

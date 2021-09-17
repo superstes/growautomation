@@ -25,7 +25,7 @@ def _get_script_dict(request, typ) -> dict:
     script_dir = get_script_dir(request, typ=typ)
 
     for element in script_list:
-        ts = os_path.getmtime("%s/%s" % (script_dir, element))
+        ts = os_path.getmtime(f"{script_dir}/{element}")
         ts_hr = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         script_dict[element] = ts_hr
 
@@ -36,7 +36,7 @@ def _get_script_dict(request, typ) -> dict:
 def _handle_uploaded_file(request, typ: str, upload, name: str):
     script_path = get_script_dir(request, typ=typ)
 
-    with open("%s/%s" % (script_path, name), 'wb+') as destination:
+    with open(f"{script_path}/{name}", 'wb+') as destination:
         for chunk in upload.chunks():
             destination.write(chunk)
 
@@ -76,7 +76,7 @@ def ScriptChangeView(request):
             if form.is_valid():
                 _handle_uploaded_file(request, typ=script_type, upload=request.FILES['script_file'], name=script_name)
 
-        return redirect("/system/script/?script_type=%s" % script_type)
+        return redirect(f"/system/script/?script_type={script_type}")
 
     else:
         if 'script_type' in request.GET and request.GET['script_type'] in script_type_options:
@@ -101,9 +101,9 @@ def ScriptDeleteView(request):
             script_name = request.POST['script_name']
 
             if script_name in _get_script_list(request, typ=script_type):
-                os_remove("%s/%s" % (get_script_dir(request, typ=script_type), script_name))
+                os_remove(f"{get_script_dir(request, typ=script_type)}/{script_name}")
 
-        return redirect("/system/script/?script_type=%s" % script_type)
+        return redirect(f"/system/script/?script_type={script_type}")
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -115,7 +115,7 @@ def ScriptShow(request):
 
         script_dir = get_script_dir(request, typ=script_type)
 
-        script_path = "%s/%s" % (script_dir, script_name)
+        script_path = f"{script_dir}/{script_name}"
 
         if os_path.exists(script_path):
             with open(script_path, 'r') as script:
@@ -123,7 +123,7 @@ def ScriptShow(request):
 
     elif 'script_type' in request.GET:
         script_type = request.GET['script_type']
-        return redirect("/system/script/?script_type=%s" % script_type)
+        return redirect(f"/system/script/?script_type={script_type}")
 
     else:
         return redirect("/system/script/")

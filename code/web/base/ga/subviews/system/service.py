@@ -77,7 +77,7 @@ def ServiceView(request):
                 service_action(request, service=service_value)
                 sleep(1)
 
-            return redirect("/system/service/?service_name=%s" % service_name.replace(' ', '+'))
+            return redirect(f"/system/service/?service_name={service_name.replace(' ', '+')}")
 
     return render(request, 'system/service.html', context={
         'request': request, 'service_name': service_name, 'service_value': service_value, 'service_status': service_status,
@@ -94,16 +94,16 @@ def service_action(request, service: str):
 
     if 'service_start' in request.POST:
         develop_log(request=request, output=log_tmpl % 'start')
-        develop_subprocess(request, command="%s start %s" % (systemctl, service), develop='ok')
+        develop_subprocess(request, command=f"{systemctl} start {service}", develop='ok')
 
     elif 'service_reload' in request.POST:
         develop_log(request=request, output=log_tmpl % 'reload')
-        develop_subprocess(request, command="%s reload %s" % (systemctl, service), develop='ok')
+        develop_subprocess(request, command=f"{systemctl} reload {service}", develop='ok')
 
     elif 'service_restart' in request.POST:
         develop_log(request=request, output=log_tmpl % 'restart')
-        develop_subprocess(request, command="%s restart %s" % (systemctl, service), develop='ok')
+        develop_subprocess(request, command=f"{systemctl} restart {service}", develop='ok')
 
     elif 'service_stop' in request.POST:
         develop_log(request=request, output=log_tmpl % 'stop')
-        develop_subprocess(request, command="%s stop %s" % (systemctl, service), develop='ok')
+        develop_subprocess(request, command=f"{systemctl} stop {service}", develop='ok')

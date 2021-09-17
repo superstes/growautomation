@@ -22,7 +22,7 @@ def create(_):
         usr, created_user = User.objects.objects.get_or_create(username=user)
         if created_user:
             usr.set_password(nested['pwd'])
-            usr.email("%s@%s" % (user, mail_domain))
+            usr.email(f"{user}@{mail_domain}")
 
             for grp in nested['group_list']:
                 grp_obj = Group.objects.get(name=grp)

@@ -19,6 +19,6 @@ def go(file: str, data_dict: dict, encrypted: bool):
                 _.write("%s\n" % crypto.encrypt("%s=%s" % (key, value)).decode("utf-8"))
             else:
                 if first_line:
-                    _.write("%s\n" % shared_var.CRYPTO_RECOGNITION_TEXT)
+                    _.write(f"{shared_var.CRYPTO_RECOGNITION_TEXT}\n")
                     first_line = False
-                _.write("%s=%s\n" % (key, value))
+                _.write(f"{key}={value}\n")

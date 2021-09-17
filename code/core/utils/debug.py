@@ -1,12 +1,13 @@
 # logging and debugging
 
 from core.config import shared as shared_vars
-from core.config.web_shared import init as web_shared_vars
 
 from datetime import datetime
 from os import path as os_path
 from pathlib import Path
 from sys import platform as sys_platform
+from inspect import stack as inspect_stack
+from inspect import getfile as inspect_getfile
 
 if sys_platform != 'win32':
     from os import getuid as os_getuid
@@ -29,18 +30,12 @@ class Log:
     except AttributeError:
         SECRET_DATA = []
 
-    def __init__(self, typ: str = 'core', addition: str = None, web_ctrl_obj=None, src_file: str = None):
+    def __init__(self, typ: str = 'core', addition: str = None, src_file: str = None):
         self.name = src_file
         if src_file is None:
-            from inspect import stack as inspect_stack
-            from inspect import getfile as inspect_getfile
             self.name = inspect_getfile(inspect_stack()[1][0])
 
         self.type = typ
-
-        if web_ctrl_obj is not None:
-            web_shared_vars(web_ctrl_obj)
-
         self.log_dir = f"{shared_vars.SYSTEM.path_log}/{self.type}/{date_year}"
         self.log_level = shared_vars.SYSTEM.log_level
 
@@ -129,8 +124,8 @@ class MultiLog:
     def write(self, output: str, level: int = 1) -> bool:
         result_list = []
 
-        for log in self.log_instances:
-            result_list.append(log.write(output=output, level=level))
+        for _log in self.log_instances:
+            result_list.append(_log.write(output=output, level=level))
 
         if all(result_list):
             return True
@@ -149,3 +144,25 @@ class FileAndSystemd:
             systemd_journal.write(output)
 
         return self.log.write(output=output, level=level)
+
+
+def log(output: str, level: int = 1, logger_instance: (Log, FileAndSystemd) = None, src_file: str = None) -> bool:
+    # wrapper function so we don't need always to call the .write method
+    if logger_instance is None:
+        if src_file is None:
+            src_file = inspect_getfile(inspect_stack()[1][0])
+
+        return Log(src_file=src_file).write(output=output, level=level)
+
+    else:
+        return logger_instance.write(output=output, level=level)
+
+
+def fns_log(output: str, level: int = 1) -> bool:
+    _src = inspect_getfile(inspect_stack()[1][0])
+    return log(output=output, level=level, logger_instance=FileAndSystemd(Log(src_file=_src)))
+
+
+def web_log(output: str, level: int = 1) -> bool:
+    _src = inspect_getfile(inspect_stack()[1][0])
+    return Log(typ='web', src_file=_src).write(output=output, level=level)

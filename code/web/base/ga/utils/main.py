@@ -12,9 +12,9 @@ from django.shortcuts import resolve_url
 
 def get_as_string(get_params: dict, add: bool = False) -> str:
     if add:
-        return "%s" % parse.urlencode(get_params)
+        return str(parse.urlencode(get_params))
 
-    return "?%s" % parse.urlencode(get_params)
+    return f"?{parse.urlencode(get_params)}"
 
 
 def redirect_if_overwritten(request, type_dict: dict):
@@ -22,7 +22,7 @@ def redirect_if_overwritten(request, type_dict: dict):
         overwrite_action = request.GET['action'].lower()
         if overwrite_action == 'create':
             try:
-                redirect_url = "/config/create/%s/%s" % (type_dict['url'], get_as_string(request.GET))
+                redirect_url = f"/config/create/{type_dict['url']}/{get_as_string(request.GET)}"
                 return redirect(redirect_url)
 
             except KeyError:
@@ -30,7 +30,7 @@ def redirect_if_overwritten(request, type_dict: dict):
 
         elif overwrite_action == 'list':
             try:
-                redirect_url = "/config/list/%s/%s" % (type_dict['url'], get_as_string(request.GET))
+                redirect_url = f"/config/list/{type_dict['url']}/{get_as_string(request.GET)}"
                 return redirect(redirect_url)
 
             except KeyError:

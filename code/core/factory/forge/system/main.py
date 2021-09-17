@@ -2,13 +2,12 @@ from core.factory import config
 from core.factory.forge.blueprint import blueprint_dict
 from core.factory.forge.system.controller import Go as ControllerFactory
 from core.factory.forge.system.task import Go as TaskFactory
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
     def __init__(self, supply_data: dict, factory_data=None):
         self.supply_data = supply_data
-        self.logger = Log()
 
         self.key_object_controller = config.KEY_OBJECT_CONTROLLER
         self.key_object_task = config.KEY_OBJECT_TASK
@@ -19,7 +18,7 @@ class Go:
         #     object_task: [instance_list],
         # }
 
-        self.logger.write(f'Building system objects (all)', level=8)
+        log(f'Building system objects (all)', level=8)
 
         output_dict = {
             self.key_object_controller: ControllerFactory(

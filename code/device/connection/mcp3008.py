@@ -56,7 +56,7 @@ class Device:
         else:
             spi = SPI(clock=board.SCK_1, MISO=board.MISO_1, MOSI=board.MOSI_1)
 
-        pin_dig = getattr(board, "D%s" % self.connection)
+        pin_dig = getattr(board, f"D{ self.connection}")
         cs = DigitalInOut(pin_dig)
         self.mcp = mcp3008.MCP3008(spi_bus=spi, cs=cs)
         self.data = self._get_data()
@@ -65,7 +65,7 @@ class Device:
         print(json_dumps({'data': self._get_data()}))
 
     def _get_data(self):
-        device = AnalogIn(self.mcp, getattr(mcp3008, "P%s" % self.pin))
+        device = AnalogIn(self.mcp, getattr(mcp3008, f"P{self.pin}"))
 
         return "%.2f" % self._correct_data(device)
 

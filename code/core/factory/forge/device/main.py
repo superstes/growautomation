@@ -1,13 +1,12 @@
 from core.factory import config
 from core.factory.forge.blueprint import blueprint_dict
 from core.factory.forge.device.generic import Go as GenericDeviceFactory
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
     def __init__(self, supply_data: dict, factory_data=None):
         self.supply_data = supply_data
-        self.logger = Log()
 
     def get(self) -> dict:
         # {
@@ -19,7 +18,7 @@ class Go:
         #     group_output: [instance_list],
         # }
 
-        self.logger.write(f'Building device objects (all)', level=8)
+        log(f'Building device objects (all)', level=8)
 
         output_dict = {}
 

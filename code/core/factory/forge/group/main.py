@@ -3,14 +3,13 @@
 from core.factory import config
 from core.factory.forge.blueprint import blueprint_dict
 from core.factory.forge.group.area import Go as AreaGroup
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
     def __init__(self, factory_data: dict, supply_data: dict):
         self.factory_data = factory_data
         self.supply_data = supply_data
-        self.logger = Log()
 
         self.key_area_group = config.KEY_GROUP_AREA
 
@@ -19,7 +18,7 @@ class Go:
         #     area_group: [instance_list],
         # }
 
-        self.logger.write(f'Building group objects (all)', level=8)
+        log(f'Building group objects (all)', level=8)
 
         output_dict = {
             self.key_area_group: AreaGroup(

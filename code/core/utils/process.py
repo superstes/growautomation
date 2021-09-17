@@ -1,6 +1,6 @@
 # process handler
 
-from core.utils.debug import Log
+from core.utils.debug import log
 from core.config.shared import SUBPROCESS_TIMEOUT
 
 from subprocess import Popen as subprocess_popen
@@ -8,19 +8,11 @@ from subprocess import PIPE as subprocess_pipe
 from subprocess import TimeoutExpired
 
 
-def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None):
-    if web_ctrl_obj is not None:
-        logger = Log(typ='web', web_ctrl_obj=web_ctrl_obj)
-        logger.write(f"Executing command \"{command}\"", level=2)
-
-    else:
-        logger = Log()
-        logger.write(f"Executing command \"{command}\"", level=6)
+def subprocess(command: (list, str), out_error: bool = False):
+    log(f"Executing command \"{command}\"", level=2)
 
     if type(command) != list:
         command = [command]
-
-    error = None
 
     try:
         output, error = subprocess_popen(
@@ -38,10 +30,10 @@ def subprocess(command: (list, str), out_error: bool = False, web_ctrl_obj=None)
 
     if error in [None, '']:
         error = None
-        logger.write(f"Process output: \"{output}\"", level=6)
+        log(f"Process output: \"{output}\"", level=6)
 
     else:
-        logger.write(f"Process error: \"{error}\" | output: \"{output}\"", level=2)
+        log(f"Process error: \"{error}\" | output: \"{output}\"", level=2)
 
     if out_error:
         return output, error

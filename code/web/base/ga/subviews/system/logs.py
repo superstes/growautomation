@@ -37,23 +37,23 @@ def LogView(request):
 
     else:
         try:
-            device_log_list = os_listdir("%s/device/%s/" % (path_log, date_year))
+            device_log_list = os_listdir(f"{path_log}/device/{date_year}/")
 
         except FileNotFoundError:
             device_log_list = []
 
     log_ga_options = {
-        'Core': "%s/core/%s/%s_core.log" % (path_log, date_year, date_month),
-        'Web': "%s/web/%s/%s_web.log" % (path_log, date_year, date_month),
+        'Core': f"{path_log}/core/{date_year}/{date_month}_core.log",
+        'Web': f"{path_log}/web/{date_year}/{date_month}_web.log",
     }
 
     for device_log in device_log_list:
         try:
             device = device_log.split('_', 2)[2].rsplit('.', 1)[0]
-            log_ga_options["Device '%s'" % device] = "%s/device/%s/%s" % (path_log, date_year, device_log)
+            log_ga_options[f"Device '{device}'"] = f"{path_log}/device/{date_year}/{device_log}"
 
         except IndexError:
-            log_ga_options["Log '%s'" % device_log] = "%s/device/%s/%s" % (path_log, date_year, device_log)
+            log_ga_options[f"Log '{device_log}'"] = f"{path_log}/device/{date_year}/{device_log}"
 
     if 'log_entry_count' in request.GET and \
             int(request.GET['log_entry_count']) in SHELL_MAX_LOG_LINES_RANGE:

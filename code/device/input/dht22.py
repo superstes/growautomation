@@ -36,7 +36,7 @@ class Device:
     PULL_INTERVAL = 3
 
     def __init__(self):
-        self.sensor = DHT22(getattr(board, "D%s" % self.CONFIG['connection']), use_pulseio=False)
+        self.sensor = DHT22(getattr(board, f"D{self.CONFIG['connection']}"), use_pulseio=False)
         self.data = self._get_data()
 
     def start(self):

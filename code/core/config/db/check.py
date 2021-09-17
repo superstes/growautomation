@@ -2,8 +2,8 @@
 
 from core.config.db.link import Go as Link
 from core.config.db.template import DB_CHECK_DICT
-from core.utils.debug import Log
-from core.utils.connectivity import test_tcp_stream
+from core.utils.debug import log
+from core.utils.test import test_tcp_stream
 
 import mysql.connector
 from random import choice as random_choice
@@ -16,7 +16,6 @@ class Go:
     def __init__(self, connection_data_dict):
         self.connection_data_dict = connection_data_dict
         self.link = Link(connection_data_dict)
-        self.logger = Log()
 
     def get(self) -> bool:
         try:
@@ -34,8 +33,7 @@ class Go:
             output = self.link.get(self.TEST_READ_COMMAND)
 
         except ConnectionError as error_msg:
-            return self._error(msg="Error while executing command \"%s\":\n\"%s\""
-                                   % (self.TEST_READ_COMMAND, error_msg))
+            return self._error(msg=f"Error while executing command \"{self.TEST_READ_COMMAND}\":\n\"{error_msg}\"")
 
         if type(output) is list and len(output) > 0:
             return True
@@ -48,17 +46,18 @@ class Go:
             random_table = ''.join(random_choice('0123456789') for _ in range(5))
             for c in self.TEST_WRITE_COMMAND_LIST:
                 if not self.link.put(c % random_table):
-                    return self._error(msg="Error while executing command \"%s\"" % c)
+                    return self._error(msg=f"Error while executing command \"{c}\"")
 
             return True
 
         except ConnectionError as error_msg:
-            return self._error(msg="Error while testing write:\n\"%s\"" % error_msg)
+            return self._error(msg=f"Error while testing write:\n\"{error_msg}\"")
 
     def _test_network(self) -> bool:
         # check connectivity up to L4
         return test_tcp_stream(host=self.connection_data_dict['server'], port=self.connection_data_dict['port'])
 
+    @staticmethod
     def _error(self, msg):
-        self.logger.write("Database connection test failed with error: \"%s\"" % msg)
+        log(f"Database connection test failed with error: \"{msg}\"")
         return False

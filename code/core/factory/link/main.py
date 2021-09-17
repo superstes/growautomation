@@ -1,7 +1,7 @@
 # creates links between objects
 
 from core.factory import config
-from core.utils.debug import Log
+from core.utils.debug import log
 from core.config.object.base import GaBase
 
 
@@ -11,7 +11,6 @@ class Go:
     def __init__(self, factory_data: dict, supply_data: dict):
         self.factory_data = factory_data
         self.supply_data = supply_data
-        self.logger = Log()
 
     def set(self) -> None:
         """
@@ -19,25 +18,25 @@ class Go:
 
         :return: None
         """
-        self.logger.write(f'Linking objects', level=8)
-        self.logger.write(f'Building one-to-many links', level=8)
+        log(f'Linking objects', level=8)
+        log(f'Building one-to-many links', level=8)
 
         for key, otm_config in config.MEMBERS.items():
-            self.logger.write(f'Building member links for type \"{key}\"', level=8)
+            log(f'Building member links for type \"{key}\"', level=8)
             self._one_to_many(instances=self.factory_data[key], otm_config=otm_config)
 
-        self.logger.write(f'Building one-to-one links', level=8)
+        log(f'Building one-to-one links', level=8)
 
         for key, oto_config in config.LINKS.items():
-            self.logger.write(f'Building one-to-one links for type \"{key}\"', level=8)
+            log(f'Building one-to-one links for type \"{key}\"', level=8)
 
             for field, _oto_config in oto_config.items():
                 if type(_oto_config) == list:
-                    self.logger.write(f'Processing complex one-to-one linking of type \"{key}\" with options: \"{[key for key in oto_config.keys()]}\"', level=8)
+                    log(f'Processing complex one-to-one linking of type \"{key}\" with options: \"{[key for key in oto_config.keys()]}\"', level=8)
                     self._one_to_one_options(instances=self.factory_data[key], oto_config=oto_config, type_key=key)
 
                 else:
-                    self.logger.write(f'Processing simple one-to-one linking of type \"{key}\"', level=8)
+                    log(f'Processing simple one-to-one linking of type \"{key}\"', level=8)
                     self._one_to_one(instances=self.factory_data[key], oto_config=oto_config)
 
     def _one_to_many(self, instances: list, otm_config: dict) -> None:
@@ -56,7 +55,7 @@ class Go:
                 possible_members = self.factory_data[search_key]
 
                 if type(raw_member_data) == list:
-                    self.logger.write(f'Building member list for instance \"{instance}\"', level=8)
+                    log(f'Building member list for instance \"{instance}\"', level=8)
                     members = []
                     for member in raw_member_data:
                         for possible_member in possible_members:
@@ -66,7 +65,7 @@ class Go:
 
                 else:
                     # numbered members -> p.e. condition link
-                    self.logger.write(f'Building numbered member dict for instance \"{instance}\"', level=8)
+                    log(f'Building numbered member dict for instance \"{instance}\"', level=8)
 
                     members = {}
                     for numbered_data, member in raw_member_data.items():
@@ -75,7 +74,7 @@ class Go:
                                 members[numbered_data] = possible_member
                                 break
 
-                self.logger.write(f'Object \"{instance}\" has the following members for attribute \"{member_attr}\": \"{members}\"', level=8)
+                log(f'Object \"{instance}\" has the following members for attribute \"{member_attr}\": \"{members}\"', level=8)
                 setattr(instance, member_attr, members)
 
     def _one_to_one(self, instances: list, oto_config: dict) -> None:
@@ -98,7 +97,7 @@ class Go:
                 for instance in instances:
                     for target_instance in self.factory_data[search_key]:
                         if instance in getattr(target_instance, search_attr):
-                            self.logger.write(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
+                            log(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
                             setattr(instance, set_attr, target_instance)
                             break
 
@@ -116,12 +115,12 @@ class Go:
                         to_compare = int(getattr(instance, set_attr))
 
                     except TypeError:
-                        self.logger.write(f'Unable to get value for attribute \"{set_attr}\" from object \"{instance}\"', level=5)
+                        log(f'Unable to get value for attribute \"{set_attr}\" from object \"{instance}\"', level=5)
                         continue
 
                     for target_instance in self.factory_data[search_key]:
                         if getattr(target_instance, search_attr) == to_compare:
-                            self.logger.write(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
+                            log(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
                             setattr(instance, set_attr, target_instance)
                             break
 
@@ -160,7 +159,7 @@ class Go:
                         for target_instance in self.factory_data[search_key]:
                             if getattr(target_instance, query_attr) == to_compare:
                                 setattr(instance, set_attr, target_instance)
-                                self.logger.write(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
+                                log(f'Object \"{instance}\" has the following link target for attribute \"{set_attr}\": \"{target_instance}\"', level=8)
                                 break
 
                         break
@@ -178,4 +177,4 @@ class Go:
         """
         to_check = getattr(instance, attribute)
         if not isinstance(to_check, self.LINK_TARGET_TYPES):
-            self.logger.write(f'Failed to create \"{attribute}\" link for object \"{instance}\"', level=4)
+            log(f'Failed to create \"{attribute}\" link for object \"{instance}\"', level=4)

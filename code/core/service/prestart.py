@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.9
 # This file is part of Growautomation
 #     Copyright (C) 2021  René Pascal Rath
 #
@@ -16,11 +16,15 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #     E-Mail: contact@growautomation.at
-#     Web: https://git.growautomation.at
+#     Web: https://git.growautomation.eu
 
-# ga_version 0.8
+# ga_version 0.9
 
-from core.utils.connectivity import test_tcp_stream
+# environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
+#   (export PYTHONPATH=/usr/sbin/ga)
+#   it's being set automatically by the systemd service
+
+from core.utils.test import test_tcp_stream
 from core.config import startup_shared as startup_shared_vars
 from core.config import shared as shared_vars
 
@@ -159,9 +163,12 @@ class Prepare:
                 group = os_stat(path).st_gid
 
                 if perms != config['perms'] or owner != config['owner'] or group != config['group']:
-                    self._log("Permissions for file \"%s\" are not set as expected" % path)
-                    self._log("Permissions for file \"%s\" are \"owner '%s', group '%s', perms '%s'\" but should be \"owner '%s', group '%s', perms '%s'\""
-                              % (path, owner, group, perms, config['owner'], config['group'], config['perms']), level=6)
+                    self._log(f"Permissions for file \"{path}\" are not set as expected")
+                    self._log(
+                        f"Permissions for file \"{path}\" are \"{owner = }, {group = }, {perms= }\" "
+                        f"but should be \"owner = {config['owner']}, group = {config['group']}, perms = {config['perms']}\"",
+                        level=6
+                    )
 
                     # extended check
                     if config['access'] == 'rw':
@@ -272,11 +279,9 @@ class Prepare:
     def _log(self, output, level: int = 1):
         if self.logger is not None:
             if len(self.log_cache) > 0:
-                from core.utils.debug import Log
-                _logger = Log()
-
+                from core.utils.debug import log
                 for _log in self.log_cache:
-                    _logger.write(output=_log['output'], level=_log['level'])
+                    log(output=_log['output'], level=_log['level'])
 
                 self.log_cache = []
 

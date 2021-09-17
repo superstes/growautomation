@@ -234,8 +234,10 @@ class Go:
         :rtype: bool
         """
         if len(result_dict) != 2 or LINK_ORDER_ID_1 not in result_dict or LINK_ORDER_ID_2 not in result_dict:
-            self.logger.write("Condition link \"%s\" (id \"%s\") has more or less than 2 results: \"%s\" => could be a configuration error"
-                              % (link.name, link.object_id, result_dict), level=7)
+            self.logger.write(
+                f"Condition link \"{link.name}\" (id \"{link.object_id}\") has more or less than 2 results: \"{result_dict}\" => could be a configuration error",
+                level=7
+            )
 
             # allowing a link with only one member
             if len(result_dict) == 1:
@@ -268,7 +270,7 @@ class Go:
             result = not (result_dict[LINK_ORDER_ID_1] != result_dict[LINK_ORDER_ID_2])
 
         else:
-            self.logger.write("Condition link \"%s\" (id \"%s\") has an unsupported operator '%s" % (link.name, link.object_id, op), level=3)
+            self.logger.write(f"Condition link \"{link.name}\" (id \"{link.object_id}\") has an unsupported operator '{op}", level=3)
             raise ValueError(f"Unsupported operator for link \"{link.name}\"")
 
         return result

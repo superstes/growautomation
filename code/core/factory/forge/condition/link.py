@@ -1,7 +1,7 @@
 # handles creation of condition link instances
 
 from core.factory import config
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
@@ -9,11 +9,10 @@ class Go:
         self.blueprint = blueprint
         self.supply_list = supply_list
         self.key_member = config.SUPPLY_KEY_MEMBER_DICT
-        self.logger = Log()
 
     def get(self):
         output_list = []
-        self.logger.write(f'Building condition link objects', level=8)
+        log(f'Building condition link objects', level=8)
 
         for data_dict in self.supply_list:
             instance = self.blueprint(

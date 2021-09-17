@@ -42,7 +42,7 @@ class Matrix:
 
                     if x_data != 0:
                         free = False
-                        used_list.append("%s/%s=%s" % (y, x, x_data))
+                        used_list.append(f"{y}/{x}={x_data}")
 
             return free, used_list
 

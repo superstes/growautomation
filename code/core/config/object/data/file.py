@@ -5,7 +5,6 @@
 from core.config.file.put import go as Put
 from core.config.file.get import go as Get
 from core.config.file.reset import go as Reset
-from core.config.file.validate import Go as Validate
 from core.config.file.update import get as Update
 from core.config import shared as shared_var
 
@@ -30,7 +29,7 @@ class GaDataFile:
     def _config_path(cls) -> str:
         current_path = Path(__file__).parent.absolute()
         ga_root_path = '/'.join(str(current_path).split('/')[:-cls.DIR_SUBTRACT_COUNT])
-        return "%s%s" % (ga_root_path, cls.CONFIG_FILE_PATH)
+        return f'{ga_root_path}{cls.CONFIG_FILE_PATH}'
 
     def get(self) -> dict:
         data = Get(file=self.file, encrypted=self.encryption)

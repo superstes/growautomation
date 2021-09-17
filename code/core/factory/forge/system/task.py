@@ -1,16 +1,15 @@
 from core.factory import config
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
     def __init__(self, blueprint, supply_list: list):
         self.blueprint = blueprint
         self.supply_list = supply_list
-        self.logger = Log()
 
     def get(self):
         output_list = []
-        self.logger.write(f'Building task objects', level=8)
+        log(f'Building task objects', level=8)
 
         for data_dict in self.supply_list:
             instance = self.blueprint(

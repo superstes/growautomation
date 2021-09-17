@@ -178,10 +178,10 @@ class Chart:
 
         else:
             if url.find('?') == -1:
-                return "%s?form_error=%s" % (url, error)
+                return f"{url}?form_error={error}"
 
-            return "%s&form_error=%s" % (url, error)
+            return f"{url}&form_error={error}"
 
     @staticmethod
     def _remove_form_error(url: str, error: str = 'Failed+to+save+form'):
-        return url.replace("&form_error=%s" % error, '')
+        return url.replace(f"&form_error={error}", '')

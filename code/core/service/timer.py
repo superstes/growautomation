@@ -7,9 +7,7 @@ from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.core.task import GaTaskDevice
-from core.utils.debug import Log
-
-logger = Log()
+from core.utils.debug import log
 
 
 ALLOWED_OBJECT_TUPLE = (
@@ -37,10 +35,10 @@ def get(config_dict: dict) -> tuple:
                         timer_list.append(obj)
 
                 else:
-                    logger.write(f"Is disabled: \"{obj}\"", level=6)
+                    log(f"Is disabled: \"{obj}\"", level=6)
 
             else:
-                logger.write(f"Is not allowed: \"{obj}\"", level=7)
+                log(f"Is not allowed: \"{obj}\"", level=7)
 
     timer_list.extend(custom_list)
 

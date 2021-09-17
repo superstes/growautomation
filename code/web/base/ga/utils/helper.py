@@ -3,7 +3,7 @@ from datetime import datetime
 from pytz import timezone as pytz_timezone
 
 from core.utils.process import subprocess
-from core.utils.debug import Log
+from core.utils.debug import web_log
 
 from ..models import ObjectControllerModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
@@ -49,9 +49,9 @@ def get_script_dir(request, typ) -> str:
     path_root = get_controller_setting(request, setting='path_root')
 
     if platform == 'win32':
-        output = "C:/Users/rene/Documents/code/ga/growautomation/code/device/%s" % typ.lower()
+        output = f"C:/Users/rene/Documents/code/ga/growautomation/code/device/{typ.lower()}"
     else:
-        output = "%s/device/%s" % (path_root, typ.lower())
+        output = f"{path_root}/device/{typ.lower()}"
 
     return output
 
@@ -63,22 +63,27 @@ def get_client_ip(request):
     else:
         client_ip = request.META.get('REMOTE_ADDR')
 
-    censored_client_ip = "%s.0" % client_ip.rsplit('.', 1)[0]
+    censored_client_ip = f"{client_ip.rsplit('.', 1)[0]}.0"
 
     return censored_client_ip
+
+
+def init_core_config():
+    from core.config.web_shared import init
+    init(get_controller_obj())
 
 
 def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:
     if check_develop(request):
         return develop
 
-    return subprocess(command, web_ctrl_obj=get_controller_obj())
+    init_core_config()
+    return subprocess(command)
 
 
 def develop_log(request, output: str, level: int = 1) -> None:
     if not check_develop(request):
-        logger = Log(typ='web', web_ctrl_obj=get_controller_obj())
-        logger.write(output=output, level=level)
+        web_log(output=output, level=level)
 
 
 def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:

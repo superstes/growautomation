@@ -50,8 +50,8 @@ class Device:
 
         try:
             i2c = I2C(
-                getattr(board, "D%s" % self.CONFIG['connection']['scl']),
-                getattr(board, "D%s" % self.CONFIG['connection']['sda'])
+                getattr(board, f"D{self.CONFIG['connection']['scl']}"),
+                getattr(board, f"D{self.CONFIG['connection']['sda']}")
             )
 
             custom_i2c = True
@@ -64,8 +64,9 @@ class Device:
         except (ValueError, TimeoutError) as error:
             if str(error).find('No I2C device at address') != -1:
                 if custom_i2c:
-                    self._error("Connection to ads1115 failed, using custom ports: \"scl=>%s, sda=>%s\", check the wiring and configuration"
-                                % (self.CONFIG['connection']['scl'], self.CONFIG['connection']['sda']))
+                    self._error(f"Connection to ads1115 failed, using custom ports: \""
+                                f"scl=>{self.CONFIG['connection']['scl']}, sda=>{self.CONFIG['connection']['sda']}\", "
+                                f"check the wiring and configuration")
                 else:
                     self._error("Connection to ads1115 failed, check the wiring")
 
@@ -76,7 +77,7 @@ class Device:
 
     def _get_data(self):
         self.adc.gain = 1  # could be increased if the data signals are too weak
-        device = AnalogIn(self.adc, getattr(ads1115, "P%s" % self.pin))
+        device = AnalogIn(self.adc, getattr(ads1115, f"P{self.pin}"))
 
         return "%.2f" % self._correct_data(device)
 

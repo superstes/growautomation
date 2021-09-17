@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.9
 # This file is part of GrowAutomation
 #     Copyright (C) 2021  René Pascal Rath
 #
@@ -16,9 +16,9 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #     E-Mail: contact@growautomation.at
-#     Web: https://git.growautomation.at
+#     Web: https://git.growautomation.eu
 
-# ga_version 0.8
+# ga_version 0.9
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
 #   (export PYTHONPATH=/usr/sbin/ga)
@@ -32,7 +32,7 @@ from core.factory.main import get as factory
 from core.factory.reload import Go as Reload
 from core.service.timer import get as get_timer
 from core.config import shared as shared_vars
-from core.utils.debug import FileAndSystemd, Log
+from core.utils.debug import fns_log
 from core.service.decision import Go as Decision
 from core.config.object.data.file import GaDataFile
 from core.factory import config as factory_config
@@ -59,7 +59,6 @@ class Service:
         signal.signal(signal.SIGINT, self.stop)
         self.CONFIG, self.current_config_dict = factory()
         self._init_shared_vars()
-        self.logger = FileAndSystemd(Log())
         self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
         self._update_config_file()
@@ -67,24 +66,24 @@ class Service:
 
     def start(self):
         try:
-            self.logger.write("Service has process id %s" % os_getpid(), level=7)
+            fns_log(f"Service has process id {os_getpid()}", level=7)
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
 
             self.THREAD.start()
-            self.logger.write('Start - finished starting threads.')
+            fns_log('Start - finished starting threads.')
             self._status()
 
         except TypeError as error_msg:
-            self.logger.write("Service encountered an error while starting:\n\"%s\"" % error_msg)
+            fns_log(f"Service encountered an error while starting:\n\"{error_msg}\"")
             self.stop()
 
         self._run()
 
     def reload(self, signum=None, stack=None):
-        self.logger.write(f"Service received signal {signum}", level=3)
-        self.logger.write('Service reload -> checking for config changes', level=4)
+        fns_log(f"Service received signal {signum}", level=3)
+        fns_log('Service reload -> checking for config changes', level=4)
 
         # check current db config against currently loaded config
         reload, self.CONFIG, self.current_config_dict = Reload(
@@ -95,7 +94,7 @@ class Service:
         shared_vars.CONFIG = self.CONFIG
 
         if reload:
-            self.logger.write('Reload - config has changed. Restarting threads.')
+            fns_log('Reload - config has changed. Restarting threads.')
             # update shared config
             self._update_config_file()
             self._init_shared_vars()
@@ -109,7 +108,7 @@ class Service:
             self.start()
 
         else:
-            self.logger.write('Reload - config is up-to-date.')
+            fns_log('Reload - config is up-to-date.')
             self._run()
 
     def stop(self, signum=None, stack=None):
@@ -118,23 +117,23 @@ class Service:
 
         else:
             self.stop_count += 1
-            self.logger.write('Service is stopping', level=6)
-            self.logger.write('Stopping service.')
+            fns_log('Service is stopping', level=6)
+            fns_log('Stopping service.')
             self._signum_log(signum=signum)
-            self.logger.write('Stopping timer threads', level=6)
+            fns_log('Stopping timer threads', level=6)
             self.THREAD.stop()
             self._wait(seconds=self.WAIT_TIME)
-            self.logger.write('Service stopped.')
+            fns_log('Service stopped.')
             self._exit()
 
     def hard_exit(self, signum=None, stack=None):
         self._signum_log(signum)
 
         if self.stop_count >= self.MAX_STOP_COUNT:
-            self.logger.write(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
+            fns_log(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
 
-        self.logger.write('Stopping service merciless', level=3)
-        self.logger.write('Service stopped.')
+        fns_log('Stopping service merciless', level=3)
+        fns_log('Service stopped.')
 
         raise SystemExit('Service exited merciless!')
 
@@ -165,38 +164,40 @@ class Service:
     def _exit(self) -> None:
         if self.exit_count == 0:
             self.exit_count += 1
-            self.logger.write('GrowAutomation service: Farewell!')
+            fns_log('GrowAutomation service: Farewell!')
 
         raise SystemExit('Service exited gracefully.')
 
-    def _signum_log(self, signum):
+    @staticmethod
+    def _signum_log(signum):
         if signum is not None:
             try:
-                self.logger.write(f"Service received signal {signum} \"{sys_exc_info()[0].__name__}\"", level=3)
+                fns_log(f"Service received signal {signum} \"{sys_exc_info()[0].__name__}\"", level=3)
 
             except AttributeError:
-                self.logger.write(f"Service received signal {signum}", level=3)
+                fns_log(f"Service received signal {signum}", level=3)
 
     def _status(self):
         thread_list = self.THREAD.list()
         detailed_thread_list = '\n'.join([str(thread.__dict__) for thread in thread_list])
         simple_thread_list = [thread.name for thread in thread_list]
-        self.logger.write(f"Status - threads running: {simple_thread_list}")
-        self.logger.write(f"Detailed info on running threads:\n{detailed_thread_list}", level=7)
+        fns_log(f"Status - threads running: {simple_thread_list}")
+        fns_log(f"Detailed info on running threads:\n{detailed_thread_list}", level=7)
         # self._test_properties(instances=thread_list, query='script')
 
+    @staticmethod
     def _test_properties(self, instances: list, query: str):
         _ = {}
         for instance in instances:
             if hasattr(instance, query):
                 _[instance.name] = instance.script
 
-        self.logger.write(f"TEST PROPERTY: {_}")
+        fns_log(f"TEST PROPERTY: {_}")
 
     def _run(self):
         try:
             self._wait(seconds=self.WAIT_TIME)
-            self.logger.write('Entering service runtime', level=7)
+            fns_log('Entering service runtime', level=7)
             run_last_reload_time = time()
             run_last_status_time = time()
 
@@ -216,13 +217,13 @@ class Service:
                 error = sys_exc_info()[1]
 
                 if str(error).find('Service exited') == -1:
-                    self.logger.write("A fatal error occurred: \"%s\"" % error)
+                    fns_log(f"A fatal error occurred: \"{error}\"")
 
             except IndexError:
                 pass
 
             if self.exit_count > 0:
-                self.logger.write('Skipping service stop (gracefully) -> exiting (hard)', level=5)
+                fns_log('Skipping service stop (gracefully) -> exiting (hard)', level=5)
                 self._exit()
 
             else:

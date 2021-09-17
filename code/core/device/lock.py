@@ -18,7 +18,7 @@ def get(instance) -> bool:
         else:
             sleep(LOCK_CHECK_INTERVAL)
 
-    logger.write("Gave up to get lock for device \"%s\" after \"%s\" sec" % (instance.name, LOCK_MAX_WAIT), level=6)
+    logger.write(f"Gave up to get lock for device \"{instance.name}\" after \"{LOCK_MAX_WAIT}\" sec", level=6)
 
     return False
 

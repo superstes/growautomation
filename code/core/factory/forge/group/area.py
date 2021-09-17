@@ -1,7 +1,7 @@
 # creates area group instances
 
 from core.factory import config
-from core.utils.debug import Log
+from core.utils.debug import log
 
 
 class Go:
@@ -9,8 +9,6 @@ class Go:
         self.factory_dict = factory_dict
         self.supply_list = supply_list
         self.blueprint = blueprint
-        self.logger = Log()
-
         self.key_member = config.SUPPLY_KEY_MEMBER_DICT
 
     def get(self) -> list:
@@ -19,7 +17,7 @@ class Go:
         # }
 
         area_group_list = []
-        self.logger.write(f'Building area objects', level=8)
+        log(f'Building area objects', level=8)
 
         for data_dict in self.supply_list:
             instance = self.blueprint(

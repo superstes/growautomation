@@ -16,7 +16,7 @@ def add_default_chart_options(request, defaults: dict, redirect_path: str) -> (N
 
     divider = get_url_divider(redirect_path)
 
-    return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**{key: value for key, value in request.GET.items()}, **missing_params})))
+    return redirect(f"{redirect_path}{divider}{get_as_string({**{key: value for key, value in request.GET.items()}, **missing_params})}")
 
 
 def get_param_if_ok(parameters, search: str, choices: list = None, no_choices: list = None, format_as: (str, int, list, dict, bool) = str, fallback=None,
@@ -106,6 +106,6 @@ def add_graph_params_to_url(request, chart_dict: dict, redirect_path: str) -> (N
             return None
 
         divider = get_url_divider(redirect_path)
-        return redirect("%s%s%s" % (redirect_path, divider, get_as_string({**missing_params, **existing_params})))
+        return redirect(f"{redirect_path}{divider}{get_as_string({**missing_params, **existing_params})}")
 
     return None
