@@ -2,7 +2,7 @@
 # gets connection settings passed from GaDataDb instance
 
 from core.utils.process import subprocess
-from core.utils.debug import Log
+from core.utils.debug import log
 
 import mysql.connector
 from time import sleep as time_sleep
@@ -12,6 +12,7 @@ from functools import lru_cache
 
 class Go:
     MARIADB_CONFIG_FILE = '/etc/mysql/mariadb.conf.d/50-server.cnf'
+    MARIADB_SOCKET_DEFAULT = '/run/mysqld/mysqld.sock'
     SQL_EXCEPTION_TUPLE = (
         mysql.connector.errors.ProgrammingError,  # if sql syntax has an error
         mysql.connector.Error,
@@ -24,7 +25,6 @@ class Go:
         self.connection_data_dict = connection_data_dict
         self.cursor = None
         self.connection = None
-        self.logger = Log()
         self._connect()
 
     def _connect(self) -> bool:
@@ -36,29 +36,29 @@ class Go:
                         # will only work if it is run with root privileges
                         # should only be used in the setup and update
                         _connection = mysql.connector.connect(
-                            unix_socket=self._unixsock(),
+                            unix_socket=self._unix_sock(),
                             user=self.connection_data_dict['user'],
                         )
-                        self.logger.write('Initiated sql connection via socket as root without password', level=8)
+                        log('Initiated sql connection via socket as root without password', level=8)
 
                     except self.SQL_EXCEPTION_TUPLE:
                         # if failed without password, try again with it
                         _connection = mysql.connector.connect(
-                            unix_socket=self._unixsock(),
+                            unix_socket=self._unix_sock(),
                             user=self.connection_data_dict['user'],
                             passwd=self.connection_data_dict['secret']
                         )
-                        self.logger.write('Initiated sql connection via socket as root', level=8)
+                        log('Initiated sql connection via socket as root', level=8)
 
                 else:
                     # local logon for default users
                     _connection = mysql.connector.connect(
-                        unix_socket=self._unixsock(),
+                        unix_socket=self._unix_sock(),
                         user=self.connection_data_dict['user'],
                         passwd=self.connection_data_dict['secret'],
                         database=self.connection_data_dict['database']
                     )
-                    self.logger.write('Initiated sql connection to localhost', level=8)
+                    log('Initiated sql connection to localhost', level=8)
 
             else:
                 # remote logon
@@ -69,7 +69,7 @@ class Go:
                     passwd=self.connection_data_dict['secret'],
                     database=self.connection_data_dict['database']
                 )
-                self.logger.write('Initiated sql connection to remote server', level=8)
+                log('Initiated sql connection to remote server', level=8)
 
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
@@ -80,7 +80,7 @@ class Go:
             return True
 
         except UnboundLocalError:
-            self.logger.write('Connection instance could not be created.')
+            log('Connection instance could not be created.')
             raise ConnectionError('Connection instance not created')
 
     def get(self, query: [str, list]) -> list:
@@ -90,12 +90,12 @@ class Go:
         else:
             query_list = query
 
-        self.logger.write(f"Query to execute: \"{query_list}\"", level=7)
+        log(f"Query to execute: \"{query_list}\"", level=7)
         data_list = []
 
         try:
             for q in query_list:
-                data = self._readcache(q)
+                data = self._read_cache(q)
                 if len(query_list) > 1:
                     if type(data) is not None:
                         data_list.append(data)
@@ -106,7 +106,7 @@ class Go:
         except self.SQL_EXCEPTION_TUPLE as error_msg:
             self._error(error_msg)
 
-        self.logger.write(f"Query output: \"{data_list}\"", level=7)
+        log(f"Query output: \"{data_list}\"", level=7)
         return data_list  # list of tuples
 
     def put(self, command: [str, list]) -> bool:
@@ -116,7 +116,7 @@ class Go:
         else:
             command_list = command
 
-        self.logger.write(f"Query to execute: \"{command_list}\"", level=7)
+        log(f"Query to execute: \"{command_list}\"", level=7)
 
         try:
             for cmd in command_list:
@@ -130,7 +130,7 @@ class Go:
         return True
 
     def _error(self, msg: str):
-        self.logger.write(f"SQL connection error: \"{msg}\"", level=3)
+        log(f"SQL connection error: \"{msg}\"", level=3)
 
         try:
             self.connection.rollback()
@@ -141,7 +141,7 @@ class Go:
         raise ConnectionError(msg)
 
     @lru_cache(maxsize=16)
-    def _readcache(self, query: str):
+    def _read_cache(self, query: str):
         self.cursor.execute(query)
 
         if self.cursor.rowcount < 1:
@@ -151,23 +151,25 @@ class Go:
             return self.cursor.fetchall()
 
     @classmethod
-    def _unixsock(cls):
+    def _unix_sock(cls):
         try:
+            sock = None
+
             with open(cls.MARIADB_CONFIG_FILE, 'r') as _:
                 for line in _.readlines():
                     if line.find('socket') != -1:
                         sock = line.split('=')[1].strip()
                         break
 
-                if not sock:
-                    return False
+                if sock is None:
+                    sock = cls.MARIADB_SOCKET_DEFAULT
 
             if os_path.exists(sock) is False:
                 if subprocess(command="systemctl status mysql.service | grep 'Active:'").find('Active: inactive') != -1:
                     if subprocess('systemctl start mysql.service').find('Not able to start') != -1:
                         return False
 
-                    time_sleep(5)
+                    time_sleep(3)
 
             return sock
 
@@ -183,7 +185,7 @@ class Go:
 
         try:
             self.connection.close()
-            self.logger.write('SQL connection closed', level=8)
+            log('SQL connection closed', level=8)
 
         except (UnboundLocalError, AttributeError, ReferenceError):
             pass
