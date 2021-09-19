@@ -59,7 +59,7 @@ class Service:
         signal.signal(signal.SIGINT, self.stop)
         self.CONFIG, self.current_config_dict = factory()
         self._init_shared_vars()
-        self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
+        self.timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
         self._update_config_file()
         self.THREAD = Thread()
@@ -99,7 +99,7 @@ class Service:
             self._update_config_file()
             self._init_shared_vars()
             # re-create the list of possible timers
-            self.timer_list, self.custom_timer_list = get_timer(config_dict=self.CONFIG)
+            self.timer_list = get_timer(config_dict=self.CONFIG)
             # stop and reset all current threads
             self.THREAD.stop()
             self.THREAD.jobs = []

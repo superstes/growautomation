@@ -2,7 +2,7 @@
 
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
-from core.config.object.core.task import GaTaskDevice
+from core.config.object.core.task import GaTaskDevice, SystemTask
 from core.config.object.setting.condition import GaConditionGroup
 
 from core.utils.debug import log
@@ -21,6 +21,9 @@ class Go:
 
         elif isinstance(self.instance, GaTaskDevice):
             self._core_timer()
+
+        elif isinstance(self.instance, SystemTask):
+            self.instance.execute()
 
         else:
             log(f"Service could not find a matching decision for instance: '{self.instance}'", level=5)

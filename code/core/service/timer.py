@@ -8,6 +8,7 @@ from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
 from core.config.object.core.task import GaTaskDevice
 from core.utils.debug import log
+from core.service.system_tasks import get_tasks
 
 
 ALLOWED_OBJECT_TUPLE = (
@@ -18,9 +19,8 @@ ALLOWED_OBJECT_TUPLE = (
 )
 
 
-def get(config_dict: dict) -> tuple:
-    timer_list = []
-    custom_list = []
+def get(config_dict: dict) -> list:
+    timer_list = get_tasks()
 
     for category, obj_list in config_dict.items():
         for obj in obj_list:
@@ -29,7 +29,7 @@ def get(config_dict: dict) -> tuple:
 
                     if isinstance(obj, GaInputDevice):
                         if obj.timer is not None and obj.timer != obj.parent_instance.timer:
-                            custom_list.append(obj)
+                            timer_list.append(obj)
 
                     elif isinstance(obj, (GaInputModel, GaConditionGroup)):
                         timer_list.append(obj)
@@ -40,6 +40,4 @@ def get(config_dict: dict) -> tuple:
             else:
                 log(f"Is not allowed: \"{obj}\"", level=7)
 
-    timer_list.extend(custom_list)
-
-    return timer_list, custom_list
+    return timer_list

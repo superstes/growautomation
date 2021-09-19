@@ -6,7 +6,7 @@ from core.config.object.helper import set_attribute
 
 
 class GaTaskDevice(GaBase):
-    setting_list = ['timer', 'enabled', 'interval', 'target', 'interval']
+    setting_list = ['timer', 'enabled', 'interval', 'target']
 
     def __init__(self, setting_dict: dict, **kwargs):
         # inheritance from superclasses
@@ -29,3 +29,21 @@ class GaTaskDevice(GaBase):
 #         # specific vars
 #         self.member_list = member_list
 #         self.setting_dict = setting_dict
+
+
+class SystemTask(GaBase):
+    setting_list = ['timer']
+
+    def __init__(self, setting_dict: dict, execute, **kwargs):
+        # inheritance from superclasses
+        super().__init__(**kwargs)
+        # specific vars
+        self.setting_dict = setting_dict
+        self.execute = execute
+        # device instance vars
+        set_attribute(
+            setting_dict=self.setting_dict,
+            setting_list=self.setting_list,
+            instance=self,
+            obj=SystemTask
+        )
