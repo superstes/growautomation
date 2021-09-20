@@ -17,8 +17,14 @@ class Test:
     sql_secret = 'placeholder'
 
 
+class Device:
+    def __init__(self, oid):
+        self.object_id = oid
+
+
 try:
     shared.SYSTEM = Test()
+    shared.CONFIG = {'object_input': [Device(4), Device(8)]}
     from connect import Server
     Server().run()
 

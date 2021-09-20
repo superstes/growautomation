@@ -6,7 +6,7 @@ from core.config.db.template import DEVICE_DICT
 from core.utils.threader import Loop as Thread
 from core.device.output.condition.link import Go as GetGroupResult
 from core.device.process import Go as Process
-from core.device.log import device_logger
+from core.utils.debug import device_log
 
 from core.config.object.device.output import GaOutputDevice, GaOutputModel
 
@@ -19,28 +19,33 @@ class Go:
     REVERSE_KEY_CONDITION = 'condition'
     REVERSE_CONDITION_INTERVAL = 60
 
-    def __init__(self, instance):
+    def __init__(self, instance: (GaOutputModel, GaOutputDevice), action: str = None, manually: bool = True):
         self.instance = instance
         self.database = GaDataDb()
         self.output_instance_list = []
         self.processed_list = []
-        self.logger = device_logger(addition=instance.name)
+        self.action = action
+        self.name = instance.name
+        self.manually = manually
 
-    def start(self):
+    def start(self) -> bool:
         condition_result = GetGroupResult(group=self.instance).go()
-        self._evaluate(condition_result=condition_result)
+        return self._evaluate(condition_result=condition_result)
 
-    def _evaluate(self, condition_result) -> None:
+    def _evaluate(self, condition_result) -> bool:
         # todo: reverse type condition implementation => Ticket#11
 
-        if condition_result:
-            self.logger.write(f"Conditions for \"{self.instance.name}\" were met", level=6)
-
+        if self.manually or condition_result:
+            if condition_result:
+                device_log(f"Conditions for \"{self.instance.name}\" were met", add=self.name, level=6)
+    
+            else:
+                device_log(f"{self.action.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
+    
             output_list = self.instance.output_object_list.copy()
-
-            self.logger.write(f"Output list of \"{self.instance.name}\": \"{output_list}\"", level=7)
+            device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)
             output_list.extend(self.instance.output_group_list)
-            self.logger.write(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", level=7)
+            device_log(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", add=self.name, level=7)
 
             task_instance_list = []
 
@@ -54,35 +59,57 @@ class Go:
                     ).get()
                 )
 
+            results = []
+
             for task_dict in task_instance_list:
-                self._process(task_dict=task_dict)
+                results.append(self._process(task_dict=task_dict))
+
+            if len(results) > 0:
+                return all(results)
 
         else:
-            self.logger.write(f"Conditions for \"{self.instance.name}\" were not met", level=3)
+            device_log(f"Conditions for \"{self.instance.name}\" were not met", add=self.name, level=3)
+
+        return False
 
     def _process(self, task_dict: dict, reverse=False) -> bool:
         device = task_dict['device']
-        self.logger.write(f"Processing device instance: \"{device.__dict__}\"", level=7)
+
+        if self.action == 'stop':
+            reverse = True
+
+        device_log(f"Processing device instance: \"{device.__dict__}\"", add=self.name, level=7)
 
         if 'downlink' in task_dict:
-            result = Process(instance=task_dict['downlink'], nested_instance=device, script_dir='connection', reverse=reverse).start()
+            result = Process(
+                instance=task_dict['downlink'],
+                nested_instance=device,
+                script_dir='connection',
+                reverse=reverse,
+                manually=self.manually,
+            ).start()
 
         else:
-            result = Process(instance=device, script_dir='output', reverse=reverse).start()
+            result = Process(
+                instance=device,
+                script_dir='output',
+                reverse=reverse,
+                manually=self.manually,
+            ).start()
 
         if result is None:
-            self.logger.write(f"Processing of output-device \"{device.name}\" failed", level=3)
+            device_log(f"Processing of output-device \"{device.name}\" failed", add=self.name, level=3)
             return False
 
         elif result is False:
-            self.logger.write(f"Device \"{device.name}\" is in fail-sleep", level=4)
+            device_log(f"Device \"{device.name}\" is in fail-sleep", add=self.name, level=4)
             return False
 
         else:
-            self.logger.write(f"Processing of output \"{device.name}\" succeeded", level=7)
+            device_log(f"Processing of output \"{device.name}\" succeeded", add=self.name, level=7)
 
-            self.logger.write(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
-                              f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", level=7)
+            device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
+                       f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", add=self.name, level=7)
 
             if device.reverse == 1 and device.active:
                 # todo: write state to database => a service restart MUST NOT keep devices running
@@ -114,7 +141,7 @@ class Go:
 
     def _reverse_timer(self, task_dict: dict) -> None:
         device = task_dict['device']
-        self.logger.write(f"Entering wait timer ({device.reverse_type_data} secs) for output-device \"{device.name}\"", level=6)
+        device_log(f"Entering wait timer ({device.reverse_type_data} secs) for output-device \"{device.name}\"", add=self.name, level=6)
 
         thread = Thread()
 
@@ -126,14 +153,14 @@ class Go:
         )
         def thread_task(data):
             self._process(task_dict=data, reverse=True)
-            self.logger.write(f"Reversing of device \"{device.name}\" finished", level=6)
+            device_log(f"Reversing of device \"{device.name}\" finished", add=self.name, level=6)
             thread.stop_thread(description=device.name)
 
         thread.start()
 
     def _reverse_condition(self, task_dict: dict) -> None:
         device = task_dict['device']
-        self.logger.write(f"Entering reverse-condition loop for output-device \"{device.name}\"", level=6)
+        device_log(f"Entering reverse-condition loop for output-device \"{device.name}\"", add=self.name, level=6)
 
         thread = Thread()
 
@@ -145,10 +172,10 @@ class Go:
         )
         def thread_task(data):
             while not self._process(task_dict=data, reverse=True):
-                self.logger.write(f"Reversing of device \"{device.name}\" continues", level=8)
+                device_log(f"Reversing of device \"{device.name}\" continues", add=self.name, level=8)
                 sleep(self.REVERSE_CONDITION_INTERVAL)
 
-            self.logger.write(f"Reversing of device \"{device.name}\" finished", level=6)
+            device_log(f"Reversing of device \"{device.name}\" finished", add=self.name, level=6)
             thread.stop_thread(description=device.name)
 
         thread.start()

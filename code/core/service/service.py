@@ -33,7 +33,7 @@ from core.factory.reload import Go as Reload
 from core.service.timer import get as get_timer
 from core.config import shared as shared_vars
 from core.utils.debug import fns_log
-from core.service.decision import Go as Decision
+from core.service.decision import start as decision
 from core.config.object.data.file import GaDataFile
 from core.factory import config as factory_config
 
@@ -62,7 +62,7 @@ class Service:
         self.timer_list = get_timer(config_dict=self.CONFIG)
         self.CONFIG_FILE = GaDataFile()
         self._update_config_file()
-        self.THREAD = Thread()
+        self.THREADER = Thread()
 
     def start(self):
         try:
@@ -71,7 +71,7 @@ class Service:
             for instance in self.timer_list:
                 self._thread(instance=instance)
 
-            self.THREAD.start()
+            self.THREADER.start()
             fns_log('Start - finished starting threads.')
             self._status()
 
@@ -101,8 +101,8 @@ class Service:
             # re-create the list of possible timers
             self.timer_list = get_timer(config_dict=self.CONFIG)
             # stop and reset all current threads
-            self.THREAD.stop()
-            self.THREAD.jobs = []
+            self.THREADER.stop()
+            self.THREADER.jobs = []
             self._wait(seconds=self.WAIT_TIME)
             # re-create all the threads
             self.start()
@@ -121,7 +121,7 @@ class Service:
             fns_log('Stopping service.')
             self._signum_log(signum=signum)
             fns_log('Stopping timer threads', level=6)
-            self.THREAD.stop()
+            self.THREADER.stop()
             self._wait(seconds=self.WAIT_TIME)
             fns_log('Service stopped.')
             self._exit()
@@ -146,13 +146,13 @@ class Service:
         self.CONFIG_FILE.update()
 
     def _thread(self, instance):
-        @self.THREAD.thread(
+        @self.THREADER.thread(
             sleep_time=int(instance.timer),
             thread_data=instance,
             description=instance.name,
         )
         def thread_task(data):
-            Decision(instance=data).start()
+            decision(instance=data)
 
     @staticmethod
     def _wait(seconds: int):
@@ -178,7 +178,7 @@ class Service:
                 fns_log(f"Service received signal {signum}", level=3)
 
     def _status(self):
-        thread_list = self.THREAD.list()
+        thread_list = self.THREADER.list()
         detailed_thread_list = '\n'.join([str(thread.__dict__) for thread in thread_list])
         simple_thread_list = [thread.name for thread in thread_list]
         fns_log(f"Status - threads running: {simple_thread_list}")

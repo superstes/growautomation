@@ -6,13 +6,15 @@ from datetime import datetime
 
 from core.config import shared
 
+# NOTE: the script must be executed as ga-serviceuser; else you will find that no logs can be written by the service while it is executing
+
 shared.init()
 
 
 class Test:
     security = 0
-    log_level = 10
-    debug = 1
+    log_level = 0
+    debug = 0
     path_root = '/var/lib/ga'
     path_log = '/var/log/ga'
     sql_secret = 'placeholder'
@@ -21,8 +23,8 @@ class Test:
 try:
     shared.SYSTEM = Test()
     from connect import Client
-    print(Client(path='ga.core.device.input.4').post(data='start'))
-    sleep(0.5)
+    print(Client(path='ga.core.device.input.1').post(data='start'))
+    sleep(0.2)
 
 except KeyboardInterrupt:
     pass

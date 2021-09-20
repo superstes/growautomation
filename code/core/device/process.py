@@ -21,12 +21,13 @@ class Go:
     INPUT_DATA_KEY = 'data'
     SCRIPT_SUBPATH = "device/%s"
 
-    def __init__(self, instance, script_dir: str, reverse: bool = False, nested_instance=None):
+    def __init__(self, instance, script_dir: str, reverse: bool = False, nested_instance=None, manually: bool = False):
         self.instance = instance
         self.reverse = reverse
         self.nested_instance = nested_instance
         self.name = instance.name
         self.script_dir = script_dir
+        self.manually = manually
 
     def start(self) -> (str, None, bool):
         # output:
@@ -61,7 +62,7 @@ class Go:
         return None
 
     def _fail_check(self):
-        if self.instance.fail_sleep is not None:
+        if not self.manually and self.instance.fail_sleep is not None:  # skip fail-sleep if executed manually
             if datetime.now() < self.instance.fail_sleep:
                 device_log(f"Skipping execution of device \"{self.instance.name}\" since it has reached the max error threshold", add=self.name, level=4)
                 device_log(f"Device \"{self.instance.name}\" will be skipped until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", add=self.name, level=6)

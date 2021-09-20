@@ -183,7 +183,6 @@ def server_thread(srv, connection):
         log(f'{srv.LOG_PREFIX}No data received', level=5)
         return None
 
-    log(f"{srv.LOG_PREFIX}Received data (raw): '{data}'", level=7)
     parsed = srv.parse(data)
     log(f"{srv.LOG_PREFIX}Received data: '{parsed}'", level=6)
 
@@ -192,12 +191,9 @@ def server_thread(srv, connection):
 
     else:
         # parsing command and executing api
-        result = Route(parsed=parsed).go()
-
-        if result:
-            Interact(link=connection, server=True).send(data='Success!')
-        else:
-            Interact(link=connection, server=True).send(data='Failed!')
+        result, status = Route(parsed=parsed).go()
+        result_str = 'success' if result else 'failed'
+        Interact(link=connection, server=True).send(data=f'result:{result_str},status:{status}')
 
     srv.CLIENT_THREADS -= 1
     return data
@@ -245,9 +241,14 @@ class Server:
 
             while True:
                 connection, address = self.SERVER.accept()
-                connection.settimeout(RECV_TIMEOUT)
-                log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
-                start_new_thread(server_thread, (self, connection))
+
+                try:
+                    connection.settimeout(RECV_TIMEOUT)
+                    log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
+                    start_new_thread(server_thread, (self, connection))
+
+                except Exception as error:
+                    log(f"Client connection '{connection}' failed with error: '{error}'")
 
         except (Exception, KeyboardInterrupt) as error:
             log(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)
