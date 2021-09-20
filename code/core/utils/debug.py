@@ -51,11 +51,7 @@ class Log:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
-
-        if shared_vars.SYSTEM.debug == 1:
-            level = 10
-
-        if level > self.log_level or not self.status:
+        if shared_vars.SYSTEM.debug == 0 and (level > self.log_level or not self.status):
             return False
 
         output = self._censor(str(output))
@@ -166,3 +162,16 @@ def fns_log(output: str, level: int = 1) -> bool:
 def web_log(output: str, level: int = 1) -> bool:
     _src = inspect_getfile(inspect_stack()[1][0])
     return Log(typ='web', src_file=_src).write(output=output, level=level)
+
+
+def device_log(output: str, add: str, level: int = 1) -> bool:
+    _src = inspect_getfile(inspect_stack()[1][0])
+
+    if shared_vars.SYSTEM.device_log == 1:
+        return MultiLog([
+            Log(src_file=_src),
+            Log(typ='device', addition=add, src_file=_src)
+        ]).write(output=output, level=level)
+
+    else:
+        return Log(src_file=_src).write(output=output, level=level)

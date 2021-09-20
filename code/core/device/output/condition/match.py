@@ -1,6 +1,6 @@
 # handles single condition processing
 
-from core.device.log import device_logger
+from core.utils.debug import device_log
 from core.device.output.condition.process.match_data import Go as MatchData
 from core.device.output.condition.process.match_special import Go as SpecialMatch
 from core.config.object.setting.condition import GaConditionMatchSpecial
@@ -11,11 +11,10 @@ class Go:
         self.condition = condition
         self.data_list = []
         self.data_type = None
-        self.logger = device_logger(addition=device)
         self.device = device
 
     def get(self) -> bool:
-        self.logger.write(f"Getting data of condition match \"{self.condition.name}\"", level=9)
+        device_log(f"Getting data of condition match \"{self.condition.name}\"", add=self.device, level=9)
 
         if isinstance(self.condition.check_instance, GaConditionMatchSpecial):
             return SpecialMatch(condition=self.condition, device=self.device).get()
@@ -29,9 +28,9 @@ class Go:
             # maybe add more functionality for non-number data types (?)
             data = self.data_list[0]
 
-        self.logger.write(f"Data of condition match \"{self.condition.name}\": \"{data}\"", level=7)
+        device_log(f"Data of condition match \"{self.condition.name}\": \"{data}\"", add=self.device, level=7)
         result = self._compare_data(data=data)
-        self.logger.write(f"Result of condition match \"{self.condition.name}\": \"{result}\"", level=6)
+        device_log(f"Result of condition match \"{self.condition.name}\": \"{result}\"", add=self.device, level=6)
         return result
 
     def _compare_data(self, data) -> bool:
@@ -47,8 +46,8 @@ class Go:
                 value = self.data_type(self.condition.value)
 
         except TypeError:
-            self.logger.write(f"Failed to apply data type \"{self.data_type}\" to data \"{data}\" or value \"{self.condition.value}\" "
-                              f"of condition match \"{self.condition.name}\"", level=3)
+            device_log(f"Failed to apply data type \"{self.data_type}\" to data \"{data}\" or value \"{self.condition.value}\" "
+                       f"of condition match \"{self.condition.name}\"", add=self.device, level=3)
             raise ValueError(f"Unsupported data type \"{self.data_type}\" for condition match \"{self.condition.name}\"")
 
         if operator == '=':
@@ -68,10 +67,10 @@ class Go:
                 result = True
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" with value_type \"{self.data_type}\"", level=4)
+            device_log(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" with value_type \"{self.data_type}\"", add=self.device, level=4)
             raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", level=7)
+        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", add=self.device, level=7)
         return result
 
     def _get_data(self) -> (float, int):
@@ -86,9 +85,9 @@ class Go:
             data = (sum(self.data_list) / len(self.data_list))
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", level=4)
+            device_log(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", add=self.device, level=4)
             raise ValueError(f"Unsupported check type for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", level=7)
+        device_log(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", add=self.device, level=7)
 
         return data

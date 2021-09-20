@@ -1,7 +1,7 @@
 # will check for which input scripts to start
 # filtering on enabled state, model grouping and area grouping
 
-from core.device.log import device_logger
+from core.utils.debug import device_log
 from core.device.area import area_filter
 
 
@@ -12,7 +12,7 @@ class Go:
         self.model_obj = model_obj
         self.device_obj = device_obj
         self.areas = areas
-        self.logger = device_logger(addition=instance.name)
+        self.name = instance.name
 
     def get(self) -> list:
         if isinstance(self.instance, self.model_obj):
@@ -22,11 +22,11 @@ class Go:
             self._device(instance=self.instance)
 
         else:
-            self.logger.write(f"Instance \"{self.instance.name}\" matches neither provided objects", level=3)
+            device_log(f"Instance \"{self.instance.name}\" matches neither provided objects", add=self.name, level=3)
 
-        self.logger.write(f"Instance \"{self.instance.name}\" - unfiltered device list to process: \"{self.task_instance_list}\"", level=7)
+        device_log(f"Instance \"{self.instance.name}\" - unfiltered device list to process: \"{self.task_instance_list}\"", add=self.name, level=7)
         filtered_instance_list = area_filter(areas=self.areas, devices=self.task_instance_list)
-        self.logger.write(f"Instance \"{self.instance.name}\" - filtered device list to process: \"{filtered_instance_list}\"", level=6)
+        device_log(f"Instance \"{self.instance.name}\" - filtered device list to process: \"{filtered_instance_list}\"", add=self.name, level=6)
 
         return filtered_instance_list
 
@@ -46,9 +46,9 @@ class Go:
         downlink = instance.downlink
 
         if downlink.enabled == 0:
-            self.logger.write(f"Downlink \"{downlink.name}\" of device \"{instance.name}\" is disabled", level=6)
+            device_log(f"Downlink \"{downlink.name}\" of device \"{instance.name}\" is disabled", add=self.name, level=6)
             return None
 
-        self.logger.write(f"Device \"{instance.name}\" is connected via downlink \"{downlink.name}\"", level=7)
+        device_log(f"Device \"{instance.name}\" is connected via downlink \"{downlink.name}\"", add=self.name, level=7)
 
         self.task_instance_list.append({'downlink': downlink, 'device': instance})

@@ -1,6 +1,6 @@
 # processing of special condition matches
 
-from core.device.log import device_logger
+from core.utils.debug import device_log
 
 from datetime import datetime
 
@@ -8,7 +8,7 @@ from datetime import datetime
 class Go:
     def __init__(self, condition, device):
         self.condition = condition
-        self.logger = device_logger(addition=device)
+        self.name = device
 
     def get(self) -> bool:
         if self.condition.check_instance.name == 'time':
@@ -20,7 +20,7 @@ class Go:
         elif self.condition.check_instance.name.startswith('day_'):
             return self._day()
 
-        self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported special match set: \"{self.condition.check_instance.name}\"", level=4)
+        device_log(f"Condition match \"{self.condition.name}\" has an unsupported special match set: \"{self.condition.check_instance.name}\"", add=self.name, level=4)
         raise ValueError(f"Unsupported special match type for condition \"{self.condition.name}\"")
 
     def _time(self, raw_value: str, date: datetime = None) -> bool:
@@ -179,7 +179,7 @@ class Go:
                 result = True
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\"", level=4)
+            device_log(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\"", add=self.name, level=4)
             raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
         return result
@@ -218,10 +218,10 @@ class Go:
                 result = True
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\"", level=4)
+            device_log(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\"", add=self.name, level=4)
             raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        self.logger.write(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {now}\" = {result}", level=7)
+        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {now}\" = {result}", add=self.name, level=7)
         return result
 
     def _parse_time(self, raw_value: str) -> int:
@@ -252,6 +252,6 @@ class Go:
             self._parse_error()
 
     def _parse_error(self):
-        self.logger.write(f'Unable to parse {self.condition.check_instance.name} value provided for condition match \"{self.condition.name}\". '
-                          f'Please check the documentation for supported formats.', level=4)
+        device_log(f'Unable to parse {self.condition.check_instance.name} value provided for condition match \"{self.condition.name}\". '
+                   f'Please check the documentation for supported formats.', add=self.name, level=4)
         raise ValueError(f'Unsupported value for condition match \"{self.condition.name}\"')

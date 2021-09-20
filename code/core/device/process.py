@@ -5,7 +5,7 @@
 
 from core.utils.process import subprocess
 from core.config import shared as shared_vars
-from core.device.log import device_logger
+from core.utils.debug import device_log
 from core.device import lock
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.output import GaOutputDevice
@@ -25,7 +25,7 @@ class Go:
         self.instance = instance
         self.reverse = reverse
         self.nested_instance = nested_instance
-        self.logger = device_logger(addition=instance.name)
+        self.name = instance.name
         self.script_dir = script_dir
 
     def start(self) -> (str, None, bool):
@@ -40,7 +40,7 @@ class Go:
                 result = self._execute()
 
                 lock.remove(instance=self.instance)
-                self.logger.write(f"Device \"{self.instance.name}\" result \"{result}\"", level=6)
+                device_log(f"Device \"{self.instance.name}\" result \"{result}\"", add=self.name, level=6)
 
                 if isinstance(self.instance, (GaInputDevice, GaConnectionDevice)):
                     if self.instance.fail_count == 0:
@@ -49,7 +49,7 @@ class Go:
                             return data[self.INPUT_DATA_KEY]
 
                         except (KeyError, JSONDecodeError) as error:
-                            self.logger.write(f"Unable decode received data; error: \"{error}\"", level=2)
+                            device_log(f"Unable decode received data; error: \"{error}\"", add=self.name, level=2)
                             return None
 
                 else:
@@ -63,8 +63,8 @@ class Go:
     def _fail_check(self):
         if self.instance.fail_sleep is not None:
             if datetime.now() < self.instance.fail_sleep:
-                self.logger.write(f"Skipping execution of device \"{self.instance.name}\" since it has reached the max error threshold", level=4)
-                self.logger.write(f"Device \"{self.instance.name}\" will be skipped until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", level=6)
+                device_log(f"Skipping execution of device \"{self.instance.name}\" since it has reached the max error threshold", add=self.name, level=4)
+                device_log(f"Device \"{self.instance.name}\" will be skipped until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", add=self.name, level=6)
                 return False
 
         return True
@@ -151,24 +151,24 @@ class Go:
                         params_dict['bin'] = self.instance.reverse_script_bin
 
                 else:
-                    self.logger.write(f"Device \"{self.instance.name}\" is reversible and active, but should not be reversed", level=4)
+                    device_log(f"Device \"{self.instance.name}\" is reversible and active, but should not be reversed", add=self.name, level=4)
                     return None
 
         if params_dict['script'] in bad_values or params_dict['bin'] in bad_values:  # it should only be possible to be NoneType-None
-            self.logger.write(f"No script or binary provided to execute for device \"{self.instance.name}\"", level=2)
+            device_log(f"No script or binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
             return None
 
         return params_dict
 
     def _error_action(self, error) -> None:
         if error not in [None, '']:
-            self.logger.write(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"")
+            device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"")
             self.instance.fail_count += 1
 
             if self.instance.fail_count > shared_vars.SYSTEM.device_fail_count:
                 self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + shared_vars.SYSTEM.device_fail_sleep)
-                self.logger.write(f"Device \"{self.instance.name}\" has reached its fail threshold -> will skip execution "
-                                  f"until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", level=3)
+                device_log(f"Device \"{self.instance.name}\" has reached its fail threshold -> will skip execution "
+                           f"until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", add=self.name, level=3)
 
         else:
             self.instance.fail_count = 0
@@ -179,11 +179,11 @@ class Go:
                 if self.instance.reverse == 1:
                     if self.reverse:
                         self.instance.active = False
-                        self.logger.write(f"Reversible device \"{self.instance.name}\" was stopped", level=6)
+                        device_log(f"Reversible device \"{self.instance.name}\" was stopped", add=self.name, level=6)
 
                     else:
                         self.instance.active = True
-                        self.logger.write(f"Reversible device \"{self.instance.name}\" entered the active state", level=6)
+                        device_log(f"Reversible device \"{self.instance.name}\" entered the active state", add=self.name, level=6)
 
                 return True
 
@@ -194,12 +194,12 @@ class Go:
 
     def _reverse_check(self):
         if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1 and self.instance.active and not self.reverse:
-            self.logger.write(f"Reversible device \"{self.instance.name}\" is active and should not be reversed", level=5)
+            device_log(f"Reversible device \"{self.instance.name}\" is active and should not be reversed", add=self.name, level=5)
             return False
 
         elif isinstance(self.instance, GaConnectionDevice) and isinstance(self.nested_instance, GaOutputDevice) \
                 and self.nested_instance.reverse == 1 and self.nested_instance.active and not self.reverse:
-            self.logger.write(f"Reversible device \"{self.nested_instance.name}\" is active and should not be reversed", level=5)
+            device_log(f"Reversible device \"{self.nested_instance.name}\" is active and should not be reversed", add=self.name, level=5)
             return False
 
         return True

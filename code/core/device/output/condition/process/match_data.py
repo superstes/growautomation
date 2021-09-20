@@ -2,7 +2,7 @@
 
 from core.config.object.data.db import GaDataDb
 from core.config.object.device.input import GaInputModel, GaInputDevice
-from core.device.log import device_logger
+from core.utils.debug import device_log
 from core.config.db.template import DEVICE_DICT
 
 from datetime import timedelta
@@ -17,13 +17,13 @@ class Go:
         self.condition = condition
         self.database = GaDataDb()
         self.data_list = []
-        self.logger = device_logger(addition=device)
+        self.name = device
         self.process_list = []
         self.data_method = None
 
     def get(self) -> tuple:
         self._get_data()
-        self.logger.write(f"Condition match \"{self.condition.name}\" got data \"{self.data_list}\" of type \"{self.data_type}\"", level=6)
+        device_log(f"Condition match \"{self.condition.name}\" got data \"{self.data_list}\" of type \"{self.data_type}\"", add=self.name, level=6)
         return self.data_list, self.data_type
 
     def _get_data(self) -> None:
@@ -38,13 +38,13 @@ class Go:
             self.data_list = self._get_data_device(device=self.process_list[0])
 
         if len(self.data_list) == 0:
-            self.logger.write(f"No data received for condition match \"{self.condition.name}\" (id \"{self.condition.object_id}\")", level=5)
+            device_log(f"No data received for condition match \"{self.condition.name}\" (id \"{self.condition.object_id}\")", add=self.name, level=5)
             raise ValueError(f"Got no data for condition match \"{self.condition.name}\"")
 
     def _get_data_prerequisites(self):
         # should only run once since its the same for all devices processed
         period_type = self.condition.period
-        self.logger.write(f"Condition match \"{self.condition.name}\", period type \"{period_type}\", period \"{self.condition.period_data}\"", level=7)
+        device_log(f"Condition match \"{self.condition.name}\", period type \"{period_type}\", period \"{self.condition.period_data}\"", add=self.name, level=7)
 
         if period_type == 'time':
             data_method = self._get_data_by_time
@@ -53,7 +53,7 @@ class Go:
             data_method = self._get_data_by_range
 
         else:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has an unsupported period_type \"{period_type}\"", level=4)
+            device_log(f"Condition match \"{self.condition.name}\" has an unsupported period_type \"{period_type}\"", add=self.name, level=4)
             raise ValueError(f"Unsupported period type for condition match \"{self.condition.name}\"")
 
         return data_method
@@ -96,10 +96,10 @@ class Go:
                 disabled_list.append(to_check)
 
         if not process_disabled:
-            self.logger.write(f"Condition match \"{self.condition.name}\" has some disabled inputs: \"{disabled_list}\"", level=7)
+            device_log(f"Condition match \"{self.condition.name}\" has some disabled inputs: \"{disabled_list}\"", add=self.name, level=7)
 
         if len(to_process) == 0:
-            self.logger.write(f"Got no inputs to pull data from for condition match \"{self.condition.name}\"")
+            device_log(f"Got no inputs to pull data from for condition match \"{self.condition.name}\"", add=self.name, level=4)
             raise ValueError(f"No data to process for match \"{self.condition.name}\"")
 
         return to_process
@@ -120,7 +120,7 @@ class Go:
             typ = str
 
         else:
-            self.logger.write(f"Input device/model \"{self.condition.check_instance.name}\" has an unsupported data data_type set \"{data_type}\"", level=4)
+            device_log(f"Input device/model \"{self.condition.check_instance.name}\" has an unsupported data data_type set \"{data_type}\"", level=4)
             raise ValueError(f"Unsupported data type for input \"{self.condition.check_instance.name}\"")
 
         return typ

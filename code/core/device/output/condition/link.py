@@ -2,7 +2,7 @@
 
 from core.config.object.setting.condition import GaConditionGroup, GaConditionLink
 from core.device.output.condition.match import Go as ConditionResult
-from core.device.log import device_logger
+from core.utils.debug import device_log
 
 from collections import Counter
 
@@ -13,7 +13,7 @@ LINK_ORDER_ID_2 = 2
 class Go:
     def __init__(self, group: GaConditionGroup):
         self.group = group
-        self.logger = device_logger(group.name)
+        self.name = group.name
 
     def go(self) -> bool:
         """Generic public method
@@ -30,7 +30,7 @@ class Go:
         :return: Will return the calculated result of the condition
         :rtype: bool
         """
-        self.logger.write(f"Processing links for condition \"{group.name}\"", level=8)
+        device_log(f"Processing links for condition \"{group.name}\"", add=self.name, level=8)
         group_member_count = len(group.member_list)
         last_result = None
 
@@ -51,7 +51,7 @@ class Go:
             link.processed = True
             last_result = result
 
-        self.logger.write(f"Result of condition \"{group.name}\": \"{last_result}\" ", level=6)
+        device_log(f"Result of condition \"{group.name}\": \"{last_result}\" ", add=self.name, level=6)
         self._reset_flags(group)
 
         return last_result
@@ -63,7 +63,7 @@ class Go:
         :return: Member results
         :rtype: dict
         """
-        self.logger.write(f"Getting data for link \"{link.name}\"", level=9)
+        device_log(f"Getting data for link \"{link.name}\"", add=self.name, level=9)
 
         result_dict = {}
 
@@ -80,7 +80,7 @@ class Go:
             # if group -> run function recursively
             result_dict[order] = self._process_links(group=condition)
 
-        self.logger.write(f"Data of condition-link \"{link.name}\": \"{result_dict}\"", level=8)
+        device_log(f"Data of condition-link \"{link.name}\": \"{result_dict}\"", add=self.name, level=8)
 
         return result_dict
 
@@ -93,7 +93,7 @@ class Go:
         :return: Result of the link
         :rtype: bool
         """
-        self.logger.write(f"Getting result of condition-link \"{link.name}\"", level=9)
+        device_log(f"Getting result of condition-link \"{link.name}\"", add=self.name, level=9)
 
         try:
             result = self._get_result(
@@ -101,7 +101,7 @@ class Go:
                 result_dict=result_dict,
             )
 
-            self.logger.write(f"Result of condition-link \"{link.name}\": \"{result}\"", level=7)
+            device_log(f"Result of condition-link \"{link.name}\": \"{result}\"", add=self.name, level=7)
             return result
 
         except (KeyError, ValueError) as error_msg:
@@ -137,7 +137,7 @@ class Go:
         :rtype: None
         :raises: RuntimeError: There is no condition match to further process
         """
-        self.logger.write(f"Post-process of condition \"{group.name}\", link \"{link.name}\", result \"{result}\", process_nr \"{process_nr}\", group_member_count \"{group_member_count}\"", level=9)
+        device_log(f"Post-process of condition \"{group.name}\", link \"{link.name}\", result \"{result}\", process_nr \"{process_nr}\", group_member_count \"{group_member_count}\"", level=9)
 
         slm_list = self._get_single_link_member_list(group=group)
         nslm = False
@@ -149,14 +149,14 @@ class Go:
 
             if condition not in slm_list:
                 # if the condition will be further processed -> update its data to the link result
-                self.logger.write(f"Updating data of condition \"{condition.name}\" to result \"{result}\"", level=9)
+                device_log(f"Updating data of condition \"{condition.name}\" to result \"{result}\"", add=self.name, level=9)
 
                 condition.data = result
                 nslm = True
 
         if process_nr != group_member_count and not nslm:
             # there is no condition that should be further processed and the link is not the last one
-            self.logger.write(f"Link \"{link.name}\" (id \"{link.object_id}\") has only single members \"{slm_list}\" and is not the last one to process", level=4)
+            device_log(f"Link \"{link.name}\" (id \"{link.object_id}\") has only single members \"{slm_list}\" and is not the last one to process", add=self.name, level=4)
             self._error(RuntimeError(f"Link with id \"{link.object_id}\" is not the last to process but it does not have any link-neighbors."))
 
     def _get_single_link_member_list(self, group: GaConditionGroup) -> list:
@@ -167,7 +167,7 @@ class Go:
         :return: List of link members that are linked only once
         :rtype: list
         """
-        self.logger.write(f"Getting single link members for condition \"{group.name}\"", level=9)
+        device_log(f"Getting single link members for condition \"{group.name}\"", add=self.name, level=9)
 
         lm_list = []
         slm_list = []
@@ -183,7 +183,7 @@ class Go:
             if count == 1:
                 slm_list.append(instance)
 
-        self.logger.write(f"Condition \"{group.name}\" has the following single link members \"{slm_list}\"", level=8)
+        device_log(f"Condition \"{group.name}\" has the following single link members \"{slm_list}\"", add=self.name, level=8)
 
         if len(slm_list) == 0:
             raise ValueError("It looks like you have a configuration error.")
@@ -204,7 +204,7 @@ class Go:
         :type group: GaConditionGroup
         :rtype: None
         """
-        self.logger.write(f"Resetting flags for condition \"{group.name}\"", level=9)
+        device_log(f"Resetting flags for condition \"{group.name}\"", add=self.name, level=9)
 
         for link in group.member_list:
             link.processed = False
@@ -234,9 +234,9 @@ class Go:
         :rtype: bool
         """
         if len(result_dict) != 2 or LINK_ORDER_ID_1 not in result_dict or LINK_ORDER_ID_2 not in result_dict:
-            self.logger.write(
+            device_log(
                 f"Condition link \"{link.name}\" (id \"{link.object_id}\") has more or less than 2 results: \"{result_dict}\" => could be a configuration error",
-                level=7
+                level=7, add=self.name
             )
 
             # allowing a link with only one member
@@ -246,7 +246,7 @@ class Go:
             raise ValueError(f'Got not acceptable results for members of link \"{link.name}\"')
 
         op = link.operator
-        self.logger.write(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", level=7)
+        device_log(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", add=self.name, level=7)
 
         if op == 'and':
             result = all(result_dict.values())
@@ -270,7 +270,7 @@ class Go:
             result = not (result_dict[LINK_ORDER_ID_1] != result_dict[LINK_ORDER_ID_2])
 
         else:
-            self.logger.write(f"Condition link \"{link.name}\" (id \"{link.object_id}\") has an unsupported operator '{op}", level=3)
+            device_log(f"Condition link \"{link.name}\" (id \"{link.object_id}\") has an unsupported operator '{op}", add=self.name, level=3)
             raise ValueError(f"Unsupported operator for link \"{link.name}\"")
 
         return result
