@@ -40,6 +40,8 @@
                 {% include "../../btn/member_delete.html" %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
+            {% set_var member_own_type as sock_type %}
+            {% include "./actions_socket.html" %}
         </td>
     </tr>
 {% endfor %}

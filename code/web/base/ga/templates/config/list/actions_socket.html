@@ -1,0 +1,18 @@
+{% if 'output' in typ or 'input' in typ %}
+<form class="ga-form-inline" method="post" action="/api/sock">
+    {% csrf_token %}
+    {% include "../../btn/start.html" %}
+    <input type="hidden" name="type" value="{{ sock_type }}" />
+    <input type="hidden" name="id" value="{{ data.id }}" />
+    <input type="hidden" name="do" value="start" />
+</form>
+    {% if 'output' in typ %}
+        <form class="ga-form-inline" method="post" action="/api/sock">
+            {% csrf_token %}
+            {% include "../../btn/stop.html" %}
+            <input type="hidden" name="type" value="{{ sock_type }}" />
+            <input type="hidden" name="id" value="{{ data.id }}" />
+            <input type="hidden" name="do" value="stop" />
+        </form>
+    {% endif %}
+{% endif %}

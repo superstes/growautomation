@@ -16,7 +16,8 @@ from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteV
 from .subviews.data.raw.input import DataListView
 from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView, DataChartDbeView, DataChartDbeGraphView, DataChartDbeDatasetView
 from .subviews.api.data.main import ApiData
-from .subviews.api.chart.main import ApiChart
+from .subviews.api.chart.main import api_chart
+from .subviews.api.sock.main import api_sock
 from .subviews.data.dashboard.main import DashboardView
 from .subviews.system.export import export_view
 
@@ -184,7 +185,10 @@ class GaView:
             return ApiData(request=request).go()
 
         elif typ == 'chart':
-            return ApiChart(request=request)
+            return api_chart(request=request)
+
+        elif typ == 'sock':
+            return api_sock(request=request)
 
         develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - api not implemented")
         return handler404_api()

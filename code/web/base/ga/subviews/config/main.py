@@ -145,7 +145,6 @@ class ConfigView:
         #   ? => pull following key from member object
         group_tbl = {'name': 'name', 'description': 'description', 'enabled': 'enabled'}
         member_tbl = {'type': '!pretty', 'name': 'name', 'description': 'description', 'enabled': 'enabled'}
-        device_actions = False  # if output actions (start/stop) should be shown
 
         if self.type == 'conditiongroup':
             member_type = 'conditionmember'
@@ -173,23 +172,20 @@ class ConfigView:
                 key: _type_dict[key]['model'].objects.all() for key in _type_dict.keys()
             }
 
-        if self.type.find('output') != -1:
-            device_actions = True
-
         if member_type is not None:
             member_view_active, member_data_dict = member_pre_process(member_data_dict=member_data, request=self.request, type_dict=_type_dict)
             tmpl = 'list/member'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'member_type_dict': _type_dict,
                 'member_type': member_type, 'member_view_active': member_view_active, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
-                'main_type_dict': type_dict, 'device_actions': device_actions,
+                'main_type_dict': type_dict,
             }
 
         else:
             tmpl = 'list/default'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
-                'main_type_dict': type_dict, 'device_actions': device_actions,
+                'main_type_dict': type_dict,
             }
 
         return tmpl, context
