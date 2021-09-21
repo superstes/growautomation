@@ -50,7 +50,7 @@ It's simple! And should remain so if you have little time for it.
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
 ### Found bugs?
-Please check out our <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug guidelines</a> first!
+Just open a github issue!
 
 ### Support
 Want to support the project?
@@ -64,7 +64,7 @@ __The code is currently not in a stable state !__
 
 First 'stable' release coming <strong>SOON</strong>! :D
 
-Version: 0.8
+Version: 0.9
 
 => <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
 
@@ -74,6 +74,8 @@ Version: 0.8
 
 
 ### History
+- v0.9 _(2021-09)_
+  - action-button in webUI
 - v0.8 _(2021-03 - 2021-04)_
   - updated condition workflow
   - created basic <a href="https://docs.growautomation.eu">documentation</a>
@@ -102,35 +104,19 @@ Version: 0.8
 
 ### Planned features
 - installation per pre-configured image for easy setup
-- plant monitoring via nfc-tags and harvest-scale => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
 - documenting clean hardware setup _(easy wiring via patchpanel)_
 - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
 - builtin notification tasks
   - *get notified if the temperature is not optimal for growing*
 - creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
+- improving webUI by using AJAX, optimizing workflow and so on
+- integration of a scale so that the harvest can be logged
+- off-grid installation => dyndns and hardware-guide
+- actors in dashboard elements => when was an action taken; when was it reversed
 
 ### Maybe future features
 - agent/server installation
   - server should be able to run as vm or on dedicated hardware
   - cloud-hosted server component
 - create plans for 3d printable parts
-
-----
-
-## Thoughts about growing
-
-- It should not be necessary to check if the plants need water.
-  - Watering should be done automatically but only when necessary.
-
-- Nor should there be a need to know if the temperature is optimal.
-  - Windows should open when it is too hot and close when it gets colder.
-
-- A storm is coming?
-  - The windows should close by themselves.
-
-- Would you like to know what conditions have led to more or less yield?
-  - We should analyze the data and find correlations.
-  - That's how we can learn from our mistakes.
-
-- Want to know how your plants are doing?
-  - Just check the stats on the website - comfortably from your smartphone.
+- plant monitoring via nfc-tags => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
