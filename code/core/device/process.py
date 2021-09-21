@@ -163,7 +163,7 @@ class Go:
 
     def _error_action(self, error) -> None:
         if error not in [None, '']:
-            device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"")
+            device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"", add=self.name)
             self.instance.fail_count += 1
 
             if self.instance.fail_count > shared_vars.SYSTEM.device_fail_count:

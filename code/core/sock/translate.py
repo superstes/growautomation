@@ -71,12 +71,12 @@ class Route:
 
         for obj in shared.CONFIG[key]:
             if getattr(obj, factory_config.CORE_ID_ATTRIBUTE) == self.path_id:
-                log(f'Executing {action} for {self.path_subtype}-device with id {self.path_id}', level=6)
+                log(f'Executing {action} for {self.path_subtype}-{self.path_type} with id {self.path_id}', level=6)
 
                 if self.path_subtype == 'output':
                     if action == 'start':
                         if getattr(obj, 'locked') or getattr(obj, 'active'):
-                            log(f"Unable to start output-device '{obj}' since it is already active!", level=3)
+                            log(f"Unable to start output-{self.path_type} '{obj}' since it is already active!", level=3)
 
                         else:
                             result = Output(instance=obj, action=action, manually=True).start()

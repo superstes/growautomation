@@ -40,7 +40,8 @@ class Go:
                 device_log(f"Conditions for \"{self.instance.name}\" were met", add=self.name, level=6)
     
             else:
-                device_log(f"{self.action.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
+                _ = 'stopp' if self.action == 'stop' else self.action
+                device_log(f"{_.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
     
             output_list = self.instance.output_object_list.copy()
             device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)

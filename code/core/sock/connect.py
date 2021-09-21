@@ -23,6 +23,7 @@ class Interact:
         self.SIZE = config.PACKAGE_SIZE
         self.SERVER = server
         self.SHUFFLE = config.SHUFFLE
+        self.PATH_SEP = config.PACKAGE_PATH_SEPARATOR
         if self.SERVER:
             self.LOG_PREFIX = 'Server - '
         else:
@@ -31,7 +32,7 @@ class Interact:
         if self.SHUFFLE:
             log(f'{self.LOG_PREFIX}Shuffling transferred data', level=7)
 
-    def send(self, data: str) -> bool:
+    def send(self, data: str) -> (bool, dict):
         try:
             data_enc = data.encode('utf-8')
 
@@ -51,7 +52,9 @@ class Interact:
             self.LINK.sendall(data_packed)
 
             if not self.SERVER:
-                self.receive()
+                response = self.receive()
+                if response is not None:
+                    return response
 
             return True
 
@@ -59,7 +62,7 @@ class Interact:
             log(f"{self.LOG_PREFIX}Got error while sending data: '{error}'", level=3)
             return False
 
-    def receive(self) -> (str, None):
+    def receive(self) -> (dict, None):
         try:
             data_recv = bytearray()
             data_len = 1
@@ -86,7 +89,7 @@ class Interact:
 
                     if time() > start_time + RECV_TIMEOUT:
                         log(f'{self.LOG_PREFIX}Receive timeout!', level=5)
-                        return None
+                        return False
 
                     else:
                         sleep(RECV_INTERVAL)
@@ -117,18 +120,24 @@ class Interact:
 
         except Exception as error:
             log(f"{self.LOG_PREFIX}Got error while receiving data: '{error}'", level=3)
-            return None
+            return False
 
-    def _validate(self, data: str) -> (str, None):
+    def _validate(self, data: str) -> (dict, None):
         head_str = self.HEAD.decode('utf-8')
         tail_str = self.TAIL.decode('utf-8')
 
         if data.startswith(head_str) and data.endswith(tail_str):
-            return data[len(head_str):-len(tail_str)]
+            _ = data[len(head_str):-len(tail_str)].split(self.PATH_SEP)
+            try:
+                return {'path': _[0], 'data': _[1]}
+
+            except IndexError:
+                log(f"{self.LOG_PREFIX}Wasn't able to parse received data!", level=3)
 
         else:
             log(f'{self.LOG_PREFIX}Received invalid data!', level=3)
-            return None
+
+        return None
 
     @staticmethod
     def _shuffle(data: (bytes, str)) -> bytes:
@@ -155,7 +164,7 @@ class Client:
         if self.connected or self._init():
             return Interact(link=self.LINK).receive()
 
-    def post(self, data: str) -> bool:
+    def post(self, data: str) -> (bool, dict):
         if self.connected or self._init():
             return Interact(link=self.LINK).send(data=f'{self.PATH}{self.PATH_SEP}{data}')
 
@@ -178,20 +187,14 @@ def server_thread(srv, connection):
     srv.CLIENT_THREADS += 1
     log(f'{srv.LOG_PREFIX}Entered Client-Thread #{srv.CLIENT_THREADS}', level=6)
     data = Interact(link=connection, server=True).receive()
+    log(f"{srv.LOG_PREFIX}Received data: '{data}'", level=6)
 
     if data is None:
-        log(f'{srv.LOG_PREFIX}No data received', level=5)
-        return None
-
-    parsed = srv.parse(data)
-    log(f"{srv.LOG_PREFIX}Received data: '{parsed}'", level=6)
-
-    if parsed is None:
         log(f'{srv.LOG_PREFIX}Unable to get route', level=6)
 
     else:
         # parsing command and executing api
-        result, status = Route(parsed=parsed).go()
+        result, status = Route(parsed=data).go()
         result_str = 'success' if result else 'failed'
         Interact(link=connection, server=True).send(data=f'result:{result_str},status:{status}')
 
@@ -217,7 +220,6 @@ class Server:
         self.CLIENT_MAX_CONCURRENT = 5
         self.CLIENT_THREADS = 0
         self.PKG_SIZE = config.PACKAGE_SIZE
-        self.PATH_SEP = config.PACKAGE_PATH_SEPARATOR
         self.NAME = config.SOCKET_SERVER_NAME
         self.LOG_PREFIX = 'Server - '
 
@@ -252,15 +254,6 @@ class Server:
 
         except (Exception, KeyboardInterrupt) as error:
             log(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)
-
-    def parse(self, payload: str) -> (dict, None):
-        _ = payload.split(self.PATH_SEP)
-        try:
-            return {'path': _[0], 'data': _[1]}
-
-        except IndexError:
-            log(f"{self.LOG_PREFIX}Wasn't able to parse received data!", level=3)
-            return None
 
     def __del__(self):
         self.SERVER.close()
