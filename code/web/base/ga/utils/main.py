@@ -1,4 +1,4 @@
-from urllib import parse
+from urllib.parse import urlencode, urlparse
 from functools import wraps
 from random import choice as random_choice
 from string import ascii_letters, digits, punctuation
@@ -12,9 +12,9 @@ from django.shortcuts import resolve_url
 
 def get_as_string(get_params: dict, add: bool = False) -> str:
     if add:
-        return str(parse.urlencode(get_params))
+        return str(urlencode(get_params))
 
-    return f"?{parse.urlencode(get_params)}"
+    return f"?{urlencode(get_params)}"
 
 
 def redirect_if_overwritten(request, type_dict: dict):
@@ -158,8 +158,8 @@ def method_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
             resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
             # If the login url is the same scheme and net location then just
             # use the path as the "next" url.
-            login_scheme, login_netloc = parse.urlparse(resolved_login_url)[:2]
-            current_scheme, current_netloc = parse.urlparse(path)[:2]
+            login_scheme, login_netloc = urlparse(resolved_login_url)[:2]
+            current_scheme, current_netloc = urlparse(path)[:2]
             if ((not login_scheme or login_scheme == current_scheme) and
                     (not login_netloc or login_netloc == current_netloc)):
                 path = instance.request.get_full_path()
@@ -168,3 +168,12 @@ def method_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
                 path, resolved_login_url, redirect_field_name)
         return _wrapped_view
     return decorator
+
+
+def append_to_url(url: str, append: dict) -> str:
+    append = urlencode(append)
+
+    if url.find('?') != -1:
+        return f'{url}&{append}'
+
+    return f'{url}?{append}'

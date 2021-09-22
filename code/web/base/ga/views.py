@@ -66,7 +66,7 @@ class GaView:
                 return self.data(request=request, typ=b)
 
             else:
-                return self.home(request=request)
+                return self.data(request=request, typ='dashboard')
 
         except Pseudo404 as exc:
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc.ga['msg']}")
@@ -89,12 +89,6 @@ class GaView:
             if get_controller_setting(request=request, setting='security') == 0:
                 develop_log(request=request, output=f"{trace}"[:self.MAX_TRACEBACK_LENGTH], level=2)
             return handler500(request=request, msg=error, tb=trace)
-
-    @staticmethod
-    @login_required
-    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
-    def home(request):
-        return logout_check(request=request, default=render(request, 'home.html', {'type_dict': type_dict}))
 
     @staticmethod
     @login_required

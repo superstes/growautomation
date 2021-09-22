@@ -1,6 +1,18 @@
 {% extends "./base.html" %}
 {% load util %}
 {% block subview %}
+    {% if request.GET|has_key:'response' %}
+        {% set_var request.GET|get_item:'response' as resp %}
+        {% if 'succeeded' in resp %}
+            <div class="alert alert-success">
+                <strong>{{ resp }}</strong>
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                <strong>{{ resp }}</strong>
+            </div>
+        {% endif %}
+    {% endif %}
     <tr>
         <th>
             NAME
