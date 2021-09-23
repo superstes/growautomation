@@ -14,6 +14,7 @@ ga_device_groups:
   - 'gpio'
   - 'i2c'
   - 'spi'
+  - 'video'
 
 ga_device_raspiconfig:
   - 'nonint do_i2c 0'
