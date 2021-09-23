@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_forms_bootstrap',
     'bootstrap_datepicker_plus',
     'bootstrap4',
+    'django_user_agents',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
 ]
 ROOT_URLCONF = 'base.urls'
 TEMPLATES = [
@@ -107,3 +109,12 @@ LOGOUT_REDIRECT_URL = '/'
 handler500 = 'ga.subviews.handlers.handler500'
 handler403 = 'ga.subviews.handlers.handler403'
 handler404 = 'ga.subviews.handlers.handler404'
+
+# if performance improvements are needed for https://github.com/selwin/django-user_agents
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': '127.0.0.1:11211',
+#     }
+# }
+# USER_AGENTS_CACHE = 'default'

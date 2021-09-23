@@ -15,6 +15,7 @@
       netaddr
       django-bootstrap4
       django-bootstrap-datepicker-plus
+      django-user-agents
 
 #   input devices (sensors)
       adafruit-circuitpython-dht

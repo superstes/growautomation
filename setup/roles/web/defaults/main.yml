@@ -20,6 +20,10 @@ ga_django_mods:
   - 'django-forms-bootstrap'
   - 'django-bootstrap4'
   - 'django-bootstrap-datepicker-plus'
+  - 'pyyaml'
+  - 'ua-parser'
+  - 'user-agents'
+  - 'django-user-agents'
 
 ga_apache_config_additions:
   ServerTokens: 'Prod'

@@ -5,19 +5,14 @@ from pytz import utc as pytz_utc
 
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
-from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz, get_controller_setting
+from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz, get_controller_setting, develop_log
 from ....utils.main import method_user_passes_test
 from ....user import authorized_to_read
+from ....config import shared as config
 
 
 class ApiData:
     MEASURE_TS_FORMAT = '%H:%M:%S:%f'
-
-    MAX_DATA_POINTS_SHORT = 150
-    MAX_DATA_POINTS_MEDIUM = 500
-    MAX_DATA_POINTS_LONG = 1000
-    MAX_DATA_POINTS_HUGE = 3000
-
     THIN_OUT_FUNCTIONS = ['avg', 'max', 'min']
 
     def __init__(self, request, input_id: int = None, period: str = None, period_data: int = None, start_ts: str = None, stop_ts: str = None,
@@ -35,7 +30,7 @@ class ApiData:
         else:
             self.data = request.GET
 
-    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_read, login_url=config.LOGIN_URL)
     def go(self) -> (dict, JsonResponse):
         if self.request.method == 'GET':
             if self.input_id is None:
@@ -66,22 +61,34 @@ class ApiData:
             return handler500_api(msg='Error processing time period')
 
         start_ts, stop_ts = _time
+        develop_log(request=self.request, output=f"{stop_ts.strftime('%H:%M:%S:%f')}")
 
         time_span = stop_ts - start_ts
         if time_span > timedelta(days=365):
-            max_data_points = self.MAX_DATA_POINTS_HUGE
+            if self.request.user_agent.is_mobile:
+                max_data_points = config.MAX_DATA_POINTS_HUGE_CLI
+            else:
+                max_data_points = config.MAX_DATA_POINTS_HUGE_MOBILE
 
         elif time_span > timedelta(days=30):
-            max_data_points = self.MAX_DATA_POINTS_LONG
+            if self.request.user_agent.is_mobile:
+                max_data_points = config.MAX_DATA_POINTS_LONG_CLI
+            else:
+                max_data_points = config.MAX_DATA_POINTS_LONG_MOBILE
 
         elif time_span > timedelta(days=7):
-            max_data_points = self.MAX_DATA_POINTS_MEDIUM
+            if self.request.user_agent.is_mobile:
+                max_data_points = config.MAX_DATA_POINTS_MEDIUM_CLI
+            else:
+                max_data_points = config.MAX_DATA_POINTS_MEDIUM_MOBILE
 
         else:
-            max_data_points = self.MAX_DATA_POINTS_SHORT
+            if self.request.user_agent.is_mobile:
+                max_data_points = config.MAX_DATA_POINTS_SHORT_CLI
+            else:
+                max_data_points = config.MAX_DATA_POINTS_SHORT_MOBILE
 
         self._add_measurement('Pulling data')
-
         data_list = InputDataModel.objects.filter(
             created__gte=start_ts,
             created__lte=stop_ts,
@@ -89,18 +96,14 @@ class ApiData:
         ).order_by('-created')
 
         self._add_measurement('Preparing data')
-
         data_dict = self._prepare_data(data_list=data_list, data_type=data_type)
 
         self._add_measurement('Thinning data')
-
         if len(data_dict) > max_data_points:
             data_dict = self._thin_out_data_points(data_dict, wanted=max_data_points)
 
         self._add_measurement('Post processing')
-
         xy_data_list = []
-
         for time, data in data_dict.items():
             xy_data_list.append({'x': time, 'y': data})
 
@@ -186,26 +189,19 @@ class ApiData:
         stop_ts, _stop_ts = None, None
         _period, _period_data = None, None
 
-        if 'start_ts' in self.data:
-            _start_ts = self.data['start_ts']
-
         if 'stop_ts' in self.data:
             _stop_ts = self.data['stop_ts']
 
-        if _start_ts is not None:
-            start_ts = get_datetime_w_tz(self.request, dt_str=_start_ts)
+        if _stop_ts is not None:
+            stop_ts = get_datetime_w_tz(self.request, dt_str=_stop_ts)
 
-            if _stop_ts is not None:
-                stop_ts = get_datetime_w_tz(self.request, dt_str=_stop_ts)
-
-            else:
-                stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
+        else:
+            stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
 
         if 'period' in self.data and 'period_data' in self.data:
             # todo: support for 'last week' etc. (period=d,data=7,shift=d,shift_data:7)  => Ticket#33
             _period = self.data['period']
             _period_data = int(self.data['period_data'])
-            stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
 
             if _period == 'y':
                 start_ts = stop_ts - timedelta(days=(_period_data * 365))
@@ -225,9 +221,15 @@ class ApiData:
             else:
                 return handler400_api(msg='Unsupported time period type')
 
+        else:
+            if 'start_ts' in self.data:
+                _start_ts = self.data['start_ts']
+
+            if _start_ts is not None:
+                start_ts = get_datetime_w_tz(self.request, dt_str=_start_ts)
+
         if start_ts is None:
             return handler400_api(msg='No supported time period provided')
 
         else:
-
             return start_ts, stop_ts
