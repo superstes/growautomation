@@ -5,13 +5,17 @@ from socket import error as socket_error
 from _thread import start_new_thread
 from time import sleep, time
 from itertools import cycle
+from sys import exc_info as sys_exc_info
+from traceback import format_exc
 
 from core.config import socket as config
+from core.config.shared import SUBPROCESS_TIMEOUT
 from core.utils.debug import log
 from core.sock.translate import Route
 
-RECV_INTERVAL = 0.5
-RECV_TIMEOUT = 3
+RECV_INTERVAL = 2
+RECV_TIMEOUT = SUBPROCESS_TIMEOUT + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
+MAX_TRACEBACK_LENGTH = 5000
 
 
 class Interact:
@@ -184,28 +188,35 @@ class Client:
 
 def server_thread(srv, connection):
     # handles client connections; did not work as method of 'Server'..
-    srv.CLIENT_THREADS += 1
-    log(f'{srv.LOG_PREFIX}Entered Client-Thread #{srv.CLIENT_THREADS}', level=6)
-    data = Interact(link=connection, server=True).receive()
-    log(f"{srv.LOG_PREFIX}Received data: '{data}'", level=6)
+    try:
+        start_time = time()
+        srv.CLIENT_THREADS += 1
+        log(f'{srv.LOG_PREFIX}Entered Client-Thread #{srv.CLIENT_THREADS}', level=6)
+        data = Interact(link=connection, server=True).receive()
+        log(f"{srv.LOG_PREFIX}Received data: '{data}'", level=6)
 
-    if data is None:
-        log(f'{srv.LOG_PREFIX}Unable to get route', level=6)
+        if data is None:
+            log(f'{srv.LOG_PREFIX}Unable to get route', level=6)
 
-    else:
-        # parsing command and executing api
-        result, status = Route(parsed=data).go()
-        result_str = 'success' if result else 'failed'
-        Interact(link=connection, server=True).send(data=f'result:{result_str},status:{status}')
+        else:
+            # parsing command and executing api
+            result, status = Route(parsed=data).go()
+            result_str = 'success' if result else 'failed'
+            Interact(link=connection, server=True).send(data=f'result:{result_str},status:{status}')
 
-    srv.CLIENT_THREADS -= 1
-    return data
+        log(f"{srv.LOG_PREFIX}Processed client connection to '{connection.raddr}' in {time()-start_time} secs", level=6)
+        srv.CLIENT_THREADS -= 1
+        return data
+
+    except:
+        exc_type, exc_obj, _ = sys_exc_info()
+        log(f"Client connection '{connection.raddr}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
+        log(f"{format_exc()}"[:MAX_TRACEBACK_LENGTH], level=4)
 
 
 class Server:
     BIND_RETRY_SLEEP = 5
     BIND_RETRY_MAX_COUNT = 60
-    CONNECTION_TIMEOUT = 5
 
     def __init__(self):
         self.SERVER = socket(family=AF_INET, type=SOCK_STREAM)
@@ -243,14 +254,9 @@ class Server:
 
             while True:
                 connection, address = self.SERVER.accept()
-
-                try:
-                    connection.settimeout(RECV_TIMEOUT)
-                    log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
-                    start_new_thread(server_thread, (self, connection))
-
-                except Exception as error:
-                    log(f"Client connection '{connection}' failed with error: '{error}'")
+                connection.settimeout(RECV_TIMEOUT)
+                log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
+                start_new_thread(server_thread, (self, connection))
 
         except (Exception, KeyboardInterrupt) as error:
             log(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)

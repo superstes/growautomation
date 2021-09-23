@@ -9,6 +9,7 @@ from core.device.process import Go as Process
 from core.utils.debug import device_log
 
 from core.config.object.device.output import GaOutputDevice, GaOutputModel
+from core.config.object.setting.condition import GaConditionGroup
 
 from time import sleep
 
@@ -19,7 +20,7 @@ class Go:
     REVERSE_KEY_CONDITION = 'condition'
     REVERSE_CONDITION_INTERVAL = 60
 
-    def __init__(self, instance: (GaOutputModel, GaOutputDevice), action: str = None, manually: bool = True):
+    def __init__(self, instance: (GaOutputModel, GaOutputDevice, GaConditionGroup), action: str = None, manually: bool = False):
         self.instance = instance
         self.database = GaDataDb()
         self.output_instance_list = []
@@ -29,19 +30,13 @@ class Go:
         self.manually = manually
 
     def start(self) -> bool:
-        if self.manually:
-            condition_result = True
+        if self.manually:  # if the action is triggered manually by the user we don't want to check the conditions
+            _ = 'stopp' if self.action == 'stop' else self.action
+            device_log(f"{_.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
+            return self._run()
 
-        else:
-            condition_result = GetGroupResult(group=self.instance).go()
-
-        if condition_result:
+        elif GetGroupResult(group=self.instance).go():
             device_log(f"Conditions for \"{self.instance.name}\" were met", add=self.name, level=6)
-
-            if self.manually:
-                _ = 'stopp' if self.action == 'stop' else self.action
-                device_log(f"{_.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
-
             return self._run()
 
         else:
@@ -50,10 +45,26 @@ class Go:
 
     def _run(self) -> bool:
         # todo: reverse type condition implementation => Ticket#11
-        output_list = self.instance.output_object_list.copy()
-        device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)
-        output_list.extend(self.instance.output_group_list)
-        device_log(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", add=self.name, level=7)
+        if self.manually:
+            if type(self.instance) == GaOutputModel:
+                output_list = self.instance.member_list
+
+            elif type(self.instance) == GaOutputDevice:
+                output_list = [self.instance]
+
+            else:
+                device_log(f'Manual execution only allows OutputModels and OutputDevices to be supplied - got neither!', add=self.name, level=3)
+                return False
+
+            device_log(f"Output list to process: \"{output_list}\"", add=self.name, level=7)
+            areas = None
+
+        else:  # service will always supply a GaConditionGroup
+            output_list = self.instance.output_object_list.copy()
+            device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)
+            output_list.extend(self.instance.output_group_list)
+            device_log(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", add=self.name, level=7)
+            areas = self.instance.area_group_list
 
         task_instance_list = []
 
@@ -63,7 +74,7 @@ class Go:
                     instance=output,
                     model_obj=GaOutputModel,
                     device_obj=GaOutputDevice,
-                    areas=self.instance.area_group_list,
+                    areas=areas,
                     manually=self.manually,
                 ).get()
             )
@@ -80,11 +91,11 @@ class Go:
 
     def _process(self, task_dict: dict, reverse=False) -> bool:
         device = task_dict['device']
+        device_log(f"Processing device instance: \"{device.__dict__}\"", add=self.name, level=7)
 
         if self.action == 'stop':
             reverse = True
-
-        device_log(f"Processing device instance: \"{device.__dict__}\"", add=self.name, level=7)
+            device_log(f"Device instance: \"{device.__dict__}\" is reversing", add=self.name, level=8)
 
         if 'downlink' in task_dict:
             result = Process(

@@ -139,8 +139,9 @@ class Go:
         if params_dict['bin'] == 'python3':
             params_dict['bin'] = f'{shared_vars.PYTHON_VENV}/python3'
 
-        if isinstance(self.instance, GaOutputDevice):
-            if self.instance.reverse == 1 and self.instance.active:
+        # reverse parameters
+        if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1:
+            if self.instance.active or self.manually:
                 if self.reverse:
                     if self.instance.reverse_script is not None:
                         params_dict['script'] = self.instance.reverse_script
@@ -152,8 +153,12 @@ class Go:
                         params_dict['bin'] = self.instance.reverse_script_bin
 
                 else:
-                    device_log(f"Device \"{self.instance.name}\" is reversible and active, but should not be reversed", add=self.name, level=4)
-                    return None
+                    if not self.manually:
+                        device_log(f"Device \"{self.instance.name}\" is reversible and active, but should not be reversed", add=self.name, level=4)
+                        return None
+
+            else:
+                device_log(f"Device \"{self.instance.name}\" is either not reversible or not active", add=self.name, level=7)
 
         if params_dict['script'] in bad_values or params_dict['bin'] in bad_values:  # it should only be possible to be NoneType-None
             device_log(f"No script or binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
@@ -194,7 +199,11 @@ class Go:
         return False
 
     def _reverse_check(self):
-        if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1 and self.instance.active and not self.reverse:
+        if self.manually:
+            # if a user manually executes an action we will not check if it is active => let the user overrule possible bugs..
+            return True
+
+        elif isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1 and self.instance.active and not self.reverse:
             device_log(f"Reversible device \"{self.instance.name}\" is active and should not be reversed", add=self.name, level=5)
             return False
 

@@ -69,8 +69,8 @@ class Workload(Thread):
 
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
             self.fail_count += 1
-            log(f"Thread {self.log_name} failed with error: \"{error_msg}\"")
-            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=6)
+            log(f"Thread {self.log_name} failed with error: \"{error_msg}\"", level=1)
+            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
                 self.run()
@@ -78,8 +78,8 @@ class Workload(Thread):
         except:
             self.fail_count += 1
             exc_type, exc_obj, _ = sys_exc_info()
-            log(f"Thread {self.log_name} failed with error: \"{exc_type} - {exc_obj}\"")
-            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=6)
+            log(f"Thread {self.log_name} failed with error: \"{exc_type} - {exc_obj}\"", level=1)
+            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
                 self.run()
