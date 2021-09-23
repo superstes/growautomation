@@ -29,47 +29,52 @@ class Go:
         self.manually = manually
 
     def start(self) -> bool:
-        condition_result = GetGroupResult(group=self.instance).go()
-        return self._evaluate(condition_result=condition_result)
+        if self.manually:
+            condition_result = True
 
-    def _evaluate(self, condition_result) -> bool:
-        # todo: reverse type condition implementation => Ticket#11
+        else:
+            condition_result = GetGroupResult(group=self.instance).go()
 
-        if self.manually or condition_result:
-            if condition_result:
-                device_log(f"Conditions for \"{self.instance.name}\" were met", add=self.name, level=6)
-    
-            else:
+        if condition_result:
+            device_log(f"Conditions for \"{self.instance.name}\" were met", add=self.name, level=6)
+
+            if self.manually:
                 _ = 'stopp' if self.action == 'stop' else self.action
                 device_log(f"{_.capitalize()}ing \"{self.instance.name}\" manually", add=self.name, level=5)
-    
-            output_list = self.instance.output_object_list.copy()
-            device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)
-            output_list.extend(self.instance.output_group_list)
-            device_log(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", add=self.name, level=7)
 
-            task_instance_list = []
-
-            for output in output_list:
-                task_instance_list.extend(
-                    Check(
-                        instance=output,
-                        model_obj=GaOutputModel,
-                        device_obj=GaOutputDevice,
-                        areas=self.instance.area_group_list,
-                    ).get()
-                )
-
-            results = []
-
-            for task_dict in task_instance_list:
-                results.append(self._process(task_dict=task_dict))
-
-            if len(results) > 0:
-                return all(results)
+            return self._run()
 
         else:
             device_log(f"Conditions for \"{self.instance.name}\" were not met", add=self.name, level=3)
+            return False
+
+    def _run(self) -> bool:
+        # todo: reverse type condition implementation => Ticket#11
+        output_list = self.instance.output_object_list.copy()
+        device_log(f"Output list of \"{self.instance.name}\": \"{output_list}\"", add=self.name, level=7)
+        output_list.extend(self.instance.output_group_list)
+        device_log(f"Output-group list of \"{self.instance.name}\": \"{self.instance.output_group_list}\"", add=self.name, level=7)
+
+        task_instance_list = []
+
+        for output in output_list:
+            task_instance_list.extend(
+                Check(
+                    instance=output,
+                    model_obj=GaOutputModel,
+                    device_obj=GaOutputDevice,
+                    areas=self.instance.area_group_list,
+                    manually=self.manually,
+                ).get()
+            )
+
+        results = []
+
+        for task_dict in task_instance_list:
+            results.append(self._process(task_dict=task_dict))
+
+        if len(results) > 0:
+            return all(results)
 
         return False
 
@@ -109,21 +114,22 @@ class Go:
         else:
             device_log(f"Processing of output \"{device.name}\" succeeded", add=self.name, level=7)
 
-            device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
-                       f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", add=self.name, level=7)
+            if not self.manually and device.reverse == 1:  # if a user executes the action manually he/she/it will know better; they can reverse it manually if needed
+                device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
+                           f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", add=self.name, level=7)
 
-            if device.reverse == 1 and device.active:
-                # todo: write state to database => a service restart MUST NOT keep devices running
+                if device.active:
+                    # todo: write state to database => a service restart MUST NOT keep devices running
 
-                if device.reverse_type == self.REVERSE_KEY_TIME:
-                    self._reverse_timer(task_dict=task_dict)
+                    if device.reverse_type == self.REVERSE_KEY_TIME:
+                        self._reverse_timer(task_dict=task_dict)
 
-                elif device.reverse_type == self.REVERSE_KEY_CONDITION:
-                    self._reverse_condition(task_dict=task_dict)
+                    elif device.reverse_type == self.REVERSE_KEY_CONDITION:
+                        self._reverse_condition(task_dict=task_dict)
 
-            elif reverse and not device.active:
-                # todo: write state (inactive) to database => a service restart MUST NOT keep devices running
-                pass
+                elif reverse and not device.active:
+                    # todo: write state (inactive) to database => a service restart MUST NOT keep devices running
+                    pass
 
             return True
 
