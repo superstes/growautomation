@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from ....utils.helper import init_core_config, develop_log
 from ....utils.main import append_to_url
 from ....user import authorized_to_write
+from ....config.shared import LOGIN_URL
 
 init_core_config()
 from core.sock.connect import Client
@@ -21,7 +22,7 @@ mapping = {
 
 
 @login_required
-@user_passes_test(authorized_to_write, login_url='/accounts/login/')
+@user_passes_test(authorized_to_write, login_url=LOGIN_URL)
 def api_sock(request):
     mapping_key = request.POST['type']
     path_id = request.POST['id']

@@ -7,6 +7,7 @@ from ..helper import get_obj_dict, get_param_if_ok
 from ....utils.main import error_formatter, method_user_passes_test
 from ....submodels.helper.matrix import Matrix
 from ....user import authorized_to_read, authorized_to_write
+from ....config.shared import LOGIN_URL
 
 TITLE = 'Dashboard'
 
@@ -21,7 +22,7 @@ class DashboardView:
         self.root_path = 'data/dashboard'
         self.initiator = None
 
-    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_read, login_url=LOGIN_URL)
     def go_config(self, info: str = None):
         self.initiator = 'config'
         self.html_template = "data/dashboard/config.html"
@@ -35,7 +36,7 @@ class DashboardView:
 
             return self._get()
 
-    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_read, login_url=LOGIN_URL)
     def go_main(self):
         self.initiator = 'main'
         if self.request.method == 'POST':
@@ -125,7 +126,7 @@ class DashboardView:
             'default': default_db, 'title': TITLE,
         })
 
-    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_write, login_url=LOGIN_URL)
     def _post(self, info: str = None):
         data = self.request.POST
         action = get_param_if_ok(data, search='do', choices=['create', 'update', 'delete'], fallback='update', lower=True)

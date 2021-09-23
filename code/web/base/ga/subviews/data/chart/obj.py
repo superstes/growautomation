@@ -5,7 +5,7 @@ from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, Ch
 from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
 from ....utils.main import error_formatter, method_user_passes_test
 from ....user import authorized_to_read, authorized_to_write
-
+from ....config.shared import LOGIN_URL
 
 class Chart:
     def __init__(self, request, html_template: str, model, form):
@@ -33,7 +33,7 @@ class Chart:
 
             return self.get(chart_option_defaults)
 
-    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_read, login_url=LOGIN_URL)
     def get(self, chart_option_defaults: dict):
         data = self.request.GET
 
@@ -114,7 +114,7 @@ class Chart:
                 'form': chart_dict['form'], 'selected': chart_dict['id'], 'object_list': chart_dict['list'], 'title': self.title,
             })
 
-    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_write, login_url=LOGIN_URL)
     def post(self):
         data = self.request.POST
 

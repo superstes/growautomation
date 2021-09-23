@@ -7,7 +7,7 @@ from ...config.site import type_dict, sub_type_dict
 from ...utils.main import member_pre_process
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.helper import set_key
-from ...config.shared import CENSOR_SYMBOL
+from ...config.shared import CENSOR_SYMBOL, LOGIN_URL
 
 
 class ConfigView:
@@ -52,7 +52,7 @@ class ConfigView:
         else:
             return self._get()
 
-    @method_user_passes_test(authorized_to_read, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_read, login_url=LOGIN_URL)
     def _get(self):
         if self.action == 'list':
             tmpl, context = self._get_list()
@@ -74,7 +74,7 @@ class ConfigView:
 
         return render(self.request, f'{self.tmpl_root}/{tmpl}.html', context=context)
 
-    @method_user_passes_test(authorized_to_write, login_url='/accounts/login/')
+    @method_user_passes_test(authorized_to_write, login_url=LOGIN_URL)
     def _post(self):
         if self.action == 'update':
             return self._post_update()

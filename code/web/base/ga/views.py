@@ -1,9 +1,7 @@
 from traceback import format_exc
 
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 
-from .config.site import type_dict
 from .subviews.config.main import ConfigView
 from .utils.main import logout_check
 from .utils.helper import develop_log, get_controller_setting
@@ -20,6 +18,7 @@ from .subviews.api.chart.main import api_chart
 from .subviews.api.sock.main import api_sock
 from .subviews.data.dashboard.main import DashboardView
 from .subviews.system.export import export_view
+from .config.shared import LOGIN_URL
 
 
 def view(request, **kwargs):
@@ -92,13 +91,13 @@ class GaView:
 
     @staticmethod
     @login_required
-    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
+    @user_passes_test(authorized_to_access, login_url=LOGIN_URL)
     def config(request, action: str, typ: str, uid: int = None, sub_type: str = None):
         return logout_check(request=request, default=ConfigView(request=request, typ=typ, action=action, sub_type=sub_type, uid=uid).go())
 
     @staticmethod
     @login_required
-    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
+    @user_passes_test(authorized_to_access, login_url=LOGIN_URL)
     def system(request, typ: str, sub_type: str = None):
         if typ == 'log':
             return logout_check(request=request, default=LogView(request=request))
@@ -127,7 +126,7 @@ class GaView:
 
     @staticmethod
     @login_required
-    @user_passes_test(authorized_to_access, login_url='/accounts/login/')
+    @user_passes_test(authorized_to_access, login_url=LOGIN_URL)
     def data(request, typ: str, sub_type: str = None, third_type: str = None):
         if typ == 'table':
             return logout_check(request=request, default=DataListView(request=request))
