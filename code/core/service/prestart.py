@@ -25,7 +25,7 @@
 #   it's being set automatically by the systemd service
 
 from core.utils.test import test_tcp_stream
-from core.config import startup_shared as startup_shared_vars
+from core.config import shared_init_prestart as startup_shared_vars
 from core.config import shared as shared_vars
 
 from systemd import journal as systemd_journal

@@ -24,7 +24,7 @@
 #   (export PYTHONPATH=/usr/sbin/ga)
 #   it's being set automatically by the systemd service
 
-from core.config import startup_shared as startup_shared_vars
+from core.config import shared_init_prestart as startup_shared_vars
 startup_shared_vars.init()
 
 from core.utils.threader import Loop as Thread

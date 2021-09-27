@@ -69,7 +69,7 @@ def get_client_ip(request):
 
 
 def init_core_config():
-    from core.config.web_shared import init
+    from core.config.shared_init_web import init
     init(get_controller_obj())
 
 
