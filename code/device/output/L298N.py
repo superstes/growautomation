@@ -6,8 +6,6 @@
 #   privileges
 #     executing user must be a member of group gpio (usermod -a -G gpio USERNAME)
 #
-# for detailed information see the external documentation:
-#   adafruit dht22: https://learn.adafruit.com/dht/dht-circuitpython-code
 # call:
 #    python3 L298N.py forward/reverse "{\"connection\": $FWD+REV-PINS+RUNTIME}"
 #   p.e.
@@ -29,6 +27,7 @@ class Device:
 
     def __init__(self):
         try:
+            # we have no support to provide the pwm speed/percentage yet.. could be done by providing another argument
             self.pin_pwm = int(self.CONFIG['connection']['pwm'])
 
         except KeyError:
@@ -73,7 +72,7 @@ class Device:
             self._cleanup()
 
             if str(error).find('Not running on a RPi') != -1:
-                self._error('Executing user is not member of gpio group!')
+                self._error("The executing user is not member of the 'gpio' group!")
 
             self._error(msg=f"Got unexpected error: \"{error}\"\n{print_exc()}")
 

@@ -33,14 +33,17 @@ class Device:
     CONFIG = json_loads(sys_argv[2])
     ACCEPTABLE_ARGS = ['temperature', 'humidity']
     PULL_MAX_RETRIES = 5
-    PULL_INTERVAL = 3
+    PULL_INTERVAL = 3  # interval * max_retries should be less than the subprocess_timeout..
+    MAX_TEMPERATURE = 80
+    MIN_TEMPERATURE = -25
+    MAX_HUMIDITY = 100
+    MIN_HUMIDITY = 1
 
     def __init__(self):
         self.sensor = DHT22(getattr(board, f"D{self.CONFIG['connection']}"), use_pulseio=False)
-        self.data = self._get_data()
 
     def start(self):
-        print(json_dumps(self.data))
+        print(json_dumps(self._get_data()))
         self.sensor.exit()
 
     def _get_data(self):
@@ -52,19 +55,21 @@ class Device:
         while True:
             if try_count >= self.PULL_MAX_RETRIES:
                 self._error('Max retries reached')
+
             try:
                 if self.ARG == 'humidity':
                     data = self.sensor.humidity
-                    if self._value_check(data=data, value_max=100, value_min=1):
+                    if self._value_check(data=data, value_max=self.MAX_HUMIDITY, value_min=self.MIN_HUMIDITY):
                         break
 
                 elif self.ARG == 'temperature':
                     data = self.sensor.temperature
-                    if self._value_check(data=data, value_max=80, value_min=-15):
+                    if self._value_check(data=data, value_max=self.MAX_TEMPERATURE, value_min=self.MIN_TEMPERATURE):
                         break
+
             except RuntimeError as error:
                 if str(error).find('Not running on a RPi') != -1:
-                    self._error('Executing user is not member of gpio group!')
+                    self._error("The executing user is not member of the 'gpio' group!")
 
             time_sleep(self.PULL_INTERVAL)
             try_count += 1
