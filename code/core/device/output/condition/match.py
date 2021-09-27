@@ -1,8 +1,8 @@
 # handles single condition processing
 
 from core.utils.debug import device_log
-from core.device.output.condition.process.match_data import Go as MatchData
-from core.device.output.condition.process.match_special import Go as SpecialMatch
+from core.device.output.condition.match_data import Go as MatchData
+from core.device.output.condition.match_special import Go as SpecialMatch
 from core.config.object.setting.condition import GaConditionMatchSpecial
 
 
@@ -28,9 +28,9 @@ class Go:
             # maybe add more functionality for non-number data types (?)
             data = self.data_list[0]
 
-        device_log(f"Data of condition match \"{self.condition.name}\": \"{data}\"", add=self.device, level=7)
+        device_log(f"Data of condition match \"{self.condition.name}\": \"{data}\"", add=self.device, level=8)
         result = self._compare_data(data=data)
-        device_log(f"Result of condition match \"{self.condition.name}\": \"{result}\"", add=self.device, level=6)
+        device_log(f"Result of condition match \"{self.condition.name}\": \"{result}\"", add=self.device, level=7)
         return result
 
     def _compare_data(self, data) -> bool:
@@ -70,7 +70,7 @@ class Go:
             device_log(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\" with value_type \"{self.data_type}\"", add=self.device, level=4)
             raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", add=self.device, level=7)
+        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {data}\" = {result}", add=self.device, level=8)
         return result
 
     def _get_data(self) -> (float, int):
@@ -88,6 +88,6 @@ class Go:
             device_log(f"Condition match \"{self.condition.name}\" has an unsupported value_check set: \"{value_check}\"", add=self.device, level=4)
             raise ValueError(f"Unsupported check type for condition \"{self.condition.name}\"")
 
-        device_log(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", add=self.device, level=7)
+        device_log(f"Data of condition match \"{self.condition.name}\" using value check \"{value_check}\": {data}", add=self.device, level=8)
 
         return data

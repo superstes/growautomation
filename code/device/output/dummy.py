@@ -27,7 +27,7 @@ class Device:
     @classmethod
     def test_log(cls, out: str):
         with open(cls.LOGFILE, 'a') as log:
-            log.write(f"{datetime.now().strftime(cls.TIME_FORMAT)} - {out}")
+            log.write(f"{datetime.now().strftime(cls.TIME_FORMAT)} - {out}\n")
 
     @staticmethod
     def _error(msg):

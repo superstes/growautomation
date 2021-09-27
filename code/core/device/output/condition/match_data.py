@@ -23,7 +23,7 @@ class Go:
 
     def get(self) -> tuple:
         self._get_data()
-        device_log(f"Condition match \"{self.condition.name}\" got data \"{self.data_list}\" of type \"{self.data_type}\"", add=self.name, level=6)
+        device_log(f"Condition match \"{self.condition.name}\" got data \"{self.data_list}\" of type \"{self.data_type}\"", add=self.name, level=7)
         return self.data_list, self.data_type
 
     def _get_data(self) -> None:
@@ -44,7 +44,7 @@ class Go:
     def _get_data_prerequisites(self):
         # should only run once since its the same for all devices processed
         period_type = self.condition.period
-        device_log(f"Condition match \"{self.condition.name}\", period type \"{period_type}\", period \"{self.condition.period_data}\"", add=self.name, level=7)
+        device_log(f"Condition match \"{self.condition.name}\", period type \"{period_type}\", period \"{self.condition.period_data}\"", add=self.name, level=8)
 
         if period_type == 'time':
             data_method = self._get_data_by_time
@@ -72,31 +72,29 @@ class Go:
             return []
 
     def _devices_to_process(self) -> list:
-        # todo: let user choose if disabled inputs should be processed or not
-        # todo: area filtering => Ticket#10
+        # todo: area filtering
         to_check = self.condition.check_instance
-        process_disabled = False
         to_process = []
         disabled_list = []
 
         if isinstance(to_check, GaInputModel):
-            if process_disabled or to_check.enabled == 1:
+            if to_check.enabled == 1:
                 for device in to_check.member_list:
-                    if process_disabled or device.enabled == 1:
+                    if device.enabled == 1:
                         to_process.append(device)
 
                     else:
                         disabled_list.append(device)
 
         else:
-            if process_disabled or to_check.enabled == 1:
+            if to_check.enabled == 1:
                 to_process.append(to_check)
 
             else:
                 disabled_list.append(to_check)
 
-        if not process_disabled:
-            device_log(f"Condition match \"{self.condition.name}\" has some disabled inputs: \"{disabled_list}\"", add=self.name, level=7)
+        if len(disabled_list) > 0:
+            device_log(f"Condition match \"{self.condition.name}\" has some disabled inputs: \"{disabled_list}\"", add=self.name, level=8)
 
         if len(to_process) == 0:
             device_log(f"Got no inputs to pull data from for condition match \"{self.condition.name}\"", add=self.name, level=4)

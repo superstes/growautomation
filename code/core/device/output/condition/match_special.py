@@ -221,7 +221,7 @@ class Go:
             device_log(f"Condition match \"{self.condition.name}\" has an unsupported operator \"{operator}\"", add=self.name, level=4)
             raise ValueError(f"Unsupported operator for condition \"{self.condition.name}\"")
 
-        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {now}\" = {result}", add=self.name, level=7)
+        device_log(f"Condition match \"{self.condition.name}\" result for comparison \"{value} {operator} {now}\" = {result}", add=self.name, level=8)
         return result
 
     def _parse_time(self, raw_value: str) -> int:

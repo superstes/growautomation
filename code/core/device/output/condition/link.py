@@ -101,7 +101,7 @@ class Go:
                 result_dict=result_dict,
             )
 
-            device_log(f"Result of condition-link \"{link.name}\": \"{result}\"", add=self.name, level=7)
+            device_log(f"Result of condition-link \"{link.name}\": \"{result}\"", add=self.name, level=8)
             return result
 
         except (KeyError, ValueError) as error_msg:
@@ -137,7 +137,7 @@ class Go:
         :rtype: None
         :raises: RuntimeError: There is no condition match to further process
         """
-        device_log(f"Post-process of condition \"{group.name}\", link \"{link.name}\", result \"{result}\", process_nr \"{process_nr}\", group_member_count \"{group_member_count}\"", level=9)
+        device_log(f"Post-process of condition \"{group.name}\", link \"{link.name}\", result \"{result}\", process_nr \"{process_nr}\", group_member_count \"{group_member_count}\"", add=self.name, level=9)
 
         slm_list = self._get_single_link_member_list(group=group)
         nslm = False
@@ -236,7 +236,7 @@ class Go:
         if len(result_dict) != 2 or LINK_ORDER_ID_1 not in result_dict or LINK_ORDER_ID_2 not in result_dict:
             device_log(
                 f"Condition link \"{link.name}\" (id \"{link.object_id}\") has more or less than 2 results: \"{result_dict}\" => could be a configuration error",
-                level=7, add=self.name
+                level=8, add=self.name
             )
 
             # allowing a link with only one member
@@ -246,7 +246,7 @@ class Go:
             raise ValueError(f'Got not acceptable results for members of link \"{link.name}\"')
 
         op = link.operator
-        device_log(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", add=self.name, level=7)
+        device_log(f"Processing condition link \"{link.name}\", operator \"{op}\", result dict \"{result_dict}\"", add=self.name, level=8)
 
         if op == 'and':
             result = all(result_dict.values())
