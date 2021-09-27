@@ -35,3 +35,5 @@ LOG_FILE_PERMS = 644
 # todo: set as controller setting
 PYTHON_VENV = '/home/ga_core/venv/bin'
 SOCKET_SHUFFLE = None  # if unset SYSTEM.security will be evaluated
+
+NONE_RESULTS = ['', 'None', None, ' ']

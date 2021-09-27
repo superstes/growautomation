@@ -1,7 +1,7 @@
 # process handler
 
 from core.utils.debug import log
-from core.config.shared import SUBPROCESS_TIMEOUT
+from core.config.shared import SUBPROCESS_TIMEOUT, NONE_RESULTS
 
 from subprocess import Popen as subprocess_popen
 from subprocess import PIPE as subprocess_pipe
@@ -28,12 +28,13 @@ def subprocess(command: (list, str), out_error: bool = False):
         output = None
         error = error
 
-    if error in [None, '']:
+    if error in NONE_RESULTS:
         error = None
-        log(f"Process output: \"{output}\"", level=6)
+        if not log(f"Got output by processing command \"{command}\": \"{output}\"", level=7):
+            log(f"Process output: \"{output}\"", level=6)
 
     else:
-        log(f"Process error: \"{error}\" | output: \"{output}\"", level=2)
+        log(f"Got error while processing command \"{command}\": \"{error}\" | output: \"{output}\"", level=2)
 
     if out_error:
         return output, error

@@ -41,9 +41,14 @@ class Go:
                 result = self._execute()
 
                 lock.remove(instance=self.instance)
-                device_log(f"Device \"{self.instance.name}\" result \"{result}\"", add=self.name, level=6)
 
                 if isinstance(self.instance, (GaInputDevice, GaConnectionDevice)):
+                    if result not in shared_vars.NONE_RESULTS:
+                        device_log(f"Got result for device \"{self.instance.name}\": \"{result}\"", add=self.name, level=6)
+
+                    else:
+                        device_log(f"Got no result for device \"{self.instance.name}\"!", add=self.name, level=3)
+
                     if self.instance.fail_count == 0:
                         try:
                             data = json_loads(result)
@@ -54,6 +59,10 @@ class Go:
                             return None
 
                 else:
+                    if result not in shared_vars.NONE_RESULTS:
+                        # output devices do not need to return a useful result
+                        device_log(f"Got result for device \"{self.instance.name}\": \"{result}\"", add=self.name, level=6)
+
                     return result
 
         else:
@@ -133,7 +142,6 @@ class Go:
         return config_dict
 
     def _get_script_params(self) -> (None, dict):
-        bad_values = [None, '', 'None']
         params_dict = {'script': self.instance.script, 'bin': self.instance.script_bin, 'arg': self.instance.script_arg}
 
         if params_dict['bin'] == 'python3':
@@ -160,14 +168,14 @@ class Go:
             else:
                 device_log(f"Device \"{self.instance.name}\" is either not reversible or not active", add=self.name, level=7)
 
-        if params_dict['script'] in bad_values or params_dict['bin'] in bad_values:  # it should only be possible to be NoneType-None
+        if params_dict['script'] in shared_vars.NONE_RESULTS or params_dict['bin'] in shared_vars.NONE_RESULTS:  # it should only be possible to be NoneType-None
             device_log(f"No script or binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
             return None
 
         return params_dict
 
     def _error_action(self, error) -> None:
-        if error not in [None, '']:
+        if error not in shared_vars.NONE_RESULTS:
             device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"", add=self.name)
             self.instance.fail_count += 1
 
