@@ -1,10 +1,10 @@
-from core.config import shared as shared_vars
+from core.config import shared as config
 
 
 def init(controller_obj):
     try:
-        _ = shared_vars.SYSTEM.path_root
+        _ = config.SYSTEM.path_root
 
     except (AttributeError, NameError):
-        shared_vars.init()
-        shared_vars.SYSTEM = controller_obj
+        config.init()
+        config.SYSTEM = controller_obj

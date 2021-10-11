@@ -3,9 +3,9 @@ from grp import getgrnam
 from pwd import getpwnam
 from datetime import datetime
 
-from core.config import shared
+from core.config import shared as config
 
-shared.init()
+config.init()
 
 
 class Test:
@@ -23,8 +23,8 @@ class Device:
 
 
 try:
-    shared.SYSTEM = Test()
-    shared.CONFIG = {'object_input': [Device(4), Device(8)]}
+    config.SYSTEM = Test()
+    config.CONFIG = {'object_input': [Device(4), Device(8)]}
     from connect import Server
     Server().run()
 
@@ -38,7 +38,7 @@ def now(time_format: str):
 
 date_year, date_month = now("%Y"), now("%m")
 chown(
-    path=f'{shared.SYSTEM.path_log}/core/{date_year}/{date_month}_core.log',
+    path=f'{config.SYSTEM.path_log}/core/{date_year}/{date_month}_core.log',
     uid=getpwnam('ga_core').pw_uid,
     gid=getgrnam('ga')[2]
 )

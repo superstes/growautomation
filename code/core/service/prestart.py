@@ -1,8 +1,8 @@
 #!/usr/bin/python3.9
-# This file is part of Growautomation
+# This file is part of GrowAutomation
 #     Copyright (C) 2021  René Pascal Rath
 #
-#     Growautomation is free software: you can redistribute it and/or modify
+#     GrowAutomation is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
@@ -16,17 +16,17 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #     E-Mail: contact@growautomation.at
-#     Web: https://git.growautomation.eu
+#     Web: https://github.com/superstes/growautomation
 
 # ga_version 0.9
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
-#   (export PYTHONPATH=/usr/sbin/ga)
+#   (export PYTHONPATH=/var/lib/ga)
 #   it's being set automatically by the systemd service
 
 from core.utils.test import test_tcp_stream
 from core.config import shared_init_prestart as startup_shared_vars
-from core.config import shared as shared_vars
+from core.config import shared as config
 
 from systemd import journal as systemd_journal
 from sys import exc_info as sys_exc_info
@@ -44,9 +44,6 @@ from os import chown as os_chown
 
 
 class Prepare:
-    MAX_TRACEBACK_LENGTH = 5000
-    GA_GROUP = 'ga'
-
     def __init__(self):
         signal.signal(signal.SIGTERM, self._stop)
         signal.signal(signal.SIGINT, self._stop)
@@ -59,7 +56,7 @@ class Prepare:
             group = os_environ['GA_GROUP']
 
         else:
-            group = self.GA_GROUP
+            group = config.GA_GROUP
 
         self.uid = os_getuid()
         self.ga_gid = getgrnam(group)[2]
@@ -134,7 +131,7 @@ class Prepare:
         return self._check_file(
             files={
                 'log': {
-                    'path': f'{shared_vars.SYSTEM.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
+                    'path': f'{config.SYSTEM.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
                     'type': 'text',
                     'access': 'rw',
                     'perms': 644,
@@ -196,7 +193,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to set permissions for file \"{path}\"")
-                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
                             result_dict[file] = False
 
                 if 'type' in config and config['type'] == 'text':
@@ -209,7 +206,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to open file \"{path}\" for writing")
-                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
                             continue
 
                     if config['access'] == 'r':
@@ -221,7 +218,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to open file \"{path}\" for reading")
-                            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
                             continue
 
         if all(result_dict.values()):
@@ -232,18 +229,18 @@ class Prepare:
     def _check_networking(self) -> bool:
         connection_dict = {
             'database': {
-                'host': shared_vars.SYSTEM.sql_server,
-                'port': shared_vars.SYSTEM.sql_port,
+                'host': config.SYSTEM.sql_server,
+                'port': config.SYSTEM.sql_port,
             }
         }
 
         result_dict = {}
 
-        for connection, config in connection_dict.items():
-            result, error = test_tcp_stream(host=config['host'], port=config['port'], out_error=True)
+        for connection, settings in connection_dict.items():
+            result, error = test_tcp_stream(host=settings['host'], port=settings['port'], out_error=True)
 
             if error is not None:
-                self._log(f"Error while testing connection to {connection} (\"host: '{config['host']}', port '{config['port']}'\")")
+                self._log(f"Error while testing connection to {connection} (\"host: '{settings['host']}', port '{settings['port']}'\")")
 
             result_dict[connection] = result
 
@@ -256,11 +253,11 @@ class Prepare:
         from core.config.db.check import Go as DBCheck
 
         db_connection_data_dict = {
-            'server': shared_vars.SYSTEM.sql_server,
-            'port': shared_vars.SYSTEM.sql_port,
-            'user': shared_vars.SYSTEM.sql_user,
-            'secret': shared_vars.SYSTEM.sql_secret,
-            'database': shared_vars.SYSTEM.sql_database
+            'server': config.SYSTEM.sql_server,
+            'port': config.SYSTEM.sql_port,
+            'user': config.SYSTEM.sql_user,
+            'secret': config.SYSTEM.sql_secret,
+            'database': config.SYSTEM.sql_database
         }
 
         try:
@@ -269,7 +266,7 @@ class Prepare:
         except ConnectionError as error:
             self._log(f"Error while testing database connection (\"host: '{db_connection_data_dict['server']}', port '{db_connection_data_dict['port']}'"
                       f"\"): \"{error}\"")
-            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
+            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
             return False
 
     def _error(self, msg: str):
@@ -306,7 +303,7 @@ class Prepare:
 
         except Exception as error:
             self._log(f"An error occurred while processing factory: \"{error}\"")
-            self._log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH])
+            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
 
         return False
 

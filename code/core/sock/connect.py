@@ -8,26 +8,22 @@ from itertools import cycle
 from sys import exc_info as sys_exc_info
 from traceback import format_exc
 
-from core.config import socket as config
-from core.config.shared import SUBPROCESS_TIMEOUT
+from core.config import socket as socket_config
+from core.config import shared as config
 from core.utils.debug import log
 from core.sock.translate import Route
-
-RECV_INTERVAL = 2
-RECV_TIMEOUT = SUBPROCESS_TIMEOUT + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
-MAX_TRACEBACK_LENGTH = 5000
 
 
 class Interact:
     def __init__(self, link, server: bool = False):
         self.LINK = link
-        self.BANNER = config.SOCKET_BANNER_CORE
-        self.HEAD = config.PACKAGE_START.encode('utf-8')
-        self.TAIL = config.PACKAGE_STOP.encode('utf-8')
-        self.SIZE = config.PACKAGE_SIZE
+        self.BANNER = socket_config.SOCKET_BANNER_CORE
+        self.HEAD = socket_config.PACKAGE_START.encode('utf-8')
+        self.TAIL = socket_config.PACKAGE_STOP.encode('utf-8')
+        self.SIZE = socket_config.PACKAGE_SIZE
         self.SERVER = server
-        self.SHUFFLE = config.SHUFFLE
-        self.PATH_SEP = config.PACKAGE_PATH_SEPARATOR
+        self.SHUFFLE = socket_config.SHUFFLE
+        self.PATH_SEP = socket_config.PACKAGE_PATH_SEPARATOR
         if self.SERVER:
             self.LOG_PREFIX = 'Server - '
         else:
@@ -91,12 +87,12 @@ class Interact:
                     # if we did not receive anything
                     log(f'{self.LOG_PREFIX}Received no data!', level=9)
 
-                    if time() > start_time + RECV_TIMEOUT:
+                    if time() > start_time + socket_config.RECV_TIMEOUT:
                         log(f'{self.LOG_PREFIX}Receive timeout!', level=5)
                         return False
 
                     else:
-                        sleep(RECV_INTERVAL)
+                        sleep(socket_config.RECV_INTERVAL)
 
                 elif header:
                     # if first package => get package length and remove header
@@ -149,20 +145,20 @@ class Interact:
             data = data.encode('utf-8')
 
         return bytes(
-            [a ^ b for (a, b) in zip(data, cycle(config.SHUFFLE_DATA))]
+            [a ^ b for (a, b) in zip(data, cycle(socket_config.SHUFFLE_DATA))]
         )
 
 
 class Client:
-    def __init__(self, path: str, target: str = '127.0.0.1', port: int = config.SOCKET_PORT):
-        self.PATH = path if path.startswith('ga.') else f'{config.PATH_WEB}.{path}'
+    def __init__(self, path: str, target: str = '127.0.0.1', port: int = socket_config.SOCKET_PORT):
+        self.PATH = path if path.startswith('ga.') else f'{socket_config.PATH_WEB}.{path}'
         self.LINK = socket(family=AF_INET, type=SOCK_STREAM)
         self.TARGET = target
         self.PORT = port
-        self.PATH_SEP = config.PACKAGE_PATH_SEPARATOR
+        self.PATH_SEP = socket_config.PACKAGE_PATH_SEPARATOR
         self.LOG_PREFIX = 'Client - '
         self.connected = False
-        self.LINK.settimeout(RECV_TIMEOUT)
+        self.LINK.settimeout(socket_config.RECV_TIMEOUT)
 
     def get(self) -> (str, None):
         if self.connected or self._init():
@@ -211,7 +207,7 @@ def server_thread(srv, connection):
     except:
         exc_type, exc_obj, _ = sys_exc_info()
         log(f"Client connection '{connection.raddr}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
-        log(f"{format_exc()}"[:MAX_TRACEBACK_LENGTH], level=4)
+        log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
 
 class Server:
@@ -220,9 +216,9 @@ class Server:
 
     def __init__(self):
         self.SERVER = socket(family=AF_INET, type=SOCK_STREAM)
-        self.PORT = config.SOCKET_PORT
+        self.PORT = socket_config.SOCKET_PORT
 
-        if config.SOCKET_PUBLIC:
+        if socket_config.SOCKET_PUBLIC:
             self.ADDRESS = ''  # listen on all available addresses
 
         else:
@@ -230,8 +226,8 @@ class Server:
 
         self.CLIENT_MAX_CONCURRENT = 5
         self.CLIENT_THREADS = 0
-        self.PKG_SIZE = config.PACKAGE_SIZE
-        self.NAME = config.SOCKET_SERVER_NAME
+        self.PKG_SIZE = socket_config.PACKAGE_SIZE
+        self.NAME = socket_config.SOCKET_SERVER_NAME
         self.LOG_PREFIX = 'Server - '
 
     def run(self):
@@ -254,7 +250,7 @@ class Server:
 
             while True:
                 connection, address = self.SERVER.accept()
-                connection.settimeout(RECV_TIMEOUT)
+                connection.settimeout(socket_config.RECV_TIMEOUT)
                 log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
                 start_new_thread(server_thread, (self, connection))
 

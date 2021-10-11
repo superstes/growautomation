@@ -4,7 +4,7 @@ from re import match as regex_match
 
 from core.utils.debug import log
 from core.config.socket import PACKAGE_PATH_SEPARATOR
-from core.config import shared
+from core.config import shared as config
 from core.factory import config as factory_config
 
 
@@ -69,7 +69,7 @@ class Route:
         #     if inactive and start => start
         #     if active and stop => only run reversal
 
-        for obj in shared.CONFIG[key]:
+        for obj in config.CONFIG[key]:
             if getattr(obj, factory_config.CORE_ID_ATTRIBUTE) == self.path_id:
                 log(f'Executing {action} for {self.path_subtype}-{self.path_type} with id {self.path_id}', level=6)
 

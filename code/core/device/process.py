@@ -4,12 +4,12 @@
 #   starts output script
 
 from core.utils.process import subprocess
-from core.config import shared as shared_vars
 from core.utils.debug import device_log
 from core.device import lock
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.output import GaOutputDevice
 from core.config.object.device.connection import GaConnectionDevice
+from core.config import shared as config
 
 from json import dumps as json_dumps
 from json import loads as json_loads
@@ -19,7 +19,6 @@ from datetime import datetime
 
 class Go:
     INPUT_DATA_KEY = 'data'
-    SCRIPT_SUBPATH = "device/%s"
 
     def __init__(self, instance, script_dir: str, reverse: bool = False, nested_instance=None, manually: bool = False):
         self.instance = instance
@@ -43,7 +42,7 @@ class Go:
                 lock.remove(instance=self.instance)
 
                 if isinstance(self.instance, (GaInputDevice, GaConnectionDevice)):
-                    if result not in shared_vars.NONE_RESULTS:
+                    if result not in config.NONE_RESULTS:
                         device_log(f"Got result for device \"{self.instance.name}\": \"{result}\"", add=self.name, level=6)
 
                     else:
@@ -59,7 +58,7 @@ class Go:
                             return None
 
                 else:
-                    if result not in shared_vars.NONE_RESULTS:
+                    if result not in config.NONE_RESULTS:
                         # output devices do not need to return a useful result
                         device_log(f"Got result for device \"{self.instance.name}\": \"{result}\"", add=self.name, level=6)
 
@@ -88,8 +87,8 @@ class Go:
 
         command = "%s %s/%s/%s \"%s\" \"%s\"" % (
             params_dict['bin'],
-            shared_vars.SYSTEM.path_root,
-            self.SCRIPT_SUBPATH % self.script_dir,
+            config.SYSTEM.path_root,
+            config.DEVICE_SCRIPT_PATH % self.script_dir,
             params_dict['script'],
             params_dict['arg'],
             str(json_dumps(config_dict)).replace("\"", "\\\"")
@@ -145,7 +144,7 @@ class Go:
         params_dict = {'script': self.instance.script, 'bin': self.instance.script_bin, 'arg': self.instance.script_arg}
 
         if params_dict['bin'] == 'python3':
-            params_dict['bin'] = f'{shared_vars.PYTHON_VENV}/python3'
+            params_dict['bin'] = f'{config.PYTHON_VENV}/python3'
 
         # reverse parameters
         if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1:
@@ -168,19 +167,19 @@ class Go:
             else:
                 device_log(f"Device \"{self.instance.name}\" is either not reversible or not active", add=self.name, level=7)
 
-        if params_dict['script'] in shared_vars.NONE_RESULTS or params_dict['bin'] in shared_vars.NONE_RESULTS:  # it should only be possible to be NoneType-None
+        if params_dict['script'] in config.NONE_RESULTS or params_dict['bin'] in config.NONE_RESULTS:  # it should only be possible to be NoneType-None
             device_log(f"No script or binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
             return None
 
         return params_dict
 
     def _error_action(self, error) -> None:
-        if error not in shared_vars.NONE_RESULTS:
+        if error not in config.NONE_RESULTS:
             device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"", add=self.name)
             self.instance.fail_count += 1
 
-            if self.instance.fail_count > shared_vars.SYSTEM.device_fail_count:
-                self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + shared_vars.SYSTEM.device_fail_sleep)
+            if self.instance.fail_count > config.SYSTEM.device_fail_count:
+                self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + config.SYSTEM.device_fail_sleep)
                 device_log(f"Device \"{self.instance.name}\" has reached its fail threshold -> will skip execution "
                            f"until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", add=self.name, level=3)
 

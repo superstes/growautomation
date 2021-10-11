@@ -3,6 +3,7 @@
 
 from core.utils.process import subprocess
 from core.utils.debug import log
+from core.config import shared as config
 
 import mysql.connector
 from time import sleep as time_sleep
@@ -11,8 +12,6 @@ from functools import lru_cache
 
 
 class Go:
-    MARIADB_CONFIG_FILE = '/etc/mysql/mariadb.conf.d/50-server.cnf'
-    MARIADB_SOCKET_DEFAULT = '/run/mysqld/mysqld.sock'
     SQL_EXCEPTION_TUPLE = (
         mysql.connector.errors.ProgrammingError,  # if sql syntax has an error
         mysql.connector.Error,
@@ -150,23 +149,23 @@ class Go:
         else:
             return self.cursor.fetchall()
 
-    @classmethod
-    def _unix_sock(cls):
+    @staticmethod
+    def _unix_sock():
         try:
             sock = None
 
-            with open(cls.MARIADB_CONFIG_FILE, 'r') as _:
+            with open(config.MARIADB_CONFIG_FILE, 'r') as _:
                 for line in _.readlines():
                     if line.find('socket') != -1:
                         sock = line.split('=')[1].strip()
                         break
 
                 if sock is None:
-                    sock = cls.MARIADB_SOCKET_DEFAULT
+                    sock = config.MARIADB_SOCKET_DEFAULT
 
             if os_path.exists(sock) is False:
-                if subprocess(command="systemctl status mysql.service | grep 'Active:'").find('Active: inactive') != -1:
-                    if subprocess('systemctl start mysql.service').find('Not able to start') != -1:
+                if subprocess(command=f"systemctl status {config.MARIADB_SVC} | grep 'Active:'").find('Active: inactive') != -1:
+                    if subprocess(command=f'systemctl start {config.MARIADB_SVC}').find('Not able to start') != -1:
                         return False
 
                     time_sleep(3)

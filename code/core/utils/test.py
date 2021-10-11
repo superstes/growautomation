@@ -1,7 +1,7 @@
 import socket
 from time import sleep
 
-from core.config.shared import NONE_RESULTS
+from core.config import shared as config
 
 
 def test_tcp_stream(host: str, port: int, timeout: int = 5, out_error: bool = False) -> (bool, tuple):
@@ -20,13 +20,13 @@ def test_tcp_stream(host: str, port: int, timeout: int = 5, out_error: bool = Fa
     tcp_stream.close()
 
     if out_error:
-        if error not in NONE_RESULTS:
+        if error not in config.NONE_RESULTS:
             return False, error
         else:
             return True, None
 
     else:
-        if error not in NONE_RESULTS:
+        if error not in config.NONE_RESULTS:
             return False
         else:
             return True

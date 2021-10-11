@@ -1,6 +1,6 @@
 from base64 import b64encode
 from base64 import b64decode
-from hashlib import sha256 as hashlib_sha256
+from hashlib import sha256
 from Crypto import Random
 from Crypto.Cipher import AES
 
@@ -8,7 +8,7 @@ from Crypto.Cipher import AES
 class AESCipher(object):
     def __init__(self, key):
         self.bs = AES.block_size
-        self.key = hashlib_sha256(key.encode()).digest()
+        self.key = sha256(key.encode()).digest()
 
     def encrypt(self, raw):
         raw = self._pad(raw)

@@ -1,6 +1,6 @@
 # logging and debugging
 
-from core.config import shared as shared_vars
+from core.config import shared as config
 
 from datetime import datetime
 from os import path as os_path
@@ -25,7 +25,7 @@ date_year, date_month = now("%Y"), now("%m")
 
 class Log:
     try:
-        SECRET_DATA = [shared_vars.SYSTEM.sql_secret]
+        SECRET_DATA = [config.SYSTEM.sql_secret]
 
     except AttributeError:
         SECRET_DATA = []
@@ -36,8 +36,8 @@ class Log:
             self.name = inspect_getfile(inspect_stack()[1][0])
 
         self.type = typ
-        self.log_dir = f"{shared_vars.SYSTEM.path_log}/{self.type}/{date_year}"
-        self.log_level = shared_vars.SYSTEM.log_level
+        self.log_dir = f"{config.SYSTEM.path_log}/{self.type}/{date_year}"
+        self.log_level = config.SYSTEM.log_level
 
         if addition is None:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
@@ -51,15 +51,15 @@ class Log:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
-        if shared_vars.SYSTEM.debug == 0 and (level > self.log_level or not self.status):
+        if config.SYSTEM.debug == 0 and (level > self.log_level or not self.status):
             return False
 
         output = self._censor(str(output))
-        output_formatted = f"{datetime.now().strftime(shared_vars.LOG_TIMESTAMP_FORMAT)}{shared_vars.LOG_SEPARATOR}{self.name}{shared_vars.LOG_SEPARATOR}{output}"
+        output_formatted = f"{datetime.now().strftime(config.LOG_TIMESTAMP_FORMAT)}{config.LOG_SEPARATOR}{self.name}{config.LOG_SEPARATOR}{output}"
         self._debugger(command=output_formatted)
 
         with open(self.log_file, 'a+') as logfile:
-            logfile.write(f"{level}{shared_vars.LOG_SEPARATOR}{output_formatted}\n")
+            logfile.write(f"{level}{config.LOG_SEPARATOR}{output_formatted}\n")
 
         return True
 
@@ -72,8 +72,8 @@ class Log:
                     logfile.write('init\n')
 
             if sys_platform != 'win32':
-                os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(shared_vars.GA_GROUP)[2])
-                os_chmod(path=self.log_file, mode=int(f'{shared_vars.LOG_FILE_PERMS}', base=8))
+                os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
+                os_chmod(path=self.log_file, mode=int(f'{config.LOG_FILE_PERMS}', base=8))
 
             return True
 
@@ -82,14 +82,14 @@ class Log:
             return False
 
     def _censor(self, output: str) -> str:
-        for setting in shared_vars.LOG_SECRET_SETTINGS:
+        for setting in config.LOG_SECRET_SETTINGS:
             if output.find(setting) != -1:
                 split_output = output.split(setting)
                 updated_list = [split_output[0]]
 
                 for data in split_output[1:]:
                     try:
-                        updated_list.append(f"{setting}': \"{shared_vars.LOG_CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
+                        updated_list.append(f"{setting}': \"{config.LOG_CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
 
                     except IndexError:
                         output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
@@ -99,13 +99,13 @@ class Log:
                     output = ''.join(updated_list)
 
         for data in self.SECRET_DATA:
-            output.replace(data, shared_vars.LOG_CENSOR_OUTPUT)
+            output.replace(data, config.LOG_CENSOR_OUTPUT)
 
         return output
 
     @staticmethod
     def _debugger(command):
-        if shared_vars.SYSTEM.debug == 1:
+        if config.SYSTEM.debug == 1:
             print(f'DEBUG: {command}')
             return True
 
@@ -167,7 +167,7 @@ def web_log(output: str, level: int = 1) -> bool:
 def device_log(output: str, add: str, level: int = 1) -> bool:
     _src = inspect_getfile(inspect_stack()[1][0])
 
-    if shared_vars.SYSTEM.device_log == 1:
+    if config.SYSTEM.device_log == 1:
         return MultiLog([
             Log(src_file=_src),
             Log(typ='device', addition=add, src_file=_src)

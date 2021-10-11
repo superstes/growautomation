@@ -3,15 +3,15 @@
 from core.config.object.data.db import GaDataDb
 from core.config.object.device.input import GaInputModel, GaInputDevice
 from core.utils.debug import device_log
-from core.config.db.template import DEVICE_DICT
+from core.config.db.template import DEVICE_TMPL
 
 from datetime import timedelta
 from datetime import datetime
 
 
 class Go:
-    SQL_QUERY_TIME = DEVICE_DICT['output']['data']['time']
-    SQL_QUERY_RANGE = DEVICE_DICT['output']['data']['range']
+    SQL_QUERY_TIME = DEVICE_TMPL['output']['data']['time']
+    SQL_QUERY_RANGE = DEVICE_TMPL['output']['data']['range']
 
     def __init__(self, condition, device):
         self.condition = condition

@@ -16,12 +16,12 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #     E-Mail: contact@growautomation.at
-#     Web: https://git.growautomation.eu
+#     Web: https://github.com/superstes/growautomation
 
 # ga_version 0.9
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
-#   (export PYTHONPATH=/usr/sbin/ga)
+#   (export PYTHONPATH=/var/lib/ga)
 #   it's being set automatically by the systemd service
 
 from core.config import shared_init_prestart as startup_shared_vars
@@ -31,7 +31,7 @@ from core.utils.threader import Loop as Thread
 from core.factory.main import get as factory
 from core.factory.reload import Go as Reload
 from core.service.timer import get as get_timer
-from core.config import shared as shared_vars
+from core.config import shared as config
 from core.utils.debug import fns_log
 from core.service.decision import start as decision
 from core.config.object.data.file import GaDataFile
@@ -45,12 +45,6 @@ import signal
 
 
 class Service:
-    RUN_RELOAD_INTERVAL = 86400
-    RUN_STATUS_INTERVAL = 3600
-    RUN_LOOP_INTERVAL = 60
-    MAX_STOP_COUNT = 3
-    WAIT_TIME = 5
-
     def __init__(self):
         self.exit_count = 0
         self.stop_count = 0
@@ -91,7 +85,7 @@ class Service:
             config_dict=self.current_config_dict
         ).get()
 
-        shared_vars.CONFIG = self.CONFIG
+        config.CONFIG = self.CONFIG
 
         if reload:
             fns_log('Reload - config has changed. Restarting threads.')
@@ -103,7 +97,7 @@ class Service:
             # stop and reset all current threads
             self.THREADER.stop()
             self.THREADER.jobs = []
-            self._wait(seconds=self.WAIT_TIME)
+            self._wait(seconds=config.SVC_WAIT_TIME)
             # re-create all the threads
             self.start()
 
@@ -112,7 +106,7 @@ class Service:
             self._run()
 
     def stop(self, signum=None, stack=None):
-        if self.stop_count >= self.MAX_STOP_COUNT:
+        if self.stop_count >= config.SVC_MAX_STOP_COUNT:
             self.hard_exit(signum=signum)
 
         else:
@@ -122,15 +116,15 @@ class Service:
             self._signum_log(signum=signum)
             fns_log('Stopping timer threads', level=6)
             self.THREADER.stop()
-            self._wait(seconds=self.WAIT_TIME)
+            self._wait(seconds=config.SVC_WAIT_TIME)
             fns_log('Service stopped.')
             self._exit()
 
     def hard_exit(self, signum=None, stack=None):
         self._signum_log(signum)
 
-        if self.stop_count >= self.MAX_STOP_COUNT:
-            fns_log(f"Hard exiting service since it was stopped more than {self.MAX_STOP_COUNT} times", level=6)
+        if self.stop_count >= config.SVC_MAX_STOP_COUNT:
+            fns_log(f"Hard exiting service since it was stopped more than {config.SVC_MAX_STOP_COUNT} times", level=6)
 
         fns_log('Stopping service merciless', level=3)
         fns_log('Service stopped.')
@@ -138,9 +132,9 @@ class Service:
         raise SystemExit('Service exited merciless!')
 
     def _init_shared_vars(self):
-        shared_vars.init()
-        shared_vars.CONFIG = self.CONFIG
-        shared_vars.SYSTEM = self.CONFIG[factory_config.KEY_OBJECT_CONTROLLER][0]
+        config.init()
+        config.CONFIG = self.CONFIG
+        config.SYSTEM = self.CONFIG[factory_config.KEY_OBJECT_CONTROLLER][0]
 
     def _update_config_file(self):
         self.CONFIG_FILE.update()
@@ -183,34 +177,24 @@ class Service:
         simple_thread_list = [thread.name for thread in thread_list]
         fns_log(f"Status - threads running: {simple_thread_list}")
         fns_log(f"Detailed info on running threads:\n{detailed_thread_list}", level=7)
-        # self._test_properties(instances=thread_list, query='script')
-
-    @staticmethod
-    def _test_properties(self, instances: list, query: str):
-        _ = {}
-        for instance in instances:
-            if hasattr(instance, query):
-                _[instance.name] = instance.script
-
-        fns_log(f"TEST PROPERTY: {_}")
 
     def _run(self):
         try:
-            self._wait(seconds=self.WAIT_TIME)
+            self._wait(seconds=config.SVC_WAIT_TIME)
             fns_log('Entering service runtime', level=7)
             run_last_reload_time = time()
             run_last_status_time = time()
 
             while True:
-                if time() > (run_last_reload_time + self.RUN_RELOAD_INTERVAL):
+                if time() > (run_last_reload_time + config.SVC_RUN_RELOAD_INTERVAL):
                     self.reload()
                     break
 
-                if time() > (run_last_status_time + self.RUN_STATUS_INTERVAL):
+                if time() > (run_last_status_time + config.SVC_RUN_STATUS_INTERVAL):
                     self._status()
                     run_last_status_time = time()
 
-                time_sleep(self.RUN_LOOP_INTERVAL)
+                time_sleep(config.SVC_RUN_LOOP_INTERVAL)
 
         except:
             try:

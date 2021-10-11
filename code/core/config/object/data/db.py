@@ -5,7 +5,7 @@
 from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
 from core.config.db.validate import Go as Validate
-from core.config import shared as shared_vars
+from core.config import shared as config
 from core.utils.debug import log
 
 
@@ -13,11 +13,11 @@ class GaDataDb:
     def __init__(self):
         try:
             self.connection_data_dict = {
-                'server': shared_vars.SYSTEM.sql_server,
-                'port': shared_vars.SYSTEM.sql_port,
-                'user': shared_vars.SYSTEM.sql_user,
-                'secret': shared_vars.SYSTEM.sql_secret,
-                'database': shared_vars.SYSTEM.sql_database
+                'server': config.SYSTEM.sql_server,
+                'port': config.SYSTEM.sql_port,
+                'user': config.SYSTEM.sql_user,
+                'secret': config.SYSTEM.sql_secret,
+                'database': config.SYSTEM.sql_database
             }
 
             log(f"DB connection config: "
@@ -27,7 +27,7 @@ class GaDataDb:
                 f"database => \"{self.connection_data_dict['database']}\"", level=7)
 
         except IndexError as error_msg:
-            self._error(error_msg)
+            self._error(msg=error_msg)
 
         self.link = None
         self._link()
@@ -51,6 +51,6 @@ class GaDataDb:
         return self.link.put(command)
 
     @staticmethod
-    def _error(self, msg):
+    def _error(msg):
         log(f"Received error \"{msg}\"")
         raise ConnectionError(msg)

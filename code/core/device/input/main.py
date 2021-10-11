@@ -3,7 +3,7 @@
 from core.device.check import Go as Check
 from core.device.process import Go as Process
 from core.config.object.data.db import GaDataDb
-from core.config.db.template import DEVICE_DICT
+from core.config.db.template import DEVICE_TMPL
 from core.utils.debug import device_log
 
 from core.config.object.device.input import GaInputDevice
@@ -13,8 +13,8 @@ from datetime import datetime
 
 
 class Go:
-    SQL_DATA_COMMAND = DEVICE_DICT['input']['data']
-    SQL_TASK_COMMAND = DEVICE_DICT['task']
+    SQL_DATA_COMMAND = DEVICE_TMPL['input']['data']
+    SQL_TASK_COMMAND = DEVICE_TMPL['task']
 
     def __init__(self, instance: (GaInputDevice, GaInputModel), manually: bool = False):
         self.instance = instance

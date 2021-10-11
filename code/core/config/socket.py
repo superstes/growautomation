@@ -10,29 +10,34 @@
 #    we need to be able to start device-actions via the core from the webUI
 #
 
-from core.config import shared as shared_var
+from core.config import shared as config
 
-PATH_CORE = 'ga.core'
-SUB_PATH_DEVICE = 'device'
-PATH_DEVICE_TYPES = ['input', 'output', 'connection']
-MATCH_DEVICE = f'{PATH_CORE}{SUB_PATH_DEVICE}.([0-9]{{1,10}}).(.*?)$'
-
-PATH_WEB = 'ga.web'
-
-SUB_PATHS = [SUB_PATH_DEVICE]
-
+# general socket settings
 SOCKET_PORT = 2048
 SOCKET_PUBLIC = False  # if not => the socket server will only be reachable locally
+
+# transmission settings
 SOCKET_SERVER_NAME = 'InterconnectionServer'
 SOCKET_BANNER_CORE = f'### GrowAutomation {SOCKET_SERVER_NAME} ###'
 PACKAGE_START = '+GA+'
 PACKAGE_STOP = '-GA-'
 PACKAGE_PATH_SEPARATOR = '_GA_'
 PACKAGE_SIZE = 1024
+RECV_INTERVAL = 2
+RECV_TIMEOUT = config.SUBPROCESS_TIMEOUT + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
 
-if shared_var.SOCKET_SHUFFLE or shared_var.SYSTEM.security:
+if config.SOCKET_SHUFFLE or config.SYSTEM.security:
     SHUFFLE = True
 else:
     SHUFFLE = False
 
 SHUFFLE_DATA = '80e7540fe29c6b88314a8083acf7110c'.encode('utf-8')
+
+# api paths
+PATH_CORE = 'ga.core'
+SUB_PATH_DEVICE = 'device'
+PATH_DEVICE_TYPES = ['input', 'output', 'connection']
+MATCH_DEVICE = f'{PATH_CORE}{SUB_PATH_DEVICE}.([0-9]{{1,10}}).(.*?)$'
+PATH_WEB = 'ga.web'
+SUB_PATHS = [SUB_PATH_DEVICE]
+

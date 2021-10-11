@@ -3,6 +3,7 @@
 # modified for use in GrowAutomation
 
 from core.utils.debug import log
+from core.config import shared as config
 
 from threading import Thread, Event
 from time import sleep as time_sleep
@@ -12,11 +13,6 @@ from traceback import format_exc
 
 
 class Workload(Thread):
-    JOIN_TIMEOUT = 5
-    MAX_TRACEBACK_LENGTH = 5000
-    FAIL_COUNT_SLEEP = 5
-    FAIL_SLEEP = 600
-
     def __init__(self, sleep: timedelta, execute, data, loop_instance, description: str, once: bool = False):
         Thread.__init__(self)
         self.sleep = sleep
@@ -34,7 +30,7 @@ class Workload(Thread):
         self.state_stop.set()
 
         try:
-            self.join(self.JOIN_TIMEOUT)
+            self.join(config.THREAD_JOIN_TIMEOUT)
             if self.is_alive():
                 log(f"Unable to join thread \"{self.log_name}\"", level=5)
 
@@ -45,9 +41,9 @@ class Workload(Thread):
         return True
 
     def run(self) -> None:
-        if self.fail_count >= self.FAIL_COUNT_SLEEP:
-            log(f"Thread \"{self.log_name}\" failed too often => entering fail-sleep of {self.FAIL_SLEEP} secs", level=3)
-            time_sleep(self.FAIL_SLEEP)
+        if self.fail_count >= config.THREAD_FAIL_COUNT_SLEEP:
+            log(f"Thread \"{self.log_name}\" failed too often => entering fail-sleep of {config.THREAD_FAIL_SLEEP} secs", level=3)
+            time_sleep(config.THREAD_FAIL_SLEEP)
 
         log(f"Entering runtime of thread \"{self.log_name}\"", level=7)
         try:
@@ -70,7 +66,7 @@ class Workload(Thread):
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
             self.fail_count += 1
             log(f"Thread \"{self.log_name}\" failed with error: \"{error_msg}\"", level=1)
-            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=4)
+            log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
                 self.run()
@@ -79,15 +75,13 @@ class Workload(Thread):
             self.fail_count += 1
             exc_type, exc_obj, _ = sys_exc_info()
             log(f"Thread \"{self.log_name}\" failed with error: \"{exc_type} - {exc_obj}\"", level=1)
-            log(f"{format_exc()}"[:self.MAX_TRACEBACK_LENGTH], level=4)
+            log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
                 self.run()
 
 
 class Loop:
-    DEFAULT_SLEEP_TIME = 600
-
     def __init__(self):
         self.jobs = []
 
@@ -116,7 +110,7 @@ class Loop:
 
         def decorator(function):
             if sleep_time == 0:
-                sleep_time_new = self.DEFAULT_SLEEP_TIME
+                sleep_time_new = config.THREAD_DEFAULT_SLEEP_TIME
                 self.jobs.append(
                     Workload(
                         sleep=timedelta(seconds=sleep_time_new),

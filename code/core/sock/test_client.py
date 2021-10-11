@@ -4,11 +4,11 @@ from pwd import getpwnam
 from time import sleep
 from datetime import datetime
 
-from core.config import shared
+from core.config import shared as config
 
 # NOTE: the script must be executed as ga-serviceuser; else you will find that no logs can be written by the service while it is executing
 
-shared.init()
+config.init()
 
 
 class Test:
@@ -21,7 +21,7 @@ class Test:
 
 
 try:
-    shared.SYSTEM = Test()
+    config.SYSTEM = Test()
     from connect import Client
     print(Client(path='ga.core.device.input.1').post(data='start'))
     sleep(0.2)
@@ -36,7 +36,7 @@ def now(time_format: str):
 
 date_year, date_month = now("%Y"), now("%m")
 chown(
-    path=f'{shared.SYSTEM.path_log}/core/{date_year}/{date_month}_core.log',
+    path=f'{config.SYSTEM.path_log}/core/{date_year}/{date_month}_core.log',
     uid=getpwnam('ga_core').pw_uid,
     gid=getgrnam('ga')[2]
 )
