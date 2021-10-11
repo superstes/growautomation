@@ -1,7 +1,3 @@
-from sys import platform
-from datetime import datetime
-from pytz import timezone as pytz_timezone
-
 from core.utils.process import subprocess
 from core.utils.debug import web_log
 
@@ -10,8 +6,6 @@ from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 from ..subviews.handlers import Pseudo404
-from ..config.shared import DATETIME_TS_FORMAT
-
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 ALL_DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupInputModel, GroupOutputModel, GroupConnectionModel]
@@ -23,14 +17,6 @@ def check_develop(request) -> bool:
         return True
 
     return False
-
-
-def get_time_difference(time_data: str, time_format: str) -> int:
-    before = datetime.strptime(time_data, time_format)
-    now = datetime.now()
-    difference = now - before
-
-    return int(difference.total_seconds())
 
 
 def get_controller_obj():
@@ -47,25 +33,7 @@ def get_controller_setting(request, setting: str):
 
 def get_script_dir(request, typ) -> str:
     path_root = get_controller_setting(request, setting='path_root')
-
-    if platform == 'win32':
-        output = f"C:/Users/rene/Documents/code/ga/growautomation/code/device/{typ.lower()}"
-    else:
-        output = f"{path_root}/device/{typ.lower()}"
-
-    return output
-
-
-def get_client_ip(request):
-    ip_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if ip_forwarded:
-        client_ip = ip_forwarded.split(',')[0]
-    else:
-        client_ip = request.META.get('REMOTE_ADDR')
-
-    censored_client_ip = f"{client_ip.rsplit('.', 1)[0]}.0"
-
-    return censored_client_ip
+    return f"{path_root}/device/{typ.lower()}"
 
 
 def init_core_config():
@@ -86,23 +54,25 @@ def develop_log(request, output: str, level: int = 1) -> None:
         web_log(output=output, level=level)
 
 
-def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:
-    if ctz is None:
-        # takes A LOT of time if done in a loop
-        ctz = get_controller_setting(request, setting='timezone')
+def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):
+    if obj in [None, '', 'None'] or type(obj) not in (str, int):
+        return None
 
-    if tz is not None:
-        _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))
-        output = _tz_aware.astimezone(pytz_timezone(ctz))
+    for check_obj in typ.objects.all():
+        if type(obj) == str:
+            if force_id:
+                if check_obj.id == int(obj):
+                    return check_obj
 
-    else:
-        output = datetime_obj.replace(tzinfo=pytz_timezone(ctz))
+            else:
+                if check_obj.name == obj:
+                    return check_obj
 
-    return output
+        else:
+            if check_obj.id == obj:
+                return check_obj
 
-
-def time_as_str(datetime_obj: datetime) -> str:
-    return datetime_obj.strftime(DATETIME_TS_FORMAT)
+    return None
 
 
 def get_device_parent(child_obj):
@@ -127,45 +97,6 @@ def get_device_parent(child_obj):
     return parent
 
 
-def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):
-    if obj in [None, '', 'None'] or type(obj) not in (str, int):
-        return None
-
-    for check_obj in typ.objects.all():
-        if type(obj) == str:
-            if force_id:
-                if check_obj.id == int(obj):
-                    return check_obj
-
-            else:
-                if check_obj.name == obj:
-                    return check_obj
-
-        else:
-            if check_obj.id == obj:
-                return check_obj
-
-    return None
-
-
-def get_instance_from_field(typ, field: str, data, target_type):
-    for check_obj in typ.objects.all():
-        if not hasattr(check_obj, field):
-            return None
-
-        else:
-            if getattr(check_obj, field) == target_type(data):
-                return check_obj
-
-    return None
-
-
-def get_device_type(device: DEVICE_TYPES):
-    for typ in ALL_DEVICE_TYPES:
-        if isinstance(device, typ):
-            return typ
-
-
 def get_device_parent_setting(child_obj: DEVICE_TYPES, setting: str):
     if not isinstance(child_obj, tuple(DEVICE_TYPES)):
         return None
@@ -174,54 +105,36 @@ def get_device_parent_setting(child_obj: DEVICE_TYPES, setting: str):
     return getattr(parent, setting)
 
 
-def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
-    if type(dt_str) != str:
-        return None
+def member_pre_process(request, member_data_dict: dict, member_config: dict):
+    output = {}
+    member_view_active = False
 
+    if 'list_member' in request.GET:
+        member_view_active = request.GET['list_member']
+
+        for key, data in member_data_dict.items():
+            group_key = member_config[key]['group_key']
+            member_key = member_config[key]['member_key']
+
+            for member in data:
+                member_group = getattr(member, group_key)
+                member_repr = getattr(member, member_key)
+                if member_group.name == member_view_active and member_repr is not None:
+                    if key in output:
+                        output[key].append(member)
+
+                    else:
+                        output[key] = [member]
+
+    if member_view_active is False:
+        return member_view_active, member_data_dict
+    else:
+        return member_view_active, output
+
+
+def error_formatter(form_error, fallback: str = 'Failed to save form') -> str:
     try:
-        _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
-        ts_w_tz = add_timezone(request, datetime_obj=_ts_wo_tz)
-        return ts_w_tz
+        return str(list(form_error.as_data().values())[0][0]).replace("['", '').replace("']", '')
 
-    except ValueError:
-        return None
-
-
-def get_form_prefill(request):
-    form_prefill = {}
-
-    for key, value in request.GET.items():
-        if value is not None:
-            form_prefill[key] = value
-
-    return form_prefill
-
-
-def str_to_list(data: (list, str), reverse: bool = False) -> list:
-    if type(data) == str:
-        _ = data.split('\n')
-    else:
-        _ = data
-
-    if reverse:
-        _.reverse()
-
-    return _
-
-
-def empty_key(search, param: str) -> bool:
-    if param in search and search[param] not in [None, '', "['']", 'None']:
-        return False
-
-    return True
-
-
-def set_key(search, param: str) -> bool:
-    return not empty_key(search=search, param=param)
-
-
-def get_url_divider(url: str):
-    if url.endswith('/'):
-        return ''
-    else:
-        return '/'
+    except IndexError:
+        return fallback

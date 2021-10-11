@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from .config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
+from .config.shared import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
 
 
 def create(_):

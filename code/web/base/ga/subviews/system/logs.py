@@ -4,16 +4,14 @@ from datetime import datetime
 from os import listdir as os_listdir
 
 from ...user import authorized_to_read
-from ...utils.helper import check_develop, get_controller_setting, str_to_list, develop_subprocess
+from ...utils.basic import str_to_list
+from ...utils.helper import check_develop, get_controller_setting, develop_subprocess
+from ...config import shared as config
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
-
-SHELL_MAX_LOG_LINES = 25
-SHELL_MAX_LOG_LINES_RANGE = range(25, 1025, 25)
 SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
 SHELL_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
 SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
-DEFAULT_REFRESH_SECS = 30
 TITLE = 'System logs'
 
 
@@ -56,11 +54,11 @@ def LogView(request):
             log_ga_options[f"Log '{device_log}'"] = f"{path_log}/device/{date_year}/{device_log}"
 
     if 'log_entry_count' in request.GET and \
-            int(request.GET['log_entry_count']) in SHELL_MAX_LOG_LINES_RANGE:
+            int(request.GET['log_entry_count']) in config.WEBUI_MAX_ENTRY_RANGE:
         log_entry_count = int(request.GET['log_entry_count'])
 
     else:
-        log_entry_count = SHELL_MAX_LOG_LINES
+        log_entry_count = config.WEBUI_LOG_MAX_LOG_LINES
 
     log_file = None
     log_type = None
@@ -131,7 +129,7 @@ def LogView(request):
 
         if 'log_subtype' in request.GET:
             if reload_time is None:
-                reload_time = DEFAULT_REFRESH_SECS
+                reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
     if type(log_data) == list and len(log_data) == 0:
         log_data = None
@@ -141,6 +139,6 @@ def LogView(request):
 
     return render(request, 'system/log.html', context={
         'request': request, 'log_data': log_data, 'log_type_options': log_type_options, 'log_type': log_type,
-        'log_subtype': log_subtype, 'log_entry_count': log_entry_count, 'log_entry_range': SHELL_MAX_LOG_LINES_RANGE, 'log_file': log_file,
+        'log_subtype': log_subtype, 'log_entry_count': log_entry_count, 'log_entry_range': config.WEBUI_MAX_ENTRY_RANGE, 'log_file': log_file,
         'log_subtype_option_list': log_subtype_option_list, 'reload_time': reload_time, 'title': TITLE,
     })

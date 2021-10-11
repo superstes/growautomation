@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect
 from ast import literal_eval
 
 from ....forms import DashboardModel, DashboardPositionModel, DashboardForm, DashboardPositionForm, ChartDashboardModel, DashboardDefaultModel, DashboardDefaultForm
-from ....utils.helper import set_key, get_instance_from_id, empty_key
 from ..helper import get_obj_dict, get_param_if_ok
-from ....utils.main import error_formatter, method_user_passes_test
+from ....utils.basic import set_key, empty_key
+from ....utils.helper import get_instance_from_id
+from ....utils.helper import error_formatter
+from ....utils.auth import method_user_passes_test
 from ....submodels.helper.matrix import Matrix
 from ....user import authorized_to_read, authorized_to_write
 from ....config.shared import LOGIN_URL

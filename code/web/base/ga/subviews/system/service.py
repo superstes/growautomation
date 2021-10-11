@@ -4,18 +4,17 @@ from datetime import datetime, timedelta
 from time import sleep
 
 from ...user import authorized_to_read, authorized_to_write
-from ...utils.helper import get_time_difference, develop_subprocess, develop_log
+from ...utils.basic import get_time_difference
+from ...utils.helper import develop_subprocess, develop_log
 from ..handlers import Pseudo404
+from ...config import shared as config
 
 # need to allow www-data to start/stop/restart/reload services
-
 SHELL_SERVICE_STATUS = "/bin/systemctl is-active %s"
 SHELL_SERVICE_ENABLED = "/bin/systemctl is-enabled %s"
 SHELL_SERVICE_ACTIVE_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --value %s"
 SHELL_SERVICE_INACTIVE_TIMESTAMP = "/bin/systemctl show -p InactiveEnterTimestamp --value %s"
-DEFAULT_REFRESH_SECS = 120
 TITLE = 'System service'
-SERVICE_ACTION_COOLDOWN = 30
 
 
 @user_passes_test(authorized_to_read, login_url='/denied/')
@@ -62,18 +61,18 @@ def ServiceView(request):
         else:
             status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
 
-        dev_time = str((datetime.now() - timedelta(minutes=5)).strftime('%a %Y-%m-%d %H:%M:%S')) + ' GMT'
+        dev_time = str((datetime.now() - timedelta(minutes=5)).strftime(f'%a {config.DATETIME_TS_FORMAT}')) + ' GMT'
         service_status_time = develop_subprocess(request, command=status_command % service_value, develop=dev_time)
 
         if service_status_time is not None and service_status_time != '':
-            service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], '%a %Y-%m-%d %H:%M:%S')
+            service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], f'%a {config.DATETIME_TS_FORMAT}')
 
         if reload_time is None:
-            reload_time = DEFAULT_REFRESH_SECS
+            reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
     if request.method == 'POST':
         if 'service_name' in request.POST:
-            if service_runtime is not None and service_runtime > SERVICE_ACTION_COOLDOWN:
+            if service_runtime is not None and service_runtime > config.WEBUI_SVC_ACTION_COOLDOWN:
                 service_action(request, service=service_value)
                 sleep(1)
 

@@ -1,15 +1,18 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
 
+from ...config.model import DB_MATRIX_MAX_JSON_LEN
+
 
 class Matrix:
-    MAX_JSON_LEN = 30000
+    MAX_JSON_LEN = DB_MATRIX_MAX_JSON_LEN
 
     def __init__(self, x: int = None, y: int = None, matrix: str = None):
         if matrix is None:
             self.x = x
             self.y = y
             self.matrix = self._gen()
+
         else:
             self.matrix = self._json_input(matrix)
 
@@ -92,7 +95,7 @@ class Matrix:
                 for x in range(xy_data['x0'], xy_data['x1'] + 1):
                     _matrix[y][x - 1] = set_value
 
-        if len(self._json_output(_matrix)) > self.MAX_JSON_LEN:
+        if len(self._json_output(_matrix)) > DB_MATRIX_MAX_JSON_LEN:
             # log error or whatever
             return False
 

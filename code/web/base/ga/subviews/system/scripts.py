@@ -6,9 +6,11 @@ from os import remove as os_remove
 from datetime import datetime
 
 from ...user import authorized_to_read, authorized_to_write
-from ...utils.helper import get_script_dir, str_to_list
+from ...utils.basic import str_to_list
+from ...utils.helper import get_script_dir
 from ...forms import SystemScriptForm
 from ..handlers import Pseudo404
+from ...config.shared import DATETIME_TS_FORMAT
 
 
 TITLE = 'System scripts'
@@ -26,7 +28,7 @@ def _get_script_dict(request, typ) -> dict:
 
     for element in script_list:
         ts = os_path.getmtime(f"{script_dir}/{element}")
-        ts_hr = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        ts_hr = datetime.fromtimestamp(ts).strftime(DATETIME_TS_FORMAT)
         script_dict[element] = ts_hr
 
     return script_dict

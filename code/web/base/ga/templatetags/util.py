@@ -5,10 +5,11 @@ from random import randint
 from sys import exc_info as sys_exc_info
 from os import environ as os_environ
 
-from ..config.site import GA_USER_GROUP, GA_READ_GROUP, GA_WRITE_GROUP
-from ..utils.helper import get_controller_setting, get_client_ip
+from ..config.shared import GA_WRITE_GROUP
+from ..utils.helper import get_controller_setting
+from ..utils.web import get_client_ip
 from ..config.shared import DATETIME_TS_FORMAT, VERSION
-from ..config.nav import nav_dict
+from ..config.nav import NAVIGATION
 
 register = template.Library()
 
@@ -26,6 +27,7 @@ def get_item(data, key):
     if key.find(',') != -1:
         # workaround since template does only support two arguments for filters
         key, fallback = key.split(',', 1)
+
     else:
         fallback = None
 
@@ -42,32 +44,9 @@ def get_item(data, key):
     return fallback
 
 
-@register.filter
-def get_first_key(dictionary):
-    return list(dictionary.keys())[0]
-
-
-@register.filter
-def get_str(obj):
-    return str(obj)
-
-
 @register.simple_tag
 def set_var(val):
     return val
-
-
-@register.filter
-def get_dict(var):
-    return var.__dict__
-
-
-@register.filter
-def get_keys(obj):
-    try:
-        return obj.keys()
-    except AttributeError:
-        return None
 
 
 @register.filter
@@ -77,9 +56,11 @@ def has_key(obj, key):
             return True
 
         return False
+
     except TypeError:  # if object not iterable
         if hasattr(obj, key):
             return True
+
         else:
             return False
 
@@ -88,25 +69,11 @@ def has_key(obj, key):
 def get_login_state(request):
     try:
         state = request.user.is_authenticated
+
     except AttributeError:
         state = False
+
     return state
-
-
-@register.filter
-def authorized_to_access(user):
-    if user and user.groups.filter(name=GA_USER_GROUP).exists():
-        return True
-
-    return False
-
-
-@register.filter
-def authorized_to_read(user):
-    if user and user.groups.filter(name=GA_READ_GROUP).exists():
-        return True
-
-    return False
 
 
 @register.filter
@@ -118,47 +85,9 @@ def authorized_to_write(user):
 
 
 @register.filter
-def first_upper(string: str):
-    if type(string) == str:
-        return string.capitalize()
-
-    return string
-
-
-@register.filter
-def count_up(number: int):
-    number += 1
-    return number
-
-
-@register.filter
-def host_remove_port(http_host: str):
-    http_host_wo_port = http_host.split(':')[0]
-    return http_host_wo_port
-
-
-@register.filter
-def get_dict_depth(test: dict):
-    if isinstance(test, dict):
-        soft_depth = max(map(get_dict_depth, test.values()))
-        soft_depth += 1
-        return soft_depth
-
-    return 0
-
-
-@register.filter
 def get_full_uri(request):
     full_uri = request.build_absolute_uri()
     return full_uri
-
-
-@register.filter
-def to_uppercase(data: str) -> str:
-    if type(data) != str:
-        return data
-    else:
-        return data.upper()
 
 
 @register.filter
@@ -184,14 +113,6 @@ def get_return_path(request, typ=None) -> str:
     #     path = '/'
     #
     # return path
-
-
-# @register.filter
-# def handler500_update(request):
-#     if request.META['HTTP_REFERER'].find('/update') != -1:
-#         return True
-#
-#     return False
 
 
 @register.filter
@@ -222,11 +143,6 @@ def format_ts(datetime_obj):
 
 
 @register.filter
-def remove_newline(text: str) -> str:
-    return text.replace('\n', '')
-
-
-@register.filter
 def format_seconds(secs: int) -> str:
     return "{}".format(str(timedelta(seconds=secs)))
 
@@ -235,24 +151,9 @@ def format_seconds(secs: int) -> str:
 def request_getlist(request, parameter: str) -> list:
     if parameter in request.GET:
         return request.GET.getlist(parameter)
+
     else:
         return []
-
-
-@register.filter
-def percentage(amount: int) -> float:
-    if type(amount) != int:
-        return 100
-
-    return 100 / amount
-
-
-@register.filter
-def range_list(number: int) -> list:
-    if type(number) != int:
-        return []
-
-    return list(range(1, number + 1))
 
 
 @register.simple_tag
@@ -270,13 +171,14 @@ def get_last_errors() -> str:
 @register.filter
 def get_nav(key: str) -> dict:
     # serves navigation config to template
-    return nav_dict[key]
+    return NAVIGATION[key]
 
 
 @register.filter
 def found(data: str, search: str) -> bool:
     if data.find(search) != -1:
         return True
+
     return False
 
 

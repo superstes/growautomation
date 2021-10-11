@@ -15,7 +15,7 @@
         {% if member_data_dict|length == 0 %}
             {% include "../../warn/table_no_results.html" %}
         {% else %}
-            {% for tmp_member_type, member_config in member_type_dict.items %}
+            {% for tmp_member_type, member_config in MEMBER_CONFIG.items %}
                 {% set_var member_config|get_item:'member_key' as member_key %}
                 {% set_var member_data_dict|get_item:tmp_member_type as member_data %}
                 {% set_var member_config|get_item:'url' as member_own_type %}
@@ -26,16 +26,16 @@
         {% endif %}
          <tr class="table-active">
              <td colspan="100%">
-                 {% if member_type_dict|length == 1 %}
-                     {% for typ_name, typ_nested in member_type_dict.items %}
+                 {% if MEMBER_CONFIG|length == 1 %}
+                     {% for typ_name, typ_nested in MEMBER_CONFIG.items %}
                         <form method="get" class="ga-form-inline" action="/config/switch/{{ member_type }}/{{ typ_name }}/">
                      {% endfor %}
-                 {% elif member_type_dict|length > 1 %}
+                 {% elif MEMBER_CONFIG|length > 1 %}
                      <form method="get" class="ga-form-inline" action="/config/switch/{{ member_type }}/">
                      <label>Choose member type:
                          <select class="form-control" name="typ" onchange="this.form.action=this.value">
                              <option selected>---------</option>
-                             {% for typ_name, typ_nested in member_type_dict.items %}
+                             {% for typ_name, typ_nested in MEMBER_CONFIG.items %}
                                  <option value="/config/switch/{{ member_type }}/{{ typ_name }}/">{{ typ_nested|get_item:'pretty' }}</option>
                              {% endfor %}
                          </select>

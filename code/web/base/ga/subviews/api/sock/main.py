@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from ....utils.helper import init_core_config, develop_log
-from ....utils.main import append_to_url
+from ....utils.web import append_to_url
 from ....user import authorized_to_write
 from ....config.shared import LOGIN_URL
 

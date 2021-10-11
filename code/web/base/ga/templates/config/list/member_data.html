@@ -26,7 +26,7 @@
                 <input type="hidden" name="action" value="Update" />
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            {% if member_own_sub_type in main_type_dict.keys %}
+            {% if member_own_sub_type in MAIN_CONFIG.keys %}
                 <form method="post" class="ga-form-inline" action="/config/delete/{{ member_own_sub_type }}/{{ member.id }}">
             {% else %}
                 <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}">

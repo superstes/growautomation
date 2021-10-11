@@ -7,6 +7,7 @@ from ..models import SuperBareModel, models, BaseModel, BOOLEAN_CHOICES, BaseMem
 from .device import ObjectInputModel, GroupInputModel
 from .area import GroupAreaModel
 from .helper.matrix import Matrix
+from ..config import model as config
 
 CHART_TYPE_CHOICES = [
     ('line', 'Line'), ('bar', 'Bar'), ('radar', 'Radar'), ('doughnut', 'Doughnut'), ('pie', 'Pie'), ('polarArea', 'polar Area'), ('bubble', 'Bubble'),
@@ -119,8 +120,8 @@ class ChartDatasetLinkModel(BaseMemberModel):
 
 
 class DashboardModel(BaseModel):
-    max_rows = 100
-    max_columns = 30
+    max_rows = config.DB_MAX_ROWS
+    max_columns = config.DB_MAX_COLS
     field_list = [
         'name', 'description', 'rows', 'columns',  # 'matrix' -> hidden in form
     ]

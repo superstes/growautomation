@@ -5,8 +5,9 @@ from pytz import utc as pytz_utc
 
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
-from ....utils.helper import get_device_parent_setting, add_timezone, get_instance_from_id, get_datetime_w_tz, get_controller_setting, develop_log
-from ....utils.main import method_user_passes_test
+from ....utils.basic import add_timezone, get_datetime_w_tz
+from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_controller_setting, develop_log
+from ....utils.auth import method_user_passes_test
 from ....user import authorized_to_read
 from ....config import shared as config
 
@@ -66,27 +67,27 @@ class ApiData:
         time_span = stop_ts - start_ts
         if time_span > timedelta(days=365):
             if self.request.user_agent.is_mobile:
-                max_data_points = config.MAX_DATA_POINTS_HUGE_CLI
+                max_data_points = config.DB_MAX_DATA_POINTS_HUGE_CLI
             else:
-                max_data_points = config.MAX_DATA_POINTS_HUGE_MOBILE
+                max_data_points = config.DB_MAX_DATA_POINTS_HUGE_MOBILE
 
         elif time_span > timedelta(days=30):
             if self.request.user_agent.is_mobile:
-                max_data_points = config.MAX_DATA_POINTS_LONG_CLI
+                max_data_points = config.DB_MAX_DATA_POINTS_LONG_CLI
             else:
-                max_data_points = config.MAX_DATA_POINTS_LONG_MOBILE
+                max_data_points = config.DB_MAX_DATA_POINTS_LONG_MOBILE
 
         elif time_span > timedelta(days=7):
             if self.request.user_agent.is_mobile:
-                max_data_points = config.MAX_DATA_POINTS_MEDIUM_CLI
+                max_data_points = config.DB_MAX_DATA_POINTS_MEDIUM_CLI
             else:
-                max_data_points = config.MAX_DATA_POINTS_MEDIUM_MOBILE
+                max_data_points = config.DB_MAX_DATA_POINTS_MEDIUM_MOBILE
 
         else:
             if self.request.user_agent.is_mobile:
-                max_data_points = config.MAX_DATA_POINTS_SHORT_CLI
+                max_data_points = config.DB_MAX_DATA_POINTS_SHORT_CLI
             else:
-                max_data_points = config.MAX_DATA_POINTS_SHORT_MOBILE
+                max_data_points = config.DB_MAX_DATA_POINTS_SHORT_MOBILE
 
         self._add_measurement('Pulling data')
         data_list = InputDataModel.objects.filter(

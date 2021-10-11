@@ -97,7 +97,3 @@ from .submodels.data import DashboardModel, DashboardPositionModel, DashboardDef
 # area ##############################
 
 from .submodels.area import MemberAreaModel, GroupAreaModel, NestedAreaModel
-
-# test ##############################
-
-from .submodels.test import Test

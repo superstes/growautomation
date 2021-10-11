@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 
-from ...utils.main import get_as_string
-from ...utils.helper import get_form_prefill, empty_key, get_url_divider, set_key
+from ...utils.web import get_as_string, get_form_prefill, get_url_divider
+from ...utils.basic import empty_key, set_key
 
 
 def add_default_chart_options(request, defaults: dict, redirect_path: str) -> (None, redirect):
@@ -37,7 +37,7 @@ def get_param_if_ok(parameters, search: str, choices: list = None, no_choices: l
                         return format_as(parameters[search]).lower()
 
                 else:
-                    if parameters[search] not in no_choices:
+                    if parameters[search] not in no_choices:# need to allow www-data to start/stop/restart/reload services
                         return format_as(parameters[search])
 
             else:

@@ -1,21 +1,21 @@
 
-nav_dict = {
+NAVIGATION = {
     'left': {
         'Data': {
             'Dashboard': '/data/dashboard/',
-            'Table': '/data/table/',
             'Charts': '/data/chart/',
+            'Table': '/data/table/',
         },
         'Config': {
-            'Connection': '/config/list/connectiongroup/',
             'Input': '/config/list/inputgroup/',
             'Output': '/config/list/outputgroup/',
+            'Connection': '/config/list/connectiongroup/',
             'Condition': '/config/list/conditiongroup/',
             'Area': '/config/list/areagroup/',
         },
         'System': {
             'Controller': '/config/list/controllerobject/',
-            'Tasks': '/config/list/timerobject/',
+            # 'Tasks': '/config/list/timerobject/',  # not yet finished implementing
             'Service': '/system/service/',  # status and restart of service(s)
             'Logs': '/system/log/',  # read various log files
             'Scripts': '/system/script/',  # upload or delete scripts

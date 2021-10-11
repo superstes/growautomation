@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect
 
-from ....utils.helper import get_datetime_w_tz, set_key, get_form_prefill
+from ....utils.basic import get_datetime_w_tz, set_key
+from ....utils.helper import error_formatter
+from ....utils.web import get_form_prefill
+from ....utils.auth import method_user_passes_test
 from ....forms import ObjectInputModel, GroupInputModel, ChartGraphLinkModel, ChartDatasetLinkModel, ChartGraphLinkForm, ChartDatasetModel
 from ..helper import add_default_chart_options, get_param_if_ok, get_obj_dict, add_graph_params_to_url
-from ....utils.main import error_formatter, method_user_passes_test
 from ....user import authorized_to_read, authorized_to_write
 from ....config.shared import LOGIN_URL
+
 
 class Chart:
     def __init__(self, request, html_template: str, model, form):

@@ -2,6 +2,7 @@ from pytz import common_timezones
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from ..models import BaseModel, models, BOOLEAN_CHOICES
+from ..config import model as config
 
 
 class ObjectControllerModel(BaseModel):
@@ -23,24 +24,24 @@ class ObjectControllerModel(BaseModel):
         (9, '9 (GIMMEE all you got!!)'),
     ]
 
-    path_root = models.CharField(max_length=255, default='/var/lib/ga')
-    path_log = models.CharField(max_length=255, default='/var/log/ga')
-    path_backup = models.CharField(max_length=255, default='/mnt/backup/ga')
+    path_root = models.CharField(max_length=255, default=config.CONT_DEFAULT_ROOT_PATH)
+    path_log = models.CharField(max_length=255, default=config.CONT_DEFAULT_LOG_PATH)
+    path_backup = models.CharField(max_length=255, default=config.CONT_DEFAULT_BACKUP_PATH)
 
     sql_server = models.CharField(max_length=50, default='localhost')
     sql_port = models.PositiveSmallIntegerField(default=3306, validators=[MaxValueValidator(65535), MinValueValidator(1)])
-    sql_user = models.CharField(max_length=50, default='ga_admin')
+    sql_user = models.CharField(max_length=50, default=config.CONT_DEFAULT_SQL_USER)
     sql_secret = models.CharField(max_length=255, default='o1Qhr6zm1INEZcKjBIVB')
-    sql_database = models.CharField(max_length=50, default='ga')
+    sql_database = models.CharField(max_length=50, default=config.CONT_DEFAULT_SQL_DB)
 
     log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     security = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     backup = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
-    timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default='UTC')
+    timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default=config.CONT_DEFAULT_TZ)
 
-    device_fail_count = models.PositiveSmallIntegerField(default=3)
-    device_fail_sleep = models.PositiveSmallIntegerField(default=3600)
+    device_fail_count = models.PositiveSmallIntegerField(default=config.CONT_DEFAULT_FAIL_COUNT)
+    device_fail_sleep = models.PositiveSmallIntegerField(default=config.CONT_DEFAULT_FAIL_SLEEP)
     device_log = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
 
     web_cdn = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
@@ -69,7 +70,6 @@ class ObjectTaskModel(BaseModel):
     ]
 
     enabled = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
-    # could be changed to
     timer = models.PositiveIntegerField(default=0)
     target = models.CharField(max_length=30, default='backup', choices=TARGET_CHOICES)
     interval = models.CharField(max_length=15, default='00***', choices=INTERVAL_CHOICES)

@@ -4,10 +4,10 @@ from django.utils import timezone
 
 from ....user import authorized_to_read
 from ....models import InputDataModel, ObjectInputModel
-from ....utils.helper import get_device_parent_setting, get_datetime_w_tz
+from ....utils.basic import get_datetime_w_tz
+from ....utils.helper import get_device_parent_setting
+from ....config.shared import WEBUI_MAX_ENTRY_RANGE, WEBUI_DEFAULT_DATA_TABLE_ROWS
 
-
-DATA_MAX_ENTRY_RANGE = range(25, 1025, 25)
 TITLE = 'Data table'
 
 
@@ -22,7 +22,7 @@ def DataListView(request):
     stop_ts_ok = None
 
     input_device_dict = {instance.name: instance.id for instance in ObjectInputModel.objects.all()}
-    result_count = 100
+    result_count = WEBUI_DEFAULT_DATA_TABLE_ROWS
 
     if 'start_ts' in request.GET:
         start_ts = get_datetime_w_tz(request, dt_str=request.GET['start_ts'])
@@ -37,7 +37,7 @@ def DataListView(request):
                 else:
                     stop_ts_ok = False
 
-    if 'result_count' in request.GET and int(request.GET['result_count']) in DATA_MAX_ENTRY_RANGE:
+    if 'result_count' in request.GET and int(request.GET['result_count']) in WEBUI_MAX_ENTRY_RANGE:
         result_count = int(request.GET['result_count'])
 
     if 'input_device' in request.GET:
@@ -66,6 +66,6 @@ def DataListView(request):
 
     return render(request, 'data/raw/input.html', context={
         'request': request, 'start_ts': start_ts, 'stop_ts': stop_ts, 'input_device_dict': input_device_dict,
-        'input_device': input_device, 'result_count': result_count, 'result_count_range': DATA_MAX_ENTRY_RANGE, 'data_list': data_list,
+        'input_device': input_device, 'result_count': result_count, 'result_count_range': WEBUI_MAX_ENTRY_RANGE, 'data_list': data_list,
         'data_unit': data_unit, 'data_type': data_type, 'stop_ts_ok': stop_ts_ok, 'title': TITLE,
     })

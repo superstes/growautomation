@@ -1,11 +1,6 @@
 from ..forms import *
 
-GA_USER_GROUP = 'ga_user'
-GA_READ_GROUP = 'ga_read'
-GA_WRITE_GROUP = 'ga_write'
-GA_ADMIN_GROUP = 'ga_admin'
-
-type_dict = {
+MAIN_CONFIG = {
     # objects
     'connectionobject': {'model': ObjectConnectionModel, 'form': ObjectConnectionForm, 'pretty': 'Connection device', 'hidden': False},
     'inputobject': {'model': ObjectInputModel, 'form': ObjectInputForm, 'pretty': 'Input device', 'hidden': False},
@@ -34,7 +29,7 @@ type_dict = {
     'areanestedgroup': {'model': NestedAreaModel, 'form': NestedAreaForm, 'pretty': 'Nested area', 'hidden': True, 'redirect': 'areagroup'},
 }
 
-sub_type_dict = {
+MEMBER_CONFIG = {
     'connectionmember': {
         'object': {
             'model': MemberConnectionModel, 'form': MemberConnectionForm,
