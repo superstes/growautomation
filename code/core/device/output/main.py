@@ -2,11 +2,12 @@
 
 from core.device.check import Go as Check
 from core.config.object.data.db import GaDataDb
-from core.config.db.template import DEVICE_DICT
+from core.config.db.template import DEVICE_TMPL
 from core.utils.threader import Loop as Thread
 from core.device.output.condition.link import Go as GetGroupResult
 from core.device.process import Go as Process
 from core.utils.debug import device_log
+from core.config import shared as config
 
 from core.config.object.device.output import GaOutputDevice, GaOutputModel
 from core.config.object.setting.condition import GaConditionGroup
@@ -15,10 +16,9 @@ from time import sleep
 
 
 class Go:
-    SQL_TASK_COMMAND = DEVICE_DICT['task']
+    SQL_TASK_COMMAND = DEVICE_TMPL['task']
     REVERSE_KEY_TIME = 'time'
     REVERSE_KEY_CONDITION = 'condition'
-    REVERSE_CONDITION_INTERVAL = 60
 
     def __init__(self, instance: (GaOutputModel, GaOutputDevice, GaConditionGroup), action: str = None, manually: bool = False):
         self.instance = instance
@@ -189,11 +189,20 @@ class Go:
             description=f"Conditional reversing for '{device.name}'",
         )
         def thread_task(data):
-            while not self._process(task_dict=data, reverse=True):
-                device_log(f"Reversing of device \"{device.name}\" continues", add=self.name, level=8)
-                sleep(self.REVERSE_CONDITION_INTERVAL)
+            tries = 0
 
-            device_log(f"Reversing of device \"{device.name}\" finished", add=self.name, level=6)
+            while not self._process(task_dict=data, reverse=True):
+                if config.REVERSE_CONDITION_MAX_RETRIES is not None and tries >= config.REVERSE_CONDITION_MAX_RETRIES:
+                    device_log(f"Reversing of device \"{device.name}\" failed: reached maximum number of retries {tries}", add=self.name, level=3)
+                    break
+
+                device_log(f"Reversing of device \"{device.name}\" continues", add=self.name, level=8)
+                sleep(config.REVERSE_CONDITION_INTERVAL)
+                tries += 1
+
+            if config.REVERSE_CONDITION_MAX_RETRIES is None or tries < config.REVERSE_CONDITION_MAX_RETRIES:
+                device_log(f"Reversing of device \"{device.name}\" finished", add=self.name, level=6)
+
             thread.stop_thread(description=device.name)
 
         thread.start()
