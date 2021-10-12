@@ -1,4 +1,4 @@
-from ..models import BaseDeviceObjectModel, models, BaseDeviceModel, BOOLEAN_CHOICES, BaseMemberModel
+from ..models import BaseDeviceObjectModel, models, BaseDeviceModel, BOOLEAN_CHOICES, BaseMemberModel, BareModel, SuperBareModel
 
 from .condition_min import GroupConditionModel
 
@@ -121,3 +121,17 @@ class MemberOutputModel(BaseMemberModel):
         constraints = [
             models.UniqueConstraint(fields=['group', 'obj'], name='mo_uc_group_obj')
         ]
+
+
+class DeviceStateOutput(BareModel):
+    initials = 'dso'
+    obj = models.ForeignKey(ObjectOutputModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
+
+    active = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
+    reverse_data = models.CharField(max_length=32, blank=True, null=True, default=None)
+
+
+class DeviceLogOutput(SuperBareModel):
+    initials = 'dlo'
+    obj = models.ForeignKey(ObjectOutputModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
+    action = models.CharField(max_length=32)
