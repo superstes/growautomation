@@ -26,6 +26,7 @@ PYTHON_VENV = '/home/ga_core/venv/bin'
 SOCKET_SHUFFLE = None  # if unset SYSTEM.security will be evaluated
 NONE_RESULTS = ['', 'None', None, ' ']
 CONFIG_FILE_PATH = '/core/config/file/core.conf'
+CENSOR_SYMBOL = '●'
 
 # service settings
 SVC_RUN_RELOAD_INTERVAL = 86400
@@ -47,13 +48,15 @@ MARIADB_SVC = 'mariadb.service'
 LOG_MAX_TRACEBACK_LENGTH = 5000
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'
 LOG_SEPARATOR = ' | '
-LOG_CENSOR_OUTPUT = '●●●●●●●●●'
+LOG_CENSOR_OUTPUT = CENSOR_SYMBOL * 12
 LOG_SECRET_SETTINGS = ['sql_secret']
 LOG_FILE_PERMS = 644
 
 # device settings
 REVERSE_CONDITION_INTERVAL = 60
 REVERSE_CONDITION_MAX_RETRIES = None
+REVERSE_KEY_TIME = 'time'
+REVERSE_KEY_CONDITION = 'condition'
 DEVICE_SCRIPT_PATH = "device/%s"
 LOCK_MAX_WAIT = 120
 LOCK_CHECK_INTERVAL = 15

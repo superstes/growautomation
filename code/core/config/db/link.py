@@ -76,6 +76,7 @@ class Go:
         try:
             self.connection = _connection
             self.cursor = _connection.cursor(buffered=True)
+            # todo: change to use "cursor(dictionary=True)" since the returned tuples are harder to use than dicts; but all query handling must be refactored..
             return True
 
         except UnboundLocalError:

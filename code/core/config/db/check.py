@@ -1,7 +1,7 @@
 # should check for db connectivity problems before connecting
 
 from core.config.db.link import Go as Link
-from core.config.db.template import DB_CHECK_TMPL
+from core.config.db.template import TEST_TMPL
 from core.utils.debug import log
 from core.utils.test import test_tcp_stream
 
@@ -10,8 +10,8 @@ from random import choice as random_choice
 
 
 class Go:
-    TEST_READ_COMMAND = DB_CHECK_TMPL['read']
-    TEST_WRITE_COMMAND_LIST = DB_CHECK_TMPL['write']
+    TEST_READ_COMMAND = TEST_TMPL['read']
+    TEST_WRITE_COMMAND_LIST = TEST_TMPL['write']
 
     def __init__(self, connection_data_dict):
         self.connection_data_dict = connection_data_dict
