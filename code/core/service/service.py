@@ -35,6 +35,7 @@ from core.config import shared as config
 from core.utils.debug import fns_log
 from core.service.decision import start as decision
 from core.config.object.data.file import GaDataFile
+from core.config.object.device.output import GaOutputDevice, GaOutputModel
 from core.factory import config as factory_config
 
 from time import sleep as time_sleep
@@ -61,6 +62,10 @@ class Service:
     def start(self):
         try:
             fns_log(f"Service has process id {os_getpid()}", level=7)
+
+            for instance in self.timer_list:
+                # we'll check if any output devices are active => they shouldn't be at this point in time
+                self._reverse_outputs(instance=instance)
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
@@ -98,7 +103,7 @@ class Service:
             self.THREADER.stop()
             self.THREADER.jobs = []
             self._wait(seconds=config.SVC_WAIT_TIME)
-            # re-create all the threads
+            # re-create all the threads and re-enter run-mode
             self.start()
 
         else:
@@ -139,14 +144,26 @@ class Service:
     def _update_config_file(self):
         self.CONFIG_FILE.update()
 
-    def _thread(self, instance):
+    def _reverse_outputs(self, instance):
+        # todo: pass reverse-data to the reversal-process => timed reversal could calculate the approx. remaining time to wait before reversing
+        if isinstance(instance, GaOutputDevice):
+            if instance.active:
+                self._thread(instance=instance, timer=1, settings={'action': 'stop'})
+
+        elif isinstance(instance, GaOutputModel):
+            for output in instance.member_list:
+                if output.active:
+                    self._thread(instance=output, timer=1, settings={'action': 'stop'})
+
+    def _thread(self, instance, timer: int = None, once: bool = False, settings: dict = None):
         @self.THREADER.thread(
-            sleep_time=int(instance.timer),
+            sleep_time=int(instance.timer) if timer is None else timer,
             thread_data=instance,
             description=instance.name,
+            once=once,
         )
         def thread_task(data):
-            decision(instance=data)
+            decision(instance=data, settings=settings)
 
     @staticmethod
     def _wait(seconds: int):

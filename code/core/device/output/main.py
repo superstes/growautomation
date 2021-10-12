@@ -13,12 +13,15 @@ from core.config.object.device.output import GaOutputDevice, GaOutputModel
 from core.config.object.setting.condition import GaConditionGroup
 
 from time import sleep
+from datetime import datetime
 
 
 class Go:
     SQL_TASK_COMMAND = DEVICE_TMPL['task']
-    REVERSE_KEY_TIME = 'time'
-    REVERSE_KEY_CONDITION = 'condition'
+    SQL_STATE_PUT_COMMAND = DEVICE_TMPL['output']['state']['put']
+    SQL_STATE_UPDATE_COMMAND = DEVICE_TMPL['output']['state']['update']
+    SQL_STATE_GET_COMMAND = DEVICE_TMPL['output']['state']['get']
+    SQL_LOG_COMMAND = DEVICE_TMPL['output']['log']
 
     def __init__(self, instance: (GaOutputModel, GaOutputDevice, GaConditionGroup), action: str = None, manually: bool = False):
         self.instance = instance
@@ -44,7 +47,6 @@ class Go:
             return False
 
     def _run(self) -> bool:
-        # todo: reverse type condition implementation => Ticket#11
         if self.manually:
             if type(self.instance) == GaOutputModel:
                 output_list = self.instance.member_list
@@ -127,22 +129,47 @@ class Go:
 
             if not self.manually and device.reverse == 1:  # if a user executes the action manually he/she/it will know better; they can reverse it manually if needed
                 device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
-                           f"reverse-type - {device.reverse_type}={self.REVERSE_KEY_TIME}", add=self.name, level=7)
+                           f"reverse-type - {device.reverse_type}={config.REVERSE_KEY_TIME}", add=self.name, level=7)
 
                 if device.active:
-                    # todo: write state to database => a service restart MUST NOT keep devices running
+                    # if device was started
+                    self._set_or_update_state(device=device)
+                    self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'start', device.object_id))
 
-                    if device.reverse_type == self.REVERSE_KEY_TIME:
+                    if device.reverse_type == config.REVERSE_KEY_TIME:
                         self._reverse_timer(task_dict=task_dict)
 
-                    elif device.reverse_type == self.REVERSE_KEY_CONDITION:
+                    elif device.reverse_type == config.REVERSE_KEY_CONDITION:
                         self._reverse_condition(task_dict=task_dict)
 
                 elif reverse and not device.active:
-                    # todo: write state (inactive) to database => a service restart MUST NOT keep devices running
-                    pass
+                    # if device was reversed
+                    self._set_or_update_state(device=device)
+                    self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'reverse', device.object_id))
 
             return True
+
+    def _set_or_update_state(self, device: GaOutputDevice):
+        if len(self.database.get(self.SQL_STATE_GET_COMMAND % device.object_id)) == 0:
+            self.database.put(
+                self.SQL_STATE_PUT_COMMAND % (
+                    datetime.now(),
+                    datetime.now(),
+                    1 if device.active else 0,
+                    datetime.now() if device.reverse_type == config.REVERSE_KEY_TIME else None,
+                    device.object_id,
+                )
+            )
+
+        else:
+            self.database.put(
+                self.SQL_STATE_UPDATE_COMMAND % (
+                    datetime.now(),
+                    1 if device.active else 0,
+                    datetime.now() if device.reverse_type == config.REVERSE_KEY_TIME else None,
+                    device.object_id,
+                )
+            )
 
     def _condition_members(self) -> dict:
         output_dict = {}

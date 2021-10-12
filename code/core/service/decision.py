@@ -8,21 +8,24 @@ from core.config.object.setting.condition import GaConditionGroup
 from core.utils.debug import log
 
 
-def start(instance):
+def start(instance, settings: dict = None):
+    if settings is None:
+        settings = {}
+
     if isinstance(instance, (GaInputDevice, GaInputModel)):
         from core.device.input.main import Go
-        Go(instance=instance).start()
+        Go(instance=instance, **settings).start()
 
     elif isinstance(instance, GaConditionGroup):
         from core.device.output.main import Go
-        Go(instance=instance).start()
+        Go(instance=instance, **settings).start()
 
     elif isinstance(instance, GaTaskDevice):
         log('Core timers are not yet implemented', level=3)
         pass
 
     elif isinstance(instance, SystemTask):
-        instance.execute()
+        instance.execute(**settings)
 
     else:
         log(f"Service could not find a matching decision for instance: '{instance}'", level=5)
