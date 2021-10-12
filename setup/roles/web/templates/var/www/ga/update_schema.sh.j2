@@ -9,5 +9,5 @@ export DJANGO_SETTINGS_MODULE=base.settings
 export PYTHONPATH=${WEB_PATH}:${CORE_PATH}:${VENV_PATH}/lib/python{{ ga_python_version }}/site-packages
 
 cd ${WEB_PATH}
-source ${VENV_BIN_PATH}/activate
-${VENV_BIN_PATH}/bin/python3 manage.py makemigrations && ${VENV_BIN_PATH}/bin/python3 manage.py migrate && sudo systemctl restart apache2.service
+source ${VENV_PATH}/bin/activate
+${VENV_PATH}/bin/python3 manage.py makemigrations && ${VENV_PATH}/bin/python3 manage.py migrate && sudo systemctl restart apache2.service

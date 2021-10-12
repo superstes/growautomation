@@ -4,71 +4,93 @@
   hosts: all
   become: true
   vars_files:
-    - "./vars/main.yml"
+    - './vars/main.yml'
   tasks:
     - name: Checking if password file exists
       stat:
-        path: "{{ ga_sql_pwd_random_file }}"
+        path: "{{ ga_random_pwd_file }}"
       register: random_pwd_file
 
     - name: Generating passwords
       block:
-        - name: Creating random core password
-          set_fact:
-            ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"  # adding punctuation-characters might break it
-          no_log: true
-          when: ga_sql_pwd_core == ga_sql_pwd_random_key
+        - name: Writing web-user heading to file
+          lineinfile:
+            line: "# database-users:"
+            path: "{{ ga_random_pwd_file }}"
+            state: present
 
-        - name: Adding core password to file
+        - name: Writing sql-core password to file
           lineinfile:
             line: "{{ ga_sql_user_core }}={{ ga_sql_pwd_core }}"
-            path: "{{ ga_sql_pwd_random_file }}"
+            path: "{{ ga_random_pwd_file }}"
+            insertafter: #\database-users:"
             create: yes
             state: present
+            mode: 0600
           no_log: true
 
-        - name: Creating random web password
-          set_fact:
-            ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"  # adding punctuation-characters might break it
-          no_log: true
-          when: ga_sql_pwd_web == ga_sql_pwd_random_key
-
-        - name: Adding web password to file
+        - name: Writing sql-web password to file
           lineinfile:
             line: "{{ ga_sql_user_web }}={{ ga_sql_pwd_web }}"
-            path: "{{ ga_sql_pwd_random_file }}"
+            path: "{{ ga_random_pwd_file }}"
+            insertafter: #\database-users:"
             state: present
           no_log: true
+
+        - name: Writing web-user heading to file
+          lineinfile:
+            line: "# web-users:"
+            path: "{{ ga_random_pwd_file }}"
+            state: present
+
+        - name: Writing web-admin password to file
+          lineinfile:
+            line: "admin={{ ga_sql_pwd_web }}"
+            path: "{{ ga_random_pwd_file }}"
+            state: present
+            insertafter: #\sweb-users:"
+          no_log: true
+
+        - name: Writing web-user passwords to file
+          lineinfile:
+            line: "{{ item.name }}={{ item.pwd }}"
+            path: "{{ ga_random_pwd_file }}"
+            state: present
+            insertafter: #\sweb-users:"
+          no_log: true
+          with_items: "{{ ga_web_users }}"
 
       when: not random_pwd_file.stat.exists
 
     - name: Pulling existing passwords
       block:
-        - name: Getting core password
-          shell: "cat {{ ga_sql_pwd_random_file | quote }} | grep {{ ga_sql_user_core | quote }}"
+        - name: Getting sql-core password
+          shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_core | quote }}"
           register: raw_core_pwd
           when: ga_sql_pwd_core == ga_sql_pwd_random_key
           no_log: true
           changed_when: False
 
-        - name: Setting core password
+        - name: Setting sql-core password
           set_fact:
             ga_sql_pwd_core: "{{ raw_core_pwd.stdout.split('=', 1)[1] }}"
           no_log: true
           when: ga_sql_pwd_core == ga_sql_pwd_random_key
 
-        - name: Getting web password
-          shell: "cat {{ ga_sql_pwd_random_file | quote }} | grep {{ ga_sql_user_web | quote }}"
+        - name: Getting sql-web password
+          shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_web | quote }}"
           register: raw_web_pwd
           when: ga_sql_pwd_web == ga_sql_pwd_random_key
           no_log: true
           changed_when: False
 
-        - name: Setting web password
+        - name: Setting sql-web password
           set_fact:
             ga_sql_pwd_web: "{{ raw_web_pwd.stdout.split('=', 1)[1] }}"
           no_log: true
           when: ga_sql_pwd_web == ga_sql_pwd_random_key
+
+        # we must not pull the web-users passwords since they will not be overwritten
 
       when: random_pwd_file.stat.exists
 

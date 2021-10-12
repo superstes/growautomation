@@ -1,5 +1,7 @@
 ---
 
+ga_random_pwd_file: '/etc/.ga_setup'
+
 # !! IMPORTANT NOTICE !!
 # These are the MUST CHANGE settings:
 
@@ -10,32 +12,36 @@ ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timez
 ga_web_dns: 'ga.lan'  # if you want to access the web-interface by name
 ga_web_alias: []  # list of dns-aliases
 ga_web_users:
-  - {name: 'ga', pwd: 'GrowMe!', access: 'rw'}  # !! PLEASE CHANGE THE PASSWORD !!
-  - {name: 'demo', pwd: 'Grow2021', access: 'r'}
+  - {name: 'user', access: 'rw', pwd: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"}  # !! PLEASE CHANGE THE PASSWORD !!
+  - {name: 'view', access: 'r', pwd: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"}
+  # passwords
+  #   You can set your own password and add your own users => just replace the stuff in between the double-quotes
+  #   random passwords can be found in the 'ga_random_pwd_file' file
   # access:
   #   'r' = read-only
   #   'rw' = read-write
 ga_web_ssl_mode: 'self_signed'  # self_signed or letsencrypt
   # if letsencrypt is used as ssl_mode:
-  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-(public)-ip
-  #   2. server must have port 80/443 publicly available
+  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-public-ip
+  #   2. the server must have ports 80/443 publicly available
   #   (for details see => https://letsencrypt.org/docs/)
 
 ###############################################################################################
 
 #
 # the following settings CAN be changed; but are not too important
+#   many of those can be changed later over the web-gui
 #
 
 # basic
 ga_version: '1.0'
 ga_path_log: '/var/log/ga'
 ga_path_backup: '/var/backups/ga'
-ga_ufw_manage: true  # if the ufw (software firewall) should be configure => NOT RECOMMENDED if you run other software on the same server
+ga_ufw_manage: true  # if the ufw (software firewall) should be configured => NOT RECOMMENDED if you run other software on the same server
 ga_ufw_allow_ssh: true
 ga_service_group: 'ga'
-ga_python_version: '3.7'  # venv version
-ga_log_level: 3
+ga_python_version: '3.9'  # venv version
+ga_log_level: 4
 ga_security_mode: false
 
 # ga core
@@ -53,26 +59,28 @@ ga_web_path: '/var/www/ga'
 ga_web_path_static: '/var/www/ga_static'
 ga_web_service_user: 'ga_web'
 ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
-ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # do not use whitespaces !
+ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # DO NOT use whitespaces !
 ga_web_ssl_letsencrypt_mail: "webmaster@{{ ga_web_dns }}"  # change if you want to receive info mails
 ga_web_disable_apache_default_sites: true
 ga_web_init_db: true  # if django should initialize the database schema
-ga_web_admin: 'admin'  # password will be the same as for the database as seen below
+ga_web_admin: 'admin'  # password will be the same as for the database => see below
 
-# mariadb/mysql
+# database
 ga_sql_install: true
 ga_sql_server: 'localhost'
 ga_sql_port: 3306
 ga_sql_pwd_random_key: 'WILL_BE_RANDOM'
-ga_sql_pwd_random_file: '/etc/.ga_setup'
 ga_sql_user_host: 'localhost'
   # host that will be used for sql user creation -> login will be restricted on this host
   # needs to be changed if a remote database server is used
 ga_sql_user_core: "{{ ga_core_service_user }}"
-ga_sql_pwd_core: "{{ ga_sql_pwd_random_key }}"
-  # you can apply your own password; random pwd could be found at: '${ga_pwd_random_file}'
+# adding punctuation-characters to the sql-passwords might break the sql-syntax => stick to ascii+digits
+ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
+  # you can apply your own password => just replace the rubbish in between the double-quotes
+  # random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_user_web: "{{ ga_web_service_user }}"
-ga_sql_pwd_web: "{{ ga_sql_pwd_random_key }}"
-  # you can apply your own password; random pwd could be found at: '${ga_pwd_random_file}'
+ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
+  # you can apply your own password => just replace the rubbish in between the double-quotes
+  # random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_db: 'ga'
 ga_sql_socket: '/var/run/mysqld/mysqld.sock'  # socket used to locally connect to database
