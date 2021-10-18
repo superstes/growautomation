@@ -27,30 +27,29 @@ def ServiceView(request):
     }
     non_stop_services = ['Apache webserver', 'Mariadb database']
 
+    service_name = 'GrowAutomation'
     service_status = None
-    service_name = None
-    service_value = None
     service_runtime = None
     service_status_time = None
     service_enabled = None
-    reload_time = None
+    reload_time = 60
 
     if 'reload_time' in request.GET:
         reload_time = request.GET['reload_time']
 
     # todo clean up and fix service time counter
 
-    if 'service_name' in request.GET or 'service_name' in request.POST:
-        if 'service_name' in request.GET:
-            service_name = request.GET['service_name']
+    if 'service_name' in request.GET:
+        service_name = request.GET['service_name']
 
-        else:
-            service_name = request.POST['service_name']
+    elif 'service_name' in request.POST:
+        service_name = request.POST['service_name']
 
+    service_value = service_name_options[service_name]
+
+    if request.method == 'GET':
         if service_name not in service_name_options:
             raise Pseudo404(ga={'request': request, 'msg': f"Service \"{service_name}\" not manageable"})
-
-        service_value = service_name_options[service_name]
 
         service_status = develop_subprocess(request, command=SHELL_SERVICE_STATUS % service_value, develop='active')
         service_enabled = develop_subprocess(request, command=SHELL_SERVICE_ENABLED % service_value, develop='enabled')
@@ -70,7 +69,7 @@ def ServiceView(request):
         if reload_time is None:
             reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
-    if request.method == 'POST':
+    else:
         if 'service_name' in request.POST:
             if service_runtime is not None and service_runtime > config.WEBUI_SVC_ACTION_COOLDOWN:
                 service_action(request, service=service_value)

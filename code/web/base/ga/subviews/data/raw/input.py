@@ -6,7 +6,7 @@ from ....user import authorized_to_read
 from ....models import InputDataModel, ObjectInputModel
 from ....utils.basic import get_datetime_w_tz
 from ....utils.helper import get_device_parent_setting
-from ....config.shared import WEBUI_MAX_ENTRY_RANGE, WEBUI_DEFAULT_DATA_TABLE_ROWS
+from ....config.shared import WEBUI_MAX_ENTRY_RANGE, WEBUI_DEFAULT_DATA_TABLE_ROWS, WEBUI_EMPTY_CHOICE
 
 TITLE = 'Data table'
 
@@ -40,7 +40,7 @@ def DataListView(request):
     if 'result_count' in request.GET and int(request.GET['result_count']) in WEBUI_MAX_ENTRY_RANGE:
         result_count = int(request.GET['result_count'])
 
-    if 'input_device' in request.GET:
+    if 'input_device' in request.GET and request.GET['input_device'] != WEBUI_EMPTY_CHOICE:
         input_device = int(request.GET['input_device'])
         data_unit = get_device_parent_setting(child_obj=input_device, setting='unit')
         data_type = get_device_parent_setting(child_obj=input_device, setting='datatype')

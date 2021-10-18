@@ -60,13 +60,13 @@ def LogView(request):
     else:
         log_entry_count = config.WEBUI_LOG_MAX_LOG_LINES
 
+    log_type = 'GrowAutomation'
+    log_subtype = 'Core'
     log_file = None
-    log_type = None
     log_data = None
-    log_subtype = None
     log_subtype_options = None
     log_subtype_option_list = None
-    reload_time = None
+    reload_time = 60
 
     if 'reload_time' in request.GET:
         reload_time = request.GET['reload_time']
@@ -74,62 +74,55 @@ def LogView(request):
     if 'log_type' in request.GET and request.GET['log_type'] in log_type_options:
         log_type = request.GET['log_type']
 
-        if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_service_options:
+    if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_service_options:
+        log_subtype = request.GET['log_subtype']
+
+    if log_type == 'Service':
+        log_service_value = log_service_options[log_subtype]
+
+        log_data = str_to_list(
+            develop_subprocess(
+                request,
+                command=SHELL_SERVICE_LOG_STATUS % log_service_value,
+                develop=['Test output1', 'Helloo', "Third time's a charm"]
+            )
+        )
+
+    elif log_type == 'Service journal':
+        log_service_value = log_service_options[log_subtype]
+
+        log_data = str_to_list(
+            develop_subprocess(
+                request,
+                command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
+                develop=['Test output2', 'Helloo', "Third time's a charm"]
+            )
+        )
+
+    elif log_type == 'GrowAutomation':
+        log_subtype_options = log_ga_options
+
+        if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_ga_options:
             log_subtype = request.GET['log_subtype']
-            log_service_value = log_service_options[log_subtype]
 
-            if log_type == 'Service':
-                if develop:
-                    log_data = ['test data', 'data service']
+        log_file = log_ga_options[log_subtype]
 
-                else:
-                    log_data = str_to_list(
-                        develop_subprocess(
-                            request,
-                            command=SHELL_SERVICE_LOG_STATUS % log_service_value,
-                            develop=['Test output1', 'Helloo', "Third time's a charm"]
-                        )
-                    )
-            elif log_type == 'Service journal':
-                if develop:
-                    log_data = ['test data', 'data journal']
+        # todo: option to view older (truncated) logs?
+        log_data = str_to_list(
+            develop_subprocess(
+                request,
+                command=f"tail -n {log_entry_count} {log_file}",
+                develop=['Test output3', 'Helloo', "Third time's a charm"]
+            ),
+            reverse=True
+        )
 
-                else:
-                    log_data = str_to_list(
-                        develop_subprocess(
-                            request,
-                            command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
-                            develop=['Test output2', 'Helloo', "Third time's a charm"]
-                        )
-                    )
+    else:
+        log_subtype_options = log_service_options
 
-        if log_type == 'GrowAutomation':
-            log_subtype_options = log_ga_options
-
-            if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_ga_options:
-                log_subtype = request.GET['log_subtype']
-                log_file = log_ga_options[log_subtype]
-
-                # option to view older (truncated) logs?
-                if develop:
-                    log_data = [f"log from file '{path_log}' -> test data", 'data ga']
-
-                else:
-                    log_data = str_to_list(
-                        develop_subprocess(
-                            request,
-                            command=f"tail -n {log_entry_count} {log_file}",
-                            develop=['Test output3', 'Helloo', "Third time's a charm"]
-                        ),
-                        reverse=True
-                    )
-
-        else:
-            log_subtype_options = log_service_options
-
-        if 'log_subtype' in request.GET:
-            if reload_time is None:
-                reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
+    if 'log_subtype' in request.GET:
+        if reload_time is None:
+            reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
     if type(log_data) == list and len(log_data) == 0:
         log_data = None

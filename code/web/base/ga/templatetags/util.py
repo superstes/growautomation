@@ -5,7 +5,7 @@ from random import randint
 from sys import exc_info as sys_exc_info
 from os import environ as os_environ
 
-from ..config.shared import GA_WRITE_GROUP
+from ..config.shared import GA_WRITE_GROUP, WEBUI_EMPTY_CHOICE
 from ..utils.helper import get_controller_setting
 from ..utils.web import get_client_ip
 from ..config.shared import DATETIME_TS_FORMAT, VERSION
@@ -24,11 +24,15 @@ def get_type(value):
 @register.filter
 def get_item(data, key):
     value = None
-    if key.find(',') != -1:
-        # workaround since template does only support two arguments for filters
-        key, fallback = key.split(',', 1)
 
-    else:
+    try:
+        if key.find(',') != -1:
+            # workaround since template does only support two arguments for filters
+            key, fallback = key.split(',', 1)
+
+        else:
+            fallback = None
+    except AttributeError:
         fallback = None
 
     try:
@@ -182,25 +186,30 @@ def found(data: str, search: str) -> bool:
     return False
 
 
-@register.filter
-def demo_mode(nope: None) -> bool:
+@register.simple_tag
+def demo_mode() -> bool:
     if 'GA_DEMO' in os_environ:
         return True
 
     return False
 
 
-@register.filter
-def beta_mode(nope: None) -> bool:
+@register.simple_tag
+def beta_mode() -> bool:
     if 'GA_BETA' in os_environ:
         return True
 
     return False
 
 
-@register.filter
-def get_version(nope: None) -> float:
+@register.simple_tag
+def get_version() -> float:
     return VERSION
+
+
+@register.simple_tag
+def get_empty() -> str:
+    return WEBUI_EMPTY_CHOICE
 
 
 @register.filter
