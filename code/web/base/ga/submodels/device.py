@@ -125,7 +125,7 @@ class MemberOutputModel(BaseMemberModel):
 
 class DeviceStateOutput(BareModel):
     initials = 'dso'
-    obj = models.ForeignKey(ObjectOutputModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
+    obj = models.ForeignKey(ObjectOutputModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj", unique=True)
 
     active = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
     reverse_data = models.CharField(max_length=32, blank=True, null=True, default=None)

@@ -9,6 +9,7 @@ from ...utils.helper import member_pre_process
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.basic import set_key
 from ...config.shared import CENSOR_STRING, LOGIN_URL
+from ..api.sock.main import api_sock
 
 
 class ConfigView:
@@ -139,14 +140,19 @@ class ConfigView:
 
     def _get_list(self):
         dataset = self.model.objects.all()
-        context, member_type, member_data, member_config = None, None, None, None
+        context, member_type, member_data, member_config, device_status = None, None, None, None, None
         # group_tbl and member_tbl should be the same length
         #   '': '' can be used for empty columns
         # special table contents:
         #   ! => pull following key from MEMBER_CONFIG
         #   ? => pull following key from member object
-        group_tbl = {'name': 'name', 'description': 'description', 'enabled': 'enabled'}
-        member_tbl = {'type': '!pretty', 'name': 'name', 'description': 'description', 'enabled': 'enabled'}
+        if self.request.user_agent.is_mobile:
+            group_tbl = {'name': 'name', 'enabled': 'enabled'}
+            member_tbl = {'type': '!pretty', 'name': 'name', 'enabled': 'enabled'}
+
+        else:
+            group_tbl = {'name': 'name', 'description': 'description', 'enabled': 'enabled'}
+            member_tbl = {'type': '!pretty', 'name': 'name', 'description': 'description', 'enabled': 'enabled'}
 
         if self.type == 'conditiongroup':
             member_type = 'conditionmember'
@@ -165,7 +171,12 @@ class ConfigView:
                 'condition_link_member_group': member_config['condition_link_member_group']['model'].objects.all(),
             }
             group_tbl = {'name': 'name', 'operator': 'operator', '': ''}
-            member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name', 'description': 'description'}
+
+            if self.request.user_agent.is_mobile:
+                member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name', 'description': 'description'}
+
+            else:
+                member_tbl = {'order': '?order', 'type': '!pretty', 'name': 'name'}
 
         elif self.type.endswith('group'):
             member_type = "%smember" % self.type.replace('group', '')
@@ -174,13 +185,16 @@ class ConfigView:
                 key: member_config[key]['model'].objects.all() for key in member_config.keys()
             }
 
+        if self.type.startswith('output'):
+            device_status = self._get_status(typ='outputobject')
+
         if member_type is not None:
             member_view_active, member_data_dict = member_pre_process(member_data_dict=member_data, request=self.request, member_config=member_config)
             tmpl = 'list/member'
             context = {
                 'dataset': dataset, 'typ': self.type, 'request': self.request, 'member_data_dict': member_data_dict, 'MEMBER_CONFIG': member_config,
                 'member_type': member_type, 'member_view_active': member_view_active, 'group_tbl': group_tbl, 'member_tbl': member_tbl, 'title': self.title,
-                'MAIN_CONFIG': MAIN_CONFIG,
+                'MAIN_CONFIG': MAIN_CONFIG, 'device_status': device_status,
             }
 
         else:
@@ -301,3 +315,19 @@ class ConfigView:
 
         data.delete()
         return redirect(self.post_redirect)
+
+    def _get_status(self, typ: str) -> dict:
+        status = {}
+
+        for device in MAIN_CONFIG[typ]['model'].objects.all():
+            status[device] = api_sock(
+                request=self.request,
+                sock_data={
+                    'type': typ,
+                    'id': device.id,
+                    'do': 'is_active',
+                }
+            )
+
+        return status
+

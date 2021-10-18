@@ -84,6 +84,9 @@ class Route:
                     elif action == 'stop':
                         result = Output(instance=obj, action=action, manually=True).start()
 
+                    elif action == 'is_active':
+                        result = obj.active
+
                     else:
                         log(f"Got an unsupported action '{action}' for {self.path_subtype}-device!", level=4)
 

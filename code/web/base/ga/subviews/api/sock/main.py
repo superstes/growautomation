@@ -23,17 +23,24 @@ mapping = {
 
 @login_required
 @user_passes_test(authorized_to_write, login_url=LOGIN_URL)
-def api_sock(request):
-    mapping_key = request.POST['type']
-    path_id = request.POST['id']
+def api_sock(request, sock_data: dict = None):
+    if sock_data is not None:
+        mapping_key = sock_data['type']
+        path_id = sock_data['id']
+        data = sock_data['do']
+
+    else:
+        mapping_key = request.POST['type']
+        path_id = request.POST['id']
+        data = request.POST['do']
+
     path = f'ga.core.{mapping[mapping_key]}.{path_id}'
-    data = request.POST['do']
 
     response = Client(path).post(data)
 
     develop_log(request, output=f"Got socket response '{response}' by executing '{path} = {data}'", level=6)
 
-    if request.META['HTTP_REFERER'].find('/config/') != -1:
+    if sock_data is None and 'HTTP_REFERER' in request.META and request.META['HTTP_REFERER'].find('/config/') != -1:
         result = 'Action failed!'
 
         if type(response) == bool and response is True:
@@ -44,4 +51,8 @@ def api_sock(request):
 
         return redirect(append_to_url(url=request.META['HTTP_REFERER'], append={'response': result}))
 
-    return JsonResponse({'response': response})
+    elif sock_data is not None:
+        return response
+
+    else:
+        return JsonResponse({'response': response})

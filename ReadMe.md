@@ -76,6 +76,8 @@ Version: 0.9
 ### History
 - v0.9 _(2021-09)_
   - action-button in webUI
+  - saving of action states to db (_keeping track of active actors_)
+  - added basic dark-mode
 - v0.8 _(2021-03 - 2021-04)_
   - updated condition workflow
   - created basic <a href="https://docs.growautomation.eu">documentation</a>
