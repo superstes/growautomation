@@ -22,7 +22,7 @@
             <label for="selected">Existing dashboard object
                 <select class="form-control" id="selected" name="selected" >
                     {% if action == 'show' %}
-                        <option value="---------">---------</option>
+                        <option value="{% get_empty %}">{% get_empty %}</option>
                     {% endif %}
                     {% for option in object_list %}
                         {% if option.id == selected %}

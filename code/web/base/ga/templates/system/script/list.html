@@ -5,7 +5,7 @@
         <label>Script type
             <select class="form-control" name="script_type" >
                 {% if script_type is None %}
-                    <option selected disabled hidden>---------</option>
+                    <option selected disabled hidden>{% get_empty %}</option>
                 {% endif %}
                 {% for option in script_type_options %}
                     {% if script_type == option %}

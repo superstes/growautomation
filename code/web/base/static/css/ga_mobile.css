@@ -3,15 +3,6 @@
         font-size: 0.9rem;
     }
 
-    .ga-db-preview-grid {
-        grid-auto-rows: 35vw;
-        margin: 2vw;
-    }
-
-    .ga-db-grid {
-        grid-auto-rows: 35vw;
-    }
-
     .ga-form-inline-right {
         float: none;
     }
@@ -43,34 +34,11 @@
         font-size: 0.9rem;
     }
 
-    .ga-db-preview-grid {
-        grid-auto-rows: 45w;
-        margin: 3vw;
-    }
-
-    .ga-db-grid {
-        grid-auto-rows: 45w;
-    }
-
 }
 
 @media only screen and (max-width: 500px) {  /* mobile devices */
-    .ga-chart-main {
-        height: 35vh;
-        width: 90vw;
-    }
-
     .ga-text-responsive, .ga-text-responsive .btn {
         font-size: 0.8rem;
-    }
-
-    .ga-db-preview-grid {
-        grid-auto-rows: 75vw;
-        margin: 5vw;
-    }
-
-    .ga-db-grid {
-        grid-auto-rows: 75vw;
     }
 
     .ga-file-content-line {
@@ -84,6 +52,14 @@
 
     .ga-login-fields {
         width: 70vw;
+    }
+
+    .ga-btn-action-icon {
+        font-size: 20px !important;
+    }
+
+    .ga-btn-action {
+        padding: 1px 1px !important;
     }
 
 }

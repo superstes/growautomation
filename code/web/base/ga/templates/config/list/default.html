@@ -17,9 +17,11 @@
         <th>
             NAME
         </th>
-        <th>
-            DESCRIPTION
-        </th>
+        {% if not request.user_agent.is_mobile %}
+            <th>
+                DESCRIPTION
+            </th>
+        {% endif %}
         <th>
             ENABLED
         </th>
@@ -35,9 +37,11 @@
             <td>
                 {{ data|get_item:'name,---' }}
             </td>
-            <td>
-                {{ data|get_item:'description,---' }}
-            </td>
+            {% if not request.user_agent.is_mobile %}
+                <td>
+                    {{ data|get_item:'description,---' }}
+                </td>
+            {% endif %}
             <td>
                 {{ data|get_item:'enabled,---' }}
             </td>

@@ -32,9 +32,11 @@
                     <th>
                         NAME
                     </th>
-                    <th>
-                        DESCRIPTION
-                    </th>
+                    {% if not request.user_agent.is_mobile %}
+                        <th>
+                            DESCRIPTION
+                        </th>
+                    {% endif %}
                     <th>
                         ACTION
                     </th>
@@ -48,9 +50,11 @@
                                 <td>
                                     {{ dataset_link.obj.name }}
                                 </td>
-                                <td>
-                                    {{ dataset_link.obj.description }}
-                                </td>
+                                {% if not request.user_agent.is_mobile %}
+                                    <td>
+                                        {{ dataset_link.obj.description }}
+                                    </td>
+                                {% endif %}
                                 <td>
                                     <form class="ga-form-inline" method="post" action="/data/chart/dbe/dataset">
                                         {% csrf_token %}

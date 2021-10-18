@@ -15,14 +15,24 @@
     {% endif %}
     <tr>
         {% for header in group_tbl.keys %}
-            <th>
-                {{ header|upper }}
-            </th>
+            {% if header == 'description' and 'output' in typ %}
+                <th colspan="2">
+                    {{ header|upper }}
+                </th>
+            {% else %}
+                <th>
+                    {{ header|upper }}
+                </th>
+            {% endif %}
         {% endfor %}
         <th>
             MEMBERS
         </th>
-        <th>
+        {% if 'output' in typ and request.user_agent.is_mobile %}
+            <th colspan="2">
+        {% else %}
+            <th>
+        {% endif %}
             ACTION
         </th>
     </tr>
@@ -33,11 +43,18 @@
         {% if not group_hide_list or not data.typ.name in group_hide_list %}
             {% if not group_show_list or data.typ.name in group_show_list %}
                 <tr>
-                    {% for value in group_tbl.values %}
-                        <td>
-                            {% set_var value|add:', ' as val %}
-                            {{ data|get_item:val }}
-                        </td>
+                    {% for header, value in group_tbl.items %}
+                        {% if header == 'description' and 'output' in typ %}
+                            <td colspan="2">
+                                {% set_var value|add:', ' as val %}
+                                {{ data|get_item:val }}
+                            </td>
+                        {% else %}
+                            <td>
+                                {% set_var value|add:', ' as val %}
+                                {{ data|get_item:val }}
+                            </td>
+                        {% endif %}
                     {% endfor %}
                     <td>
                         {% if member_view_active %}
@@ -58,7 +75,11 @@
                             </form>
                         {% endif %}
                     </td>
-                    <td>
+                    {% if 'output' in typ and request.user_agent.is_mobile %}
+                        <td colspan="2">
+                    {% else %}
+                        <td>
+                    {% endif %}
                         {% include "./actions.html" %}
                     </td>
                 </tr>

@@ -5,7 +5,7 @@
         <label for="log_type">Log type</label>
         <select class="form-control" id="log_type" name="log_type" >
             {% if log_type is None or log_type not in log_type_options %}
-                <option selected>---------</option>
+                <option selected>{% get_empty %}</option>
             {% endif %}
             {% for option in log_type_options %}
                 {% if log_type is not None and option == log_type %}
@@ -19,7 +19,7 @@
             <label for="log_subtype">Sub type</label>
             <select class="form-control" id="log_subtype" name="log_subtype" >
                 {% if log_subtype is None or log_subtype not in log_subtype_option_list %}
-                    <option selected>---------</option>
+                    <option selected>{% get_empty %}</option>
                 {% endif %}
                 {% for option in log_subtype_option_list %}
                     {% if log_subtype is not None and option == log_subtype %}

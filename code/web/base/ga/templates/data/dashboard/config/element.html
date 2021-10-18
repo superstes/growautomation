@@ -9,9 +9,11 @@
             <th>
                 NAME
             </th>
-            <th>
-                DESCRIPTION
-            </th>
+            {% if not request.user_agent.is_mobile %}
+                <th>
+                    DESCRIPTION
+                </th>
+            {% endif %}
             <th>
                 BEGIN
             </th>
@@ -31,9 +33,11 @@
                         <td>
                             {{ position.element.name }}
                         </td>
-                        <td>
-                            {{ position.element.description }}
-                        </td>
+                        {% if not request.user_agent.is_mobile %}
+                            <td>
+                                {{ position.element.description }}
+                            </td>
+                        {% endif %}
                         <td>
                             Row {{ position.y0 }} | Col {{ position.x0 }}
                         </td>

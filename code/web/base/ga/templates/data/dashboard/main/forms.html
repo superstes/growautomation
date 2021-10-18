@@ -11,7 +11,7 @@
     <label for="selected">
         Dashboard object
         <select class="form-control" id="selected" name="selected" >
-            <option value="---------">---------</option>
+            <option value="{% get_empty %}">{% get_empty %}</option>
             {% for option in object_list %}
                 {% if option.id == selected %}
                     <option selected value="{{ option.id }}">{{ option }}</option>
@@ -29,7 +29,7 @@
     <label>
         Default Dashboard
         <select class="form-control" name="dashboard">
-            <option value="---------">---------</option>
+            <option value="{% get_empty %}">{% get_empty %}</option>
             {% for option in object_list %}
                 {% if option.id == default %}
                     <option selected value="{{ option.id }}">{{ option }}</option>

@@ -5,7 +5,7 @@
         <label for="service_name">Service</label>
         <select class="form-control" id="service_name" name="service_name" >
             {% if service_name is None %}
-                <option selected>---------</option>
+                <option selected>{% get_empty %}</option>
             {% endif %}
             {% for option in service_name_options %}
                 {% if service_name is not None and option == service_name %}
@@ -22,7 +22,7 @@
        {% include "../btn/select.html" %}
     </form>
     {% if service_name is not None %}
-        <br><hr>
+        <hr>
         {% if service_status is not None %}
             <h3>
                 Service status
@@ -57,11 +57,10 @@
             <br>
             <a href='/system/service/?service_name={{ service_name }}' class="btn btn-info">Refresh</a>
         {% endif %}
-        <br><hr>
+        <hr>
         <h3>
             Actions
         </h3>
-        <br>
         <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
             {% csrf_token %}
             {% if service_status != 'active' and request.user|authorized_to_write %}
@@ -104,13 +103,12 @@
                 <input type="hidden" name="service_name" value="{{ service_name }}" />
             </form>
         {% endif %}
-        <br><br><hr>
+        <hr>
         <h3>
-            More information
+            Status & Logs
         </h3>
-        <br>
-        <a href="/system/log/?log_type=Service&log_subtype={{ service_name }}" class="btn btn-info">Detailed status</a>
-        <a href="/system/log/?log_type=Service+journal&log_subtype={{ service_name }}" class="btn btn-info">Service Logs</a>
+        <a href="/system/log/?log_type=Service+journal&log_subtype={{ service_name }}" class="btn btn-info">Service Status</a>
+        <a href="/system/log/?log_type=Service&log_subtype={{ service_name }}" class="btn btn-info">Service Journal</a>
         {% if service_name == 'GrowAutomation' %}
             <a href="/system/log/?log_type=GrowAutomation&log_subtype=Core" class="btn btn-info">Application Logs</a>
         {% endif %}

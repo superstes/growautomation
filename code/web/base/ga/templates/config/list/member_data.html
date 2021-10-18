@@ -1,5 +1,6 @@
 {% load util %}
 {% for member in member_data %}
+    {% set_var member_own_type as sock_type %}
     <tr class="table-active">
         {% set_var member|get_item:member_key as member_obj %}
         {% for value in member_tbl.values %}
@@ -17,6 +18,15 @@
             </td>
         {% endfor %}
         <td>
+            {% if 'output' in typ %}
+                {% if device_status|get_item:member_obj %}
+                    Active
+                {% else %}
+                    Idle
+                {% endif %}
+            {% endif %}
+        </td>
+        <td>
             <form method="get" class="ga-form-inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
                 {% include "../../btn/detailed.html" %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
@@ -27,20 +37,19 @@
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
             {% if member_own_sub_type in MAIN_CONFIG.keys %}
-                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_own_sub_type }}/{{ member.id }}">
+                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_own_sub_type }}/{{ member.id }}" onsubmit="return confirm('Do you really want to remove the device?');">
             {% else %}
-                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}">
+                <form method="post" class="ga-form-inline" action="/config/delete/{{ member_type }}/{{ member.id }}" onsubmit="return confirm('Do you really want to remove the device?');">
             {% endif %}
                 {% csrf_token %}
                 {% include "../../btn/member_remove.html" %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            <form class="ga-form-inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}">
+            <form class="ga-form-inline" method="post" action="/config/delete/{{ member_own_type }}/{{ member_obj.id }}" onsubmit="return confirm('Do you really want to delete the device?');">
                 {% csrf_token %}
                 {% include "../../btn/member_delete.html" %}
                 <input type="hidden" name="return" value="{{ request.get_full_path }}" />
             </form>
-            {% set_var member_own_type as sock_type %}
             {% include "./actions_socket.html" %}
         </td>
     </tr>

@@ -1,4 +1,5 @@
 {% extends "../../../body.html" %}
+{% load util %}
 {% load bootstrap_tags %}
 {% block extrahead %}
     {% include "../../tmpl/chart_head.html" %}
@@ -12,7 +13,7 @@
             <label for="selected">Existing chart object
                 <select class="form-control" id="selected" name="selected" >
                     {% if action == 'show' %}
-                        <option value="---------">---------</option>
+                        <option value="{% get_empty %}">{% get_empty %}</option>
                     {% endif %}
                     {% for option in object_list %}
                         {% if option.id == selected %}

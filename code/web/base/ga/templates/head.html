@@ -9,6 +9,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+{% if request.user_agent.is_mobile %}
+    <meta name="viewport" content="width=640"/>
+{% endif %}
 <link rel="icon" type="image/jpg" href="{% static 'img/icon.jpg' %}">
 
 <!-- START js -->
@@ -28,7 +31,6 @@
 <!-- START css -->
 <link rel="stylesheet" href="{% static 'css/ga.css' %}">
 <link rel="stylesheet" href="{% static 'css/ga_mobile.css' %}">
-<link rel="stylesheet" href="{% static 'css/ga_dark.css' %}">
 {% if request|use_cdn %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha512-oc9+XSs1H243/FRN9Rw62Fn8EtxjEYWHXRvjS43YtueEewbS6ObfXcJNyohjHqVKFPoXXUxwc+q1K7Dee6vv9g==" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" />

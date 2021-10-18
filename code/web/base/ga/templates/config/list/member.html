@@ -8,6 +8,11 @@
                     {{ header|upper }}
                 </th>
             {% endfor %}
+            {% if 'output' in typ %}
+                <th>
+                    STATUS
+                </th>
+            {% endif %}
             <th>
                 ACTION
             </th>
@@ -34,7 +39,7 @@
                      <form method="get" class="ga-form-inline" action="/config/switch/{{ member_type }}/">
                      <label>Choose member type:
                          <select class="form-control" name="typ" onchange="this.form.action=this.value">
-                             <option selected>---------</option>
+                             <option selected>{% get_empty %}</option>
                              {% for typ_name, typ_nested in MEMBER_CONFIG.items %}
                                  <option value="/config/switch/{{ member_type }}/{{ typ_name }}/">{{ typ_nested|get_item:'pretty' }}</option>
                              {% endfor %}

@@ -8,7 +8,7 @@
     <input type="hidden" name="action" value="Update" />
     <input type="hidden" name="return" value="{{ request.get_full_path }}" />
 </form>
-<form method="post" class="ga-form-inline" action="/config/delete/{{ typ }}/{{ data.id }}">
+<form method="post" class="ga-form-inline" action="/config/delete/{{ typ }}/{{ data.id }}" onsubmit="return confirm('Do you really want to delete the device model?');">
     {% csrf_token %}
     {% include "../../btn/delete.html" %}
     <input type="hidden" name="return" value="{{ request.get_full_path }}" />

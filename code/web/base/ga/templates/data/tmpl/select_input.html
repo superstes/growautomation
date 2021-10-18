@@ -2,7 +2,7 @@
 <label for="input_device">Input device</label>
 <select class="form-control" id="input_device" name="input_device" >
     {% if input_device is None %}
-        <option selected>---------</option>
+        <option selected>{% get_empty %}</option>
     {% endif %}
     {% for option, option_id in input_device_dict.items %}
         {% if input_device is not None and option_id == input_device %}
