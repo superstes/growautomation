@@ -10,7 +10,6 @@
         </button>
         {% if request|get_login_state %}
             {% set_var 'left'|get_nav as nav_left %}
-            {% set_var 'right'|get_nav as nav_right %}
             <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
                 <!-- START left navbar -->
                 <ul class="navbar-nav">
@@ -63,19 +62,28 @@
                     {% endfor %}
                 </ul>
                 <!-- END left navbar -->
-                <!-- START right navbar -->
-                <ul class="navbar-nav ml-auto ga-nav-right">
-                    {% for nav_key, nav_href in nav_right.items %}
-                        <li class="nav-item ga-nav-right-li">
-                            <a class="nav-link" href="{{ nav_href }}">{{ nav_key | safe }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-                <!-- END right navbar -->
-            </div>
         {% endif %}
+            <!-- START right navbar -->
+            <ul class="navbar-nav ml-auto ga-nav-right">
+                <li class="nav-item ga-nav-right-li">
+                    <a class="nav-link" id="ga-switch-colorScheme">
+                        <i class="fas fa-adjust fa-2x ga-nav-right-icon" title="Switch Dark/Light Mode"></i>
+                    </a>
+                </li>
+                {% set_var 'right'|get_nav as nav_right %}
+                {% for nav_item in nav_right.values %}
+                    {% if not nav_item.login or request|get_login_state %}
+                        <li class="nav-item ga-nav-right-li">
+                            <a class="nav-link" href="{{ nav_item.url }}">{{ nav_item.element | safe }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            <!-- END right navbar -->
+        </div>
     </nav>
 </div>
+<!-- START submenu script -->
 <script type="text/javascript">
     $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
         if (!$(this).next().hasClass('show')) {
@@ -91,3 +99,48 @@
         return false;
     });
 </script>
+<!-- STOP submenu script -->
+<!-- START light/dark scheme toggle script -->
+<script type="text/javascript">
+    const colorSchemeButton = document.getElementById('ga-switch-colorScheme');
+    const colorScheme = document.querySelector('meta[name="color-scheme"]');
+    const colorSchemeVar = 'color-scheme';
+    const colorSchemeLight = 'light';
+    const colorSchemeDark = 'dark';
+    const colorSchemeDefault = 'none';
+
+    function getColorSchema(preference) {
+        if (preference !== colorSchemeDefault) {
+            return preference;
+        } else if (matchMedia('(prefers-color-scheme: light)').matches) {
+            return colorSchemeLight;
+        } else {
+            return colorSchemeDark;
+        }
+    }
+
+    function setColorSchema(mode) {
+        document.body.className = mode;
+        colorScheme.content = mode;
+        localStorage.setItem(colorSchemeVar, mode);
+    }
+
+    function switchColorScheme(mode) {
+        if (mode === colorSchemeLight) {
+            return colorSchemeDark;
+        } else {
+            return colorSchemeLight;
+        }
+    }
+
+    let userPreference = localStorage.getItem(colorSchemeVar) || colorSchemeDefault;
+    setColorSchema(getColorSchema(userPreference));
+
+    if (colorSchemeButton != null) {
+        colorSchemeButton.onclick = function() {
+            userPreference = switchColorScheme(userPreference);
+            setColorSchema(userPreference);
+        };
+    }
+</script>
+<!-- STOP light/dark scheme toggle script -->

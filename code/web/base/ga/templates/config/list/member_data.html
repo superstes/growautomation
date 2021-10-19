@@ -17,15 +17,15 @@
                 {% endif %}
             </td>
         {% endfor %}
-        <td>
-            {% if 'output' in typ %}
+        {% if 'output' in typ %}
+            <td>
                 {% if device_status|get_item:member_obj %}
                     Active
                 {% else %}
                     Idle
                 {% endif %}
-            {% endif %}
-        </td>
+            </td>
+        {% endif %}
         <td>
             <form method="get" class="ga-form-inline" action="/config/detailed/{{ member_own_type }}/{{ member_obj.id }}">
                 {% include "../../btn/detailed.html" %}

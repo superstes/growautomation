@@ -1,6 +1,6 @@
 /* color scheme */
 
-:root {
+body.light {
   --c1: #121212;
   --tc1: #121212;
   --tc2: rgba(255, 255, 255, .8);
@@ -11,26 +11,11 @@
   --bgNav: #343a40;
   --bgNav2: #FFFFFF;
   --bgNav3: rgba(255, 255, 255, .9);
-  --bgMed: #3A9188;
-  --bgDawn: #044A42;
-  --bgDark: #062925;
-  --gaLight: #B9BD19;
-  --gaDark: #062925;
   --tableHead: rgba(0, 0, 0, .05);
   --tableActive: rgba(0, 0, 0, .075);
-/*    --bgTint: #dfeded;
-    --tc1Inverse: #fcfdff;
-    --headerBg: #1d1d26;
-    --bgGrey: #e6e8e8;*/
-  --whiteNormal: rgba(255, 255, 255, .9);
-  --whiteNice: rgba(255, 255, 255, .7);
-  --whiteSmooth: rgba(255, 255, 255, .5);
-  --logoutButton: #B00020;
-  --rad: 5px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+body.dark {
     --c1: rgba(255, 255, 255, .9);
     --tc1: #fcfdff;
     --tc2: #fcfdff;
@@ -43,7 +28,6 @@
     --tableHead: #282828;
     --tableActive: #404040;
     --bgLight: #062925;
-  }
 }
 
 /* init */
@@ -52,6 +36,16 @@ body {
     padding: 0 0;
     margin: 0 0;
     background-color: var(--bg) !important;
+    --whiteNormal: rgba(255, 255, 255, .9);
+    --whiteNice: rgba(255, 255, 255, .7);
+    --whiteSmooth: rgba(255, 255, 255, .5);
+    --logoutButton: #B00020;
+    --rad: 5px;
+    --bgMed: #3A9188;
+    --bgDawn: #044A42;
+    --bgDark: #062925;
+    --gaLight: #B9BD19;
+    --gaDark: #062925;
 }
 
 /* START basic */
@@ -191,7 +185,7 @@ td {
     transition: color 0.2s ease-in-out;
 }
 
-.ga-nav-main-a2:hover, .ga-nav-main-a1:hover {
+.ga-nav-main-a1:hover, .ga-nav-main-a2:hover, .ga-nav-main-a3:hover {
     background: var(--gaLight) !important;
     opacity: 87%;
     -webkit-transition: color 0.3s ease-in-out;
@@ -205,16 +199,7 @@ td {
     background: var(--bgNav2) !important;
     color: var(--tc1);
 }
-/*
-.ga-nav-dd1:hover {
-    color: var(--gaLight);
-    -webkit-transition: color 0.3s ease-in-out;
-    -moz-transition: color 0.3s ease-in-out;
-    -ms-transition: color 0.3s ease-in-out;
-    -o-transition: color 0.3s ease-in-out;
-    transition: color 0.3s ease-in-out;
-}
-*/
+
 .ga-nav-dd2 {
     background: var(--bgNav3) !important;
     color: var(--tc1);
@@ -254,14 +239,6 @@ td {
     position: relative;
 }
 
-/*
-.dropdown-menu > li > a:hover:after,  {
-    transform: rotate(-90deg);
-    position: absolute;
-    top: .8em;
-}
-*/
-
 .dropdown-submenu .dropdown-menu {
     top: 0;
     left: 100%;
@@ -273,6 +250,7 @@ td {
 
 .navbar-nav li:hover > ul.dropdown-menu {
     display: block;
+    ###
 }
 
 /* STOP navigation */
