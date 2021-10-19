@@ -6,7 +6,7 @@ from pytz import utc as pytz_utc
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
 from ....utils.basic import add_timezone, get_datetime_w_tz
-from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_controller_setting, develop_log
+from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_controller_setting
 from ....utils.auth import method_user_passes_test
 from ....user import authorized_to_read
 from ....config import shared as config
@@ -62,7 +62,6 @@ class ApiData:
             return handler500_api(msg='Error processing time period')
 
         start_ts, stop_ts = _time
-        develop_log(request=self.request, output=f"{stop_ts.strftime('%H:%M:%S:%f')}")
 
         time_span = stop_ts - start_ts
         if time_span > timedelta(days=365):

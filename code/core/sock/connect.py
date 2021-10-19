@@ -10,13 +10,14 @@ from traceback import format_exc
 
 from core.config import socket as socket_config
 from core.config import shared as config
-from core.utils.debug import log
 from core.sock.translate import Route
+from core.utils.debug import log
 
 
 class Interact:
-    def __init__(self, link, server: bool = False):
+    def __init__(self, link, logger=log, server: bool = False):
         self.LINK = link
+        self.LOG = logger
         self.BANNER = socket_config.SOCKET_BANNER_CORE
         self.HEAD = socket_config.PACKAGE_START.encode('utf-8')
         self.TAIL = socket_config.PACKAGE_STOP.encode('utf-8')
@@ -30,14 +31,14 @@ class Interact:
             self.LOG_PREFIX = 'Client - '
 
         if self.SHUFFLE:
-            log(f'{self.LOG_PREFIX}Shuffling transferred data', level=7)
+            self.LOG(f'{self.LOG_PREFIX}Shuffling transferred data', level=7)
 
     def send(self, data: str) -> (bool, dict):
         try:
             data_enc = data.encode('utf-8')
 
             if self.SHUFFLE:
-                log(f'{self.LOG_PREFIX}Sending data: {data_enc}', level=9)
+                self.LOG(f'{self.LOG_PREFIX}Sending data: {data_enc}', level=9)
                 data_send = self._shuffle(data_enc)
 
             else:
@@ -48,18 +49,22 @@ class Interact:
             data_packed += data_send
             data_packed += self.TAIL
 
-            log(f'{self.LOG_PREFIX}Sending packet: {data_packed}', level=9)
+            self.LOG(f'{self.LOG_PREFIX}Sending packet: {data_packed}', level=9)
             self.LINK.sendall(data_packed)
 
             if not self.SERVER:
                 response = self.receive()
+
                 if response is not None:
                     return response
 
-            return True
+                else:
+                    self.LOG(f'{self.LOG_PREFIX}Got no response from request!', level=5)
+
+            return None
 
         except Exception as error:
-            log(f"{self.LOG_PREFIX}Got error while sending data: '{error}'", level=3)
+            self.LOG(f"{self.LOG_PREFIX}Got error while sending data: '{error}'", level=3)
             return False
 
     def receive(self) -> (dict, None):
@@ -85,10 +90,10 @@ class Interact:
 
                 if not data_enc:
                     # if we did not receive anything
-                    log(f'{self.LOG_PREFIX}Received no data!', level=9)
+                    self.LOG(f'{self.LOG_PREFIX}Received no data!', level=9)
 
                     if time() > start_time + socket_config.RECV_TIMEOUT:
-                        log(f'{self.LOG_PREFIX}Receive timeout!', level=5)
+                        self.LOG(f'{self.LOG_PREFIX}Receive timeout!', level=5)
                         return False
 
                     else:
@@ -106,12 +111,12 @@ class Interact:
                 else:
                     data_recv.extend(data_enc)
 
-            log(f'{self.LOG_PREFIX}Received data: {data_recv}', level=8)
+            self.LOG(f'{self.LOG_PREFIX}Received data: {data_recv}', level=8)
 
             if self.SHUFFLE:
                 # remove un-shuffled head and tail and get the plaintext data
                 data = self.HEAD + self._shuffle(data_recv[len(self.HEAD):-len(self.TAIL)]) + self.TAIL
-                log(f'{self.LOG_PREFIX}Un-shuffled data: {data}', level=9)
+                self.LOG(f'{self.LOG_PREFIX}Un-shuffled data: {data}', level=9)
 
             else:
                 data = data_recv
@@ -119,7 +124,7 @@ class Interact:
             return self._validate(data.decode('utf-8'))
 
         except Exception as error:
-            log(f"{self.LOG_PREFIX}Got error while receiving data: '{error}'", level=3)
+            self.LOG(f"{self.LOG_PREFIX}Got error while receiving data: '{error}'", level=3)
             return False
 
     def _validate(self, data: str) -> (dict, None):
@@ -132,10 +137,11 @@ class Interact:
                 return {'path': _[0], 'data': _[1]}
 
             except IndexError:
-                log(f"{self.LOG_PREFIX}Wasn't able to parse received data!", level=3)
+                self.LOG(f"{self.LOG_PREFIX}Wasn't able to parse received data!", level=3)
+                self.LOG(f"{self.LOG_PREFIX}Data: \"{data}\"!", level=6)
 
         else:
-            log(f'{self.LOG_PREFIX}Received invalid data!', level=3)
+            self.LOG(f'{self.LOG_PREFIX}Received invalid data!', level=3)
 
         return None
 
@@ -150,7 +156,7 @@ class Interact:
 
 
 class Client:
-    def __init__(self, path: str, target: str = '127.0.0.1', port: int = socket_config.SOCKET_PORT):
+    def __init__(self, path: str, logger=log, target: str = '127.0.0.1', port: int = socket_config.SOCKET_PORT):
         self.PATH = path if path.startswith('ga.') else f'{socket_config.PATH_WEB}.{path}'
         self.LINK = socket(family=AF_INET, type=SOCK_STREAM)
         self.TARGET = target
@@ -159,14 +165,15 @@ class Client:
         self.LOG_PREFIX = 'Client - '
         self.connected = False
         self.LINK.settimeout(socket_config.RECV_TIMEOUT)
+        self.LOG = logger
 
     def get(self) -> (str, None):
         if self.connected or self._init():
-            return Interact(link=self.LINK).receive()
+            return Interact(link=self.LINK, logger=self.LOG).receive()
 
     def post(self, data: str) -> (bool, dict):
         if self.connected or self._init():
-            return Interact(link=self.LINK).send(data=f'{self.PATH}{self.PATH_SEP}{data}')
+            return Interact(link=self.LINK, logger=self.LOG).send(data=f'{self.PATH}{self.PATH_SEP}{data}')
 
     def _init(self):
         try:
@@ -175,7 +182,7 @@ class Client:
             return True
 
         except socket_error as error:
-            log(f"{self.LOG_PREFIX}Got error connecting to server '{self.TARGET}': {error}", level=3)
+            self.LOG(f"{self.LOG_PREFIX}Got error connecting to server '{self.TARGET}': {error}", level=3)
             return False
 
     def __del__(self):
@@ -187,34 +194,42 @@ def server_thread(srv, connection):
     try:
         start_time = time()
         srv.CLIENT_THREADS += 1
-        log(f'{srv.LOG_PREFIX}Entered Client-Thread #{srv.CLIENT_THREADS}', level=6)
-        data = Interact(link=connection, server=True).receive()
-        log(f"{srv.LOG_PREFIX}Received data: '{data}'", level=6)
+        srv.LOG(f'{srv.LOG_PREFIX}Entered Client-Thread #{srv.CLIENT_THREADS}', level=6)
+        data = Interact(link=connection, server=True, logger=srv.LOG).receive()
+        srv.LOG(f"{srv.LOG_PREFIX}Received data: '{data}'", level=6)
 
         if data is None:
-            log(f'{srv.LOG_PREFIX}Unable to get route', level=6)
+            srv.LOG(f'{srv.LOG_PREFIX}Unable to get route', level=6)
 
         else:
             # parsing command and executing api
-            result, status = Route(parsed=data).go()
-            result_str = 'success' if result else 'failed'
-            Interact(link=connection, server=True).send(data=f'result:{result_str},status:{status}')
+            result = Route(parsed=data).go()
+            Interact(
+                link=connection,
+                server=True,
+                logger=srv.LOG
+            ).send(
+                data=f"{data['path']}"
+                     f"{socket_config.PACKAGE_PATH_SEPARATOR}"
+                     f"{result}"
+            )
 
-        log(f"{srv.LOG_PREFIX}Processed client connection to '{connection.raddr}' in {time()-start_time} secs", level=6)
+        srv.LOG(f"{srv.LOG_PREFIX}Processed client connection to '{connection.raddr}' in {time()-start_time} secs", level=6)
         srv.CLIENT_THREADS -= 1
         return data
 
     except:
+        srv.CLIENT_THREADS -= 1
         exc_type, exc_obj, _ = sys_exc_info()
-        log(f"Client connection '{connection.raddr}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
-        log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
+        srv.LOG(f"Client connection '{connection.raddr}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
+        srv.LOG(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
 
 class Server:
     BIND_RETRY_SLEEP = 5
     BIND_RETRY_MAX_COUNT = 60
 
-    def __init__(self):
+    def __init__(self, logger=log):
         self.SERVER = socket(family=AF_INET, type=SOCK_STREAM)
         self.PORT = socket_config.SOCKET_PORT
 
@@ -229,6 +244,7 @@ class Server:
         self.PKG_SIZE = socket_config.PACKAGE_SIZE
         self.NAME = socket_config.SOCKET_SERVER_NAME
         self.LOG_PREFIX = 'Server - '
+        self.LOG = logger
 
     def run(self):
         retry = 0
@@ -237,12 +253,12 @@ class Server:
             try:
                 retry += 1
                 self.SERVER.bind((self.ADDRESS, self.PORT))
-                log(f'{self.LOG_PREFIX}Successfully bound {self.NAME} on {self.ADDRESS}:{self.PORT}', level=6)
+                self.LOG(f'{self.LOG_PREFIX}Successfully bound {self.NAME} on {self.ADDRESS}:{self.PORT}', level=6)
                 break
 
             except OSError:
                 # when the server was killed; it will need some time until tcp releases the socket
-                log(f'{self.LOG_PREFIX}Port {self.PORT} is not free; retrying..', level=5)
+                self.LOG(f'{self.LOG_PREFIX}Port {self.PORT} is not free; retrying..', level=5)
                 sleep(self.BIND_RETRY_SLEEP)
 
         try:
@@ -251,11 +267,11 @@ class Server:
             while True:
                 connection, address = self.SERVER.accept()
                 connection.settimeout(socket_config.RECV_TIMEOUT)
-                log(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
+                self.LOG(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
                 start_new_thread(server_thread, (self, connection))
 
         except (Exception, KeyboardInterrupt) as error:
-            log(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)
+            self.LOG(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)
 
     def __del__(self):
         self.SERVER.close()

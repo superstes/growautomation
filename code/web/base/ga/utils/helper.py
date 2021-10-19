@@ -1,3 +1,6 @@
+from inspect import stack as inspect_stack
+from inspect import getfile as inspect_getfile
+
 from core.utils.process import subprocess
 from core.utils.debug import web_log
 
@@ -50,8 +53,9 @@ def develop_subprocess(request, command: str, develop: (str, list) = None) -> st
 
 
 def develop_log(request, output: str, level: int = 1) -> None:
+    _src = inspect_getfile(inspect_stack()[1][0])
     if not check_develop(request):
-        web_log(output=output, level=level)
+        web_log(output=output, level=level, src_file=_src)
 
 
 def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):

@@ -3,7 +3,7 @@
 from re import match as regex_match
 
 from core.utils.debug import log
-from core.config.socket import PACKAGE_PATH_SEPARATOR
+from core.config.socket import PACKAGE_PATH_SEPARATOR, PATH_CORE
 from core.config import shared as config
 from core.factory import config as factory_config
 
@@ -12,7 +12,7 @@ class Route:
     def __init__(self, parsed: dict):
         self.path = parsed['path'].split(PACKAGE_PATH_SEPARATOR)[0].split('.')
         self.data = parsed['data']
-        self.status = None
+        self.result = None
         try:
             self.path_main = f'{self.path[0]}.{self.path[1]}'
             self.path_type = self.path[2]
@@ -29,20 +29,28 @@ class Route:
             'group\\.(input|output|connection)': self._device,
         }
 
-        if self.path_main == 'ga.core':
+        if self.path_main == PATH_CORE:
             check = f'{self.path_type}.{self.path_subtype}'
+            matched = False
+
             for match, goto in mapping.items():
                 if regex_match(match, check) is not None:
-                    return goto(), self.status
+                    matched = True
+                    goto()
+                    break
 
-            log('No route matched!', level=5)
+            if matched:
+                return self.result
+
+            else:
+                log('No route matched!', level=5)
 
         else:
-            log("Wrong api root-path supplied => should be 'ga.core'", level=4)
+            log(f"Wrong api root-path supplied => should be '{PATH_CORE}'", level=4)
 
-        return False, self.status
+        return self.status
 
-    def _device(self) -> bool:
+    def _device(self):
         from core.device.output.main import Go as Output
         from core.device.input.main import Go as Input
         mapping = {
@@ -60,7 +68,6 @@ class Route:
 
         action = self.data
         key = mapping[self.path_type][self.path_subtype]
-        result = None
 
         # check state of device => stateful or -less => active and/or locked
         #   stateless => start is the only option => get lock and start
@@ -71,7 +78,7 @@ class Route:
 
         for obj in config.CONFIG[key]:
             if getattr(obj, factory_config.CORE_ID_ATTRIBUTE) == self.path_id:
-                log(f'Executing {action} for {self.path_subtype}-{self.path_type} with id {self.path_id}', level=6)
+                log(f'Executing \"{action}\" for {self.path_subtype}-{self.path_type} with id {self.path_id}', level=6)
 
                 if self.path_subtype == 'output':
                     if action == 'start':
@@ -79,33 +86,30 @@ class Route:
                             log(f"Unable to start output-{self.path_type} '{obj}' since it is already active!", level=3)
 
                         else:
-                            result = Output(instance=obj, action=action, manually=True).start()
+                            self.result = Output(instance=obj, action=action, manually=True).start()
 
                     elif action == 'stop':
-                        result = Output(instance=obj, action=action, manually=True).start()
+                        self.result = Output(instance=obj, action=action, manually=True).start()
 
                     elif action == 'is_active':
-                        result = obj.active
+                        self.result = getattr(obj, 'active')
 
                     else:
                         log(f"Got an unsupported action '{action}' for {self.path_subtype}-device!", level=4)
-
-                    if self.status is None:
-                        self.status = getattr(obj, 'active')
 
                 else:  # if input or connection
                     if action == 'start':
-                        result = Input(instance=obj, manually=True).start()
+                        self.result = Input(instance=obj, manually=True).start()
 
                     else:
                         log(f"Got an unsupported action '{action}' for {self.path_subtype}-device!", level=4)
 
-        if result is not None:
-            if result:
-                log(f"Execution of {self.path_subtype}-device with id {self.path_id} was successful!", level=6)
-            else:
-                log(f"Execution of {self.path_subtype}-device with id {self.path_id} failed!", level=3)
+                break
 
-            return result
+        if self.result is not None:
+            if action in ['start', 'stop']:
+                if self.result:
+                    log(f"Execution of {self.path_subtype}-device with id {self.path_id} was successful!", level=6)
 
-        return False
+                else:
+                    log(f"Execution of {self.path_subtype}-device with id {self.path_id} failed!", level=3)
