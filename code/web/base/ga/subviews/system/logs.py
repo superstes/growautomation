@@ -78,7 +78,11 @@ def LogView(request):
         log_subtype = request.GET['log_subtype']
 
     if log_type == 'Service':
-        log_service_value = log_service_options[log_subtype]
+        try:
+            log_service_value = log_service_options[log_subtype]
+
+        except KeyError:
+            log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
             develop_subprocess(
@@ -89,7 +93,11 @@ def LogView(request):
         )
 
     elif log_type == 'Service journal':
-        log_service_value = log_service_options[log_subtype]
+        try:
+            log_service_value = log_service_options[log_subtype]
+
+        except KeyError:
+            log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
             develop_subprocess(

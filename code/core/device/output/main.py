@@ -150,7 +150,9 @@ class Go:
             return True
 
     def _set_or_update_state(self, device: GaOutputDevice):
-        if len(self.database.get(self.SQL_STATE_GET_COMMAND % device.object_id)) == 0:
+        _db_state = self.database.get(self.SQL_STATE_GET_COMMAND % device.object_id)
+
+        if _db_state is None or len(_db_state) == 0:
             self.database.put(
                 self.SQL_STATE_PUT_COMMAND % (
                     datetime.now(),

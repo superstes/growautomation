@@ -115,7 +115,9 @@ class Go:
                         to_compare = int(getattr(instance, set_attr))
 
                     except TypeError:
-                        log(f'Unable to get value for attribute \"{set_attr}\" from object \"{instance}\"', level=5)
+                        if set_attr != 'downlink':
+                            log(f'Unable to get value for attribute \"{set_attr}\" from object \"{instance}\"', level=5)
+
                         continue
 
                     for target_instance in self.factory_data[search_key]:

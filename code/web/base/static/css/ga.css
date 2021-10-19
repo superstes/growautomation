@@ -7,7 +7,7 @@ body.light {
   --tc3: #fcfdff;
   --textHead: #B9BD19;
   --bg: #fcfdff;
-  --bgLight: #121212;
+  --bgLight: #3A9188;
   --bgNav: #343a40;
   --bgNav2: #FFFFFF;
   --bgNav3: rgba(255, 255, 255, .9);
@@ -153,6 +153,7 @@ td {
 .ga-nav-container {
     border-radius: 0 0 var(--rad) var(--rad);
     background-color: var(--bgNav) !important;
+    border-bottom: 2px solid var(--gaLight);
 }
 
 .ga-nav-toggler {
@@ -272,6 +273,7 @@ td {
     padding: 0.5% 1%;
     border-radius: var(--rad) var(--rad) 0 0;
     background-color: var(--bgNav);
+    border-top: 2px solid var(--gaLight);
 }
 
 .ga-footer-text {
@@ -347,7 +349,7 @@ form .error-msg {
 .ga-db-preview-grid {
     margin: 1vw;
     display: grid;
-    grid-auto-rows: 5vw;
+    grid-auto-rows: 23vh;
     grid-auto-columns: 1fr;
     grid-gap: var(--rad);
 }

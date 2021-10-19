@@ -26,26 +26,26 @@ class Workload(Thread):
         self.fail_count = 0
 
     def stop(self) -> bool:
-        log(f"Thread stopping \"{self.log_name}\"", level=6)
+        log(f"Thread stopping {self.log_name}", level=6)
         self.state_stop.set()
 
         try:
             self.join(config.THREAD_JOIN_TIMEOUT)
             if self.is_alive():
-                log(f"Unable to join thread \"{self.log_name}\"", level=5)
+                log(f"Unable to join thread {self.log_name}", level=5)
 
         except RuntimeError:
             pass
 
-        log(f"Stopped thread \"{self.log_name}\"", level=4)
+        log(f"Stopped thread {self.log_name}", level=4)
         return True
 
     def run(self) -> None:
         if self.fail_count >= config.THREAD_FAIL_COUNT_SLEEP:
-            log(f"Thread \"{self.log_name}\" failed too often => entering fail-sleep of {config.THREAD_FAIL_SLEEP} secs", level=3)
+            log(f"Thread {self.log_name} failed too often => entering fail-sleep of {config.THREAD_FAIL_SLEEP} secs", level=3)
             time_sleep(config.THREAD_FAIL_SLEEP)
 
-        log(f"Entering runtime of thread \"{self.log_name}\"", level=7)
+        log(f"Entering runtime of thread {self.log_name}", level=7)
         try:
             if self.once:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
@@ -56,16 +56,16 @@ class Workload(Thread):
             else:
                 while not self.state_stop.wait(self.sleep.total_seconds()):
                     if self.state_stop.isSet():
-                        log(f"Exiting thread \"{self.log_name}\"", level=5)
+                        log(f"Exiting thread {self.log_name}", level=5)
                         break
 
                     else:
-                        log(f"Starting thread \"{self.log_name}\"", level=5)
+                        log(f"Starting thread {self.log_name}", level=5)
                         self.execute(data=self.data)
 
         except (RuntimeError, ValueError, IndexError, KeyError, AttributeError, TypeError) as error_msg:
             self.fail_count += 1
-            log(f"Thread \"{self.log_name}\" failed with error: \"{error_msg}\"", level=1)
+            log(f"Thread {self.log_name} failed with error: \"{error_msg}\"", level=1)
             log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
@@ -74,7 +74,7 @@ class Workload(Thread):
         except:
             self.fail_count += 1
             exc_type, exc_obj, _ = sys_exc_info()
-            log(f"Thread \"{self.log_name}\" failed with error: \"{exc_type} - {exc_obj}\"", level=1)
+            log(f"Thread {self.log_name} failed with error: \"{exc_type} - {exc_obj}\"", level=1)
             log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
 
             if not self.once:
