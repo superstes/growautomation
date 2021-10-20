@@ -62,26 +62,30 @@ Want to support the project?
 ## Version
 __The code is currently not in a stable state !__
 
-First 'stable' release coming <strong>SOON</strong>! :D
-
 Version: 0.9
+
+First 'stable' release coming <strong>SOON</strong>! :D
 
 => <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
 
 ### Work in progress
-- testing and fixing input-condition-output workflow
-- writing ansible-script to set-up the application
+- testing and fixing output-reversal
+- cleaning up the webUI
 
 
 ### History
 - v0.9 _(2021-09)_
-  - action-button in webUI
+  - action-buttons in webUI => allowing to manually start/stop sensors and actors
   - saving of action states to db (_keeping track of active actors_)
   - added basic dark-mode
+
+
 - v0.8 _(2021-03 - 2021-04)_
   - updated condition workflow
   - created basic <a href="https://docs.growautomation.eu">documentation</a>
   - scripting setup using ansible
+
+
 - v0.7 _(2020-12 - 2021-03)_
   - created basic _(django)_ web interface => <a href="https://demo.growautomation.at/">DEMO</a>
     - functionality:
@@ -91,34 +95,59 @@ Version: 0.9
       - customizable statistics/graphs
   - updated core to use django mysql schema
 
+
 - v0.6 _(2020-11 - 2020-12)_
   - object-oriented config management
   
+
 - v0.3 - v0.5 _(2020-02 - 2020-10)_
   - optimized code via implementing classes
   - created a systemd service to run the core
   
+
 - v0.1 - v0.2 _(2019-05 - 2020-01)_
   - creating basic code structure _(functional programming)_
+
 
 - v0.0 _(2018-� - 2019-04)_
   - dark age _(connected scripts)_
 
 ### Planned features
-- installation per pre-configured image for easy setup
-- documenting clean hardware setup _(easy wiring via patchpanel)_
-- implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_
-- builtin notification tasks
-  - *get notified if the temperature is not optimal for growing*
-- creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
-- improving webUI by using AJAX, optimizing workflow and so on
-- integration of a scale so that the harvest can be logged
-- off-grid installation => dyndns and hardware-guide
-- actors in dashboard elements => when was an action taken; when was it reversed
+- core functionalities
+  - builtin tasks
+    - notification - *get notified if the temperature is not optimal for growing*
+    - backup - *timed backup of database and logs locally or on a remote target*
+    - custom - *let the core execute custom timed tasks* (_cron-like_)
+
+
+- documentation
+  - setup and configuration
+  - clean hardware setup _(easy wiring via patchpanel)_
+  - creating how-to videos on <a href="https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw">YouTube</a>
+
+
+- webUI improvements
+  - actors in dashboard elements => when was an action taken; when was it reversed
+  - using AJAX for dynamic data refreshment and workflow optimizations
+
+
+- improve user-experience
+  - installation per pre-configured image for easy setup
+  - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_ 
+
+
+- hardware
+  - integration of a scale so that the harvest can be logged
+  - off-grid installation => dyndns and hardware-guide
+
 
 ### Maybe future features
-- agent/server installation
-  - server should be able to run as vm or on dedicated hardware
-  - cloud-hosted server component
-- create plans for 3d printable parts
-- plant monitoring via nfc-tags => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
+- core functionalities
+  - agent/server installation
+    - server should be able to run as vm or on dedicated hardware
+    - cloud-hosted server component
+
+
+- hardware
+  - create plans for 3d printable parts
+  - plant monitoring via nfc-tags => <a href="https://www.youtube.com/watch?v=13X_MqCHwgE">idea source</a>
