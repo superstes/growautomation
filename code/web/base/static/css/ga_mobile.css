@@ -14,6 +14,11 @@
         text-transform: uppercase;
     }
 
+    .ga-nav-left, .ga-nav-dd1, .ga-nav-dd2, .ga-nav-main-a1, .ga-nav-main-a2, .ga-nav-main-a3 {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
     .ga-nav-right {
         flex-direction: row !important;
         align-items: center;

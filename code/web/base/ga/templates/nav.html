@@ -8,11 +8,11 @@
         <button class="navbar-toggler ga-nav-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <i class="navbar-toggler-icon fas fa-bars"></i>
         </button>
+        <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
         {% if request|get_login_state %}
+            <!-- START left navbar -->
             {% set_var 'left'|get_nav as nav_left %}
-            <div class="collapse navbar-collapse mr-auto" id="navbarSupportedContent">
-                <!-- START left navbar -->
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ga-nav-left">
                     {% for nav_key, nav_config in nav_left.items %}
                         {% if nav_config|get_type == 'str' %}
                             <!-- START basic link -->
@@ -61,12 +61,12 @@
                         {% endif %}
                     {% endfor %}
                 </ul>
-                <!-- END left navbar -->
-        {% endif %}
+            <!-- END left navbar -->
+            {% endif %}
             <!-- START right navbar -->
             <ul class="navbar-nav ml-auto ga-nav-right">
                 <li class="nav-item ga-nav-right-li">
-                    <a class="nav-link" id="ga-switch-colorScheme">
+                    <a type="button" class="nav-link" id="ga-switch-colorScheme">
                         <i class="fas fa-adjust fa-2x ga-nav-right-icon" title="Switch Dark/Light Mode"></i>
                     </a>
                 </li>

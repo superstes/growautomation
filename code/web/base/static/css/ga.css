@@ -9,8 +9,8 @@ body.light {
   --bg: #fcfdff;
   --bgLight: #3A9188;
   --bgNav: #343a40;
-  --bgNav2: #FFFFFF;
-  --bgNav3: rgba(255, 255, 255, .9);
+  --bgNav2: rgba(255, 255, 255, .9);
+  --bgNav3: rgba(211, 211, 211, .9);
   --tableHead: rgba(0, 0, 0, .05);
   --tableActive: rgba(0, 0, 0, .075);
 }
