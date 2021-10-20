@@ -127,25 +127,25 @@ class Go:
         else:
             device_log(f"Processing of output \"{device.name}\" succeeded", add=self.name, level=7)
 
-            if not self.manually and device.reverse == 1:  # if a user executes the action manually he/she/it will know better; they can reverse it manually if needed
-                device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
-                           f"reverse-type - {device.reverse_type}={config.REVERSE_KEY_TIME}", add=self.name, level=7)
+            self._set_or_update_state(device=device)
+            if device.active:
+                self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'start', 'manually' if self.manually else 'auto', device.object_id))
 
-                if device.active:
-                    # if device was started
-                    self._set_or_update_state(device=device)
-                    self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'start', device.object_id))
+            elif reverse and not device.active:
+                # if device was reversed
+                self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'reverse', 'manually' if self.manually else 'auto', device.object_id))
 
-                    if device.reverse_type == config.REVERSE_KEY_TIME:
-                        self._reverse_timer(task_dict=task_dict)
+            device_log(f"Checking device \"{device.name}\" for reversion: reversible - {device.reverse}, active - {device.active}, "
+                       f"reverse-type - {device.reverse_type}={config.REVERSE_KEY_TIME}", add=self.name, level=7)
 
-                    elif device.reverse_type == config.REVERSE_KEY_CONDITION:
-                        self._reverse_condition(task_dict=task_dict)
+            if not self.manually and device.reverse == 1 and device.active:
+                # if device was started
+                # if a user executes the action manually he/she/it will know better; they can reverse it manually if needed
+                if device.reverse_type == config.REVERSE_KEY_TIME:
+                    self._reverse_timer(task_dict=task_dict)
 
-                elif reverse and not device.active:
-                    # if device was reversed
-                    self._set_or_update_state(device=device)
-                    self.database.put(self.SQL_LOG_COMMAND % (datetime.now(), 'reverse', device.object_id))
+                elif device.reverse_type == config.REVERSE_KEY_CONDITION:
+                    self._reverse_condition(task_dict=task_dict)
 
             return True
 

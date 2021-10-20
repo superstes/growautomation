@@ -15,7 +15,7 @@ DEVICE_TMPL = {
             'update': "UPDATE ga_devicestateoutput SET updated = '%s', active = '%s', reverse_data = '%s' WHERE obj_id = '%s';",
             'get': "SELECT active, reverse_data FROM ga_devicestateoutput WHERE obj_id = '%s';",
         },
-        'log': "INSERT INTO ga_devicelogoutput (created, action, obj_id) VALUES ('%s','%s','%s');",
+        'log': "INSERT INTO ga_devicelogoutput (created, action, initiator, obj_id) VALUES ('%s','%s','%s','%s');",
     },
 }
 

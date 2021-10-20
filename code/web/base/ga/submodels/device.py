@@ -134,4 +134,5 @@ class DeviceStateOutput(BareModel):
 class DeviceLogOutput(SuperBareModel):
     initials = 'dlo'
     obj = models.ForeignKey(ObjectOutputModel, on_delete=models.CASCADE, related_name=f"{initials}_fk_obj")
-    action = models.CharField(max_length=32)
+    action = models.CharField(max_length=16)
+    initiator = models.CharField(max_length=16)
