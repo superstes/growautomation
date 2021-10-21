@@ -7,14 +7,16 @@ from os import path as os_path
 from ...user import authorized_to_write
 from ...utils.helper import get_controller_setting, develop_subprocess
 from ...subviews.handlers import Pseudo404
-from ...config.shared import SQL_CONFIG_FILE, DATETIME_TS_FORMAT
+from ...config import shared as config
 
 
-@user_passes_test(authorized_to_write, login_url='/denied/')
+@user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
 def export_view(request, process: str):
-    dump_file = f"dump_{process}_{datetime.now().strftime(DATETIME_TS_FORMAT.replace(' ', '_').replace(':', '-'))}.sql.xz"
+    dump_file = f"dump_{process}_{datetime.now().strftime(config.DATETIME_TS_FORMAT.replace(' ', '_').replace(':', '-'))}.sql.xz"
     dump_file_path = f'/tmp/{dump_file}'
     dump_db = get_controller_setting(request=request, setting='sql_database')
+    include_tables = []
+    exclude_tables = []
 
     if process == 'config':
         exclude_tables = [
@@ -32,15 +34,15 @@ def export_view(request, process: str):
             'ga_inputdatamodel',
             'ga_dashboardmodel',
             'ga_test',
+            'ga_devicelogoutput',
+            'ga_devicestateoutput',
         ]
-        exclude_string = ' --ignore-table=ga.'.join(exclude_tables)
-        dump_command = f"mysqldump --defaults-file={SQL_CONFIG_FILE} {dump_db} --single-transaction {exclude_string} | xz -7 > {dump_file_path}"
 
     elif process == 'data':
         include_tables = [
             'ga_inputdatamodel',
+            'ga_devicelogoutput',
         ]
-        dump_command = f"mysqldump --defaults-file={SQL_CONFIG_FILE} {dump_db} --single-transaction {' '.join(include_tables)} | xz -7 > {dump_file_path}"
 
     elif process == 'full':
         exclude_tables = [
@@ -57,13 +59,18 @@ def export_view(request, process: str):
             'django_session',
             'ga_test',
         ]
-        exclude_string = ' --ignore-table=ga.'.join(exclude_tables)
-        dump_command = f"mysqldump --defaults-file={SQL_CONFIG_FILE} {dump_db} --single-transaction {exclude_string} | xz -7 > {dump_file_path}"
 
     else:
         raise Pseudo404(ga={'request': request, 'msg': f"Unsupported export type '{process}'!"})
 
-    develop_subprocess(request, command=dump_command, develop='Skipping dump in development environment!')
+    develop_subprocess(
+        request,
+        command=f"mysqldump --defaults-file={config.SQL_CONFIG_FILE} {dump_db} --single-transaction "
+                f"{' '.join(include_tables)}"
+                f"{' --ignore-table=ga.'.join(exclude_tables)} | "
+                f"xz -7 > {dump_file_path}",
+        develop='Skipping dump in development environment!'
+    )
 
     if os_path.exists(dump_file_path):
         with open(dump_file_path, 'rb') as dump:

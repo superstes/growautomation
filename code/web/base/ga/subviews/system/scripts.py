@@ -10,7 +10,7 @@ from ...utils.basic import str_to_list
 from ...utils.helper import get_script_dir
 from ...forms import SystemScriptForm
 from ..handlers import Pseudo404
-from ...config.shared import DATETIME_TS_FORMAT
+from ...config import shared as config
 
 
 TITLE = 'System scripts'
@@ -28,13 +28,13 @@ def _get_script_dict(request, typ) -> dict:
 
     for element in script_list:
         ts = os_path.getmtime(f"{script_dir}/{element}")
-        ts_hr = datetime.fromtimestamp(ts).strftime(DATETIME_TS_FORMAT)
+        ts_hr = datetime.fromtimestamp(ts).strftime(config.DATETIME_TS_FORMAT)
         script_dict[element] = ts_hr
 
     return script_dict
 
 
-@user_passes_test(authorized_to_write, login_url='/denied/')
+@user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
 def _handle_uploaded_file(request, typ: str, upload, name: str):
     script_path = get_script_dir(request, typ=typ)
 
@@ -43,7 +43,7 @@ def _handle_uploaded_file(request, typ: str, upload, name: str):
             destination.write(chunk)
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def ScriptView(request):
     script_type_options = ['Input', 'Output', 'Connection']
 
@@ -64,7 +64,7 @@ def ScriptView(request):
     })
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def ScriptChangeView(request):
     script_type_options = ['Input', 'Output', 'Connection']
     form = SystemScriptForm(request.POST, request.FILES)
@@ -92,7 +92,7 @@ def ScriptChangeView(request):
         })
 
 
-@user_passes_test(authorized_to_write, login_url='/denied/')
+@user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
 def ScriptDeleteView(request):
     script_type_options = ['Input', 'Output', 'Connection']
 
@@ -108,7 +108,7 @@ def ScriptDeleteView(request):
         return redirect(f"/system/script/?script_type={script_type}")
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def ScriptShow(request):
     if 'script_type' in request.GET and 'script_name' in request.GET:
         script_type = request.GET['script_type']

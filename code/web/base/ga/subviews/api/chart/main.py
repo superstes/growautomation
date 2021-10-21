@@ -6,9 +6,10 @@ from ...handlers import handler400_api
 from ....utils.helper import get_instance_from_id
 from ....user import authorized_to_read
 from ..data.main import ApiData
+from ....config import shared as config
 
 
-@user_passes_test(authorized_to_read, login_url='/api/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_API_URL)
 def api_chart(request):
     if request.method == 'GET':
         if 'id' not in request.GET:

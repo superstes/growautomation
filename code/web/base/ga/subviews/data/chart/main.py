@@ -6,13 +6,14 @@ from ..helper import get_param_if_ok
 from ....forms import ChartGraphModel, ChartDatasetModel, ChartDatasetForm, ChartGraphForm, ChartDashboardModel, ChartDashboardForm
 from ....forms import ChartDatasetLinkModel, ChartDatasetLinkForm, ChartGraphLinkModel, ChartGraphLinkForm
 from .obj import Chart
+from ....config import shared as config
 
 
 dbe_path = '/data/chart/dbe'
 TITLE = 'Data charts'
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def DataChartView(request):
     graph_list = ChartGraphModel.objects.all()
     dataset_list = ChartDatasetModel.objects.all()

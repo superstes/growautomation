@@ -9,6 +9,8 @@ SQL_CONFIG_FILE = f'{settings.BASE_DIR}/database.cnf'
 
 # privileges
 LOGIN_URL = '/accounts/login/'
+DENIED_URL = '/denied/'
+DENIED_API_URL = '/api/denied/'
 GA_USER_GROUP = 'ga_user'
 GA_READ_GROUP = 'ga_read'
 GA_WRITE_GROUP = 'ga_write'

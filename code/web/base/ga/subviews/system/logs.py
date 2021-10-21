@@ -15,7 +15,7 @@ SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
 TITLE = 'System logs'
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def LogView(request):
     develop = check_develop(request)
     date_year = datetime.now().strftime('%Y')
