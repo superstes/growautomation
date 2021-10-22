@@ -6,6 +6,7 @@ CENSOR_SYMBOL = '●'
 CENSOR_STRING = CENSOR_SYMBOL * 12
 VERSION = 0.9
 SQL_CONFIG_FILE = f'{settings.BASE_DIR}/database.cnf'
+NONE_RESULTS = ['', 'None', None, ' ']
 
 # privileges
 LOGIN_URL = '/accounts/login/'

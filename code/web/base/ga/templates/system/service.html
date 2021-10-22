@@ -68,7 +68,7 @@
             {% else %}
                 <input type="submit" value="Start" class="btn btn-success" disabled/>
             {% endif %}
-            <input type="hidden" name="service_start" value="1" />
+            <input type="hidden" name="service_action" value="start" />
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
         <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
@@ -78,7 +78,7 @@
             {% else %}
                 <input type="submit" value="Reload" class="btn btn-warning" disabled/>
             {% endif %}
-            <input type="hidden" name="service_reload" value="1" />
+            <input type="hidden" name="service_action" value="reload" />
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
         <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
@@ -88,7 +88,7 @@
             {% else %}
                 <input type="submit" value="Restart" class="btn btn-warning" disabled/>
             {% endif %}
-            <input type="hidden" name="service_restart" value="1" />
+            <input type="hidden" name="service_action" value="restart" />
             <input type="hidden" name="service_name" value="{{ service_name }}" />
         </form>
         {% if service_name not in non_stop_services %}
@@ -99,7 +99,7 @@
                 {% else %}
                     <input type="submit" value="Stop" class="btn btn-danger" disabled/>
                 {% endif %}
-                <input type="hidden" name="service_stop" value="1" />
+                <input type="hidden" name="service_action" value="stop" />
                 <input type="hidden" name="service_name" value="{{ service_name }}" />
             </form>
         {% endif %}

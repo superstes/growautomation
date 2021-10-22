@@ -10,14 +10,15 @@ from ..handlers import Pseudo404
 from ...config import shared as config
 
 # need to allow www-data to start/stop/restart/reload services
-SHELL_SERVICE_STATUS = "/bin/systemctl is-active %s"
-SHELL_SERVICE_ENABLED = "/bin/systemctl is-enabled %s"
-SHELL_SERVICE_ACTIVE_TIMESTAMP = "/bin/systemctl show -p ActiveEnterTimestamp --value %s"
-SHELL_SERVICE_INACTIVE_TIMESTAMP = "/bin/systemctl show -p InactiveEnterTimestamp --value %s"
+SYSTEMCTL = '/bin/systemctl'
+SHELL_SERVICE_STATUS = f"{SYSTEMCTL} is-active %s"
+SHELL_SERVICE_ENABLED = f"{SYSTEMCTL} is-enabled %s"
+SHELL_SERVICE_ACTIVE_TIMESTAMP = f"{SYSTEMCTL} show -p ActiveEnterTimestamp --value %s"
+SHELL_SERVICE_INACTIVE_TIMESTAMP = f"{SYSTEMCTL} show -p InactiveEnterTimestamp --value %s"
 TITLE = 'System service'
 
 
-@user_passes_test(authorized_to_read, login_url='/denied/')
+@user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def ServiceView(request):
     service_name_options = {
         'GrowAutomation': 'ga_core.service',
@@ -47,6 +48,19 @@ def ServiceView(request):
 
     service_value = service_name_options[service_name]
 
+    # get status times
+    if service_status == 'active':
+        status_command = SHELL_SERVICE_ACTIVE_TIMESTAMP
+
+    else:
+        status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
+
+    dev_time = str((datetime.now() - timedelta(minutes=5)).strftime(f'%a {config.DATETIME_TS_FORMAT}')) + ' GMT'
+    service_status_time = develop_subprocess(request, command=status_command % service_value, develop=dev_time)
+
+    if service_status_time not in config.NONE_RESULTS:
+        service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], f'%a {config.DATETIME_TS_FORMAT}')
+
     if request.method == 'GET':
         if service_name not in service_name_options:
             raise Pseudo404(ga={'request': request, 'msg': f"Service \"{service_name}\" not manageable"})
@@ -54,26 +68,13 @@ def ServiceView(request):
         service_status = develop_subprocess(request, command=SHELL_SERVICE_STATUS % service_value, develop='active')
         service_enabled = develop_subprocess(request, command=SHELL_SERVICE_ENABLED % service_value, develop='enabled')
 
-        if service_status == 'active':
-            status_command = SHELL_SERVICE_ACTIVE_TIMESTAMP
-
-        else:
-            status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
-
-        dev_time = str((datetime.now() - timedelta(minutes=5)).strftime(f'%a {config.DATETIME_TS_FORMAT}')) + ' GMT'
-        service_status_time = develop_subprocess(request, command=status_command % service_value, develop=dev_time)
-
-        if service_status_time is not None and service_status_time != '':
-            service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], f'%a {config.DATETIME_TS_FORMAT}')
-
         if reload_time is None:
             reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
     else:
         if 'service_name' in request.POST:
-            if service_runtime is not None and service_runtime > config.WEBUI_SVC_ACTION_COOLDOWN:
-                service_action(request, service=service_value)
-                sleep(1)
+            if service_runtime is not None and service_runtime > config.WEBUI_SVC_ACTION_COOLDOWN and 'service_action' in request.POST:
+                service_action(request=request, service=service_value)
 
             return redirect(f"/system/service/?service_name={service_name.replace(' ', '+')}")
 
@@ -84,24 +85,19 @@ def ServiceView(request):
     })
 
 
-@user_passes_test(authorized_to_write, login_url='/denied/')
+@user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
 def service_action(request, service: str):
-    systemctl = 'sudo /bin/systemctl'
-    meta = request.META
-    log_tmpl = f"{meta['PATH_INFO']} - action \"%s service {service}\" was executed by user {request.user} from remote ip {meta['REMOTE_ADDR']}"
+    action = request.POST['service_action']
+    develop_log(request, f"{action}ing service {service}")
 
-    if 'service_start' in request.POST:
-        develop_log(request=request, output=log_tmpl % 'start')
-        develop_subprocess(request, command=f"{systemctl} start {service}", develop='ok')
+    if action in ['start', 'stop', 'reload', 'restart']:
+        develop_log(
+            request=request,
+            output=f"{request.META['PATH_INFO']} - action \"{action} service {service}\" "
+                   f"was executed by user {request.user} from remote ip {request.META['REMOTE_ADDR']}"
+        )
+        develop_subprocess(request=request, command=f"sudo {SYSTEMCTL} {action} {service}", develop='ok')
+        sleep(1)
 
-    elif 'service_reload' in request.POST:
-        develop_log(request=request, output=log_tmpl % 'reload')
-        develop_subprocess(request, command=f"{systemctl} reload {service}", develop='ok')
-
-    elif 'service_restart' in request.POST:
-        develop_log(request=request, output=log_tmpl % 'restart')
-        develop_subprocess(request, command=f"{systemctl} restart {service}", develop='ok')
-
-    elif 'service_stop' in request.POST:
-        develop_log(request=request, output=log_tmpl % 'stop')
-        develop_subprocess(request, command=f"{systemctl} stop {service}", develop='ok')
+    else:
+        develop_log(request=request, output=f"Got unsupported service action: '{action}'")
