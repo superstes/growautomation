@@ -189,7 +189,7 @@ class Client:
         self.LINK.close()
 
 
-def server_thread(srv, connection):
+def server_thread(srv, connection, client):
     # handles client connections; did not work as method of 'Server'..
     try:
         start_time = time()
@@ -214,15 +214,15 @@ def server_thread(srv, connection):
                      f"{result}"
             )
 
-        srv.LOG(f"{srv.LOG_PREFIX}Processed client connection to '{connection.raddr}' in {time()-start_time} secs", level=6)
+        srv.LOG(f"{srv.LOG_PREFIX}Processed client connection to '{client}' in %.3f secs" % (time() - start_time), level=6)
         srv.CLIENT_THREADS -= 1
         return data
 
     except:
         srv.CLIENT_THREADS -= 1
         exc_type, exc_obj, _ = sys_exc_info()
-        srv.LOG(f"Client connection '{connection.raddr}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
-        srv.LOG(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH], level=4)
+        srv.LOG(f"Client connection '{client}' failed with error: \"{exc_type} - {exc_obj}\"", level=1)
+        srv.LOG(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}", level=4)
 
 
 class Server:
@@ -266,9 +266,10 @@ class Server:
 
             while True:
                 connection, address = self.SERVER.accept()
+                client = f'{address[0]}:{address[1]}'
                 connection.settimeout(socket_config.RECV_TIMEOUT)
-                self.LOG(f"{self.LOG_PREFIX}Client {address[0]}:{address[1]} connected to the {self.NAME}!", level=6)
-                start_new_thread(server_thread, (self, connection))
+                self.LOG(f"{self.LOG_PREFIX}Client {client} connected to the {self.NAME}!", level=6)
+                start_new_thread(server_thread, (self, connection, client))
 
         except (Exception, KeyboardInterrupt) as error:
             self.LOG(f"{self.LOG_PREFIX}{self.NAME} got error: '{error}'", level=5)

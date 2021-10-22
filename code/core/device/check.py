@@ -25,9 +25,9 @@ class Go:
         else:
             device_log(f"Object \"{self.instance.name}\" matches neither provided objects", add=self.name, level=3)
 
-        device_log(f"Object \"{self.instance.name}\" - unfiltered device list to process: \"{self.task_instance_list}\"", add=self.name, level=7)
+        device_log(f"Object \"{self.instance.name}\" - unfiltered device list to process: \"{self.task_instance_list}\"", add=self.name, level=8)
         filtered_instance_list = area_filter(areas=self.areas, devices=self.task_instance_list)
-        device_log(f"Object \"{self.instance.name}\" - filtered device list to process: \"{filtered_instance_list}\"", add=self.name, level=6)
+        device_log(f"Object \"{self.instance.name}\" - filtered device list to process: \"{filtered_instance_list}\"", add=self.name, level=7)
 
         return filtered_instance_list
 
