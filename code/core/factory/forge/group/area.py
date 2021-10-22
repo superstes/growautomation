@@ -5,9 +5,9 @@ from core.utils.debug import log
 
 
 class Go:
-    def __init__(self, factory_dict: dict, supply_list: list, blueprint):
+    def __init__(self, factory_dict: dict, supply_data: dict, blueprint):
         self.factory_dict = factory_dict
-        self.supply_list = supply_list
+        self.supply_data = supply_data
         self.blueprint = blueprint
         self.key_member = config.SUPPLY_KEY_MEMBER_DICT
 
@@ -19,7 +19,7 @@ class Go:
         area_group_list = []
         log(f'Building area objects', level=8)
 
-        for data_dict in self.supply_list:
+        for data_dict in self.supply_data.values():
             instance = self.blueprint(
                 connection_group_list=data_dict[self.key_member][config.SUPPLY_AR_KEY_MEMBER_CG],
                 connection_obj_list=data_dict[self.key_member][config.SUPPLY_AR_KEY_MEMBER_CO],

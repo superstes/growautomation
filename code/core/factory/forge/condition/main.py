@@ -35,7 +35,7 @@ class Go:
         for key, factory in _config.items():
             output[key] = factory(
                 blueprint=blueprint_dict[key],
-                supply_list=self.supply_data[key],
+                supply_data=self.supply_data[key],
             ).get()
 
         return output

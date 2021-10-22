@@ -25,12 +25,12 @@ class Go:
                 blueprint=blueprint_dict[self.key_object_controller],
                 parent=blueprint_dict[config.KEY_GROUP_CONTROLLER](),
                 # parent is only used for inheritance of settings -> will not be needed after controller object creation
-                supply_list=self.supply_data[self.key_object_controller],
+                supply_data=self.supply_data[self.key_object_controller],
             ).get(),
 
             self.key_object_task: TaskFactory(
                 blueprint=blueprint_dict[self.key_object_task],
-                supply_list=self.supply_data[self.key_object_task],
+                supply_data=self.supply_data[self.key_object_task],
             ).get()
         }
 

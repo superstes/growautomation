@@ -193,7 +193,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to set permissions for file \"{path}\"")
-                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
                             result_dict[file] = False
 
                 if 'type' in config and config['type'] == 'text':
@@ -206,7 +206,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to open file \"{path}\" for writing")
-                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
                             continue
 
                     if config['access'] == 'r':
@@ -218,7 +218,7 @@ class Prepare:
 
                         except PermissionError:
                             self._log(f"Failed to open file \"{path}\" for reading")
-                            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
+                            self._log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
                             continue
 
         if all(result_dict.values()):
@@ -266,7 +266,7 @@ class Prepare:
         except ConnectionError as error:
             self._log(f"Error while testing database connection (\"host: '{db_connection_data_dict['server']}', port '{db_connection_data_dict['port']}'"
                       f"\"): \"{error}\"")
-            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
+            self._log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
             return False
 
     def _error(self, msg: str):
@@ -303,7 +303,7 @@ class Prepare:
 
         except Exception as error:
             self._log(f"An error occurred while processing factory: \"{error}\"")
-            self._log(f"{format_exc()}"[:config.LOG_MAX_TRACEBACK_LENGTH])
+            self._log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
 
         return False
 

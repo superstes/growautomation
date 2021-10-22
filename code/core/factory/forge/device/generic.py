@@ -3,9 +3,9 @@ from core.utils.debug import log
 
 
 class Go:
-    def __init__(self, blueprint, supply_list: list):
+    def __init__(self, blueprint, supply_data: dict):
         self.blueprint = blueprint
-        self.supply_list = supply_list
+        self.supply_data = supply_data
 
         self.key_id = config.DB_ALL_KEY_ID
         self.key_name = config.DB_ALL_KEY_NAME
@@ -19,7 +19,7 @@ class Go:
 
         log(f'Building device model objects', level=8)
 
-        for data_dict in self.supply_list:
+        for data_dict in self.supply_data.values():
             instance = self.blueprint(
                 setting_dict=data_dict[self.key_setting],
                 member_list=data_dict[config.SUPPLY_KEY_MEMBER_DICT][config.SUPPLY_GENERIC_KEY_MEMBER],
@@ -37,7 +37,7 @@ class Go:
 
         log(f'Building device objects', level=8)
 
-        for data_dict in self.supply_list:
+        for data_dict in self.supply_data.values():
             if self.downlink_attribute in data_dict:
                 instance = self.blueprint(
                     setting_dict=data_dict[self.key_setting],

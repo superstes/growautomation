@@ -143,11 +143,9 @@ class Go:
         :return: None
         """
 
-        raw_data = self.supply_data[type_key]
-
         for instance in instances:
             _id = getattr(instance, config.CORE_ID_ATTRIBUTE)
-            raw_instance_data = [data_dict for data_dict in raw_data if int(data_dict['id']) == _id][0]
+            raw_instance_data = [data_dict for data_dict in self.supply_data[type_key].values() if int(data_dict['id']) == _id][0]
 
             for set_attr, options in oto_config.items():
                 for option in options:

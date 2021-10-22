@@ -42,6 +42,7 @@ from time import sleep as time_sleep
 from time import time
 from os import getpid as os_getpid
 from sys import exc_info as sys_exc_info
+from traceback import format_exc
 import signal
 
 
@@ -65,7 +66,11 @@ class Service:
 
             for instance in self.timer_list:
                 # we'll check if any output devices are active => they shouldn't be at this point in time
-                self._reverse_outputs(instance=instance)
+                if self._reverse_outputs(instance=instance):
+                    self.THREADER.start_thread(description=instance.name)
+                    self.THREADER.stop_thread(description=instance.name)
+
+            self._wait(2)
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
@@ -85,26 +90,39 @@ class Service:
         fns_log('Service reload -> checking for config changes', level=4)
 
         # check current db config against currently loaded config
-        reload, self.CONFIG, self.current_config_dict = Reload(
+        reload_needed, reload_threads, _new_config, _new_config_dict = Reload(
             object_list=self.CONFIG,
-            config_dict=self.current_config_dict
+            config_dict=self.current_config_dict,
+            timers=self.timer_list,
         ).get()
 
-        config.CONFIG = self.CONFIG
-
-        if reload:
-            fns_log('Reload - config has changed. Restarting threads.')
+        if reload_needed:
+            fns_log('Reload - config has changed. Updating threads.')
             # update shared config
+            self.CONFIG = _new_config
+            self.current_config_dict = _new_config_dict
+            config.CONFIG = self.CONFIG
             self._update_config_file()
             self._init_shared_vars()
-            # re-create the list of possible timers
-            self.timer_list = get_timer(config_dict=self.CONFIG)
-            # stop and reset all current threads
-            self.THREADER.stop()
-            self.THREADER.jobs = []
-            self._wait(seconds=config.SVC_WAIT_TIME)
-            # re-create all the threads and re-enter run-mode
-            self.start()
+
+            for old_timer in reload_threads['remove']:
+                self.THREADER.stop_thread(description=old_timer.name)
+
+                if isinstance(old_timer, (GaOutputModel, GaOutputDevice)):
+                    self._reverse_outputs(instance=old_timer)
+
+                self.timer_list.remove(old_timer)
+                del old_timer
+
+            self._wait(seconds=2)
+
+            for new_timer in reload_threads['add']:
+                self._thread(instance=new_timer)
+                self.THREADER.start_thread(description=new_timer.name)
+                self.timer_list.append(new_timer)
+
+            fns_log('Reload - Done reloading.')
+            self._status()
 
         else:
             fns_log('Reload - config is up-to-date.')
@@ -144,23 +162,28 @@ class Service:
     def _update_config_file(self):
         self.CONFIG_FILE.update()
 
-    def _reverse_outputs(self, instance):
+    def _reverse_outputs(self, instance) -> bool:
         # todo: pass reverse-data to the reversal-process => timed reversal could calculate the approx. remaining time to wait before reversing
         if isinstance(instance, GaOutputDevice):
             if instance.active:
                 self._thread(instance=instance, timer=1, settings={'action': 'stop'})
+                return True
 
         elif isinstance(instance, GaOutputModel):
             for output in instance.member_list:
                 if output.active:
                     self._thread(instance=output, timer=1, settings={'action': 'stop'})
+                    return True
+
+        return False
 
     def _thread(self, instance, timer: int = None, once: bool = False, settings: dict = None):
-        @self.THREADER.thread(
+        @self.THREADER.add_thread(
             sleep_time=int(instance.timer) if timer is None else timer,
             thread_data=instance,
             description=instance.name,
             once=once,
+            daemon=True,
         )
         def thread_task(data):
             decision(instance=data, settings=settings)
@@ -215,10 +238,11 @@ class Service:
 
         except:
             try:
-                error = sys_exc_info()[1]
+                exc_type, error, _ = sys_exc_info()
 
                 if str(error).find('Service exited') == -1:
-                    fns_log(f"A fatal error occurred: \"{error}\"")
+                    fns_log(f"A fatal error occurred: \"{exc_type} - {error}\"")
+                    fns_log(f"{format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)}")
 
             except IndexError:
                 pass

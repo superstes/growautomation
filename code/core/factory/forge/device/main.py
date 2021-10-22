@@ -39,12 +39,12 @@ class Go:
         for device_config in device_config_list:
             output_dict[device_config['gk']] = device_config['bp'](
                 blueprint=blueprint_dict[device_config['gk']],
-                supply_list=self.supply_data[device_config['gk']],
+                supply_data=self.supply_data[device_config['gk']],
             ).get_model()
 
             output_dict[device_config['ok']] = device_config['bp'](
                 blueprint=blueprint_dict[device_config['ok']],
-                supply_list=self.supply_data[device_config['ok']],
+                supply_data=self.supply_data[device_config['ok']],
             ).get_device()
 
             if device_config['ok'] in update_states:

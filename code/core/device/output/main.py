@@ -192,7 +192,7 @@ class Go:
 
         thread = Thread()
 
-        @thread.thread(
+        @thread.add_thread(
             sleep_time=int(device.reverse_type_data),
             thread_data=task_dict,
             once=True,
@@ -210,12 +210,13 @@ class Go:
         device_log(f"Entering reverse-condition loop for output-device \"{device.name}\"", add=self.name, level=6)
 
         thread = Thread()
+        thread_description = f"Conditional reversing for '{device.name}'"
 
-        @thread.thread(
+        @thread.add_thread(
             sleep_time=int(1),
             thread_data=task_dict,
             once=True,
-            description=f"Conditional reversing for '{device.name}'",
+            description=thread_description,
         )
         def thread_task(data):
             tries = 0
@@ -234,4 +235,4 @@ class Go:
 
             thread.stop_thread(description=device.name)
 
-        thread.start()
+        thread.start_thread(description=thread_description)

@@ -145,7 +145,16 @@ class Go:
 
         return data_list
 
-    def _get_data(self, config: dict, typ: str) -> list:
+    @staticmethod
+    def _convert_to_dict(data: list) -> dict:
+        _data = {}
+
+        for element in data:
+            _data[element[factory_config.DB_ALL_KEY_ID]] = element
+
+        return _data
+
+    def _get_data(self, config: dict, typ: str) -> dict:
         query_typ = 'base'
 
         data_list = self._get_data_list(query_typ=query_typ, config=config)
@@ -157,4 +166,4 @@ class Go:
         else:
             data_list = self._add_members(data_list=data_list, config=config)
     
-        return data_list
+        return self._convert_to_dict(data_list)

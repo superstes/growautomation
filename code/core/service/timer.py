@@ -6,25 +6,27 @@
 from core.config.object.device.input import GaInputDevice
 from core.config.object.device.input import GaInputModel
 from core.config.object.setting.condition import GaConditionGroup
-from core.config.object.core.task import GaTaskDevice
 from core.utils.debug import log
 from core.service.system_tasks import get_tasks
 
 
-ALLOWED_OBJECT_TUPLE = (
+TIMER_OBJECTS = (
     GaInputDevice,
     GaInputModel,
     GaConditionGroup,
-    GaTaskDevice
 )
 
 
-def get(config_dict: dict) -> list:
-    timer_list = get_tasks()
+def get(config_dict: dict, system_tasks: bool = True) -> list:
+    if system_tasks:
+        timer_list = get_tasks()
 
-    for category, obj_list in config_dict.items():
-        for obj in obj_list:
-            if isinstance(obj, ALLOWED_OBJECT_TUPLE):
+    else:
+        timer_list = []
+
+    for category, obj_data in config_dict.items():
+        for obj in obj_data:
+            if isinstance(obj, TIMER_OBJECTS):
                 if obj.enabled == 1:
 
                     if isinstance(obj, GaInputDevice):
@@ -41,3 +43,7 @@ def get(config_dict: dict) -> list:
                 log(f"Is not allowed: \"{obj}\"", level=7)
 
     return timer_list
+
+
+
+
