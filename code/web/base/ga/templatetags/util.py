@@ -118,19 +118,19 @@ def get_return_path(request, typ=None) -> str:
     # return path
 
 
-@register.filter
-def use_cdn(request):
-    return get_server_config(request, setting='web_cdn')
+@register.simple_tag
+def use_cdn():
+    return get_server_config(setting='web_cdn')
 
 
-@register.filter
-def hide_warning(request):
-    return get_server_config(request, setting='web_warn')
+@register.simple_tag
+def hide_warning():
+    return get_server_config(setting='web_warn')
 
 
-@register.filter
-def security_mode(request):
-    return get_server_config(request, setting='security')
+@register.simple_tag
+def security_mode():
+    return get_server_config(setting='security')
 
 
 @register.filter
@@ -203,7 +203,7 @@ def beta_mode() -> bool:
 
 @register.simple_tag
 def get_version() -> float:
-    return config.VERSION
+    return get_server_config(setting='version')
 
 
 @register.simple_tag

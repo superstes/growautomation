@@ -32,7 +32,7 @@ def set_key(search, param: str) -> bool:
 def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:
     if ctz is None:
         # takes A LOT of time if done in a loop
-        ctz = get_server_config(request, setting='timezone')
+        ctz = get_server_config(setting='timezone')
 
     if tz is not None:
         _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))

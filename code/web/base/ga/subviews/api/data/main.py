@@ -175,7 +175,7 @@ class ApiData:
         else:
             typ = str
 
-        own_tz = get_server_config(self.request, setting='timezone')
+        own_tz = get_server_config(setting='timezone')
         for data_obj in data_list:
             # converting datetime to utc millisecond-timestamp since that is the default time-format in chartjs
             tz_aware_dt = add_timezone(request=self.request, datetime_obj=data_obj.created, tz=own_tz, ctz=own_tz)

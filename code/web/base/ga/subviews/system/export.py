@@ -14,7 +14,7 @@ from ...config import shared as config
 def export_view(request, process: str):
     dump_file = f"dump_{process}_{datetime.now().strftime(config.DATETIME_TS_FORMAT.replace(' ', '_').replace(':', '-'))}.sql.xz"
     dump_file_path = f'/tmp/{dump_file}'
-    dump_db = get_server_config(request=request, setting='sql_database')
+    dump_db = get_server_config(setting='sql_database')
     include_tables = []
     exclude_tables = []
 

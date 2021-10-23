@@ -20,7 +20,7 @@ def LogView(request):
     develop = check_develop(request)
     date_year = datetime.now().strftime('%Y')
     date_month = datetime.now().strftime('%m')
-    path_log = get_server_config(request, 'path_log')
+    path_log = get_server_config(setting='path_log')
 
     log_type_options = ['Service', 'Service journal', 'GrowAutomation']
     log_service_options = {

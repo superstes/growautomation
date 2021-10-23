@@ -77,14 +77,14 @@ class GaView:
         except Pseudo500 as exc:
             trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc.ga['msg']}")
-            if get_server_config(request=request, setting='security') == 0:
+            if get_server_config(setting='security') == 0:
                 develop_log(request=request, output=f"{trace}", level=2)
             return handler500(request=exc.ga['request'], msg=exc.ga['msg'], tb=trace)
 
         except Exception as error:
             trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
-            if get_server_config(request=request, setting='security') == 0:
+            if get_server_config(setting='security') == 0:
                 develop_log(request=request, output=f"{trace}", level=2)
             return handler500(request=request, msg=error, tb=trace)
 

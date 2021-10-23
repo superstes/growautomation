@@ -42,28 +42,16 @@ def get_agent(name: str = None) -> (SystemAgentModel, None):
         return None
 
 
-def get_agent_config(request, setting: str):
-    _ = getattr(get_agent(), setting)
-
-    if _ is None:
-        raise Pseudo404(ga={'request': request, 'msg': "Unable to get value of agent setting. Maybe no agent config exists."})
-
-    else:
-        return _
+def get_agent_config(setting: str):
+    return getattr(get_agent(), setting)
 
 
-def get_server_config(request, setting: str):
-    _ = getattr(get_server(), setting)
-
-    if _ is None:
-        raise Pseudo404(ga={'request': request, 'msg': "Unable to get value of server setting. Maybe no agent config exists."})
-
-    else:
-        return _
+def get_server_config(setting: str):
+    return getattr(get_server(), setting)
 
 
 def get_script_dir(request, typ) -> str:
-    path_root = get_agent_config(request, setting='path_root')
+    path_root = get_agent_config(setting='path_root')
     return f"{path_root}/device/{typ.lower()}"
 
 
