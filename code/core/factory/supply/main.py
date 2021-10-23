@@ -9,8 +9,7 @@ crypto = AESCipher(get_key())
 
 class Go:
     SUPPLY_SQL_DICT = supply_config.supply_sql_dict
-    SQL_DEFAULTS = SUPPLY_SQL_DICT['*']
-    
+
     def __init__(self):
         self.database = GaDataDb()
         
@@ -27,32 +26,23 @@ class Go:
         return data_dict
 
     def _get_data_list(self, query_typ: str, config: dict) -> list:
-        query = config['queries'][query_typ]
-    
-        fields = self.SQL_DEFAULTS['fields']['*'] + config['fields'][query_typ]
-        data_tuple_list = self.database.get(query)
-    
-        data_list = []
+        # todo: clean up supply config
+        # fields = self.SQL_DEFAULTS['fields']['*'] + config['fields'][query_typ]
+        data = self.database.get(config['queries'][query_typ])
 
-        if data_tuple_list is not None:
-            for data_tuple in data_tuple_list:
-                _data = dict(zip(fields, data_tuple))
-                data_list.append(self._decrypt(data_dict=_data))
-    
-        return data_list
+        if data is None:
+            data = []
+
+        return self._decrypt(data_list=data)
 
     @staticmethod
-    def _decrypt(data_dict: dict) -> dict:
-        output_dict = {}
+    def _decrypt(data_list: list) -> list:
+        for data in data_list:
+            for key, value in data.items():
+                if key in factory_config.DB_ENCRYPTED_SETTING_LIST:
+                    data[key] = crypto.decrypt(str.encode(value))
 
-        for key, value in data_dict.items():
-            if key in factory_config.DB_ENCRYPTED_SETTING_LIST:
-                output_dict[key] = crypto.decrypt(str.encode(value))
-
-            else:
-                output_dict[key] = value
-
-        return output_dict
+        return data_list
 
     @staticmethod
     def _add_settings(config: dict, query_typ: str, data_list: list) -> list:

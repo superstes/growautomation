@@ -31,9 +31,8 @@ class Go:
             {'bp': GenericDeviceFactory, 'ok': config.KEY_OBJECT_OUTPUT, 'gk': config.KEY_GROUP_OUTPUT},
         ]
 
-        #
         update_states = {
-            config.KEY_OBJECT_OUTPUT: {'attribute': 'state', 'query': DEVICE_TMPL['output']['state']['get'], 'value': 1, 'idx': 0, 'set_to': True},
+            config.KEY_OBJECT_OUTPUT: {'attribute': 'state', 'query': DEVICE_TMPL['output']['state']['get'], 'value': 1, 'set_to': True},
         }
 
         for device_config in device_config_list:
@@ -55,7 +54,7 @@ class Go:
                     result = self.database.get(update['query'] % device.object_id)
 
                     if result is not None and len(result) > 0:
-                        db_value = result[0][update['idx']]
+                        db_value = result[0]['active']
 
                         if db_value == update['value']:
                             log(f"Setting {attribute} of device {device.name} to value from db!", level=5)

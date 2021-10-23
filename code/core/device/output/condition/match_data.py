@@ -65,8 +65,8 @@ class Go:
     def _get_data_device(self, device: GaInputDevice) -> list:
         # must be iterable since it can be called multiple times from the data_group method
         try:
-            data_tuple_list = self.data_method(input_id=device.object_id)
-            return [self.data_type(data[0]) for data in data_tuple_list]
+            data_list = self.data_method(input_id=device.object_id)
+            return [self.data_type(entry['data']) for entry in data_list]
 
         except (TypeError, IndexError):
             return []
@@ -130,10 +130,8 @@ class Go:
         start_time = (datetime.now() - timedelta(seconds=time_period)).strftime(timestamp_format)
         stop_time = datetime.now().strftime(timestamp_format)
 
-        data_tuple_list = self.database.get(self.SQL_QUERY_TIME % (input_id, start_time, stop_time))
-        return data_tuple_list
+        return self.database.get(self.SQL_QUERY_TIME % (input_id, start_time, stop_time))
 
     def _get_data_by_range(self, input_id: int) -> list:
         range_count = int(self.condition.period_data)
-        data_tuple_list = self.database.get(self.SQL_QUERY_RANGE % (input_id, range_count))
-        return data_tuple_list
+        return self.database.get(self.SQL_QUERY_RANGE % (input_id, range_count))

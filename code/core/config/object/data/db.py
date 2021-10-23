@@ -4,7 +4,6 @@
 
 from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
-from core.config.db.validate import Go as Validate
 from core.config import shared as config
 from core.utils.debug import log
 
@@ -13,11 +12,11 @@ class GaDataDb:
     def __init__(self):
         try:
             self.connection_data_dict = {
-                'server': config.SYSTEM.sql_server,
-                'port': config.SYSTEM.sql_port,
-                'user': config.SYSTEM.sql_user,
-                'secret': config.SYSTEM.sql_secret,
-                'database': config.SYSTEM.sql_database
+                'server': config.AGENT.sql_server,
+                'port': config.AGENT.sql_port,
+                'user': config.AGENT.sql_user,
+                'secret': config.AGENT.sql_secret,
+                'database': config.AGENT.sql_database
             }
 
             log(
@@ -42,13 +41,8 @@ class GaDataDb:
         else:
             self._error("Connection check failed.")
 
-    @staticmethod
-    def _validate(data: list) -> list:
-        return Validate(data).get()
-
     def get(self, query: [str, list]) -> list:
-        output = self.link.get(query)
-        return self._validate(output)
+        return self.link.get(query)
 
     def put(self, command: [str, list]) -> bool:
         return self.link.put(command)

@@ -75,8 +75,7 @@ class Go:
 
         try:
             self.connection = _connection
-            self.cursor = _connection.cursor(buffered=True)
-            # todo: change to use "cursor(dictionary=True)" since the returned tuples are harder to use than dicts; but all query handling must be refactored..
+            self.cursor = _connection.cursor(buffered=True, dictionary=True)
             return True
 
         except UnboundLocalError:
@@ -96,6 +95,7 @@ class Go:
         try:
             for q in query_list:
                 data = self._read_cache(q)
+
                 if len(query_list) > 1:
                     if type(data) is not None:
                         data_list.append(data)
@@ -107,7 +107,7 @@ class Go:
             self._error(error_msg)
 
         log(f"Query output: \"{data_list}\"", level=7)
-        return data_list  # list of tuples
+        return data_list  # list of dicts
 
     def put(self, command: [str, list]) -> bool:
         if type(command) == str:
