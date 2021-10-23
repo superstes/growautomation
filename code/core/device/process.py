@@ -87,7 +87,7 @@ class Go:
 
         command = "%s %s/%s/%s \"%s\" \"%s\"" % (
             params_dict['bin'],
-            config.SYSTEM.path_root,
+            config.AGENT.path_root,
             config.DEVICE_SCRIPT_PATH % self.script_dir,
             params_dict['script'],
             params_dict['arg'],
@@ -144,7 +144,7 @@ class Go:
         params_dict = {'script': self.instance.script, 'bin': self.instance.script_bin, 'arg': self.instance.script_arg}
 
         if params_dict['bin'] == 'python3':
-            params_dict['bin'] = f'{config.PYTHON_VENV}/python3'
+            params_dict['bin'] = f'{config.AGENT.path_home}{config.PATH_HOME_VENV}/python3'
 
         # reverse parameters
         if isinstance(self.instance, GaOutputDevice) and self.instance.reverse == 1:
@@ -178,8 +178,8 @@ class Go:
             device_log(f"An error occurred while processing device \"{self.instance.name}\": \"{error}\"", add=self.name)
             self.instance.fail_count += 1
 
-            if self.instance.fail_count > config.SYSTEM.device_fail_count:
-                self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + config.SYSTEM.device_fail_sleep)
+            if self.instance.fail_count > config.AGENT.device_fail_count:
+                self.instance.fail_sleep = datetime.fromtimestamp(datetime.now().timestamp() + config.AGENT.device_fail_sleep)
                 device_log(f"Device \"{self.instance.name}\" has reached its fail threshold -> will skip execution "
                            f"until \"{self.instance.fail_sleep.strftime('%Y-%m-%d %H:%M:%S:%f')}\"", add=self.name, level=3)
 

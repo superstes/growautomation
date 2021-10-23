@@ -41,9 +41,9 @@ class Workload(Thread):
         return True
 
     def run(self) -> None:
-        if self.fail_count >= config.THREAD_FAIL_COUNT_SLEEP:
+        if self.fail_count >= config.AGENT.device_fail_count:
             log(f"Thread {self.log_name} failed too often => entering fail-sleep of {config.THREAD_FAIL_SLEEP} secs", level=3)
-            time_sleep(config.THREAD_FAIL_SLEEP)
+            time_sleep(config.AGENT.device_fail_sleep)
 
         log(f"Entering runtime of thread {self.log_name}", level=7)
         try:

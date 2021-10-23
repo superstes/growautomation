@@ -5,7 +5,7 @@ from os import listdir as os_listdir
 
 from ...user import authorized_to_read
 from ...utils.basic import str_to_list
-from ...utils.helper import check_develop, get_controller_setting, develop_subprocess
+from ...utils.helper import check_develop, get_server_config, develop_subprocess
 from ...config import shared as config
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
@@ -20,7 +20,7 @@ def LogView(request):
     develop = check_develop(request)
     date_year = datetime.now().strftime('%Y')
     date_month = datetime.now().strftime('%m')
-    path_log = get_controller_setting(request, 'path_log')
+    path_log = get_server_config(request, 'path_log')
 
     log_type_options = ['Service', 'Service journal', 'GrowAutomation']
     log_service_options = {

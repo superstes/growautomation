@@ -5,7 +5,7 @@ from datetime import datetime
 from os import path as os_path
 
 from ...user import authorized_to_write
-from ...utils.helper import get_controller_setting, develop_subprocess
+from ...utils.helper import get_server_config, develop_subprocess
 from ...subviews.handlers import Pseudo404
 from ...config import shared as config
 
@@ -14,7 +14,7 @@ from ...config import shared as config
 def export_view(request, process: str):
     dump_file = f"dump_{process}_{datetime.now().strftime(config.DATETIME_TS_FORMAT.replace(' ', '_').replace(':', '-'))}.sql.xz"
     dump_file_path = f'/tmp/{dump_file}'
-    dump_db = get_controller_setting(request=request, setting='sql_database')
+    dump_db = get_server_config(request=request, setting='sql_database')
     include_tables = []
     exclude_tables = []
 

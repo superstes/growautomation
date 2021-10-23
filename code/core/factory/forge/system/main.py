@@ -1,7 +1,5 @@
 from core.factory import config
-from core.factory.forge.blueprint import blueprint_dict
-from core.factory.forge.system.controller import Go as ControllerFactory
-from core.factory.forge.system.task import Go as TaskFactory
+from core.config.object.core.system import GaServer, GaAgent
 from core.utils.debug import log
 
 
@@ -9,7 +7,7 @@ class Go:
     def __init__(self, supply_data: dict, factory_data=None):
         self.supply_data = supply_data
 
-        self.key_object_controller = config.KEY_OBJECT_CONTROLLER
+        self.key_object_controller = config.KEY_OBJECT_AGENT
         self.key_object_task = config.KEY_OBJECT_TASK
 
     def get(self) -> dict:
@@ -19,19 +17,27 @@ class Go:
         # }
 
         log(f'Building system objects (all)', level=8)
+        output_dict = {}
 
-        output_dict = {
-            self.key_object_controller: ControllerFactory(
-                blueprint=blueprint_dict[self.key_object_controller],
-                parent=blueprint_dict[config.KEY_GROUP_CONTROLLER](),
-                # parent is only used for inheritance of settings -> will not be needed after controller object creation
-                supply_data=self.supply_data[self.key_object_controller],
-            ).get(),
-
-            self.key_object_task: TaskFactory(
-                blueprint=blueprint_dict[self.key_object_task],
-                supply_data=self.supply_data[self.key_object_task],
-            ).get()
+        _config = {
+            config.KEY_OBJECT_SERVER: GaServer,
+            config.KEY_OBJECT_AGENT: GaAgent,
         }
+
+        for key, blueprint in _config.items():
+            # todo: for multi-agent support we must get the right agent config
+            output_dict[key] = [blueprint(
+                setting_dict=self.supply_data[key][1][config.SUPPLY_KEY_SETTING_DICT],
+                object_id=self.supply_data[key][1][config.DB_ALL_KEY_ID],
+                name=self.supply_data[key][1][config.DB_ALL_KEY_NAME],
+                description=self.supply_data[key][1][config.DB_ALL_KEY_DESCRIPTION],
+            )]
+
+        # output_dict.update({
+        #     self.key_object_task: TaskFactory(
+        #         blueprint=blueprint_dict[self.key_object_task],
+        #         supply_data=self.supply_data[self.key_object_task],
+        #     ).get()
+        # })
 
         return output_dict

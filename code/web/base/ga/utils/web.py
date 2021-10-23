@@ -52,3 +52,7 @@ def append_to_url(url: str, append: dict) -> str:
         return f'{url}&{append}'
 
     return f'{url}?{append}'
+
+
+def append_return(request, url: str):
+    return append_to_url(url=url, append={'next': request.path})

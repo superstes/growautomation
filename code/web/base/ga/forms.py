@@ -211,13 +211,40 @@ class MemberConditionAreaGroupForm(BaseForm):
 
 # system ##############################
 
-class ObjectControllerForm(BaseForm):
+
+class SystemAgentForm(BaseForm):
     class Meta:
-        model = ObjectControllerModel
+        model = SystemAgentModel
         fields = model.field_list
         labels = LABEL_DICT
         help_texts = HELP_DICT
+        widgets = {
+            'sql_secret': forms.PasswordInput(render_value=True),
+        }
 
+    def clean(self):
+        super().clean()
+
+        submitted_plain_secret = self.cleaned_data['sql_secret']  # decrypt(instance.sql_secret)
+        if self.instance is None:
+            raise ValidationError('You must provide a valid sql password!')
+        current_encrypted_secret = self.instance.sql_secret
+
+        # if password was not changed -> set same one again
+        if submitted_plain_secret.find(CENSOR_SYMBOL) != -1:
+            self.cleaned_data['sql_secret'] = current_encrypted_secret
+
+        # encrypt secret/password for storage in db if it was changed (else it is already encrypted)
+        if submitted_plain_secret != current_encrypted_secret:
+            self.cleaned_data['sql_secret'] = encrypt(submitted_plain_secret)
+
+
+class SystemServerForm(BaseForm):
+    class Meta:
+        model = SystemServerModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
         widgets = {
             'sql_secret': forms.PasswordInput(render_value=True),
         }
@@ -252,30 +279,38 @@ class SystemScriptForm(forms.Form):
     script_file = forms.FileField()
 
 
+class SystemServerDynDnsForm(BaseForm):
+    class Meta:
+        model = SystemServerDynDnsModel
+        fields = model.field_list
+        labels = LABEL_DICT
+        help_texts = HELP_DICT
+
+
 # data ##############################
 
 class ChartGraphForm(BaseForm):
     class Meta:
         model = ChartGraphModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
 
 
 class ChartDashboardForm(BaseForm):
     class Meta:
         model = ChartDashboardModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
 
 
 class ChartDatasetForm(BaseForm):
     class Meta:
         model = ChartDatasetModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
         widgets = {
             'start_ts': forms.HiddenInput(),
             'stop_ts': forms.HiddenInput(),
@@ -303,8 +338,8 @@ class ChartGraphLinkForm(BaseForm):
     class Meta:
         model = ChartGraphLinkModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
         widgets = {
             'group': forms.HiddenInput(),
         }
@@ -314,16 +349,16 @@ class ChartDatasetLinkForm(BaseForm):
     class Meta:
         model = ChartDatasetLinkModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
 
 
 class DashboardForm(BaseForm):
     class Meta:
         model = DashboardModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
 
     def clean(self):
         data = super().clean()
@@ -334,8 +369,8 @@ class DashboardPositionForm(BaseForm):
     class Meta:
         model = DashboardPositionModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT
 
     def clean(self):
         data = super().clean()
@@ -356,5 +391,5 @@ class DashboardDefaultForm(BaseForm):
     class Meta:
         model = DashboardDefaultModel
         fields = model.field_list
-        help_texts = HELP_DICT
         labels = LABEL_DICT
+        help_texts = HELP_DICT

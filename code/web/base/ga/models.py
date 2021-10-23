@@ -81,7 +81,7 @@ from .submodels.device import MemberConnectionModel, MemberInputModel, MemberOut
 
 # system ##############################
 
-from .submodels.system import ObjectTaskModel, ObjectControllerModel
+from .submodels.system import ObjectTaskModel, SystemAgentModel, SystemServerModel, SystemServerDynDnsModel
 
 # condition ##############################
 

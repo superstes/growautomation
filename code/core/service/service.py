@@ -70,7 +70,7 @@ class Service:
                     self.THREADER.start_thread(description=instance.name)
                     self.THREADER.stop_thread(description=instance.name)
 
-            self._wait(2)
+            self._wait(seconds=config.SVC_WAIT_TIME)
 
             for instance in self.timer_list:
                 self._thread(instance=instance)
@@ -114,7 +114,7 @@ class Service:
                 self.timer_list.remove(old_timer)
                 del old_timer
 
-            self._wait(seconds=2)
+            self._wait(seconds=config.SVC_WAIT_TIME)
 
             for new_timer in reload_threads['add']:
                 self._thread(instance=new_timer)
@@ -157,7 +157,8 @@ class Service:
     def _init_shared_vars(self):
         config.init()
         config.CONFIG = self.CONFIG
-        config.SYSTEM = self.CONFIG[factory_config.KEY_OBJECT_CONTROLLER][0]
+        config.AGENT = self.CONFIG[factory_config.KEY_OBJECT_AGENT][0]
+        config.SERVER = self.CONFIG[factory_config.KEY_OBJECT_SERVER][0]
 
     def _update_config_file(self):
         self.CONFIG_FILE.update()
@@ -226,15 +227,15 @@ class Service:
             run_last_status_time = time()
 
             while True:
-                if time() > (run_last_reload_time + config.SVC_RUN_RELOAD_INTERVAL):
+                if time() > (run_last_reload_time + config.AGENT.svc_interval_reload):
                     self.reload()
                     break
 
-                if time() > (run_last_status_time + config.SVC_RUN_STATUS_INTERVAL):
+                if time() > (run_last_status_time + config.AGENT.svc_interval_status):
                     self._status()
                     run_last_status_time = time()
 
-                time_sleep(config.SVC_RUN_LOOP_INTERVAL)
+                time_sleep(config.SVC_LOOP_INTERVAL)
 
         except:
             try:

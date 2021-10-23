@@ -6,10 +6,12 @@ from os import environ as os_environ
 # config set by service
 def init():
     global CONFIG
-    global SYSTEM
+    global AGENT
+    global SERVER
 
     CONFIG = []
-    SYSTEM = None
+    AGENT = None
+    SERVER = None
 
 
 # todo: integrate most used ones as controller settings with hardcoded fallback values
@@ -21,21 +23,16 @@ if 'GA_GROUP' in os_environ:
     GA_GROUP = os_environ['GA_GROUP']
 
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
-SUBPROCESS_TIMEOUT = 60
-PYTHON_VENV = '/home/ga_core/venv/bin'
-SOCKET_SHUFFLE = None  # if unset SYSTEM.security will be evaluated
+PATH_HOME_VENV = '/venv/bin'  # home prepended
+SOCKET_SHUFFLE = None  # if unset AGENT.security will be evaluated
 NONE_RESULTS = ['', 'None', None, ' ']
 CONFIG_FILE_PATH = '/core/config/file/core.conf'
 CENSOR_SYMBOL = '●'
 
 # service settings
-SVC_RUN_RELOAD_INTERVAL = 86400
-SVC_RUN_STATUS_INTERVAL = 3600
-SVC_RUN_LOOP_INTERVAL = 60
+SVC_LOOP_INTERVAL = 60
 SVC_MAX_STOP_COUNT = 3
-SVC_WAIT_TIME = 5
-THREAD_FAIL_COUNT_SLEEP = 5
-THREAD_FAIL_SLEEP = 600
+SVC_WAIT_TIME = 3
 THREAD_JOIN_TIMEOUT = 5
 THREAD_DEFAULT_SLEEP_TIME = 600
 

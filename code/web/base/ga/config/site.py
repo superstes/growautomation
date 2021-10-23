@@ -7,7 +7,8 @@ MAIN_CONFIG = {
     'outputobject': {'model': ObjectOutputModel, 'form': ObjectOutputForm, 'pretty': 'Output device', 'hidden': False},
     'conditionobject': {'model': ObjectConditionModel, 'form': ObjectConditionForm, 'pretty': 'Condition match', 'hidden': False},
     'conditionspecialobject': {'model': ObjectSpecialConditionModel, 'form': ObjectSpecialConditionForm, 'pretty': 'Special condition match', 'hidden': False},
-    'controllerobject': {'model': ObjectControllerModel, 'form': ObjectControllerForm, 'pretty': 'Controller', 'hidden': False},
+    'systemagent': {'model': SystemAgentModel, 'form': SystemAgentForm, 'pretty': 'Agent', 'hidden': False},
+    'systemserver': {'model': SystemServerModel, 'form': SystemServerForm, 'pretty': 'Server', 'hidden': False},
     'timerobject': {'model': ObjectTaskModel, 'form': ObjectTaskForm, 'pretty': 'Task', 'hidden': False},
     # groups
     'connectiongroup': {'model': GroupConnectionModel, 'form': GroupConnectionForm, 'pretty': 'Connection device model', 'hidden': False},

@@ -5,10 +5,9 @@ from random import randint
 from sys import exc_info as sys_exc_info
 from os import environ as os_environ
 
-from ..config.shared import GA_WRITE_GROUP, WEBUI_EMPTY_CHOICE
-from ..utils.helper import get_controller_setting
+from ..utils.helper import get_server_config
 from ..utils.web import get_client_ip
-from ..config.shared import DATETIME_TS_FORMAT, VERSION
+from ..config import shared as config
 from ..config.nav import NAVIGATION
 
 register = template.Library()
@@ -82,7 +81,7 @@ def get_login_state(request):
 
 @register.filter
 def authorized_to_write(user):
-    if user and user.groups.filter(name=GA_WRITE_GROUP).exists():
+    if user and user.groups.filter(name=config.GA_WRITE_GROUP).exists():
         return True
 
     return False
@@ -121,17 +120,17 @@ def get_return_path(request, typ=None) -> str:
 
 @register.filter
 def use_cdn(request):
-    return get_controller_setting(request, setting='web_cdn')
+    return get_server_config(request, setting='web_cdn')
 
 
 @register.filter
 def hide_warning(request):
-    return get_controller_setting(request, setting='web_warn')
+    return get_server_config(request, setting='web_warn')
 
 
 @register.filter
 def security_mode(request):
-    return get_controller_setting(request, setting='security')
+    return get_server_config(request, setting='security')
 
 
 @register.filter
@@ -143,7 +142,7 @@ def client_is_public(request):
 
 @register.filter
 def format_ts(datetime_obj):
-    return datetime.strftime(datetime_obj, DATETIME_TS_FORMAT)
+    return datetime.strftime(datetime_obj, config.DATETIME_TS_FORMAT)
 
 
 @register.filter
@@ -204,12 +203,12 @@ def beta_mode() -> bool:
 
 @register.simple_tag
 def get_version() -> float:
-    return VERSION
+    return config.VERSION
 
 
 @register.simple_tag
 def get_empty() -> str:
-    return WEBUI_EMPTY_CHOICE
+    return config.WEBUI_EMPTY_CHOICE
 
 
 @register.filter
@@ -218,3 +217,18 @@ def empty_if_none(check: str) -> str:
         return ''
 
     return check
+
+
+@register.filter
+def warning_public(none) -> str:
+    return config.WEBUI_WARNING_PUBLIC
+
+
+@register.filter
+def warning_unencrypted(none) -> str:
+    return config.WEBUI_WARNING_UNENCRYPTED
+
+
+@register.filter
+def warning_public_unencrypted(none) -> str:
+    return config.WEBUI_WARNING_PUBLIC_UNENCRYPTED

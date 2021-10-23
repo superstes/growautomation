@@ -131,7 +131,7 @@ class Prepare:
         return self._check_file(
             files={
                 'log': {
-                    'path': f'{config.SYSTEM.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
+                    'path': f'{config.AGENT.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
                     'type': 'text',
                     'access': 'rw',
                     'perms': 644,
@@ -229,8 +229,8 @@ class Prepare:
     def _check_networking(self) -> bool:
         connection_dict = {
             'database': {
-                'host': config.SYSTEM.sql_server,
-                'port': config.SYSTEM.sql_port,
+                'host': config.AGENT.sql_server,
+                'port': config.AGENT.sql_port,
             }
         }
 
@@ -253,11 +253,11 @@ class Prepare:
         from core.config.db.check import Go as DBCheck
 
         db_connection_data_dict = {
-            'server': config.SYSTEM.sql_server,
-            'port': config.SYSTEM.sql_port,
-            'user': config.SYSTEM.sql_user,
-            'secret': config.SYSTEM.sql_secret,
-            'database': config.SYSTEM.sql_database
+            'server': config.AGENT.sql_server,
+            'port': config.AGENT.sql_port,
+            'user': config.AGENT.sql_user,
+            'secret': config.AGENT.sql_secret,
+            'database': config.AGENT.sql_database
         }
 
         try:

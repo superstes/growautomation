@@ -4,7 +4,7 @@ from inspect import getfile as inspect_getfile
 from core.utils.process import subprocess
 from core.utils.debug import web_log
 
-from ..models import ObjectControllerModel
+from ..models import SystemServerModel, SystemAgentModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
@@ -22,26 +22,54 @@ def check_develop(request) -> bool:
     return False
 
 
-def get_controller_obj():
-    return ObjectControllerModel.objects.all()[0]
-
-
-def get_controller_setting(request, setting: str):
+def get_server() -> (SystemServerModel, None):
     try:
-        return getattr(get_controller_obj(), setting)
+        return SystemServerModel.objects.all()[0]
 
     except IndexError:
-        raise Pseudo404(ga={'request': request, 'msg': "Can't get controller setting if no controller exists. You must create a controller first."})
+        return None
+
+
+def get_agent(name: str = None) -> (SystemAgentModel, None):
+    try:
+        if name is None:
+            return SystemAgentModel.objects.all()[0]
+
+        else:
+            return SystemAgentModel.objects.filter(name=name)[0]
+
+    except IndexError:
+        return None
+
+
+def get_agent_config(request, setting: str):
+    _ = getattr(get_agent(), setting)
+
+    if _ is None:
+        raise Pseudo404(ga={'request': request, 'msg': "Unable to get value of agent setting. Maybe no agent config exists."})
+
+    else:
+        return _
+
+
+def get_server_config(request, setting: str):
+    _ = getattr(get_server(), setting)
+
+    if _ is None:
+        raise Pseudo404(ga={'request': request, 'msg': "Unable to get value of server setting. Maybe no agent config exists."})
+
+    else:
+        return _
 
 
 def get_script_dir(request, typ) -> str:
-    path_root = get_controller_setting(request, setting='path_root')
+    path_root = get_agent_config(request, setting='path_root')
     return f"{path_root}/device/{typ.lower()}"
 
 
 def init_core_config():
     from core.config.shared_init_web import init
-    init(get_controller_obj())
+    init(agent_obj=get_agent(), server_obj=get_server())
 
 
 def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:

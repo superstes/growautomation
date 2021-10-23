@@ -23,7 +23,7 @@ class Device:
 
 
 try:
-    config.SYSTEM = Test()
+    config.AGENT = Test()
     config.CONFIG = {'object_input': [Device(4), Device(8)]}
     from connect import Server
     Server().run()
@@ -38,7 +38,7 @@ def now(time_format: str):
 
 date_year, date_month = now("%Y"), now("%m")
 chown(
-    path=f'{config.SYSTEM.path_log}/core/{date_year}/{date_month}_core.log',
+    path=f'{config.AGENT.path_log}/core/{date_year}/{date_month}_core.log',
     uid=getpwnam('ga_core').pw_uid,
     gid=getgrnam('ga')[2]
 )

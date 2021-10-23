@@ -20,7 +20,7 @@ def get() -> tuple:
     supply_data = Supply().get()
     log(f'Supply data: \"{supply_data}\"', level=7)
 
-    _config = {
+    factories = {
         'device': DeviceFactory,
         'group': GroupFactory,
         'condition': ConditionFactory,
@@ -29,21 +29,21 @@ def get() -> tuple:
 
     factory_data = {}
 
-    for key, factory in _config.items():
-        _ = factory(
+    for key, factory in factories.items():
+        _data = factory(
             supply_data=supply_data,
             factory_data=factory_data,
         ).get()
 
-        factory_data.update(_.copy())
+        factory_data.update(_data.copy())
 
         log_prefix = f'{key.capitalize()} factory'
-        log(f'{log_prefix} output: \"{_}\"', level=7)
-        _log_parse(prefix=log_prefix, output=_, level=8)
+        log(f'{log_prefix} output: \"{_data}\"', level=7)
+        _log_parse(prefix=log_prefix, output=_data, level=8)
 
     CreateLinks(
         factory_data=factory_data,
-        supply_data=supply_data
+        supply_data=supply_data,
     ).set()
 
     log(f'Factory output: \"{factory_data}\"', level=6)

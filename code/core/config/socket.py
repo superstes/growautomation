@@ -24,9 +24,9 @@ PACKAGE_STOP = '-GA-'
 PACKAGE_PATH_SEPARATOR = '_GA_'
 PACKAGE_SIZE = 1024
 RECV_INTERVAL = 2
-RECV_TIMEOUT = config.SUBPROCESS_TIMEOUT + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
+RECV_TIMEOUT = config.AGENT.subprocess_timeout + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
 
-if config.SOCKET_SHUFFLE or config.SYSTEM.security:
+if config.SOCKET_SHUFFLE or config.SERVER.security:
     SHUFFLE = True
 else:
     SHUFFLE = False

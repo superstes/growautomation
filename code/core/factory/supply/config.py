@@ -1,5 +1,5 @@
 from core.factory.config import *
-
+from core.config.object.core.system import GaAgent, GaServer
 
 # provides configuration for factory supply
 #   what data to query
@@ -94,17 +94,26 @@ supply_sql_dict = {
             'base': ['enabled', 'connection'],
         },
     },
-    KEY_OBJECT_CONTROLLER: {
+    KEY_OBJECT_SERVER: {
         'queries': {
-            'base': f"SELECT * FROM {DJANGO_PROJECT}_objectcontrollermodel;",
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_systemservermodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
-                     'log_level', 'debug', 'security', 'backup', 'timezone'],
+            'base': GaServer.setting_list,
         },
         'setting_fields': {
-            'base': ['path_root', 'path_log', 'path_backup', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database',
-                     'log_level', 'debug', 'security', 'backup', 'timezone'],
+            'base': GaServer.setting_list,
+        },
+    },
+    KEY_OBJECT_AGENT: {
+        'queries': {
+            'base': f"SELECT * FROM {DJANGO_PROJECT}_systemagentmodel;",
+        },
+        'fields': {
+            'base': GaAgent.setting_list,
+        },
+        'setting_fields': {
+            'base': GaAgent.setting_list,
         },
     },
     KEY_OBJECT_TASK: {

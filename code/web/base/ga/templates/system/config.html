@@ -1,0 +1,12 @@
+{% extends "../body.html" %}
+{% load util %}
+{% block content %}
+    <form name="configure" method="get" >
+        <label for="type">Setting to configure</label>
+        <select class="form-control" id="type" name="type">
+            <option selected value="server">Server</option>
+            <option selected value="agent">Agent</option>
+        </select>
+        {% include "../btn/select.html" %}
+    </form>
+{% endblock %}

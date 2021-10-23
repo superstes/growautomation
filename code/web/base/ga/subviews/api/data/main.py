@@ -6,7 +6,7 @@ from pytz import utc as pytz_utc
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
 from ....utils.basic import add_timezone, get_datetime_w_tz
-from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_controller_setting
+from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_server_config
 from ....utils.auth import method_user_passes_test
 from ....user import authorized_to_read
 from ....config import shared as config
@@ -175,7 +175,7 @@ class ApiData:
         else:
             typ = str
 
-        own_tz = get_controller_setting(self.request, setting='timezone')
+        own_tz = get_server_config(self.request, setting='timezone')
         for data_obj in data_list:
             # converting datetime to utc millisecond-timestamp since that is the default time-format in chartjs
             tz_aware_dt = add_timezone(request=self.request, datetime_obj=data_obj.created, tz=own_tz, ctz=own_tz)

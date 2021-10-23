@@ -20,7 +20,7 @@ def subprocess(command: (list, str), out_error: bool = False):
             shell=True,
             stdout=subprocess_pipe,
             stderr=subprocess_pipe
-        ).communicate(timeout=config.SUBPROCESS_TIMEOUT)
+        ).communicate(timeout=config.AGENT.subprocess_timeout)
 
         output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
 

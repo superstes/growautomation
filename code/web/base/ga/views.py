@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .subviews.config.main import ConfigView
 from .utils.auth import logout_check
-from .utils.helper import develop_log, get_controller_setting
+from .utils.helper import develop_log, get_server_config
 from .user import authorized_to_access
 from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
@@ -18,6 +18,7 @@ from .subviews.api.chart.main import api_chart
 from .subviews.api.sock.main import api_sock
 from .subviews.data.dashboard.main import DashboardView
 from .subviews.system.export import export_view
+from .subviews.system.config import system_config_view
 from .config.shared import LOGIN_URL, LOG_MAX_TRACEBACK_LENGTH
 
 
@@ -76,14 +77,14 @@ class GaView:
         except Pseudo500 as exc:
             trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc.ga['msg']}")
-            if get_controller_setting(request=request, setting='security') == 0:
+            if get_server_config(request=request, setting='security') == 0:
                 develop_log(request=request, output=f"{trace}", level=2)
             return handler500(request=exc.ga['request'], msg=exc.ga['msg'], tb=trace)
 
         except Exception as error:
             trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
             develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
-            if get_controller_setting(request=request, setting='security') == 0:
+            if get_server_config(request=request, setting='security') == 0:
                 develop_log(request=request, output=f"{trace}", level=2)
             return handler500(request=request, msg=error, tb=trace)
 
@@ -119,6 +120,9 @@ class GaView:
                 return logout_check(request=request, default=export_view(request=request, process=sub_type))
 
             return logout_check(request=request, default=export_view(request=request, process='config'))
+
+        elif typ == 'config':
+            return logout_check(request=request, default=system_config_view(request=request))
 
         raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 

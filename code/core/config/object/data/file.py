@@ -39,7 +39,7 @@ class GaDataFile:
 
     def update(self) -> None:
         update_data_dict = Update(current_config=self.get())
-        self.encryption = config.SYSTEM.security
+        self.encryption = config.SERVER.security
         return self.reset(data=update_data_dict)
 
     def reset(self, data: dict):
@@ -48,7 +48,7 @@ class GaDataFile:
 
     def _check_encryption(self) -> bool:
         try:
-            return config.SYSTEM.security
+            return config.SERVER.security
 
         except AttributeError:
             with open(self.file, 'r') as _:

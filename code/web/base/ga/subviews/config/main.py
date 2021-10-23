@@ -33,7 +33,15 @@ class ConfigView:
         else:
             post_target = self.type
 
-        self.post_redirect = f'/{self.tmpl_root}/list/{post_target}/'
+        if 'next' in request.GET:
+            self.post_redirect = request.GET['next']
+
+        elif 'HTTP_REFERER' in request.META:
+            self.post_redirect = request.META['HTTP_REFERER']
+
+        else:
+            self.post_redirect = f'/{self.tmpl_root}/list/{post_target}/'
+
         self.error_msgs = {
             'id': f"Item with id {self.uid} does not exist",
             'method': f"Action '{self.action}' not supported for current method",

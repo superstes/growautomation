@@ -14,7 +14,7 @@ NAVIGATION = {
             'Area': '/config/list/areagroup/',
         },
         'System': {
-            'Controller': '/config/list/controllerobject/',
+            'Settings': '/system/config/',
             # 'Tasks': '/config/list/timerobject/',  # not yet finished implementing
             'Service': '/system/service/',  # status and restart of service(s)
             'Logs': '/system/log/',  # read various log files

@@ -1,7 +1,7 @@
 from datetime import datetime
 from pytz import timezone as pytz_timezone
 
-from .helper import get_controller_setting
+from .helper import get_server_config
 from ..config.shared import DATETIME_TS_FORMAT
 
 
@@ -32,7 +32,7 @@ def set_key(search, param: str) -> bool:
 def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:
     if ctz is None:
         # takes A LOT of time if done in a loop
-        ctz = get_controller_setting(request, setting='timezone')
+        ctz = get_server_config(request, setting='timezone')
 
     if tz is not None:
         _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))

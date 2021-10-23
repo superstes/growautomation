@@ -1,8 +1,11 @@
 LABEL_DICT = {
+    # basics
     'name': 'Name',
     'description': 'Description',
     'group': 'Group',
     'obj': 'Object',
+
+    # config
     'condition': 'Condition match',
     'link': 'Condition link',
     'nested_group': 'Nested group',
@@ -29,10 +32,13 @@ LABEL_DICT = {
     'period_data': 'Period',
     'period_function': 'Period function',
     'special_obj': 'Special match',
-    'path_root': 'GA root path',
-    'path_log': 'GA log path',
-    'backup': 'Enable backup',
-    'path_backup': 'GA backup path',
+
+    # system
+    'path_root': 'Core installation path',
+    'path_home': 'Service-user home path',
+    'path_log': 'Log path',
+    'path_web': 'Webserver root path',
+    'path_web_static': 'Webserver static-files directory',
     'sql_server': 'SQL server',
     'sql_port': 'SQL server port',
     'sql_user': 'SQL user',
@@ -45,6 +51,19 @@ LABEL_DICT = {
     'timer': 'Timer',
     'web_cdn': 'Use CDN',
     'web_warn': 'Hide warnings',
+    'device_fail_count': 'Device fail threshold',
+    'device_fail_sleep': 'Device fail sleep time',
+    'device_log': 'Device logs',
+    'svc_interval_status': 'Status interval',
+    'svc_interval_reload': 'Reload interval',
+    'subprocess_timeout': 'Execution timeout',
+    'version': 'System Version',
+    'version_detail': 'Exact System Version',
+    'ga_cloud': 'GrowAutomation Cloud Services',
+    'ga_cloud_uuid': 'GrowAutomation Cloud ID',
+    'ga_cloud_ddns': 'GrowAutomation Cloud Dynamic DNS',
+
+    # dashboard
     'chart_type': 'Chart type',
     'time_format_min': 'Time minute format',
     'time_format_hour': 'Time hour format',
@@ -68,16 +87,16 @@ LABEL_DICT = {
     'chart_point_radius': 'Chart point radius',
     'chart_point_color': 'Chart point color',
     'chart_point_type': 'Chart point type',
-    'device_fail_count': 'Device fail threshold',
-    'device_fail_sleep': 'Device fail sleep time',
-    'device_log': 'Device logs',
 }
 
 HELP_DICT = {
+    # basic
     'name': 'Name of the object or group [max length 50]',
     'description': 'Description of the object or group [can be empty, max length 255]',
     'group': 'Group to link',
     'obj': 'Object to link',
+
+    # config
     'condition': 'Condition object to link',
     'link': 'Condition link to link to',
     'nested_group': 'Nested group to link',
@@ -103,10 +122,19 @@ HELP_DICT = {
     'period': 'Method used to retrieve datapoints for the datapool',
     'period_data': 'Used in combination with the period type in the data retrieval process',
     'period_function': 'How to calculate the value of thinned-out data-points',
-    'path_root': 'Path to the growautomation core installation [max length 255]',
-    'path_log': 'Path for growautomation log creation [max length 255]',
-    'backup': 'Should the integrated backup task be enabled?',
-    'path_backup': 'Target path for backups -> if enabled [max length 255]',
+    'special_obj': 'Special condition match [can be empty]',
+    'area': 'Area to filter devices on [can be empty]',
+    'input_obj': 'Input device [can be empty]',
+    'input_device': 'Input device [can be empty]',
+    'input_group': 'Input device model [can be empty]',
+    'input_model': 'Input device model [can be empty]',
+
+    # system
+    'path_root': 'Path to the core installation [max length 255]',
+    'path_web': 'Path to the webserver root-directory [max length 255]',
+    'path_web_static': 'Directory to save the webserver static-files in [max length 255]',
+    'path_log': 'Directory to save the logs in [max length 255]',
+    'path_home': 'Path to use as a home directory for the service-user [max length 255]',
     'sql_server': 'IP/Hostname of the SQL server (mariadb/mysql) that should be used [max length 50]',
     'sql_port': 'SQL server port to connect to [1-65535]',
     'sql_user': 'SQL user used for connecting to the sql server [max length 50]',
@@ -121,6 +149,19 @@ HELP_DICT = {
     'web_cdn': 'If the webinterface should use css and javascript files from content delivery networks; '
                'might speed-up loading times when accessing the website over the internet',
     'web_warn': 'If the webinterface should hide warnings',
+    'device_fail_count': 'How often a device can fail (in a row) until it enters the fail-sleep time',
+    'device_fail_sleep': 'How long a device should be ignored by the core after a recurring error was recognized',
+    'device_log': 'If a per-device logfile should be created',
+    'svc_interval_status': 'How often the core service should report its status (in seconds)',
+    'svc_interval_reload': 'How often the core service should reload its config (in seconds)',
+    'subprocess_timeout': 'The maximum time a device execution should be able to take (in seconds)',
+    'version': 'Major version of this GrowAutomation System',
+    'version_detail': 'Exact VCS version of this GrowAutomation System',
+    'ga_cloud': 'If the use of GrowAutomation Cloud-Services should be enabled',
+    'ga_cloud_uuid': 'This is the unique Cloud-ID of your system',
+    'ga_cloud_ddns': 'If this system should register itself to the GrowAutomation DynDNS Service. For more information => see the documentation!',
+
+    # dashboard
     'chart_type': 'Chart.js chart-type => DISCLAIMER: The GA config was only optimized for line charts',
     'time_format_min': 'Time format if the range is shown in minutes [must be valid moment.js format]',
     'time_format_hour': 'Time format if the range is shown in hours [must be valid moment.js format]',
@@ -137,15 +178,6 @@ HELP_DICT = {
     'chart_point_radius': 'Radius of chart data points [can be empty]',
     'chart_point_color': 'Color of chart data points [max length 50, can be empty]',
     'chart_point_type': 'Type of chart data points [can be empty]',
-    'device_fail_count': 'How often a device can fail (in a row) until it enters the fail-sleep time',
-    'device_fail_sleep': 'How long a device should be ignored by the core after a recurring error was recognized',
-    'device_log': 'If a per-device logfile should be created',
     'rows': 'How many rows there should be [max 100]',
     'columns': 'How many columns there should be [max 30]',
-    'area': 'Area to filter devices on [can be empty]',
-    'input_obj': 'Input device [can be empty]',
-    'input_device': 'Input device [can be empty]',
-    'input_group': 'Input device model [can be empty]',
-    'input_model': 'Input device model [can be empty]',
-    'special_obj': 'Special condition match [can be empty]',
 }

@@ -25,7 +25,7 @@ date_year, date_month = now("%Y"), now("%m")
 
 class Log:
     try:
-        SECRET_DATA = [config.SYSTEM.sql_secret]
+        SECRET_DATA = [config.AGENT.sql_secret]
 
     except AttributeError:
         SECRET_DATA = []
@@ -36,8 +36,8 @@ class Log:
             self.name = inspect_getfile(inspect_stack()[1][0])
 
         self.type = typ
-        self.log_dir = f"{config.SYSTEM.path_log}/{self.type}/{date_year}"
-        self.log_level = config.SYSTEM.log_level
+        self.log_dir = f"{config.AGENT.path_log}/{self.type}/{date_year}"
+        self.log_level = config.AGENT.log_level
 
         if addition is None:
             self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
@@ -51,7 +51,7 @@ class Log:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
-        if config.SYSTEM.debug == 0 and (level > self.log_level or not self.status):
+        if config.AGENT.debug == 0 and (level > self.log_level or not self.status):
             return False
 
         output = self._censor(str(output))
@@ -105,7 +105,7 @@ class Log:
 
     @staticmethod
     def _debugger(command):
-        if config.SYSTEM.debug == 1:
+        if config.AGENT.debug == 1:
             print(f'DEBUG: {command}')
             return True
 
@@ -166,7 +166,7 @@ def web_log(output: str, src_file: str, level: int = 1) -> bool:
 def device_log(output: str, add: str, level: int = 1) -> bool:
     _src = inspect_getfile(inspect_stack()[1][0])
 
-    if config.SYSTEM.device_log == 1:
+    if config.AGENT.device_log == 1:
         return MultiLog([
             Log(src_file=_src),
             Log(typ='device', addition=add, src_file=_src)
