@@ -4,7 +4,6 @@
     <strong>
         Refreshed at {% now "Y-m-d H:i:s T" %} <br>
     </strong>
-    <br>
     {% if script_content is None %}
         {% include "../../warn/no_results.html" %}
     {% else %}
@@ -19,6 +18,5 @@
             Current script: '{{ script_path }}'
         </p>
     </div>
-    <br><br>
     {% include "../../btn/abort.html" %}
 {% endblock %}

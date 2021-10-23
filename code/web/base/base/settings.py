@@ -24,7 +24,7 @@ SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'
 DEBUG = True
 
 s = socket(AF_INET, SOCK_DGRAM)
-s.connect(("1.1.1.1", 80))
+s.connect(('1.1.1.1', 80))
 own_ip = s.getsockname()[0]
 s.close()
 

@@ -48,7 +48,6 @@
                  {% endif %}
                      <input type="hidden" name="group" value="{{ data|get_item:'id' }}" />
                      <input type="hidden" name="return" value="{{ request.get_full_path }}" />
-                     <br>
                      {% include "../../btn/create.html" %}
                      {% include "../../btn/add.html" %}
                      <!-- todo: disable list if target is hidden -->

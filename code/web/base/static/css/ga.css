@@ -439,6 +439,7 @@ form .error-msg {
 /* START buttons */
 
 .ga-btn-action {
+    margin-top: 0.35rem;
     padding: 0.35rem 0.4rem !important;
     opacity: 75%;
     border-radius: .35rem !important;
