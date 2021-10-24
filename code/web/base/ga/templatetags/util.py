@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from random import randint
 from sys import exc_info as sys_exc_info
 from os import environ as os_environ
+from traceback import format_exc
 
 from ..utils.helper import get_server_config
 from ..utils.web import get_client_ip
@@ -164,11 +165,25 @@ def random_gif() -> str:
     return f"img/500/{randint(1, 20)}.gif"
 
 
-@register.simple_tag
-def get_last_errors() -> str:
+@register.filter
+def get_error(msg: str) -> str:
     error_type = str(sys_exc_info()[0]).split("'", 3)[1]
-    error_msg = sys_exc_info()[1]
+
+    if msg not in config.NONE_RESULTS:
+        error_msg = msg
+
+    else:
+        error_msg = sys_exc_info()[1]
+
+    if error_msg in config.NONE_RESULTS:
+        error_msg = 'Got no error message.'
+
     return f"{error_type} => {error_msg}"
+
+
+@register.simple_tag
+def get_traceback() -> str:
+    return format_exc(limit=config.LOG_MAX_TRACEBACK_LENGTH)
 
 
 @register.filter
@@ -220,15 +235,5 @@ def empty_if_none(check: str) -> str:
 
 
 @register.filter
-def warning_public(none) -> str:
-    return config.WEBUI_WARNING_PUBLIC
-
-
-@register.filter
-def warning_unencrypted(none) -> str:
-    return config.WEBUI_WARNING_UNENCRYPTED
-
-
-@register.filter
-def warning_public_unencrypted(none) -> str:
-    return config.WEBUI_WARNING_PUBLIC_UNENCRYPTED
+def warning(key: str) -> str:
+    return config.WEBUI_WARNING[key]

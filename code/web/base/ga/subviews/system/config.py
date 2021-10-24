@@ -18,6 +18,6 @@ def system_config_view(request):
             return redirect(append_return(request=request, url='/config/update/systemserver/1'))
 
         else:
-            return Pseudo404(ga={'request': request, 'msg': "Got unsupported system config-type."})
+            raise Pseudo404(ga={'request': request, 'msg': "Got unsupported system config-type."})
 
-    return render(request, 'system/config.html', context={'request': request})
+    return render(request, 'system/config.html', context={'request': request, 'title': 'System Settings'})

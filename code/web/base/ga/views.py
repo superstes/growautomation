@@ -1,10 +1,8 @@
-from traceback import format_exc
-
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .subviews.config.main import ConfigView
 from .utils.auth import logout_check
-from .utils.helper import develop_log, get_server_config
+from .utils.helper import develop_log
 from .user import authorized_to_access
 from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
@@ -19,7 +17,8 @@ from .subviews.api.sock.main import api_sock
 from .subviews.data.dashboard.main import DashboardView
 from .subviews.system.export import export_view
 from .subviews.system.config import system_config_view
-from .config.shared import LOGIN_URL, LOG_MAX_TRACEBACK_LENGTH
+from .subviews.system.update import update_view, update_status_view
+from .config.shared import LOGIN_URL
 
 
 def view(request, **kwargs):
@@ -67,26 +66,16 @@ class GaView:
                 return self.data(request=request, typ='dashboard')
 
         except Pseudo404 as exc:
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc.ga['msg']}")
-            return handler404(request=exc.ga['request'], msg=exc.ga['msg'])
+            return handler404(exc)
 
         except Pseudo403 as exc:
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 403 - {exc.ga['msg']}")
-            return handler403(request=exc.ga['request'], msg=exc.ga['msg'])
+            return handler403(exc)
 
         except Pseudo500 as exc:
-            trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {exc.ga['msg']}")
-            if get_server_config(setting='security') == 0:
-                develop_log(request=request, output=f"{trace}", level=2)
-            return handler500(request=exc.ga['request'], msg=exc.ga['msg'], tb=trace)
+            return handler500(exc)
 
-        except Exception as error:
-            trace = format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)
-            develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {error}")
-            if get_server_config(setting='security') == 0:
-                develop_log(request=request, output=f"{trace}", level=2)
-            return handler500(request=request, msg=error, tb=trace)
+        except Exception as exc:
+            return handler500(exc)
 
     @staticmethod
     @login_required

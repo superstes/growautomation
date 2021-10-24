@@ -4,23 +4,23 @@
     <head>
         {% include "../head.html" %}
     </head>
-    <body class="alert alert-danger">
-        <div class="ga-error-500">
-            <h1>Error 500</h1>
-            <h2>Oooooopppsss!</h2><br>
-            <strong>
-                Something did go wrong while loading the page
-            </strong>
-            <br><hr><br>
-            <strong>Last error:</strong><br>
-            {% get_last_errors %}
-            <br><hr><br>
-            {% if error_trace is not None and security_mode is False %}
+    <body>
+        <div class="ga-error-500 ga-error-500-basic">
+            <div class="alert alert-danger">
+                <h1>Error 500</h1>
+                <h2>Oooooopppsss!</h2><br>
+                <strong>
+                    Something did go wrong while loading the page
+                </strong>
+                <br><hr>
+                <strong>Last error:</strong><br>
+                {{ error_msg | get_error }}
+                <br><hr>
                 <strong>Error traceback:</strong><br>
-                <pre>{{ error_trace }}</pre>
-                <br><hr><br>
-            {% endif %}
-            {% include "./500_gif.html" %}
+                <pre>{% get_traceback %}</pre>
+                <br><hr>
+                {% include "./500_gif.html" %}
+            </div>
         </div>
     </body>
 </html>

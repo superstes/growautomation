@@ -1,8 +1,8 @@
 {% extends "../body.html" %}
 {% load util %}
 {% block content %}
-    <div class="alert alert-danger">
-        <div class="ga-error-500">
+    <div class="ga-error-500">
+        <div class="alert alert-danger">
             <h1>Error 500</h1>
             <h2>Oooooopppsss!</h2><br>
             <strong>
@@ -10,15 +10,13 @@
                 <br><br>
                 '{{ request|get_full_uri }}'
             </strong>
-            <br><hr><br>
+            <br><hr>
             <strong>Last error:</strong><br>
-            {% get_last_errors %}
-            <br><hr><br>
-            {% if error_trace is not None and security_mode is False %}
-                <strong>Error traceback:</strong><br>
-                <pre>{{ error_trace }}</pre>
-                <br><hr><br>
-            {% endif %}
+            {{ error_msg | get_error }}
+            <br><hr>
+            <strong>Error traceback:</strong><br>
+            <pre>{% get_traceback %}</pre>
+            <br><hr>
             {% include "./500_gif.html" %}
         </div>
     </div>

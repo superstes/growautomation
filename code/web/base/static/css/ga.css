@@ -1,18 +1,21 @@
 /* color scheme */
 
 body.light {
-  --c1: #121212;
-  --tc1: #121212;
-  --tc2: rgba(255, 255, 255, .8);
-  --tc3: #fcfdff;
-  --textHead: #B9BD19;
-  --bg: #fcfdff;
-  --bgLight: #3A9188;
-  --bgNav: #343a40;
-  --bgNav2: rgba(255, 255, 255, .9);
-  --bgNav3: rgba(211, 211, 211, .9);
-  --tableHead: rgba(0, 0, 0, .05);
-  --tableActive: rgba(0, 0, 0, .075);
+    --c1: #121212;
+    --tc1: #121212;
+    --tc2: rgba(255, 255, 255, .8);
+    --tc3: #fcfdff;
+    --textHead: #B9BD19;
+    --bg: #fcfdff;
+    --bgLight: #3A9188;
+    --bgNav: #343a40;
+    --bgNav2: rgba(255, 255, 255, .9);
+    --bgNav3: rgba(211, 211, 211, .9);
+    --tableHead: rgba(0, 0, 0, .05);
+    --tableActive: rgba(0, 0, 0, .075);
+    --bgError: #f8d7da;
+    --borderError: #f5c6cb;
+    --tcError: #721c24;
 }
 
 body.dark {
@@ -28,6 +31,9 @@ body.dark {
     --tableHead: #282828;
     --tableActive: #404040;
     --bgLight: #062925;
+    --bgError: #282828;
+    --borderError: #404040;
+    --tcError: #721c24;
 }
 
 /* init */
@@ -419,6 +425,20 @@ form .error-msg {
 
 .ga-error-500 {
     text-align: center;
+}
+
+.ga-error-500-basic {
+    min-height: 100%;
+}
+
+.ga-error-500 > .alert-danger {
+    background-color: var(--bgError) !important;
+    border-color: var(--borderError) !important;
+    color: var(--tcError) !important;
+}
+
+.ga-error-500 > .alert-danger > pre {
+    color: var(--tc1) !important;
 }
 
 .ga-error-500 > img {
