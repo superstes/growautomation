@@ -1,0 +1,17 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    {% include "../../warn/update.html" %}
+    <form method="post">
+        {% csrf_token %}
+        <div id="div_id_path" class="form-group">
+            <label for="id_path" class="control-label">Source Path</label>
+            <div class="">
+                <input type="text" value="--------" name="path" maxlength="255" class="form-control" id="id_path">
+                <p class="help-block">Path to the 'git clone' directory.</p>
+            </div>
+        </div>
+        <input type="hidden" name="type" value="offline" />
+        {% include "../../btn/start.html" %}
+    </form>
+{% endblock %}

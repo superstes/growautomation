@@ -8,10 +8,10 @@ from ..models import SystemServerModel, SystemAgentModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
-from ..subviews.handlers import Pseudo404
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
-ALL_DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel, GroupInputModel, GroupOutputModel, GroupConnectionModel]
+ALL_DEVICE_TYPES = [GroupInputModel, GroupOutputModel, GroupConnectionModel]
+ALL_DEVICE_TYPES.extend(DEVICE_TYPES)
 
 
 def check_develop(request) -> bool:
@@ -60,12 +60,16 @@ def init_core_config():
     init(agent_obj=get_agent(), server_obj=get_server())
 
 
+def web_subprocess(command: str) -> str:
+    init_core_config()
+    return subprocess(command)
+
+
 def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:
     if check_develop(request):
         return develop
 
-    init_core_config()
-    return subprocess(command)
+    return web_subprocess(command)
 
 
 def develop_log(request, output: str, level: int = 1) -> None:

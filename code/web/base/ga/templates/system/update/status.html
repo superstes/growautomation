@@ -1,0 +1,14 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    {% include "../../warn/update.html" %}
+    <h2>Log data:</h2>
+    <strong>
+        Refreshed at {% now "Y-m-d H:i:s T" %} <br>
+    </strong>
+    <ol class="ga-file-content">
+        {% for line in log_data %}
+<li class="ga-file-content-line">{{ line }}</li>
+        {% endfor %}
+    </ol>
+{% endblock %}

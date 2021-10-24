@@ -113,6 +113,12 @@ class GaView:
         elif typ == 'config':
             return logout_check(request=request, default=system_config_view(request=request))
 
+        elif typ == 'update':
+            if sub_type is not None and sub_type == 'status':
+                return logout_check(request=request, default=update_status_view(request=request))
+
+            return logout_check(request=request, default=update_view(request=request))
+
         raise Pseudo404(ga={'request': request, 'msg': 'Not implemented!'})
 
     @staticmethod

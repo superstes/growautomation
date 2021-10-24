@@ -36,12 +36,27 @@ WEBUI_LOG_MAX_LOG_LINES = 25
 WEBUI_MAX_ENTRY_RANGE = range(50, 3025, 50)
 WEBUI_SVC_ACTION_COOLDOWN = 15
 WEBUI_DEFAULT_DATA_TABLE_ROWS = 50
-WEBUI_EMPTY_CHOICE = '---------'
+WEBUI_EMPTY_CHOICE = '--------'
 
 # messages
-WEBUI_WARNING_PUBLIC = 'You are accessing this web interface over a public network.<br><strong>This could be a security risk.<br></strong>' \
-                       'This web interface has not been tested for security vulnerabilities.'
-WEBUI_WARNING_UNENCRYPTED = '<strong>Your connection is unencrypted!</strong>'
-WEBUI_WARNING_PUBLIC_UNENCRYPTED = '<strong>Your connection is unencrypted! And you are accessing this web interface over a public network.<br></strong>' \
-                                   'You should consider setting up encryption via LetsEncrypt:<br><a href="https://docs.growautomation.eu">GrowAutomation documentation</a> ' \
-                                   '| <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-20-04">Example tutorial</a>'
+WEBUI_WARNING = {
+    'public': 'You are accessing this web interface over a public network.<br><strong>This could be a security risk.<br></strong>' \
+              'This web interface has not been tested for security vulnerabilities.',
+    'unencrypted': '<strong>Your connection is unencrypted!</strong>',
+    'public_unencrypted': '<strong>Your connection is unencrypted! And you are accessing this web interface over a public network.<br></strong>' \
+                          'You should consider setting up encryption via LetsEncrypt:<br><a href="https://docs.growautomation.eu">GrowAutomation documentation</a> ' \
+                          '| <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-20-04">Example tutorial</a>',
+    'update_online': '<strong>Your system could not connect to github.com => therefore an online-update is not possible.</strong>',
+}
+
+# logs
+LOG_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
+LOG_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
+LOG_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
+
+# update
+UPDATE_PATH_BACKUP = '/var/backups/ga/update'
+UPDATE_PATH_CLONE = '/tmp/ga/update'
+UPDATE_SERVICE = 'ga_update'
+UPDATE_CONFIG_FILE = '/etc/ga_update.conf'
+UPDATE_TIMESTAMP = '%Y-%m-%d_%H-%M'

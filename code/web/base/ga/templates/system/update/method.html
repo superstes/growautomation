@@ -1,0 +1,12 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    <form name="configure" method="get" >
+        <label for="type">Update Method</label>
+        <select class="form-control" id="type" name="type">
+            <option selected value="online">Online Update</option>
+            <option value="offline">Offline Update</option>
+        </select>
+        {% include "../../btn/select.html" %}
+    </form>
+{% endblock %}

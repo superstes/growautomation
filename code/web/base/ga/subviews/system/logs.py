@@ -9,9 +9,6 @@ from ...utils.helper import check_develop, get_server_config, develop_subprocess
 from ...config import shared as config
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
-SHELL_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
-SHELL_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
-SHELL_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
 TITLE = 'System logs'
 
 
@@ -87,7 +84,7 @@ def LogView(request):
         log_data = str_to_list(
             develop_subprocess(
                 request,
-                command=SHELL_SERVICE_LOG_STATUS % log_service_value,
+                command=config.LOG_SERVICE_LOG_STATUS % log_service_value,
                 develop=['Test output1', 'Helloo', "Third time's a charm"]
             )
         )
@@ -102,7 +99,7 @@ def LogView(request):
         log_data = str_to_list(
             develop_subprocess(
                 request,
-                command=SHELL_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
+                command=config.LOG_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
                 develop=['Test output2', 'Helloo', "Third time's a charm"]
             )
         )
