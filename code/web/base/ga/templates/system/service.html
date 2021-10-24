@@ -106,8 +106,8 @@
         <h3>
             Status & Logs
         </h3>
-        <a href="/system/log/?log_type=Service+journal&log_subtype={{ service_name }}" class="btn btn-info">Service Status</a>
-        <a href="/system/log/?log_type=Service&log_subtype={{ service_name }}" class="btn btn-info">Service Journal</a>
+        <a href="/system/log/?log_type=Service&log_subtype={{ service_name }}" class="btn btn-info">Service Status</a>
+        <a href="/system/log/?log_type=Service+journal&log_subtype={{ service_name }}" class="btn btn-info">Service Journal</a>
         {% if service_name == 'GrowAutomation' %}
             <a href="/system/log/?log_type=GrowAutomation&log_subtype=Core" class="btn btn-info">Application Logs</a>
         {% endif %}
