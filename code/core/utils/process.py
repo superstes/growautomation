@@ -15,31 +15,34 @@ def subprocess(command: (list, str), out_error: bool = False):
         command = [command]
 
     try:
-        output, error = subprocess_popen(
+        proc = subprocess_popen(
             command,
             shell=True,
             stdout=subprocess_pipe,
             stderr=subprocess_pipe
-        ).communicate(timeout=config.AGENT.subprocess_timeout)
-
-        output, error = output.decode('utf-8').strip(), error.decode('utf-8').strip()
+        )
+        stdout_bytes, stderr_bytes = proc.communicate(timeout=config.AGENT.subprocess_timeout)
+        stdout, stderr = stdout_bytes.decode('utf-8').strip(), stderr_bytes.decode('utf-8').strip()
+        exit_code = proc.returncode
 
     except TimeoutExpired as error:
-        output = None
-        error = error
+        stdout = None
+        exit_code = 1
+        stderr = error
 
-    if error in config.NONE_RESULTS:
-        error = None
-        if not log(f"Got output by processing command \"{command}\": \"{output}\"", level=7):
-            log(f"Process output: \"{output}\"", level=6)
+    if exit_code == 0 and stderr in config.NONE_RESULTS:
+        stderr = None
+        if not log(f"Got output by processing command \"{command}\": \"{stdout}\"", level=7):
+            log(f"Process output: \"{stdout}\"", level=6)
 
     else:
-        log(f"Got error while processing command \"{command}\": \"{error}\" | output: \"{output}\"", level=2)
+        log(f"Got error while processing command \"{command}\": "
+            f"exit-code {exit_code} - \"{stderr}\" | output: \"{stdout}\"", level=2)
 
     if out_error:
-        return output, error
+        return stdout, stderr
 
-    return output
+    return stdout
 
 
 def _filter():
