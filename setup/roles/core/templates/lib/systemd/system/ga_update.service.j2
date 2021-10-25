@@ -1,0 +1,17 @@
+[Unit]
+Description=GrowAutomation Update Service
+Documentation=https://docs.growautomation.eu
+Documentation=https://github.com/superstes/growautomation
+After=mariadb.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sudo /bin/bash {{ ga_update_path }}/prestart.sh
+ExecStart=/usr/bin/sudo /usr/bin/python3 {{ ga_update_path }}/main.py
+User={{ ga_update_service_user }}
+Group={{ ga_update_service_user }}
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ga_update
+
+Environment="PYTHONUNBUFFERED=1"

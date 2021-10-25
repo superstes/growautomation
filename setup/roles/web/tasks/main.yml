@@ -2,7 +2,7 @@
 
 - name: GA | Web | Installing packages
   apt:
-    name: ['apache2', 'python-setuptools', 'python3-pip', 'libapache2-mod-wsgi-py3']
+    name: ['apache2', 'python3-pip', 'libapache2-mod-wsgi-py3']
     state: present
   notify: 'enable_apache'
 

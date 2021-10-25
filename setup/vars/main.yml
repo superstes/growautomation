@@ -84,3 +84,7 @@ ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits len
   # random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_db: 'ga'
 ga_sql_socket: '/var/run/mysqld/mysqld.sock'  # socket used to locally connect to database
+
+# update
+ga_update_path: '/var/lib/ga_update'  # DO NOT CHANGE!
+ga_update_service_user: 'ga_update'

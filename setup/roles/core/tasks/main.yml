@@ -2,7 +2,7 @@
 
 - name: GA | Core | Installing packages
   apt:
-    name: ['git', 'python3', 'python3-pip', 'python-setuptools']
+    name: ['git', 'python3', 'python3-pip']
     state: present
 
 - name: GA | Core | Setting system timezone
@@ -79,7 +79,7 @@
 
 - name: GA | Core | Adding core config file
   template:
-    src: "templates/var/lib/ga/core/config/file/core.conf.j2"
+    src: 'templates/var/lib/ga/core/config/file/core.conf.j2'
     dest: "{{ ga_core_path }}/core/config/file/core.conf"
     mode: 0600
     owner: "{{ ga_core_service_user }}"
@@ -100,8 +100,11 @@
 
 - name: GA | Core | Adding core service file
   template:
-    src: "templates/lib/systemd/system/ga_core.service.j2"
-    dest: "/lib/systemd/system/ga_core.service"
+    src: 'templates/lib/systemd/system/ga_core.service.j2'
+    dest: '/lib/systemd/system/ga_core.service'
+
+- name: GA | Core | Configuring update prerequisits
+  import_tasks: update.yml
 
 - name: GA | Core | Reloading systemd
   systemd:

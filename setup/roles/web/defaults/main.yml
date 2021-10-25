@@ -24,6 +24,7 @@ ga_django_mods:
   - 'ua-parser'
   - 'user-agents'
   - 'django-user-agents'
+  - 'requests'
 
 ga_apache_config_additions:
   ServerTokens: 'Prod'

@@ -16,8 +16,9 @@ Group={{ ga_core_service_user }}
 Restart=on-failure
 RestartSec=60s
 TimeoutStopSec=120s
-StandardOutput=append:{{ ga_core_path_log }}/service.log
-StandardError=append:{{ ga_core_path_log }}/service.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ga_core
 
 Environment="PYTHONPATH={{ ga_core_path }}"
 Environment="PYTHONUNBUFFERED=1"

@@ -16,6 +16,7 @@
       django-bootstrap4
       django-bootstrap-datepicker-plus
       django-user-agents
+      requests
 
 #   input devices (sensors)
       adafruit-circuitpython-dht
