@@ -51,12 +51,12 @@ WEBUI_WARNING = {
 
 # logs
 LOG_SERVICE_STATUS = "/bin/systemctl show -p ActiveState --value %s"
-LOG_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager"
+LOG_SERVICE_LOG_STATUS = "/bin/systemctl status %s -l --no-pager -n 50"
 LOG_SERVICE_LOG_JOURNAL = "/bin/journalctl -u %s --no-pager -n %s"
 
 # update
 UPDATE_PATH_BACKUP = '/var/backups/ga/update'
 UPDATE_PATH_CLONE = '/tmp/ga/update'
 UPDATE_SERVICE = 'ga_update'
-UPDATE_CONFIG_FILE = '/etc/ga_update.conf'
+UPDATE_CONFIG_FILE = '/tmp/ga_update.conf'
 UPDATE_TIMESTAMP = '%Y-%m-%d_%H-%M'

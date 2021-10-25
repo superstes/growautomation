@@ -1,7 +1,17 @@
 {% extends "../../body.html" %}
 {% load util %}
 {% block content %}
-    {% include "../../warn/update.html" %}
+    <h2>Status:</h2>
+    {% if status == 'Finished successfully!' %}
+        <div class="alert alert-success">
+    {% elif status == 'Failed!' %}
+        <div class="alert alert-danger">
+    {% else %}
+        <div class="alert alert-info">
+    {% endif %}
+    <strong>Update {{ status }}</strong>
+    </div>
+    <hr>
     <h2>Log data:</h2>
     <strong>
         Refreshed at {% now "Y-m-d H:i:s T" %} <br>
@@ -11,4 +21,12 @@
 <li class="ga-file-content-line">{{ line }}</li>
         {% endfor %}
     </ol>
+    {% include "../../js/auto_reload.html" %}
+    {% if redirect_time != 0 %}
+        <script>
+            setTimeout(function(){
+                window.location.href = '/system/update/status/';
+            }, {{ redirect_time }}000);
+        </script>
+    {% endif %}
 {% endblock %}

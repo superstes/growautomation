@@ -6,26 +6,35 @@
         <form method="post">
             {% csrf_token %}
             <div id="div_id_release" class="form-group">
-                <label for="id_release" class="control-label">Release</label>
+                <label for="id_release" class="control-label">{{ 'update_release' | form_label }}</label>
                 <select class="form-control" id="id_release" name="release">
                     <option selected value="{{ current_version }}">{{ current_version }}</option>
                     {% for release in releases %}
                         <option value="{{ release }}">{{ release }}</option>
                     {% endfor %}
                 </select>
-                <p class="help-block">Choose a release-version to upgrade to.</p>
+                <p class="help-block">{{ 'update_release' | form_help }}</p>
             </div>
             <div id="div_id_commit" class="form-group">
-                <label for="id_commit" class="control-label">Commit-ID (optional)</label>
+                <label for="id_commit" class="control-label">{{ 'update_commit' | form_label }}</label>
                 <div class="">
                     <input type="text" value="--------" name="commit" minlength="7" maxlength="40" class="form-control" id="id_commit">
-                    <p class="help-block">Provide a specific commit-ID to upgrade to. Will ignore the release.</p>
+                    <p class="help-block">{{ 'update_commit' | form_help }}</p>
                 </div>
             </div>
             <input type="hidden" name="type" value="online" />
             {% include "../../btn/start.html" %}
         </form>
+        <br>
+        <div class="alert alert-info" id="downloadStarted" style="display:none;">
+            Update download started!
+        </div>
     {% else %}
         {% include "../../error/online_update.html" %}
     {% endif %}
+    <script>
+        function btnStartClicked() {
+           document.getElementById('downloadStarted').style.display = "block";
+        }
+    </script>
 {% endblock %}

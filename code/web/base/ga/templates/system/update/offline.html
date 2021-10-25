@@ -2,13 +2,14 @@
 {% load util %}
 {% block content %}
     {% include "../../warn/update.html" %}
+    {% include "../../warn/offline_update.html" %}
     <form method="post">
         {% csrf_token %}
         <div id="div_id_path" class="form-group">
-            <label for="id_path" class="control-label">Source Path</label>
+            <label for="id_path" class="control-label">{{ 'update_path' | form_label }}</label>
             <div class="">
                 <input type="text" value="--------" name="path" maxlength="255" class="form-control" id="id_path">
-                <p class="help-block">Path to the 'git clone' directory.</p>
+                <p class="help-block">{{ 'update_path' | form_help }}</p>
             </div>
         </div>
         <input type="hidden" name="type" value="offline" />

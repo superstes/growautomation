@@ -116,8 +116,6 @@
         <div class="alert alert-info">Select a service to see more</div>
     {% endif %}
     {% if service_name is not None %}
-        <script>
-            {% include "../js/auto_reload.html" %}
-        </script>
+        {% include "../js/auto_reload.html" %}
     {% endif %}
 {% endblock %}

@@ -1,8 +1,10 @@
 {% if reload_time is not None and reload_time != 0 and reload_time != '0' %}
-    setTimeout(
-        function(){
-        window.location.reload();
-        },
-    {{ reload_time }}000
-    );
+    <script>
+        setTimeout(
+            function(){
+            window.location.reload();
+            },
+        {{ reload_time }}000
+        );
+    </script>
 {% endif %}

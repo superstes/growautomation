@@ -1,5 +1,6 @@
 from inspect import stack as inspect_stack
 from inspect import getfile as inspect_getfile
+from django.db.utils import OperationalError
 
 from core.utils.process import subprocess
 from core.utils.debug import web_log
@@ -12,6 +13,14 @@ from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 ALL_DEVICE_TYPES = [GroupInputModel, GroupOutputModel, GroupConnectionModel]
 ALL_DEVICE_TYPES.extend(DEVICE_TYPES)
+
+
+class PseudoServerAgent:
+    # needed for migrations on the agent/server models
+    def __init__(self):
+        self.subprocess_timeout = 60
+        self.security = 1
+        self.version = 'UPDATE'
 
 
 def check_develop(request) -> bool:
@@ -29,6 +38,9 @@ def get_server() -> (SystemServerModel, None):
     except IndexError:
         return None
 
+    except OperationalError:
+        return PseudoServerAgent()
+
 
 def get_agent(name: str = None) -> (SystemAgentModel, None):
     try:
@@ -41,6 +53,9 @@ def get_agent(name: str = None) -> (SystemAgentModel, None):
     except IndexError:
         return None
 
+    except OperationalError:
+        return PseudoServerAgent()
+
 
 def get_agent_config(setting: str):
     return getattr(get_agent(), setting)
@@ -50,7 +65,7 @@ def get_server_config(setting: str):
     return getattr(get_server(), setting)
 
 
-def get_script_dir(request, typ) -> str:
+def get_script_dir(typ) -> str:
     path_root = get_agent_config(setting='path_root')
     return f"{path_root}/device/{typ.lower()}"
 
@@ -60,9 +75,9 @@ def init_core_config():
     init(agent_obj=get_agent(), server_obj=get_server())
 
 
-def web_subprocess(command: str) -> str:
+def web_subprocess(command: str, out_error: bool = False) -> str:
     init_core_config()
-    return subprocess(command)
+    return subprocess(command=command, out_error=out_error)
 
 
 def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:

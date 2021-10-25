@@ -1,6 +1,6 @@
 {% load util %}
 {% if request.user|authorized_to_write %}
-    <button type="submit" class="btn btn-success ga-btn-action" title="Start">
+    <button type="submit" class="btn btn-success ga-btn-action" title="Start" onclick="btnStartClicked()" >
         <i class="fas fa-play fa-2x ga-btn-action-icon"></i>
     </button>
 {% else %}

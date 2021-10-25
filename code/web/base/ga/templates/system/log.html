@@ -88,8 +88,6 @@
         {% endif %}
     {% endif %}
     {% if log_type is not None and log_subtype is not None %}
-        <script>
-            {% include "../js/auto_reload.html" %}
-        </script>
+        {% include "../js/auto_reload.html" %}
     {% endif %}
 {% endblock %}

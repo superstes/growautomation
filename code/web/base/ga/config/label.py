@@ -87,6 +87,11 @@ LABEL_DICT = {
     'chart_point_radius': 'Chart point radius',
     'chart_point_color': 'Chart point color',
     'chart_point_type': 'Chart point type',
+
+    # update
+    'update_release': 'Release',
+    'update_commit': 'Commit-ID (optional)',
+    'update_path': 'Source Path',
 }
 
 HELP_DICT = {
@@ -180,4 +185,9 @@ HELP_DICT = {
     'chart_point_type': 'Type of chart data points [can be empty]',
     'rows': 'How many rows there should be [max 100]',
     'columns': 'How many columns there should be [max 30]',
+
+    # update
+    'update_release': 'Choose a release-version to upgrade to.',
+    'update_commit': 'Provide a specific commit-ID to upgrade to. If a commit is provided the update will ignore the release.',
+    'update_path': "Local path to the source-code repository.",
 }
