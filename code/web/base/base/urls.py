@@ -13,15 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from ga.views import view, handler404
+from ga.views import view
+from ga.subviews.handlers import handler404_base
 from django.conf.urls import include
 
 urlpatterns = [
-    # mgmt
-    # url(r'^admin/', admin.site.urls),
     # auth
     url('^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
     path('accounts/', include('django.contrib.auth.urls')),  # login page
@@ -39,5 +37,5 @@ urlpatterns = [
     path('<str:a>/<str:b>/<str:c>/<str:d>/<str:e>/', view),
 
     # fallback
-    url(r'^', handler404),
+    url(r'^', handler404_base),
 ]

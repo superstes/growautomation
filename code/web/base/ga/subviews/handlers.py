@@ -25,6 +25,28 @@ class Pseudo500(PseudoException):
     pass
 
 
+def input_check(exc) -> dict:
+    output = {}
+
+    if isinstance(exc, Exception):
+        output['request'] = None
+        output['msg'] = str(exc)
+
+    elif hasattr(exc, 'ga'):
+        output['request'] = exc.ga['request']
+        output['msg'] = exc.ga['msg']
+
+    elif type(exc) == dict and 'ga' in exc:
+        output['request'] = exc['ga']['request']
+        output['msg'] = exc['ga']['msg']
+
+    else:
+        output['request'] = exc
+        output['msg'] = 'Got no error message.'
+
+    return output
+
+
 def handler400_api(msg=None):
     if msg is None:
         msg = 'api not found'
@@ -33,9 +55,9 @@ def handler400_api(msg=None):
 
 
 def handler403(exc):
-    request = exc.ga['request']
-    develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 403 - {exc.ga['msg']}")
-    return render(request, 'error/403.html', context={'request': request, 'error_msg': exc.ga['msg']})
+    output = input_check(exc)
+    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 403 - {output['msg']}")
+    return render(output['request'], 'error/403.html', context={'request': output['request'], 'error_msg': output['msg']})
 
 
 def handler403_api(msg=None):
@@ -46,9 +68,13 @@ def handler403_api(msg=None):
 
 
 def handler404(exc):
-    request = exc.ga['request']
-    develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - {exc.ga['msg']}")
-    return render(request, 'error/404.html', context={'request': request, 'error_msg': exc.ga['msg']})
+    output = input_check(exc)
+    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 404 - {output['msg']}")
+    return render(output['request'], 'error/404.html', context={'request': output['request'], 'error_msg': output['msg']})
+
+
+def handler404_base(request, exception):
+    return handler404({'ga': {'request': request, 'msg': str(exception)}})
 
 
 def handler404_api(msg=None):
@@ -59,14 +85,13 @@ def handler404_api(msg=None):
 
 
 def handler500(exc):
-    request = exc.ga['request']
-    msg = exc.ga['msg']
-    develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 500 - {msg}")
+    output = input_check(exc)
+    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 500 - {output['msg']}")
 
     if get_server_config(setting='security') == 0:
-        develop_log(request=request, output=f"{format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)}", level=2)
+        develop_log(request=output['request'], output=f"{format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)}", level=2)
 
-    return render(request, '500.html', context={'request': request, 'error_msg': msg})
+    return render(output['request'], '500.html', context={'request': output['request'], 'error_msg': output['msg']})
 
 
 def handler500_api(msg=None):
