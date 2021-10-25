@@ -25,6 +25,7 @@ def LogView(request):
         'Apache webserver': 'apache2.service',
         'Mariadb database': 'mariadb.service',
         'LetsEncrypt renewal': 'ga_web_certRenewal.service',
+        'GrowAutomation Update': 'ga_update.service',
     }
 
     if develop:
@@ -61,7 +62,7 @@ def LogView(request):
     log_subtype = 'Core'
     log_file = None
     log_data = None
-    log_subtype_options = None
+    log_subtype_options = log_service_options
     log_subtype_option_list = None
     reload_time = 60
 
