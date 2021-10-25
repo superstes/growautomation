@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://github.com/superstes/growautomation
 
-# ga_version 0.9
+# ga_version 1.0
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
 #   (export PYTHONPATH=/var/lib/ga)
@@ -28,7 +28,7 @@ from core.utils.test import test_tcp_stream
 from core.config import shared_init_prestart as startup_shared_vars
 from core.config import shared as config
 
-from systemd import journal as systemd_journal
+from systemd import journal
 from sys import exc_info as sys_exc_info
 from os import path as os_path
 from os import stat as os_stat
@@ -288,7 +288,7 @@ class Prepare:
             self.log_cache.append({'level': level, 'output': output})
 
             if level == 1:
-                systemd_journal.write(output)
+                journal.send(output)
 
     def _check_factory(self) -> bool:
         # REALLY basic check for errors

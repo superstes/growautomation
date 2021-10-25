@@ -134,10 +134,10 @@ class FileAndSystemd:
         self.log = log_instance
 
     def write(self, output: str, level: int = 1) -> bool:
-        from systemd import journal as systemd_journal
+        from systemd import journal
 
         if level == 1:
-            systemd_journal.write(output)
+            journal.send(output)
 
         return self.log.write(output=output, level=level)
 

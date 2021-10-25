@@ -4,7 +4,7 @@
 #   core
       pycryptodome  # (Crypto)
       mysql.connector
-      systemd
+      systemd-python
 
 #   django
       virtualenv
