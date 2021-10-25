@@ -23,6 +23,7 @@ class Go:
             _data_dict = self._get_data(config=config, typ=typ)
             data_dict[typ] = _data_dict
 
+        del self.database
         return data_dict
 
     def _get_data_list(self, query_typ: str, config: dict) -> list:

@@ -24,6 +24,7 @@ class Go:
     def get(self) -> tuple:
         self._get_data()
         device_log(f"Condition match \"{self.condition.name}\" got data \"{self.data_list}\" of type \"{self.data_type}\"", add=self.name, level=7)
+        del self.database
         return self.data_list, self.data_type
 
     def _get_data(self) -> None:

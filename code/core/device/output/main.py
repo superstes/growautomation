@@ -147,6 +147,12 @@ class Go:
                 elif device.reverse_type == config.REVERSE_KEY_CONDITION:
                     self._reverse_condition(task_dict=task_dict)
 
+                else:
+                    self._exit()
+
+            else:
+                self._exit()
+
             return True
 
     def _set_or_update_state(self, device: GaOutputDevice):
@@ -233,6 +239,10 @@ class Go:
             if config.REVERSE_CONDITION_MAX_RETRIES is None or tries < config.REVERSE_CONDITION_MAX_RETRIES:
                 device_log(f"Reversing of device \"{device.name}\" finished", add=self.name, level=6)
 
+            self._exit()
             thread.stop_thread(description=device.name)
 
         thread.start_thread(description=thread_description)
+
+    def _exit(self):
+        del self.database

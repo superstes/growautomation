@@ -65,4 +65,5 @@ class Go:
                             else:
                                 setattr(device, attribute, db_value)
 
+        del self.database
         return output_dict

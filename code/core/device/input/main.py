@@ -65,6 +65,8 @@ class Go:
                 device_log(f"Processing of input-device \"{task_name}\" succeeded", add=self.name, level=7)
                 results.append(True)
 
+        del self.database
+
         if len(results) > 0:
             return all(results)
 
