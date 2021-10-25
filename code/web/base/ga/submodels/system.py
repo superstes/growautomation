@@ -29,7 +29,7 @@ class SystemAgentModel(BaseModel):
     version_detail = models.CharField(max_length=64)
 
     path_root = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
-    path_home = models.CharField(max_length=255, default=config.SYS_DEFAULT_AGENT_HOME_PATH)
+    path_home = models.CharField(max_length=255, default=config.SYS_DEFAULT_HOME_CORE_PATH)
     path_log = models.CharField(max_length=255, default=config.SYS_DEFAULT_LOG_PATH)
 
     sql_server = models.CharField(max_length=50, default='localhost')
@@ -59,10 +59,11 @@ class SystemServerModel(BaseModel):
     version = models.FloatField()
     version_detail = models.CharField(max_length=64)
 
-    path_root = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
+    path_core = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
     path_web = models.CharField(max_length=255, default=config.SYS_DEFAULT_WEB_ROOT_PATH)
     path_web_static = models.CharField(max_length=255, default=config.SYS_DEFAULT_WEB_STATIC_PATH)
-    path_home = models.CharField(max_length=255, default=config.SYS_DEFAULT_SERVER_HOME_PATH)
+    path_home_core = models.CharField(max_length=255, default=config.SYS_DEFAULT_HOME_CORE_PATH)
+    path_home_web = models.CharField(max_length=255, default=config.SYS_DEFAULT_HOME_WEB_PATH)
     path_log = models.CharField(max_length=255, default=config.SYS_DEFAULT_LOG_PATH)
 
     sql_server = models.CharField(max_length=50, default='localhost')

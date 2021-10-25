@@ -8,7 +8,7 @@ from .subviews.handlers import handler403, handler404, handler403_api, handler40
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
 from .subviews.system.logs import LogView
 from .subviews.system.service import ServiceView
-from .subviews.system.scripts import ScriptView, ScriptChangeView, ScriptDeleteView, ScriptShow
+from .subviews.system.scripts import script_list_view, script_read_view, script_change_view, script_delete_view
 from .subviews.data.raw.input import DataListView
 from .subviews.data.chart.main import DataChartView, DataChartDatasetView, DataChartGraphView, DataChartDbeView, DataChartDbeGraphView, DataChartDbeDatasetView
 from .subviews.api.data.main import ApiData
@@ -96,13 +96,13 @@ class GaView:
         elif typ == 'script':
             if sub_type is not None:
                 if sub_type == 'change':
-                    return logout_check(request=request, default=ScriptChangeView(request=request))
+                    return logout_check(request=request, default=script_change_view(request=request))
                 elif sub_type == 'delete':
-                    return logout_check(request=request, default=ScriptDeleteView(request=request))
+                    return logout_check(request=request, default=script_delete_view(request=request))
                 elif sub_type == 'show':
-                    return logout_check(request=request, default=ScriptShow(request=request))
+                    return logout_check(request=request, default=script_read_view(request=request))
 
-            return logout_check(request=request, default=ScriptView(request=request))
+            return logout_check(request=request, default=script_list_view(request=request))
 
         elif typ == 'export':
             if sub_type is not None:

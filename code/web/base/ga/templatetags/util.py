@@ -10,6 +10,7 @@ from ..utils.helper import get_server_config
 from ..utils.web import get_client_ip
 from ..config import shared as config
 from ..config.nav import NAVIGATION
+from ..config.label import HELP_DICT, LABEL_DICT
 
 register = template.Library()
 
@@ -237,3 +238,13 @@ def empty_if_none(check: str) -> str:
 @register.filter
 def warning(key: str) -> str:
     return config.WEBUI_WARNING[key]
+
+
+@register.filter
+def form_help(key: str) -> str:
+    return HELP_DICT[key]
+
+
+@register.filter
+def form_label(key: str) -> str:
+    return LABEL_DICT[key]

@@ -16,15 +16,15 @@ from ...config import shared as config
 TITLE = 'System scripts'
 
 
-def _get_script_list(request, typ) -> list:
-    script_list = os_listdir(get_script_dir(request, typ=typ))
+def _get_script_list(typ) -> list:
+    script_list = os_listdir(get_script_dir(typ))
     return script_list
 
 
-def _get_script_dict(request, typ) -> dict:
+def _get_script_dict(typ) -> dict:
     script_dict = {}
-    script_list = _get_script_list(request, typ)
-    script_dir = get_script_dir(request, typ=typ)
+    script_list = _get_script_list(typ)
+    script_dir = get_script_dir(typ)
 
     for element in script_list:
         ts = os_path.getmtime(f"{script_dir}/{element}")
@@ -35,8 +35,8 @@ def _get_script_dict(request, typ) -> dict:
 
 
 @user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
-def _handle_uploaded_file(request, typ: str, upload, name: str):
-    script_path = get_script_dir(request, typ=typ)
+def _handle_uploaded_file(typ: str, upload, name: str):
+    script_path = get_script_dir(typ)
 
     with open(f"{script_path}/{name}", 'wb+') as destination:
         for chunk in upload.chunks():
@@ -44,7 +44,7 @@ def _handle_uploaded_file(request, typ: str, upload, name: str):
 
 
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
-def ScriptView(request):
+def script_list_view(request):
     script_type_options = ['Input', 'Output', 'Connection']
 
     script_type = None
@@ -55,8 +55,8 @@ def ScriptView(request):
         script_type = request.GET['script_type']
 
         if script_type in script_type_options:
-            script_dict = _get_script_dict(request, typ=script_type)
-            script_dir = get_script_dir(request, typ=script_type)
+            script_dict = _get_script_dict(script_type)
+            script_dir = get_script_dir(script_type)
 
     return render(request, 'system/script/list.html', context={
         'request': request, 'script_type': script_type, 'script_dict': script_dict, 'script_type_options': script_type_options,
@@ -65,7 +65,7 @@ def ScriptView(request):
 
 
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
-def ScriptChangeView(request):
+def script_change_view(request):
     script_type_options = ['Input', 'Output', 'Connection']
     form = SystemScriptForm(request.POST, request.FILES)
 
@@ -83,7 +83,7 @@ def ScriptChangeView(request):
     else:
         if 'script_type' in request.GET and request.GET['script_type'] in script_type_options:
             script_type = request.GET['script_type']
-            script_dir = get_script_dir(request, typ=script_type)
+            script_dir = get_script_dir(script_type)
         else:
             raise Pseudo404(ga={'request': request, 'msg': 'A script type must be defined.'})
 
@@ -93,7 +93,7 @@ def ScriptChangeView(request):
 
 
 @user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
-def ScriptDeleteView(request):
+def script_delete_view(request):
     script_type_options = ['Input', 'Output', 'Connection']
 
     if request.method == 'POST':
@@ -102,20 +102,20 @@ def ScriptDeleteView(request):
         if script_type in script_type_options:
             script_name = request.POST['script_name']
 
-            if script_name in _get_script_list(request, typ=script_type):
-                os_remove(f"{get_script_dir(request, typ=script_type)}/{script_name}")
+            if script_name in _get_script_list(script_type):
+                os_remove(f"{get_script_dir(script_type)}/{script_name}")
 
         return redirect(f"/system/script/?script_type={script_type}")
 
 
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
-def ScriptShow(request):
+def script_read_view(request):
     if 'script_type' in request.GET and 'script_name' in request.GET:
         script_type = request.GET['script_type']
         script_name = request.GET['script_name']
         script_content = None
 
-        script_dir = get_script_dir(request, typ=script_type)
+        script_dir = get_script_dir(script_type)
 
         script_path = f"{script_dir}/{script_name}"
 
