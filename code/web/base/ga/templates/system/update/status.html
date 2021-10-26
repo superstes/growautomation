@@ -21,6 +21,10 @@
 <li class="ga-file-content-line">{{ line }}</li>
         {% endfor %}
     </ol>
+    <div class="alert alert-warning">
+        If the update fails hard you might need to read the update logs via:<br>
+        'journalctl -u ga_update.service --no-pager --full -n{LINECOUNT}'
+    </div>
     {% include "../../js/auto_reload.html" %}
     {% if redirect_time != 0 %}
         <script>
