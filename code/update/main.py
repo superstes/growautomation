@@ -20,96 +20,100 @@
 
 # ga_version 1.0
 
+# this script starts the ansible-playbook that updates the GrowAutomation components to the newer version
+
 from re import match as regex_match
 from os import listdir
-from pathlib import Path
 from subprocess import run as subprocess_run
-from subprocess import DEVNULL
-from json import loads as json_loads
 from time import sleep
+from systemd import journal
+from datetime import datetime
 
 
 class Update:
-    PROCESS_TIMEOUT = 300
-    CMD_BACKUP_FILE = 'tar czf - %s | xz -7 > %s'
-    CMD_BACKUP_SQL = 'mysqldump --defaults-file=%s --single-transaction --force %s | xz -7 > %s'
+    PROCESS_TIMEOUT = 3600
+    CMD_PRE_SLEEP = 2
     NONE_RESULTS = ['', 'None', None, ' ']
-    DB_CONFIG = 'database.cnf'
-    BOOL_KEYS = ['FORCE']
+    UPDATE_PACKAGES = [
+        'ansible', 'git',
+    ]
 
     def __init__(self):
-        apache_tmp_folder = [_dir for _dir in listdir('/tmp') if regex_match('systemd-private-.*-apache2.service.*', _dir) is not None][0]
-        self.apache_tmp = f"/tmp/{apache_tmp_folder}"
-        self.config_file = f"{self.apache_tmp}/tmp/ga_update.conf"
         self.config = {}
-        self.path_update = None
+        self.ansible_repo = f"/tmp/ga/update/ansible/{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
 
     def start(self):
         if self._execute():
-            print("Update succeeded! Exiting.")
+            journal.send("Update succeeded! Exiting.")
 
         else:
-            print("Update failed! Exiting.")
+            journal.send("Update failed! Exiting.")
 
     def _execute(self):
-        with open(self.config_file, 'r') as file:
+        self._process(
+            cmd=f"apt install -y {' '.join([pkg for pkg in self.UPDATE_PACKAGES])}",
+            msg='Installing update dependencies',
+        )
+
+        # building config
+        apache_tmp_folder = [_dir for _dir in listdir('/tmp') if regex_match('systemd-private-.*-apache2.service.*', _dir) is not None][0]
+        config_file = f"/tmp/{apache_tmp_folder}/tmp/ga_update.conf"
+
+        with open(config_file, 'r') as file:
             for line in file.readlines():
                 _key, _value = line.split('=')
                 key = _key.strip()
                 value = _value.replace('\n', '').strip()
-                if key in self.BOOL_KEYS:
-                    self.config[key] = json_loads(value.lower())
+                self.config[key] = value
 
-                else:
-                    self.config[key] = value
+        results = []
 
-        self.path_update = f"{self.apache_tmp}{self.config['PATH_UPDATE']}"
-
-        if self._backup():
-            print('Successfully created backups!')
-
-        else:
-            print('Backup creation failed!')
-            if self.config['FORCE']:
-                print('Update is forced => continuing!')
+        # preparing update script
+        if self.config['ga_update_path_repo'] in self.NONE_RESULTS:
+            if self.config['ga_update_method'] != 'offline':
+                results.append(self._process(
+                    cmd=f"git clone https://github.com/superstes/growautomation.git --single-branch {self.ansible_repo}",
+                    msg='Downloading git repository',
+                ))
+                self.config['ga_update_path_repo'] = self.ansible_repo
 
             else:
+                journal.send("ERROR: No valid repository provided and update-mode is offline. Can't continue!")
                 return False
 
-        return True
+        else:
+            self.ansible_repo = self.config['ga_update_path_repo']
 
-    def _backup(self) -> bool:
-        results = []
-        Path(self.config['PATH_BACKUP']).mkdir(parents=True, exist_ok=True)
+        # NOTE: we do this since it could lead to incompatibility problems in the future if we use the newest version of the update-script
+        target_version = self.config['ga_update_release'] if self.config['ga_update_type'] != 'commit' else self.config['ga_update_commit']
+        results.append(self._process(
+            cmd=f"cd {self.ansible_repo} && git reset --hard {target_version}",
+            msg='Getting correct script-version',
+        ))
 
-        print("Backing-up directories")
-        sleep(3)
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_CORE'], f"{self.config['PATH_BACKUP']}/core.tar.xz")))
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_WEB'], f"{self.config['PATH_BACKUP']}/web.tar.xz")))
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_WEB_STATIC'], f"{self.config['PATH_BACKUP']}/web_static.tar.xz")))
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_HOME_CORE'], f"{self.config['PATH_BACKUP']}/home_core.tar.xz")))
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_HOME_WEB'], f"{self.config['PATH_BACKUP']}/home_web.tar.xz")))
-        results.append(self._process(cmd=self.CMD_BACKUP_FILE % (self.config['PATH_LOG'], f"{self.config['PATH_BACKUP']}/log.tar.xz")))
+        vars_string = [f"--extra-vars '{key}={value}' " for key, value in self.config.items()]
+        path_ansible = f"{self.ansible_repo}/setup"
 
-        print("Backing-up database")
-        sleep(3)
-        results.append(self._process(cmd=self.CMD_BACKUP_SQL % (
-            f"{self.config['PATH_WEB']}/{self.DB_CONFIG}",
-            self.config['SQL_DB'],
-            f"{self.config['PATH_BACKUP']}/db.sql.xz"
-        )))
+        results.append(self._process(
+            cmd=f"cd {path_ansible} && ansible-galaxy collection install -r requirements.yml",
+            msg="Installing update-script requirements (ansible)")
+        )
 
-        sleep(3)
-        print(f"Got backup files in {self.config['PATH_BACKUP']}: {listdir(self.config['PATH_BACKUP'])}")
+        results.append(self._process(
+            cmd=f"cd {path_ansible} && ansible-playbook -K -i inventories/hosts.yml setup.yml --limit localhost {vars_string}",
+            msg="Starting ansible-playbook to update GrowAutomation!")
+        )
 
         return all(results)
 
-    def _process(self, cmd: str) -> bool:
-        proc = subprocess_run(cmd, shell=True, timeout=self.PROCESS_TIMEOUT, stdout=DEVNULL)
-        exit_code = proc.returncode
+    def _process(self, cmd: str, msg: str) -> bool:
+        journal.send(msg)
+        sleep(self.CMD_PRE_SLEEP)
 
-        if exit_code != 0:
-            print(f"Subprocess for command '{cmd}' returned an error!")
+        proc = subprocess_run(cmd, shell=True, timeout=self.PROCESS_TIMEOUT)
+
+        if proc.returncode != 0:
+            journal.send(f"Subprocess for command '{cmd}' returned an error!")
             return False
 
         return True

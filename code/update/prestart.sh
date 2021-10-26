@@ -25,18 +25,19 @@ UPDATE_CONFIG="/tmp/${TMP_DIR}/tmp/ga_update.conf"
 UPDATE_PATH='/var/lib/ga_update'
 
 METHOD=$(cat $UPDATE_CONFIG | grep 'METHOD' | cut -d '=' -f2)
-VERSION=$(cat $UPDATE_CONFIG | grep 'VERSION' | cut -d '=' -f2)
-COMMIT=$(cat $UPDATE_CONFIG | grep 'COMMIT' | cut -d '=' -f2)
 
 if [ "$METHOD" == 'online' ]
 then
+  VERSION=$(cat $UPDATE_CONFIG | grep 'VERSION' | cut -d '=' -f2)
+  COMMIT=$(cat $UPDATE_CONFIG | grep 'COMMIT' | cut -d '=' -f2)
+
   if [ "$COMMIT" != 'None' ]
   then
     TAG=$COMMIT
   else
     TAG=$VERSION
   fi
-  wget "https://raw.githubusercontent.com/superstes/growautomation/${TAG}/code/update/main.py" -o ${UPDATE_PATH}/tmp_main.py && mv ${UPDATE_PATH}/tmp_main.py ${UPDATE_PATH}/main.py
+  wget "https://raw.githubusercontent.com/superstes/growautomation/${TAG}/code/update/main.py" -o ${UPDATE_PATH}/tmp_main.py && rm ${UPDATE_PATH}/main.py && mv ${UPDATE_PATH}/tmp_main.py ${UPDATE_PATH}/main.py
   rm ${UPDATE_PATH}/tmp_main.py
   sleep 1
 fi
