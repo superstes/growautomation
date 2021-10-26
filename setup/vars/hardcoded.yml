@@ -1,0 +1,84 @@
+# hardcoded variables used for the setup and update
+# these SHOULD NOT BE MODIFIED!
+
+# basics
+ga_version: '1.0' # => pull latest version dynamically from github api
+ga_python_version: '3.9'
+ga_update_path: '/var/lib/ga_update'
+
+# users
+ga_core_service_user: 'ga_core'
+ga_web_service_user: 'ga_web'
+ga_update_service_user: 'ga_update'
+ga_service_group: 'ga'
+ga_core_path_venv: "/home/{{ ga_core_service_user }}/venv"
+ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
+
+# core
+ga_core_packages:
+  - 'git'
+  - 'python3'
+  - 'python3-pip'
+  - 'python3-systemd'
+  - 'systemd'
+
+ga_core_mods:
+  - 'pycryptodome'
+  - 'mysql.connector'
+  - 'systemd-python'
+
+# web
+ga_web_packages:
+  - 'apache2'
+  - 'python3'
+  - 'python3-pip'
+  - 'libapache2-mod-wsgi-py3'
+
+ga_django_mods:
+  - 'django'
+  - 'django_mysql'
+  - 'mysqlclient'
+  - 'netaddr'
+  - 'pycryptodome'
+  - 'django-forms-bootstrap'
+  - 'django-bootstrap4'
+  - 'django-bootstrap-datepicker-plus'
+  - 'pyyaml'
+  - 'ua-parser'
+  - 'user-agents'
+  - 'django-user-agents'
+  - 'requests'
+
+ga_web_groups:
+  - 'systemd-journal'
+  - "{{ ga_service_group }}"
+
+# db
+ga_sql_db: 'ga'
+ga_db_packages:
+  - 'mariadb-server'
+  - 'mariadb-client'
+  - 'python3-pymysql'
+
+# devices
+ga_device_groups:
+  - 'gpio'
+  - 'i2c'
+  - 'spi'
+  - 'video'
+
+ga_device_mods:
+  - 'smbus'
+  - 'adafruit-circuitpython-dht'
+  - 'adafruit-circuitpython-ads1x15'
+  - 'adafruit-circuitpython-mcp3xxx'
+
+ga_device_packages:
+  - 'libgpiod2'
+  - 'i2c-tools'
+
+# update
+ga_update_packages:
+  - 'rsync'
+
+

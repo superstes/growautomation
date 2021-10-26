@@ -54,7 +54,7 @@ echo 'Do you want to continue? (yes/any=no)'
 
 read config_done
 if [ $config_done == 'yes' ]; then
-  ansible-playbook -K -i inventories/hosts.yml ga.yml --limit ${TARGET_HOST} --extra-vars "setup_clone_dir=${SETUP_DIR}"
+  ansible-playbook -K -i inventories/hosts.yml setup.yml --limit ${TARGET_HOST} --extra-vars "setup_clone_dir=${SETUP_DIR}"
 else
   echo 'User chose to stop the setup! Exiting!'
 fi

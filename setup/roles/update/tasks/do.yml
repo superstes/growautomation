@@ -1,0 +1,138 @@
+---
+
+- name: GA | Update | Do | Removing old python environments
+  ansible.builtin.file:
+    path: "{{ venv.path }}"
+    force: yes
+    state: absent
+  when: venv.remove
+  loop_control:
+    loop_var: venv
+  with_items:
+    - {path: "{{ ga_update_path_home_core }}/venv", remove: "{{ ga_remove_core_venv }}", label: 'core', mods: "{{ ga_core_mods }}"}
+    - {path: "{{ ga_update_path_home_web }}/venv", remove: "{{ ga_remove_web_venv }}", label: 'web', mods: "{{ ga_django_mods }}"}
+  ignore_errors: true
+  register: update_remove_venv
+
+- name: GA | Update | Do | Updating python environments
+  ansible.builtin.pip:
+    name: "{{ venv.mods }}"
+    virtualenv: "{{ venv.path }}"
+    virtualenv_python: "{{ ga_python_version }}"
+    state: present
+  loop_control:
+    loop_var: venv
+  with_items:
+    - {path: "{{ ga_update_path_home_core }}/venv", label: 'core', mods: "{{ ga_core_mods }}"}
+    - {path: "{{ ga_update_path_home_web }}/venv", label: 'web', mods: "{{ ga_django_mods }}"}
+  ignore_errors: true
+  register: update_venv
+
+- name: GA | Update | Do | Updateing code
+  ansible.posix.synchronize:
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    recursive: yes
+    delete: yes
+    rsync_opts: "{{ item.opts | default([]) }}"
+  delegate_to: 'localhost'
+  with_items:
+    - {src: "{{ ga_update_path_repo }}/code/", dst: "{{ ga_update_path_core }}/", opts: [
+        '--exclude=secret/*', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf'
+    ]}
+    - {src: "{{ ga_update_path_repo }}/code/web/base/", dst: "{{ ga_update_path_web }}/", opts: [
+        '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=settings.py'
+    ]}
+    - {src: "{{ ga_update_path_repo }}/code/web/base/static/", dst: "{{ ga_update_path_web_static }}/"}
+  ignore_errors: true
+  register: update_code
+
+ name: GA | Update | Do | Setting privileges for code
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    recurse: yes
+  with_items:
+    - {path: "{{ ga_update_path_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
+    - {path: "{{ ga_update_path_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+    - {path: "{{ ga_update_path_web_static }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+  ignore_errors: true
+  register: update_code_privs
+  when: update_code.failed is undefined or not update_code.failed
+
+- name: GA | Update | Do | Setting privileges for secrets
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0440
+  with_items:
+    - {path: "{{ ga_update_path_core }}/core/secret/random.key", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
+  ignore_errors: true
+  register: update_code_privs_secret
+  when: update_code.failed is undefined or not update_code.failed
+
+- name: GA | Update | Do | Building database schema
+  ansible.builtin.shell: "source {{ ga_update_path_home_web }}/venv/bin/activate &&
+  {{ ga_update_path_home_web }}/venv/bin/python3 manage.py makemigrations"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_update_path_web }}"
+  environment:
+    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_update_path_home_web }}/venv/lib/python{{ ga_python_version }}/site-packages"
+  ignore_errors: true
+  register: update_db_schema_build
+  when: update_code.failed is undefined or not update_code.failed
+
+- name: GA | Update | Do | Updating database schema
+  ansible.builtin.shell: "source {{ ga_update_path_home_web }}/venv/bin/activate &&
+  {{ ga_update_path_home_web }}/venv/bin/python3 manage.py migrate"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_update_path_web }}"
+  environment:
+    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_update_path_home_web }}/venv/lib/python{{ ga_python_version }}/site-packages"
+    DJANGO_SETTINGS_MODULE: 'base.settings'
+  ignore_errors: true
+  register: update_db_schema_migrate
+  when:
+    - update_code.failed is undefined or not update_code.failed
+    - update_db_schema_build.failed is undefined or not update_db_schema_build.failed
+
+- name: GA | Update | Do | Stopping services about to be upgraded (if online)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - 'apache2.service'
+    - 'mariadb.service'
+    - 'ga_core.service'
+  when: ga_update_method == 'online'
+
+- name: GA | Update | Do | Upgrading used packages (if online)
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  ignore_errors: true
+  register: update_apt
+  with_items:
+    - "{{ ga_core_packages }}"
+    - "{{ ga_db_packages }}"
+    - "{{ ga_device_packages }}"
+    - "{{ ga_web_packages }}"
+  when: ga_update_method == 'online'
+
+- name: GA | Update | Do | Starting services (if online)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+  ignore_errors: true
+  register: update_start_svc
+  with_items:
+    - 'apache2.service'
+    - 'mariadb.service'
+    - 'ga_core.service'
+  when: ga_update_method == 'online'

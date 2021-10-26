@@ -5,6 +5,7 @@
   become: true
   vars_files:
     - './vars/main.yml'
+    - './vars/hardcoded.yml'
   tasks:
     - name: Checking if password file exists
       stat:

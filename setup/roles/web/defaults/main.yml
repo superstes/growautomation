@@ -11,21 +11,6 @@ ga_web_port_http: 80
 ga_web_port_https: 443
 ga_web_autoindex: false
 
-ga_django_mods:
-  - 'django'
-  - 'django_mysql'
-  - 'mysqlclient'
-  - 'netaddr'
-  - 'pycryptodome'
-  - 'django-forms-bootstrap'
-  - 'django-bootstrap4'
-  - 'django-bootstrap-datepicker-plus'
-  - 'pyyaml'
-  - 'ua-parser'
-  - 'user-agents'
-  - 'django-user-agents'
-  - 'requests'
-
 ga_apache_config_additions:
   ServerTokens: 'Prod'
   ServerSignature: 'Off'
@@ -35,10 +20,6 @@ ga_apache_envvar_replacement:
       replace: "export APACHE_RUN_USER={{ ga_web_service_user }}" }
   - { search: '^export APACHE_RUN_GROUP',
       replace: "export APACHE_RUN_GROUP={{ ga_web_service_user }}" }
-
-ga_web_groups:
-  - 'systemd-journal'
-  - "{{ ga_service_group }}"
 
 ga_django_setting_replacement:
   - {search: '^DEBUG = True$',

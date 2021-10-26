@@ -2,12 +2,12 @@
 
 - name: GA | Devices | Installing packages
   apt:
-    name: "{{ ga_device_apt }}"
+    name: "{{ ga_device_packages }}"
     state: present
 
 - name: GA | Devices | Install python modules into venv
   pip:
-    name: "{{ ga_device_pip }}"
+    name: "{{ ga_device_mods }}"
     virtualenv: "{{ ga_core_path_venv }}"
     virtualenv_python: "{{ ga_python_version }}"
     state: present

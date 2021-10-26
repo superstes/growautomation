@@ -1,0 +1,10 @@
+---
+
+- name: Updating GrowAutomation
+  hosts: all
+  become: true
+  vars_files:
+    - './vars/main.yml'
+    - './vars/hardcoded.yml'
+  roles:
+    - update

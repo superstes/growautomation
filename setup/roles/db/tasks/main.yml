@@ -4,7 +4,7 @@
 
 - name: GA | DB | Install mariadb
   apt:
-    name: ['mariadb-server', 'mariadb-client', 'python3-pymysql']
+    name: "{{ ga_db_packages }}"
     state: present
   notify: 'enable_mariadb'
 

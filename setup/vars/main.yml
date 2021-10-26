@@ -34,21 +34,16 @@ ga_web_ssl_mode: 'self_signed'  # self_signed or letsencrypt
 #
 
 # basic
-ga_version: '1.0'
 ga_path_log: '/var/log/ga'
 ga_path_backup: '/var/backups/ga'
 ga_ufw_manage: true  # if the ufw (software firewall) should be configured => NOT RECOMMENDED if you run other software on the same server
 ga_ufw_allow_ssh: true
-ga_service_group: 'ga'
-ga_python_version: '3.9'  # venv version
-ga_log_level: 4
+ga_log_level: 5
 ga_security_mode: false
 
 # ga core
 ga_core_install: true
 ga_core_path: '/var/lib/ga'
-ga_core_service_user: 'ga_core'
-ga_core_path_venv: "/home/{{ ga_core_service_user }}/venv"
 ga_core_device_support: true  # if support for basic devices should be provided
 ga_core_controller_name: 'con01'
 ga_core_device_log: true
@@ -57,8 +52,6 @@ ga_core_device_log: true
 ga_web_install: true
 ga_web_path: '/var/www/ga'
 ga_web_path_static: '/var/www/ga_static'
-ga_web_service_user: 'ga_web'
-ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
 ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # DO NOT use whitespaces !
 ga_web_ssl_letsencrypt_mail: "webmaster@{{ ga_web_dns }}"  # change if you want to receive info mails
 ga_web_disable_apache_default_sites: true
@@ -82,9 +75,4 @@ ga_sql_user_web: "{{ ga_web_service_user }}"
 ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
   # you can apply your own password => just replace the rubbish in between the double-quotes
   # random passwords can be found in the 'ga_random_pwd_file' file
-ga_sql_db: 'ga'
 ga_sql_socket: '/var/run/mysqld/mysqld.sock'  # socket used to locally connect to database
-
-# update
-ga_update_path: '/var/lib/ga_update'  # DO NOT CHANGE!
-ga_update_service_user: 'ga_update'

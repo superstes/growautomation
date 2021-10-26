@@ -2,7 +2,7 @@
 
 - name: GA | Core | Installing packages
   apt:
-    name: ['git', 'python3', 'python3-pip', 'python3-systemd']
+    name: "{{ ga_core_packages }}"
     state: present
 
 - name: GA | Core | Setting system timezone
@@ -45,8 +45,8 @@
     repo: 'https://github.com/superstes/growautomation.git'
     dest: "{{ setup_clone_dir }}"
     depth: 1
+    version: "{{ ga_version }}"
   when: not tmp_clone_dir.stat.exists
-#    version: "{{ ga_version }}"
 
 - name: GA | Core | Copying core-code
   shell: "cp -r {{ setup_clone_dir }}/code/core {{ ga_core_path }} &&

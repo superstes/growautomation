@@ -1,0 +1,30 @@
+---
+
+- name: GA | Update | Backup | Creating backup directory
+  ansible.builtin.file:
+    path: "{{ ga_update_path_backup }}"
+    state: directory
+    mode: 0750
+
+- name: GA | Update | Backup | Backing up directories
+  ansible.builtin.shell: "tar cf - {{ item.src }} | xz -7 > {{ item.dst }}"
+  with_items:
+    - {src: "{{ ga_update_path_core }}", dst: "{{ ga_update_path_backup }}/core.tar.xz"}
+    - {src: "{{ ga_update_path_web }}", dst: "{{ ga_update_path_backup }}/web.tar.xz"}
+    - {src: "{{ ga_update_path_web_static }}", dst: "{{ ga_update_path_backup }}/web_static.tar.xz"}
+    - {src: "{{ ga_update_path_home_core }}", dst: "{{ ga_update_path_backup }}/home_core.tar.xz"}
+    - {src: "{{ ga_update_path_home_web }}", dst: "{{ ga_update_path_backup }}/home_web.tar.xz"}
+    - {src: "{{ ga_update_path_log }}", dst: "{{ ga_update_path_backup }}/log.tar.xz"}
+
+- name: GA | Update | Backup | Backing up database
+  ansible.builtin.shell: "mysqldump --defaults-file={{ ga_update_path_web }}/database.cnf --single-transaction --force {{ ga_sql_db }} |
+  xz -7 > {{ ga_update_path_backup }}/db.sql.xz"
+
+- name: GA | Update | Backup | Setting privileges on backup-files
+  ansible.builtin.file:
+    path: "{{ ga_update_path_backup }}"
+    state: directory
+    owner: 'root'
+    group: 'root'
+    mode: 0750
+    recurse: yes
