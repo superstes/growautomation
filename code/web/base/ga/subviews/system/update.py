@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 import requests
+from threading import Thread
 
 from core.utils.test import test_tcp_stream
 
@@ -89,7 +90,10 @@ def update_start(request, current_version):
                 f"ga_update_path_log={get_server_config(setting='path_log')}\n"
             )
 
-        web_subprocess(f'sudo systemctl start {config.UPDATE_SERVICE}.service --no-block')
+        def start():
+            web_subprocess(f'sudo systemctl start {config.UPDATE_SERVICE}.service')
+
+        Thread(target=start()).start()
         return redirect('/system/update/status/')
 
     except KeyError as error:
@@ -101,24 +105,22 @@ def update_status_view(request):
     status = 'Running'
     reload_time = 5
     redirect_time = 30
-    log_data = str_to_list(web_subprocess(config.LOG_SERVICE_LOG_STATUS % config.UPDATE_SERVICE))
+    log_data = str_to_list(web_subprocess(f"{config.LOG_SERVICE_LOG_STATUS % config.UPDATE_SERVICE} | grep ' {config.UPDATE_SERVICE}\\['"))
+    update_status = web_subprocess(command=f"systemctl is-active {config.UPDATE_SERVICE}.service")
 
-    if log_data[2].find('activating') == -1:
+    if update_status.find('activating') == -1:
         reload_time = 0
         redirect_time = 0
-        status = 'Finished'
+        status = 'Finished with unidentified result!'
 
-        if log_data[-3].find('Succeeded') != -1:
-            status = 'Finished successfully!'
+        for line in log_data[-6:-2]:
+            if line.find('Update failed') != -1:
+                status = 'Failed!'
+                break
 
-        elif log_data[2].find('failed') != -1:
-            status = 'Failed!'
-
-        else:
-            for line in log_data[-5:-2]:
-                if line.find('failed') != -1 or line.find('Failed') != -1:
-                    status = 'Failed'
-                    break
+            elif line.find('Update succeeded') != -1:
+                status = 'Finished successfully!'
+                break
 
     return render(request, 'system/update/status.html', context={
         'request': request, 'title': 'System Update Status', 'log_data': log_data, 'reload_time': reload_time, 'status': status, 'redirect_time': redirect_time,

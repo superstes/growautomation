@@ -26,9 +26,7 @@
             {% include "../../btn/start.html" %}
         </form>
         <br>
-        <div class="alert alert-info" id="downloadStarted" style="display:none;">
-            Update download started!
-        </div>
+        {% include "../../info/update.html" %}
     {% else %}
         {% include "../../error/online_update.html" %}
     {% endif %}
