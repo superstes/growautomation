@@ -7,6 +7,7 @@
     url: 'https://api.github.com/repos/superstes/growautomation/tags'
   register: ga_release_list
   delegate_to: localhost
+  changed_when: false
   when:
     - ga_update_method == 'online'
     - ga_update_release is undefined or ga_update_release == 'None'
@@ -15,6 +16,7 @@
 - name: GA | Update | Prep | Getting last release version
   ansible.builtin.set_fact:
     ga_update_release: "{{ ga_release_list.json | json_query('[*].name') | first }}"
+  changed_when: false
   when:
     - ga_update_method == 'online'
     - ga_update_release is undefined or ga_update_release == 'None'
@@ -23,6 +25,7 @@
 - name: GA | Update | Prep | Getting commit-id of last release version
   ansible.builtin.set_fact:
     ga_update_commit: "{{ ga_release_list.json | json_query('[*].commit.sha') | first }}"
+  changed_when: false
   when:
     - ga_update_method == 'online'
     - ga_update_type != 'commit'
@@ -33,11 +36,13 @@
 - name: GA | Update | Prep | Checking if repository exists
   ansible.builtin.stat:
     path: "{{ ga_update_path_repo }}"
+  changed_when: false
   register: local_repo
 
 - name: GA | Update | Prep | Checking if repository is valid
   ansible.builtin.shell: "git ls-remote {{ ga_update_path_repo }} 2&> /dev/null; echo $?"
   register: repo_exists
+  changed_when: false
   when:
    - local_repo.stat.exists
    - local_repo.stat.isdir
@@ -48,8 +53,8 @@
     Please download the repository from a remote pc via 'git clone https://github.com/superstes/growautomation.git' and copy it to the local disk!
     Or try using the online-update functionality."
   when: >
-    not offline_repo.stat.exists or
-    not offline_repo.stat.isdir or
+    not local_repo.stat.exists or
+    not local_repo.stat.isdir or
     repo_exists.stdout != '0'
 
 # setting repo to target version
@@ -65,6 +70,7 @@
 - name: GA | Update | Prep | Getting release of commit
   ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git describe --tags | cut -d '-' -f1"
   register: ga_raw_commit_release
+  changed_when: false
   when: ga_update_type == 'commit'
 
 # get 'parent'-release of commit if commit is used as a target version
@@ -72,4 +78,5 @@
 - name: GA | Update | Prep | Setting release version
   ansible.builtin.set_fact:
     ga_update_release: "{{ ga_raw_commit_release.stdout }}"
+  changed_when: false
   when: ga_update_type == 'commit'

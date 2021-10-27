@@ -2,19 +2,22 @@
 
 - name: Getting python-version of core-venv
   ansible.builtin.shell: "{{ ga_update_path_home_core }}/venv/bin/python3 --version | cut -d ' ' -f2"
+  changed_when: false
   register: ga_raw_core_venv_version
 
 - name: Checking core-venv version
   ansible.builtin.set_fact:
     ga_remove_core_venv: true
+  changed_when: false
   when: ga_raw_core_venv_version.stdout|float < ga_python_version|float
 
 - name: Getting python-version of web-venv
   ansible.builtin.shell: "{{ ga_update_path_home_web }}/venv/bin/python3 --version | cut -d ' ' -f2"
+  changed_when: false
   register: ga_raw_web_venv_version
 
 - name: Checking web-venv version
   ansible.builtin.set_fact:
     ga_remove_web_venv: true
+  changed_when: false
   when: ga_raw_web_venv_version.stdout|float < ga_python_version|float
-

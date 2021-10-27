@@ -28,6 +28,7 @@
 - name: GA | Update | Evaluating update result
   ansible.builtin.set_fact:
     ga_update_failed: true
+  changed_when: false
   when: >
     (update_remove_venv.failed is defined and update_remove_venv.failed) or
     (update_venv.failed is defined and update_venv.failed) or
