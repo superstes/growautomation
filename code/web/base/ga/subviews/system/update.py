@@ -89,7 +89,7 @@ def update_start(request, current_version):
                 f"ga_update_path_log={get_server_config(setting='path_log')}\n"
             )
 
-        web_subprocess(f'sudo systemctl start {config.UPDATE_SERVICE}.service')
+        web_subprocess(f'sudo systemctl start {config.UPDATE_SERVICE}.service --no-block')
         return redirect('/system/update/status/')
 
     except KeyError as error:
@@ -111,8 +111,14 @@ def update_status_view(request):
         if log_data[-3].find('Succeeded') != -1:
             status = 'Finished successfully!'
 
-        elif log_data[2].find('failed') != -1 or log_data[-3].find('Failed') != -1:
+        elif log_data[2].find('failed') != -1:
             status = 'Failed!'
+
+        else:
+            for line in log_data[-5:-2]:
+                if line.find('failed') != -1 or line.find('Failed') != -1:
+                    status = 'Failed'
+                    break
 
     return render(request, 'system/update/status.html', context={
         'request': request, 'title': 'System Update Status', 'log_data': log_data, 'reload_time': reload_time, 'status': status, 'redirect_time': redirect_time,

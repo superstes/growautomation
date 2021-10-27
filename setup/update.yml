@@ -1,7 +1,7 @@
 ---
 
 - name: Updating GrowAutomation
-  hosts: all
+  hosts: localhost
   become: true
   vars_files:
     - './vars/main.yml'

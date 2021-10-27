@@ -100,7 +100,7 @@ class Update:
         )
 
         results.append(self._process(
-            cmd=f"cd {path_ansible} && ansible-playbook -K -i inventories/hosts.yml setup.yml --limit localhost {vars_string}",
+            cmd=f"cd {path_ansible} && ansible-playbook update.yml {vars_string}",
             msg="Starting ansible-playbook to update GrowAutomation!")
         )
 
