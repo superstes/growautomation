@@ -92,7 +92,7 @@
 # get 'parent'-release of commit if commit is used as a target version
 
 - name: GA | Update | Prep | Setting release version
-  ansible.builtin.vars:
+  ansible.builtin.set_fact:
     ga_update_release_now: "{{ ga_raw_commit_release.stdout }}"
   changed_when: false
   when: ga_update_type == 'commit'
