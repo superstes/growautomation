@@ -96,3 +96,8 @@
     ga_update_release_now: "{{ ga_raw_commit_release.stdout }}"
   changed_when: false
   when: ga_update_type == 'commit'
+
+- name: GA | Update | Prep | Getting core-count to use for tasks
+  ansible.builtin.set_fact:
+    ga_update_cores: "{{ ansible_processor_cores - 1 }}"
+  changed_when: false

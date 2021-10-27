@@ -2,7 +2,7 @@
 
 - name: GA | Update | Restore | Saving logs for debug reasons
   ansible.builtin.shell:
-    cmd: "tar cf - {{ ga_update_path_log }} | xz -7 > {{ ga_update_path_backup }}/log_restore.tar.xz"
+    cmd: "tar cf - {{ ga_update_path_log }} | xz -7 -T{{ ga_update_cores }} > {{ ga_update_path_backup }}/log_restore.tar.xz"
     warn: false
 
 - name: GA | Update | Restore | Stopping core service

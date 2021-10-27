@@ -8,7 +8,7 @@
 
 - name: GA | Update | Backup | Backing up directories
   ansible.builtin.shell:
-    cmd: "tar cf - {{ item.src }} | xz -7 > {{ item.dst }}"
+    cmd: "tar cf - {{ item.src }} | xz -7 -T{{ ga_update_cores }} > {{ item.dst }}"
     warn: false
   with_items:
     - {src: "{{ ga_update_path_core }}", dst: "{{ ga_update_path_backup }}/core.tar.xz"}
@@ -20,7 +20,7 @@
 
 - name: GA | Update | Backup | Backing up database
   ansible.builtin.shell: "mysqldump --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --single-transaction --force {{ ga_sql_db }} |
-  xz -7 > {{ ga_update_path_backup }}/db.sql.xz"
+  xz -7 -T{{ ga_update_cores }} > {{ ga_update_path_backup }}/db.sql.xz"
 
 - name: GA | Update | Backup | Setting privileges on backup-files
   ansible.builtin.file:
