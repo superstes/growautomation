@@ -12,23 +12,13 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from os import path as os_path
-from socket import socket, AF_INET, SOCK_DGRAM
+
+# import static config => those will not be changed on update
+from .config import ALLOWED_HOSTS, SECRET_KEY, TIME_ZONE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'REPLACE-WITH-PRODUCTION-KEY'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-s = socket(AF_INET, SOCK_DGRAM)
-s.connect(('1.1.1.1', 80))
-own_ip = s.getsockname()[0]
-s.close()
-
-ALLOWED_HOSTS = [own_ip, 'demo.growautomation.at', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
@@ -95,7 +85,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Europe/Vienna'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True

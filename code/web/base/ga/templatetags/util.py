@@ -218,8 +218,8 @@ def beta_mode() -> bool:
 
 
 @register.simple_tag
-def get_version() -> float:
-    return get_server_config(setting='version')
+def get_version() -> str:
+    return f"{get_server_config(setting='version')} - {get_server_config(setting='version_detail')}"
 
 
 @register.simple_tag
