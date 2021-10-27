@@ -2,6 +2,7 @@
 
 - name: GA | Update | Restore | Saving logs for debug reasons
   ansible.builtin.shell: "tar cf - {{ ga_update_path_log }} | xz -7 > {{ ga_update_path_backup }}/log_restore.tar.xz"
+  warn: false
 
 - name: GA | Update | Restore | Stopping core service
   ansible.builtin.systemd:
@@ -23,6 +24,7 @@
 
 - name: GA | Update | Restore | Restoring directories
   ansible.builtin.shell: "tar -xJf {{ item }} -C /"
+  warn: false
   with_items:
     - "{{ ga_update_path_backup }}/core.tar.xz"
     - "{{ ga_update_path_backup }}/web.tar.xz"

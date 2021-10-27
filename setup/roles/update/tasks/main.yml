@@ -1,5 +1,12 @@
 ---
 
+- debug:
+    msg: "########################################\n
+    ########################################\n
+    Preparing for Update!\n
+    ########################################\n
+    ########################################"
+
 - name: GA | Update | Installing dependencies
   ansible.builtin.apt:
     name: "{{ ga_update_packages }}"
@@ -12,6 +19,13 @@
 
 - name: GA | Update | Backing-up current version
   ansible.builtin.import_tasks: backup.yml
+
+- debug:
+    msg: "########################################\n
+    ########################################\n
+    GrowAutomation will now be upgraded to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}'!\n
+    ########################################\n
+    ########################################"
 
 - name: GA | Update | Running update tasks
   ansible.builtin.import_tasks: do.yml
@@ -47,8 +61,8 @@
 - name: GA | Update | Updating version number
   ansible.builtin.shell: "echo \"{{ item }};\" | mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} {{ ga_sql_db }}"
   with_items:
-    - "update ga_systemagentmodel set version='{{ ga_update_release }}', version_detail='{{ ga_update_commit }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel set version='{{ ga_update_release }}', version_detail='{{ ga_update_commit }}'"
+    - "update ga_systemagentmodel set version='{{ ga_update_release_now }}', version_detail='{{ ga_update_commit_now }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel set version='{{ ga_update_release_now }}', version_detail='{{ ga_update_commit_now }}'"
   when: not ga_update_failed
 
 - name: GA | Update | Restarting services
@@ -58,3 +72,19 @@
   with_items:
     - 'ga_core.service'
     - 'apache2.service'
+
+- debug:
+    msg: "########################################\n
+    ########################################\n
+    GrowAutomation was successfully updated to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}'!\n
+    ########################################\n
+    ########################################"
+  when: not ga_update_failed
+
+- debug:
+    msg: "########################################\n
+    ########################################\n
+    GrowAutomation update to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}' FAILED!\n
+    ########################################\n
+    ########################################"
+  when: ga_update_failed

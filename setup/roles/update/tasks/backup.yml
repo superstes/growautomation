@@ -8,6 +8,7 @@
 
 - name: GA | Update | Backup | Backing up directories
   ansible.builtin.shell: "tar cf - {{ item.src }} | xz -7 > {{ item.dst }}"
+  warn: false
   with_items:
     - {src: "{{ ga_update_path_core }}", dst: "{{ ga_update_path_backup }}/core.tar.xz"}
     - {src: "{{ ga_update_path_web }}", dst: "{{ ga_update_path_backup }}/web.tar.xz"}

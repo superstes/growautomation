@@ -15,7 +15,7 @@
 
 - name: GA | Update | Prep | Getting last release version
   ansible.builtin.set_fact:
-    ga_update_release: "{{ ga_release_list.json | json_query('[*].name') | first }}"
+    ga_update_release_now: "{{ ga_release_list.json | json_query('[*].name') | first }}"
   changed_when: false
   when:
     - ga_update_method == 'online'
@@ -24,7 +24,7 @@
 
 - name: GA | Update | Prep | Getting commit-id of last release version
   ansible.builtin.set_fact:
-    ga_update_commit: "{{ ga_release_list.json | json_query('[*].commit.sha') | first }}"
+    ga_update_commit_now: "{{ ga_release_list.json | json_query('[*].commit.sha') | first }}"
   changed_when: false
   when:
     - ga_update_method == 'online'
@@ -32,6 +32,22 @@
     - ga_update_commit is undefined or ga_update_commit == 'None'
 
 # validating repo
+
+- name: GA | Update | Prep | Setting release version
+  ansible.builtin.set_fact:
+    ga_update_release_now: "{{ ga_update_release }}"
+  when:
+    - ga_update_release is defined
+    - ga_update_release != 'None'
+    - ga_update_type != 'commit'
+
+- name: GA | Update | Prep | Setting release version
+  ansible.builtin.set_fact:
+    ga_update_commit_now: "{{ ga_update_commit }}"
+  when:
+    - ga_update_commit is defined
+    - ga_update_commit != 'None'
+    - ga_update_type == 'commit'
 
 - name: GA | Update | Prep | Checking if repository exists
   ansible.builtin.stat:
@@ -60,11 +76,11 @@
 # setting repo to target version
 
 - name: GA | Update | Prep | Setting repo to target release
-  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_release }}"
+  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_release_now }}"
   when: ga_update_type != 'commit'
 
 - name: GA | Update | Prep | Setting repo to target commit
-  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_commit }}"
+  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_commit_now }}"
   when: ga_update_type == 'commit'
 
 - name: GA | Update | Prep | Getting release of commit
@@ -76,7 +92,7 @@
 # get 'parent'-release of commit if commit is used as a target version
 
 - name: GA | Update | Prep | Setting release version
-  ansible.builtin.set_fact:
-    ga_update_release: "{{ ga_raw_commit_release.stdout }}"
+  ansible.builtin.vars:
+    ga_update_release_now: "{{ ga_raw_commit_release.stdout }}"
   changed_when: false
   when: ga_update_type == 'commit'
