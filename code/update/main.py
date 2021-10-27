@@ -91,7 +91,7 @@ class Update:
             msg='Getting correct script-version',
         ))
 
-        vars_string = [f"--extra-vars '{key}={value}' " for key, value in self.config.items()]
+        vars_string = ' '.join([f"--extra-vars '{key}={value}'" for key, value in self.config.items()])
         path_ansible = f"{self.ansible_repo}/setup"
 
         results.append(self._process(
