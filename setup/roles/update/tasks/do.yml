@@ -9,8 +9,8 @@
   loop_control:
     loop_var: venv
   with_items:
-    - {path: "{{ ga_update_path_home_core }}/venv", remove: "{{ ga_remove_core_venv }}"}
-    - {path: "{{ ga_update_path_home_web }}/venv", remove: "{{ ga_remove_web_venv }}"}
+    - {path: "{{ ga_update_path_home_core }}/venv", remove: "{{ ga_remove_core_venv | default(false) }}"}
+    - {path: "{{ ga_update_path_home_web }}/venv", remove: "{{ ga_remove_web_venv | default(false) }}"}
   ignore_errors: true
   register: update_remove_venv
 

@@ -4,7 +4,7 @@
     msg:
       - '########################################'
       - '########################################'
-      - 'Preparing for Update!'
+      - '######### Preparing for Update #########'
       - '########################################'
       - '########################################'
 
@@ -25,7 +25,7 @@
     msg:
       - '########################################'
       - '########################################'
-      - "GrowAutomation will now be upgraded to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}'!"
+      - "GrowAutomation will now be upgraded to version {{ ga_update_release_now }} - {{ ga_update_commit_now }}"
       - '########################################'
       - '########################################'
 
@@ -79,7 +79,7 @@
     msg:
       - '########################################'
       - '########################################'
-      - "GrowAutomation was successfully updated to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}'!"
+      - "GrowAutomation was successfully updated to version {{ ga_update_release_now }} - {{ ga_update_commit_now }}"
       - '########################################'
       - '########################################'
   when: not ga_update_failed
@@ -88,7 +88,7 @@
     msg:
       - '########################################'
       - '########################################'
-      - "GrowAutomation update to version {{ ga_update_release_now }} - '{{ ga_update_commit_now }}' FAILED!"
+      - "GrowAutomation update to version {{ ga_update_release_now }} - {{ ga_update_commit_now }} FAILED"
       - '########################################'
       - '########################################'
   when: ga_update_failed
