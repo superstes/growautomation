@@ -1,10 +1,10 @@
 ---
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Getting passwords"
-  include_tasks: pwd.yml
+  ansible.builtin.include_tasks: pwd.yml
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Copying easyrsa base"
-  copy:
+  ansible.builtin.copy:
     src: 'files/var/lib/easyrsa/'
     dest: "{{ loop_easyrsa_path }}/"
     owner: "{{ loop_easyrsa_cert_owner }}"
@@ -12,7 +12,7 @@
     mode: 0755
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Copying easyrsa config"
-  template:
+  ansible.builtin.template:
     src: "templates/var/lib/easyrsa/vars.j2"
     dest: "{{ loop_easyrsa_path }}/vars"
     owner: "{{ loop_easyrsa_cert_owner }}"
@@ -20,12 +20,12 @@
     mode: 0644
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Initializing PKI"
-  shell: "echo 'yes' | {{ loop_easyrsa_path }}/easyrsa init-pki --vars='{{ loop_easyrsa_path }}/vars'"
+  ansible.builtin.shell: "echo 'yes' | {{ loop_easyrsa_path }}/easyrsa init-pki --vars='{{ loop_easyrsa_path }}/vars'"
   args:
     creates: "{{ loop_easyrsa_path_pki }}"
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Creating directories"
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ loop_easyrsa_cert_owner }}"
@@ -38,7 +38,7 @@
     - "{{ loop_easyrsa_path_pki }}/reqs"
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building CA"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa build-ca"
     responses:
       Enter New CA Key Passphrase : "{{ loop_easyrsa_ca_pwd }}"
@@ -54,7 +54,7 @@
   no_log: true
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building CRL"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa gen-crl"
     responses:
       Enter pass phrase for: "{{ loop_easyrsa_ca_pwd }}"
@@ -62,11 +62,11 @@
   no_log: true
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Building Certificates"
-  include_tasks: certs.yml
+  ansible.builtin.include_tasks: certs.yml
   when: "'certs' in loop_instance"
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Updating privileges"
-  shell: "chown -R {{ loop_easyrsa_cert_owner }}:{{ loop_easyrsa_cert_group }} {{ loop_easyrsa_path_pki }} &&
+  ansible.builtin.shell: "chown -R {{ loop_easyrsa_cert_owner }}:{{ loop_easyrsa_cert_group }} {{ loop_easyrsa_path_pki }} &&
   chmod -R {{ loop_easyrsa_perms_pub }} {{ loop_easyrsa_path_pki }} &&
   chmod -R {{ loop_easyrsa_perms_priv }} {{ loop_easyrsa_path_pki }}/private/* &&
   find {{ loop_easyrsa_path_pki }} -type d -print0 |xargs -0 chmod 755"

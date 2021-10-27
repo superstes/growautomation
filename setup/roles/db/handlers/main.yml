@@ -1,7 +1,7 @@
 ---
 
 - name: 'enable_mariadb'
-  systemd:
+  ansible.builtin.systemd:
     name: 'mariadb.service'
     enabled: yes
     state: started

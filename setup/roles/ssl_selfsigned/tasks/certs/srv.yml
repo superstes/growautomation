@@ -1,7 +1,7 @@
 ---
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building server certificate '{{ cert.cn }}'"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa build-server-full {{ cert.cn | quote }}"
     responses:
       Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
@@ -15,7 +15,7 @@
     - cert.sub_alt is undefined
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building server certificate '{{ cert.cn }}' (with no password)"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa build-server-full {{ cert.cn | quote }} nopass"
     responses:
       Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
@@ -29,7 +29,7 @@
     - cert.sub_alt is undefined
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building server certificate '{{ cert.cn }}' (with subject alternative names)"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa --subject-alt-name={{ cert.sub_alt | quote }} build-server-full {{ cert.cn | quote }}"
     responses:
       Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
@@ -43,7 +43,7 @@
     - cert.sub_alt is defined
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Building server certificate '{{ cert.cn }}' (with subject alternative names and no password)"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa --subject-alt-name={{ cert.sub_alt | quote }} build-server-full {{ cert.cn | quote }} nopass"
     responses:
       Enter PEM pass phrase: "{{ loop_easyrsa_cert_pwd }}"
@@ -57,7 +57,7 @@
     - cert.sub_alt is defined
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Checking if cert exists '{{ cert.cn }}'"
-  stat:
+  ansible.builtin.stat:
     path: "{{ loop_easyrsa_path_pki }}/private/{{ cert.cn }}.key"
   register: cert_key_file
   when:
@@ -65,7 +65,7 @@
     - cert.state == 'absent'
 
 - name: "GA | Cert SelfSigned | Instance '{{ loop_instance_name }}' | Certs | Revoking server certificate '{{ cert.cn }}'"
-  expect:
+  ansible.builtin.expect:
     command: "{{ loop_easyrsa_path }}/easyrsa revoke {{ cert.cn | quote }}"
     responses:
       Continue with revocation: 'yes'

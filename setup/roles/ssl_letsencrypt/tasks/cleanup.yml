@@ -1,13 +1,13 @@
 ---
 
 - name: GA | Cert LetsEncrypt | Cleanup | Disable temporary apache site
-  file:
+  ansible.builtin.file:
     state: absent
     dest: "/etc/apache2/sites-enabled/tmp_lets_encrypt.conf"
   register: tmp_site_config
 
 - name: GA | Cert LetsEncrypt | Cleanup | Reload apache
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     state: reloaded
   when: tmp_site_config.changed

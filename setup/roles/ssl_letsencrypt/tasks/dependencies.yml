@@ -1,7 +1,7 @@
 ---
 
 - name: GA | Cert LetsEncrypt | Dependencies | Deploying temporary apache site
-  template:
+  ansible.builtin.template:
     src: 'templates/etc/apache2/sites-available/lets_encrypt.conf.j2'
     dest: "/etc/apache2/sites-available/tmp_lets_encrypt.conf"
     owner: 'root'
@@ -11,7 +11,7 @@
   register: tmp_site_config
 
 - name: GA | Cert LetsEncrypt | Dependencies | Enable apache site
-  file:
+  ansible.builtin.file:
     state: link
     src: "/etc/apache2/sites-available/tmp_lets_encrypt.conf"
     dest: "/etc/apache2/sites-enabled/tmp_lets_encrypt.conf"
@@ -20,6 +20,6 @@
     mode: 0644
 
 - name: GA | Cert LetsEncrypt | Dependencies | Reload apache
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     state: reloaded

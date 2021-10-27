@@ -2,11 +2,11 @@
 
 # dependencies for 'expect' ansible module
 - name: GA | Cert SelfSigned | Installing dependencies
-  package:
+  ansible.builtin.apt:
     name: 'python-pexpect'
 
 - name: GA | Cert SelfSigned | Deploying PKIs
-  include_tasks: looper.yml
+  ansible.builtin.include_tasks: looper.yml
   args:
     apply:
       vars:
@@ -43,22 +43,22 @@
   when: easyrsa.ca is defined
 
 - name: GA | Cert SelfSigned | Checking if fullchain exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ selfsigned_fullchain }}"
   register: fullchain_file
 
 - name: GA | Cert SelfSigned | Pulling ca cert
-  shell: "cat {{ selfsigned_ca | quote }}"
+  ansible.builtin.shell: "cat {{ selfsigned_ca | quote }}"
   register: raw_ca_cert
   when: not fullchain_file.stat.exists
 
 - name: GA | Cert SelfSigned | Pulling server cert
-  shell: "cat {{ selfsigned_cert | quote }}"
+  ansible.builtin.shell: "cat {{ selfsigned_cert | quote }}"
   register: raw_srv_cert
   when: not fullchain_file.stat.exists
 
 - name: GA | Cert SelfSigned | Creating fullchain
-  template:
+  ansible.builtin.template:
     src: "templates/var/lib/easyrsa/pki/issued/fullchain.crt.j2"
     dest: "{{ selfsigned_fullchain }}"
     owner: "{{ easyrsa_cert_owner }}"
@@ -67,7 +67,7 @@
   when: not fullchain_file.stat.exists
 
 - name: GA | Cert SelfSigned | Linking certs
-  file:
+  ansible.builtin.file:
     state: link
     src: "{{ item.key }}"
     dest: "{{ item.value }}"

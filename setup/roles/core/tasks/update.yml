@@ -1,7 +1,7 @@
 ---
 
 - name: GA | Core | Update | Creating directory
-  file:
+  ansible.builtin.file:
     path: "{{ ga_update_path }}"
     state: directory
     owner: "{{ ga_update_service_user }}"
@@ -9,23 +9,23 @@
     mode: 0755
 
 - name: GA | Core | Update | Adding update service file
-  template:
+  ansible.builtin.template:
     src: 'templates/lib/systemd/system/ga_update.service.j2'
     dest: '/lib/systemd/system/ga_update.service'
 
 - name: GA | Core | Update | Copying update-code
-  shell: "cp -r {{ setup_clone_dir }}/code/update/* {{ ga_update_path }} &&
+  ansible.builtin.shell: "cp -r {{ setup_clone_dir }}/code/update/* {{ ga_update_path }} &&
   chown -R {{ ga_update_service_user }}:{{ ga_update_service_user }} {{ ga_update_path }} &&
   chmod -R 750 {{ ga_update_path }}"
 
 - name: GA | Core | Update | Adding service user
-  user:
+  ansible.builtin.user:
     name: "{{ ga_update_service_user }}"
     shell: '/usr/sbin/nologin'
     home: "/home/{{ ga_update_service_user }}"
 
 - name: GA | Core | Update | Adding privileges
-  template:
+  ansible.builtin.template:
     src: 'templates/etc/sudoers.d/gaupdate.j2'
     dest: '/etc/sudoers.d/gaupdate'
     owner: 'root'

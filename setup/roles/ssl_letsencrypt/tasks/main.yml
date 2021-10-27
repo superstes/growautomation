@@ -1,28 +1,28 @@
 ---
 
 - name: GA | Cert LetsEncrypt | Install package
-  apt:
+  ansible.builtin.apt:
     name: ['python3', 'python3-certbot-apache', 'software-properties-common']
     state: present
 
 - name: GA | Cert LetsEncrypt | Check if a apache virtualhost is available
-  shell: 'ls -l /etc/apache2/sites-enabled/'
+  ansible.builtin.shell: 'ls -l /etc/apache2/sites-enabled/'
   register: enabled_apache_sites
 
 - name: GA | Cert LetsEncrypt | Configuring dependencies
-  include_tasks: dependencies.yml
+  ansible.builtin.include_tasks: dependencies.yml
   when:
     - '"total 0" in enabled_apache_sites["stdout_lines"]'
     - enabled_apache_sites["stdout_lines"] | length == 1
 
 - name: GA | Cert LetsEncrypt | Configuring certbot
-  include_tasks: domain.yml
+  ansible.builtin.include_tasks: domain.yml
 
 - name: GA | Cert LetsEncrypt | Cleanup dependencies
-  include_tasks: cleanup.yml
+  ansible.builtin.include_tasks: cleanup.yml
 
 - name: GA | Cert LetsEncrypt | Adding systemd files for certbot renewal
-  template:
+  ansible.builtin.template:
     src: "templates/lib/systemd/system/{{ item }}"
     dest: "/lib/systemd/system/{{ item }}"
   with_items:
@@ -30,16 +30,16 @@
     - 'ga_web_certRenewal.timer'
 
 - name: GA | Cert LetsEncrypt | Reloading systemd
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: yes
 
 - name: GA | Cert LetsEncrypt | Enabling service
-  systemd:
+  ansible.builtin.systemd:
     name: 'ga_web_certRenewal.timer'
     enabled: yes
     state: started
 
 - name: GA | Cert LetsEncrypt | Restart apache
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     state: restarted

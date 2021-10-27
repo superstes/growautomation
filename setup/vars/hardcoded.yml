@@ -54,6 +54,7 @@ ga_web_groups:
   - "{{ ga_service_group }}"
 
 # db
+ga_db_config: 'database.cnf'
 ga_sql_db: 'ga'
 ga_db_packages:
   - 'mariadb-server'

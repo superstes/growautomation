@@ -1,25 +1,25 @@
 ---
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (1/3)
-  set_fact:
+  ansible.builtin.set_fact:
     _alias: "{{ ga_web_alias | join(' --domain ') }}"
   when: ga_web_alias | length > 0
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (2/3)
-  set_fact:
+  ansible.builtin.set_fact:
     certbot_alias: "{{ '--domain ' + _alias }}"
   when: ga_web_alias | length > 0
 
 - name: GA | Cert LetsEncrypt | Creating alternative name string (3/3)
-  set_fact:
+  ansible.builtin.set_fact:
     certbot_alias: ''
   when: ga_web_alias | length == 0
 
 - name: GA | Cert LetsEncrypt | Debug => the following command will be issued
-  debug:
+  ansible.builtin.debug:
     msg: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ ga_web_ssl_letsencrypt_mail }} --cert-name {{ ga_web_key }}
              --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ certbot_alias }}"
 
 - name: GA | Cert LetsEncrypt | Certbot | Starting certbot initialization (this might take some time)
-  shell: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ ga_web_ssl_letsencrypt_mail }} --cert-name {{ ga_web_key }}
-           --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ certbot_alias }}"
+  ansible.builtin.shell: "certbot certonly --apache -{{ certbot_verbosity }} --non-interactive --agree-tos --email {{ ga_web_ssl_letsencrypt_mail }} --cert-name {{ ga_web_key }}
+                          --rsa-key-size {{ letsencrypt_key_size }} --no-redirect --domain {{ ga_web_dns }} {{ certbot_alias }}"

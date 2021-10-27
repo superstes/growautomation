@@ -3,19 +3,19 @@
 # note: db-schema and initial controller configuration will be initialized by django
 
 - name: GA | DB | Install mariadb
-  apt:
+  ansible.builtin.apt:
     name: "{{ ga_db_packages }}"
     state: present
   notify: 'enable_mariadb'
 
 - name: GA | DB | Creating database
-  mysql_db:
+  community.mysql.mysql_db:
     name: "{{ ga_sql_db }}"
     state: present
     login_unix_socket: "{{ ga_sql_socket }}"
 
 - name: GA | DB | Creating users
-  mysql_user:
+  community.mysql.mysql_user:
     name: "{{ item.user }}"
     password: "{{ item.pwd }}"
     priv: "{{ ga_sql_db }}.*:ALL"
@@ -31,7 +31,7 @@
     - {user: "{{ ga_sql_user_web }}", pwd: "{{ ga_sql_pwd_web }}"}
 
 - name: GA | DB | Displaying info
-  debug:
+  ansible.builtin.debug:
     msg: "INFO: The creation of database users might fail if they already exist. In that case you can ignore this error!"
   when:
     - user_creation.failed is defined

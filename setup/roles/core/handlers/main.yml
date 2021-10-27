@@ -1,6 +1,6 @@
 ---
 
 - name: 'start_core_service'
-  systemd:
+  ansible.builtin.systemd:
     name: 'ga_core.service'
     state: started

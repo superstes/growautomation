@@ -1,16 +1,16 @@
 ---
 
 - name: 'restart_apache'
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     state: restarted
 
 - name: 'reload_apache'
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     state: reloaded
 
 - name: 'enable_apache'
-  systemd:
+  ansible.builtin.systemd:
     name: 'apache2.service'
     enabled: yes

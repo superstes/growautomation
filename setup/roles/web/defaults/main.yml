@@ -21,7 +21,7 @@ ga_apache_envvar_replacement:
   - { search: '^export APACHE_RUN_GROUP',
       replace: "export APACHE_RUN_GROUP={{ ga_web_service_user }}" }
 
-ga_django_setting_replacement:
+ga_django_config_replacement:
   - {search: '^DEBUG = True$',
      replace: 'DEBUG = False'}
   - {search: '^ALLOWED_HOSTS = ',

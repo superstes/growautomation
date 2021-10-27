@@ -1,12 +1,12 @@
 ---
 
 - name: GA | UFW | Install package
-  apt:
+  ansible.builtin.apt:
     name: ['ufw']
     state: present
 
 - name: GA | UFW | Set defaults
-  template:
+  ansible.builtin.template:
     src: 'templates/etc/default/ufw.j2'
     dest: '/etc/default/ufw'
     owner: 'root'
@@ -14,11 +14,11 @@
     mode: 0644
 
 - name: GA | UFW | Configuring ssh rule
-  import_tasks: ssh.yml
+  ansible.builtin.import_tasks: ssh.yml
   when: ga_ufw_allow_ssh
 
 - name: GA | UFW | Allowing web ports
-  ufw:
+  ansible.builtin.ufw:
     rule: 'allow'
     port: "{{ item.value }}"
     proto: 'tcp'
@@ -28,9 +28,9 @@
     - {'django_https': "{{ ga_web_port_https }}"}
 
 - name: GA | UFW | Enable ufw
-  ufw:
+  community.general.ufw:
     state: enabled
 
 - name: GA | UFW | Reload
-  ufw:
+  community.general.ufw:
     state: reloaded

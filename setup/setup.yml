@@ -8,20 +8,20 @@
     - './vars/hardcoded.yml'
   tasks:
     - name: Checking if password file exists
-      stat:
+      ansible.builtin.stat:
         path: "{{ ga_random_pwd_file }}"
       register: random_pwd_file
 
     - name: Generating passwords
       block:
         - name: Writing web-user heading to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "# database-users:"
             path: "{{ ga_random_pwd_file }}"
             state: present
 
         - name: Writing sql-core password to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "{{ ga_sql_user_core }}={{ ga_sql_pwd_core }}"
             path: "{{ ga_random_pwd_file }}"
             insertafter: #\database-users:"
@@ -31,7 +31,7 @@
           no_log: true
 
         - name: Writing sql-web password to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "{{ ga_sql_user_web }}={{ ga_sql_pwd_web }}"
             path: "{{ ga_random_pwd_file }}"
             insertafter: #\database-users:"
@@ -39,13 +39,13 @@
           no_log: true
 
         - name: Writing web-user heading to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "# web-users:"
             path: "{{ ga_random_pwd_file }}"
             state: present
 
         - name: Writing web-admin password to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "admin={{ ga_sql_pwd_web }}"
             path: "{{ ga_random_pwd_file }}"
             state: present
@@ -53,7 +53,7 @@
           no_log: true
 
         - name: Writing web-user passwords to file
-          lineinfile:
+          ansible.builtin.lineinfile:
             line: "{{ item.name }}={{ item.pwd }}"
             path: "{{ ga_random_pwd_file }}"
             state: present
@@ -66,27 +66,27 @@
     - name: Pulling existing passwords
       block:
         - name: Getting sql-core password
-          shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_core | quote }}"
+          ansible.builtin.shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_core | quote }}"
           register: raw_core_pwd
           when: ga_sql_pwd_core == ga_sql_pwd_random_key
           no_log: true
           changed_when: False
 
         - name: Setting sql-core password
-          set_fact:
+          ansible.builtin.set_fact:
             ga_sql_pwd_core: "{{ raw_core_pwd.stdout.split('=', 1)[1] }}"
           no_log: true
           when: ga_sql_pwd_core == ga_sql_pwd_random_key
 
         - name: Getting sql-web password
-          shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_web | quote }}"
+          ansible.builtin.shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_web | quote }}"
           register: raw_web_pwd
           when: ga_sql_pwd_web == ga_sql_pwd_random_key
           no_log: true
           changed_when: False
 
         - name: Setting sql-web password
-          set_fact:
+          ansible.builtin.set_fact:
             ga_sql_pwd_web: "{{ raw_web_pwd.stdout.split('=', 1)[1] }}"
           no_log: true
           when: ga_sql_pwd_web == ga_sql_pwd_random_key
@@ -96,7 +96,7 @@
       when: random_pwd_file.stat.exists
 
     - name: Database
-      import_role:
+      ansible.builtin.import_role:
         name: db
       when:
         - ga_sql_server == 'localhost'
@@ -104,11 +104,11 @@
         - ga_sql_install
 
     - name: GA Core
-      import_role:
+      ansible.builtin.import_role:
         name: core
       when: ga_core_install
 
     - name: GA Web
-      import_role:
+      ansible.builtin.import_role:
         name: web
       when: ga_web_install
