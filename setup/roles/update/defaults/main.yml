@@ -4,4 +4,3 @@ ga_update_failed: false
 ga_remove_web_venv: false
 ga_remove_core_venv: false
 ga_update_path_backup: "/var/backups/ga/update/{{ ansible_date_time.iso8601_basic_short }}"
-ga_update_path_repo_default: "/tmp/ga/update/{{ ansible_date_time.iso8601_basic_short }}"

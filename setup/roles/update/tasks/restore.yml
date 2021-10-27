@@ -33,7 +33,7 @@
 
 - name: GA | Update | Restore | Restoring database
   ansible.builtin.shell: "xzcat {{ ga_update_path_backup }}/db.sql.xz |
-  mysql --defaults-file={{ ga_update_path_web }}/database.cnf --single-transaction --force {{ ga_sql_db }}"
+  mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --single-transaction --force {{ ga_sql_db }}"
 
 - name: GA | Update | Restore | Starting core service
   ansible.builtin.systemd:

@@ -43,6 +43,13 @@
   ansible.builtin.import_tasks: restore.yml
   when: ga_update_failed
 
+- name: GA | Update | Updating version number
+  ansible.builtin.shell: "echo \"{{ item }};\" | mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} {{ ga_sql_db }}"
+  with_items:
+    - "update ga_systemagentmodel set version='{{ ga_update_release }}', version_detail='{{ ga_update_commit }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel set version='{{ ga_update_release }}', version_detail='{{ ga_update_commit }}'"
+  when: not ga_update_failed
+
 - name: GA | Update | Restarting services
   ansible.builtin.systemd:
     name: "{{ item }}"

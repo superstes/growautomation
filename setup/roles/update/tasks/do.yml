@@ -38,16 +38,16 @@
   delegate_to: 'localhost'
   with_items:
     - {src: "{{ ga_update_path_repo }}/code/", dst: "{{ ga_update_path_core }}/", opts: [
-        '--exclude=secret/*', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf'
+        '--exclude=secret/*', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf',
     ]}
     - {src: "{{ ga_update_path_repo }}/code/web/base/", dst: "{{ ga_update_path_web }}/", opts: [
-        '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=settings.py'
+        '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=base/config.py',
     ]}
     - {src: "{{ ga_update_path_repo }}/code/web/base/static/", dst: "{{ ga_update_path_web_static }}/"}
   ignore_errors: true
   register: update_code
 
- name: GA | Update | Do | Setting privileges for code
+- name: GA | Update | Do | Updating privileges
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
@@ -55,9 +55,13 @@
     group: "{{ item.group }}"
     recurse: yes
   with_items:
+    - {path: "{{ ga_update_path_home_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
+    - {path: "{{ ga_update_path_home_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
     - {path: "{{ ga_update_path_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
     - {path: "{{ ga_update_path_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
     - {path: "{{ ga_update_path_web_static }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+    - {path: "{{ ga_update_path_log }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_service_group }}"}
+    - {path: "{{ ga_update_path_log }}/web/", owner: "{{ ga_web_service_user }}", group: "{{ ga_service_group }}"}
   ignore_errors: true
   register: update_code_privs
   when: update_code.failed is undefined or not update_code.failed
