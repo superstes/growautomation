@@ -1,0 +1,72 @@
+---
+
+- name: GA | Update | Process | Restore | Saving logs for debug reasons
+  ansible.builtin.shell:
+    cmd: "tar cf - {{ ga_update_path_log }} | xz -7 -T{{ ga_update_cores }} > {{ ga_update_path_backup }}/log_restore.tar.xz"
+    warn: false
+
+- name: GA | Update | Process | Restore | Checking if backups really exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: ga_restore_backup_files
+  with_items:
+    - "{{ ga_update_path_backup }}/core.tar.xz"
+    - "{{ ga_update_path_backup }}/web.tar.xz"
+    - "{{ ga_update_path_backup }}/web_static.tar.xz"
+    - "{{ ga_update_path_backup }}/home_core.tar.xz"
+    - "{{ ga_update_path_backup }}/home_web.tar.xz"
+    - "{{ ga_update_path_backup }}/log.tar.xz"
+
+- name: GA | Update | Process | Restore | Backup files do exist
+  ansible.builtin.set_fact:
+    ga_backup_ok: true
+  when: ga_restore_backup_files.results  | json_query('[*].stat.exists') | all_true
+
+- name: GA | Update | Process | Restore | Backup files do NOT exist
+  ansible.builtin.set_fact:
+    ga_backup_ok: false
+  when: ga_backup_ok is undefined
+
+- name: GA | Update | Process | Restore | Stopping core service
+  ansible.builtin.systemd:
+    name: 'ga_core.service'
+    state: stopped
+  when: ga_backup_ok
+
+- name: GA | Update | Process | Restore | Removing directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    force: yes
+    state: absent
+  when: ga_backup_ok
+  with_items:
+    - "{{ ga_update_path_core }}"
+    - "{{ ga_update_path_web }}"
+    - "{{ ga_update_path_web_static }}"
+    - "{{ ga_core_path_venv }}"
+    - "{{ ga_web_path_venv }}"
+    - "{{ ga_update_path_log }}"
+
+- name: GA | Update | Process | Restore | Restoring directories
+  ansible.builtin.shell:
+    cmd: "tar -xJf {{ item }} -C /"
+    warn: false
+  when: ga_backup_ok
+  with_items:
+    - "{{ ga_update_path_backup }}/core.tar.xz"
+    - "{{ ga_update_path_backup }}/web.tar.xz"
+    - "{{ ga_update_path_backup }}/web_static.tar.xz"
+    - "{{ ga_update_path_backup }}/home_core.tar.xz"
+    - "{{ ga_update_path_backup }}/home_web.tar.xz"
+    - "{{ ga_update_path_backup }}/log.tar.xz"
+
+- name: GA | Update | Process | Restore | Restoring database
+  ansible.builtin.shell: "xzcat {{ ga_update_path_backup }}/db.sql.xz |
+  mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --force {{ ga_sql_db }}"
+  when: ga_backup_ok
+
+- name: GA | Update | Process | Restore | Starting core service
+  ansible.builtin.systemd:
+    name: 'ga_core.service'
+    state: started
+  when: ga_backup_ok

@@ -1,94 +1,75 @@
 ---
 
-- debug:
-    msg:
-      - '########################################'
-      - '########################################'
-      - '######### Preparing for Update #########'
-      - '########################################'
-      - '########################################'
-
-- name: GA | Update | Installing dependencies
-  ansible.builtin.apt:
-    name: "{{ ga_update_packages }}"
-
 - name: GA | Update | Preparing
-  ansible.builtin.import_tasks: preparations.yml
+  ansible.builtin.import_tasks: prep/main.yml
 
-- name: GA | Update | Running pre-checks
-  ansible.builtin.import_tasks: checks.yml
-
-- name: GA | Update | Backing-up current version
-  ansible.builtin.import_tasks: backup.yml
-
-- debug:
-    msg:
-      - '########################################'
-      - '########################################'
-      - "GrowAutomation will now be upgraded to version {{ ga_update_release_now }} - {{ ga_update_commit_now }}"
-      - '########################################'
-      - '########################################'
-
-- name: GA | Update | Running update tasks
-  ansible.builtin.import_tasks: do.yml
-
-# todo: update version in db
-# todo: what if db schema changed too much? => maybe allow user to pass a 'migrate-db' flag (or something like that)
-#   if that flag is set we will:
-#   1. export the db data without 'if table does not exist' statements
-#   2. drop the db
-#   3. remove all migrations
-#   4. create the new db schema
-#   5. try to import the data and config as good as possible (data should never be a problem => config could be)
-
-- name: GA | Update | Evaluating update result
+- name: GA | Update | Evaluating if update should be processed
   ansible.builtin.set_fact:
-    ga_update_failed: true
-  changed_when: false
-  when: >
-    (update_remove_venv.failed is defined and update_remove_venv.failed) or
-    (update_venv.failed is defined and update_venv.failed) or
-    (update_code.failed is defined and update_code.failed) or
-    (update_code_privs.failed is defined and update_code_privs.failed) or
-    (update_code_privs_secret.failed is defined and update_code_privs_secret.failed) or
-    (update_db_schema_build.failed is defined and update_db_schema_build.failed) or
-    (update_db_schema_migrate.failed is defined and update_db_schema_migrate.failed) or
-    (update_apt is defined and update_apt.failed is defined and update_apt.failed) or
-    (update_start_svc is defined and update_start_svc.failed is defined and update_start_svc.failed)
+    ga_update_process: true
+  when: |
+    ga_update_release_new is version(ga_update_release_current, '<') or
+    (ga_update_release_new == ga_update_release_current and ga_update_commit_new != ga_update_commit_current)
 
-- name: GA | Update | Trying to restore old version if update failed
-  ansible.builtin.import_tasks: restore.yml
-  when: ga_update_failed
+- name: GA | Update | Update should not be processed
+  ansible.builtin.set_fact:
+    ga_update_process: false
+  when: ga_update_process is undefined
+
+- name: GA | Update | Processing
+  ansible.builtin.import_tasks: process/main.yml
+  when: ga_update_process
 
 - name: GA | Update | Updating version number
   ansible.builtin.shell: "echo \"{{ item }};\" | mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} {{ ga_sql_db }}"
   with_items:
-    - "update ga_systemagentmodel set version='{{ ga_update_release_now }}', version_detail='{{ ga_update_commit_now }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel set version='{{ ga_update_release_now }}', version_detail='{{ ga_update_commit_now }}'"
-  when: not ga_update_failed
+    - "update ga_systemagentmodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"
+  when:
+    - not ga_update_failed
+    - ga_update_process
 
 - name: GA | Update | Restarting services
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: restarted
+  when: ga_update_process
   with_items:
     - 'ga_core.service'
     - 'apache2.service'
 
-- debug:
+- ansible.builtin.debug:
     msg:
-      - '########################################'
-      - '########################################'
-      - "GrowAutomation was successfully updated to version {{ ga_update_release_now }} - {{ ga_update_commit_now }}"
-      - '########################################'
-      - '########################################'
-  when: not ga_update_failed
+      - '################################################################################'
+      - '################################################################################'
+      - "GrowAutomation was successfully updated to version {{ ga_update_release_new }} - {{ ga_update_commit_new }}"
+      - '################################################################################'
+      - '################################################################################'
+  when:
+    - not ga_update_failed
+    - ga_update_process
 
-- debug:
+- ansible.builtin.debug:
     msg:
-      - '########################################'
-      - '########################################'
-      - "GrowAutomation update to version {{ ga_update_release_now }} - {{ ga_update_commit_now }} FAILED"
-      - '########################################'
-      - '########################################'
+      - '################################################################################'
+      - '################################################################################'
+      - "GrowAutomation update WAS DISMISSED!"
+      - "New version '{{ ga_update_release_new }}', current version '{{ ga_update_release_current }}'"
+      - "New version-commit '{{ ga_update_commit_new }}', current version-commit '{{ ga_update_commit_current }}'"
+      - '################################################################################'
+      - '################################################################################'
+  when:
+    - not ga_update_failed
+    - not ga_update_process
+
+- ansible.builtin.debug:
+    msg:
+      - '################################################################################'
+      - '################################################################################'
+      - "GrowAutomation update to version {{ ga_update_release_new }} - {{ ga_update_commit_new }} FAILED!"
+      - '################################################################################'
+      - '################################################################################'
+      - "Here's a way to restore GrowAutomation to its previous version (if you need it):"
+      - "cd {{ ga_update_path_repo }}/setup"
+      - "ansible-playbook pb_restore.yml  # provide the backup path: {{ ga_update_path_backup }}"
+      - '################################################################################'
   when: ga_update_failed

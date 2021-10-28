@@ -8,10 +8,18 @@
         <div id="div_id_path" class="form-group">
             <label for="id_path" class="control-label">{{ 'update_path' | form_label }}</label>
             <div class="">
-                <input type="text" value="--------" name="path" maxlength="255" class="form-control" id="id_path">
+                <input type="text" placeholder="/tmp/growautomation" name="path" maxlength="255" pattern="(\/[a-zA-Z0-9_-]+){2,20}$" class="form-control" id="id_path" required>
                 <p class="help-block">{{ 'update_path' | form_help }}</p>
             </div>
         </div>
+        <div id="div_id_release" class="form-group">
+            <label for="id_release" class="control-label">{{ 'update_release' | form_label }} (optional) </label>
+            <div class="">
+                <input type="text" value="{{ current_version }}" name="release" pattern="\d{1,4}\.\d{1,4}" class="form-control" id="id_release">
+                <p class="help-block">{{ 'update_release' | form_help }}</p>
+            </div>
+        </div>
+        {% include "./form_commit.html" %}
         <input type="hidden" name="type" value="offline" />
         {% include "../../btn/start.html" %}
         {% include "../../info/update.html" %}

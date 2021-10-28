@@ -1,0 +1,8 @@
+{% load util %}
+<div id="div_id_commit" class="form-group">
+    <label for="id_commit" class="control-label">{{ 'update_commit' | form_label }}</label>
+    <div class="">
+        <input type="text" value="--------" name="commit" pattern="^[a-f\d-]{6,40}$" class="form-control" id="id_commit">
+        <p class="help-block">{{ 'update_commit' | form_help }}</p>
+    </div>
+</div>

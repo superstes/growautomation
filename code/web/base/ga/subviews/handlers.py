@@ -47,6 +47,14 @@ def input_check(exc) -> dict:
     return output
 
 
+def handler_log(output: dict, status: int):
+    if output['request'] is None:
+        develop_log(request=output['request'], output=f"Got error {status} - {output['msg']}")
+
+    else:
+        develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error {status} - {output['msg']}")
+
+
 def handler400_api(msg=None):
     if msg is None:
         msg = 'api not found'
@@ -56,7 +64,7 @@ def handler400_api(msg=None):
 
 def handler403(exc):
     output = input_check(exc)
-    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 403 - {output['msg']}")
+    handler_log(output=output, status=403)
     return render(output['request'], 'error/403.html', context={'request': output['request'], 'error_msg': output['msg']})
 
 
@@ -69,7 +77,7 @@ def handler403_api(msg=None):
 
 def handler404(exc):
     output = input_check(exc)
-    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 404 - {output['msg']}")
+    handler_log(output=output, status=404)
     return render(output['request'], 'error/404.html', context={'request': output['request'], 'error_msg': output['msg']})
 
 
@@ -86,7 +94,7 @@ def handler404_api(msg=None):
 
 def handler500(exc):
     output = input_check(exc)
-    develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error 500 - {output['msg']}")
+    handler_log(output=output, status=500)
 
     if get_server_config(setting='security') == 0:
         develop_log(request=output['request'], output=f"{format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)}", level=2)

@@ -63,30 +63,34 @@ def update_start(request, current_version):
             raise KeyError('Got unsupported update method')
 
         update_release = request.POST['release']
+        update_commit = None
 
         if request.POST['commit'] != config.WEBUI_EMPTY_CHOICE:
             update_type = 'commit'
             update_commit = request.POST['commit']
 
-        else:
+        elif request.POST['release'] not in config.NONE_RESULTS:
             update_type = 'release'
-            update_commit = None
 
+            # checking if release version is valid (if possible for current scope)
             if float(update_release) <= float(current_version):
                 raise KeyError('Got unsupported target version!')
+
+        else:
+            update_type = 'none'
 
         with open(config.UPDATE_CONFIG_FILE, 'w') as file:
             file.write(
                 f"ga_update_type={update_type}\n"
                 f"ga_update_method={update_method}\n"
                 f"ga_update_release={update_release}\n"
+                f"ga_update_release_current={current_version}\n"
+                f"ga_update_commit_current={get_server_config(setting='version_detail')}\n"
                 f"ga_update_commit={update_commit}\n"
                 f"ga_update_path_repo={repo_path}\n"
                 f"ga_update_path_core={get_server_config(setting='path_core')}\n"
-                f"ga_update_path_home_core={get_server_config(setting='path_home_core')}\n"
                 f"ga_update_path_web={get_server_config(setting='path_web')}\n"
                 f"ga_update_path_web_static={get_server_config(setting='path_web_static')}\n"
-                f"ga_update_path_home_web={get_server_config(setting='path_home_web')}\n"
                 f"ga_update_path_log={get_server_config(setting='path_log')}\n"
             )
 
@@ -111,16 +115,23 @@ def update_status_view(request):
     if update_status.find('activating') == -1:
         reload_time = 0
         redirect_time = 0
-        status = 'Finished with unidentified result!'
+        status = 'Finished with unidentified result'
 
         for line in log_data[-6:-2]:
             if line.find('Update failed') != -1:
-                status = 'Failed!'
+                status = 'Failed'
                 break
 
             elif line.find('Update succeeded') != -1:
-                status = 'Finished successfully!'
+                status = 'Finished successfully'
                 break
+
+        if status != 'Failed':
+            if log_data[-1].find('failed=0') == -1:
+                status = 'Finished with errors'
+
+            elif log_data[-1].find('failed=0') != -1:
+                status = 'Finished successfully'
 
     return render(request, 'system/update/status.html', context={
         'request': request, 'title': 'System Update Status', 'log_data': log_data, 'reload_time': reload_time, 'status': status, 'redirect_time': redirect_time,

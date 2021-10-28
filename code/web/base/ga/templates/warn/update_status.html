@@ -1,7 +1,14 @@
 <br><br>
 <div class="alert alert-warning">
-    This update page might fail to load/time-out while updating.<br>
+    This update page might fail to load/time-out while updating => don't worry.<br>
     In that case => just refresh the page after some (<i>~1-5</i>) minutes.<br><br>
-    If the update fails hard you might need to read the update logs via:<br>
-    'journalctl -u ga_update.service --no-pager --full -n{LINECOUNT}'
+    If the update <b>fails hard</b> you might need to read the update logs via:<br>
+    root@ga: journalctl -u ga_update.service --no-pager --full -n{LINES}<br><br>
+    The <b>last resort</b> would be to manually restore the automatically created backups via:<br>
+    root@ga: cd {REPO_DIR}/setup<br>
+    root@ga: ansible-playbook pb_restore.yml<br><br>
+    <small>
+        Default repository path: '/tmp/ga/update/{DATETIME}'<br>
+        Default backup path: '/var/backups/ga/update/{DATETIME}'
+    </small>
 </div>

@@ -1,0 +1,56 @@
+---
+
+# this playbook can start the restore process after an update failed
+
+- name: Restoring GrowAutomation
+  hosts: localhost
+  become: true
+  vars_files:
+    - './vars/main.yml'
+    - './vars/hardcoded.yml'
+
+  vars:
+    ga_update_cores: "{{ ansible_processor_cores - 1 }}"
+
+  vars_prompt:
+    - name: ga_update_path_backup
+      prompt: Provide the path to the backup directory
+      private: no
+
+    - name: ga_backup_again
+      prompt: Want to back-up the directories again before deleting them? (yes/NO)
+      private: no
+      default: 'no'
+
+    - name: ga_update_path_core
+      prompt: Provide the GrowAutomation core directory (if not default)
+      default: "{{ ga_core_path }}"
+      private: no
+
+    - name: ga_update_path_web
+      prompt: Provide the GrowAutomation web directory (if not default)
+      default: "{{ ga_web_path }}"
+      private: no
+
+    - name: ga_update_path_web_static
+      prompt: Provide the GrowAutomation web-static-files directory (if not default)
+      default: "{{ ga_web_path_static }}"
+      private: no
+
+    - name: ga_update_path_log
+      prompt: Provide the GrowAutomation log directory (if not default)
+      default: "{{ ga_path_log }}"
+      private: no
+
+  tasks:
+    - ansible.builtin.import_tasks: roles/update/tasks/process/backup.yml
+      vars:
+        ga_update_path_backup: "/var/backups/ga/restore/{{ ansible_date_time.iso8601_basic_short }}"
+      when: ga_backup_again == 'yes'
+
+    - ansible.builtin.import_tasks: roles/update/tasks/process/restore.yml
+
+    - name: Restarting webserver
+      ansible.builtin.systemd:
+        name: 'apache2.service'
+        state: restarted

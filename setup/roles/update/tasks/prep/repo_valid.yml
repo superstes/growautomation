@@ -1,0 +1,27 @@
+---
+
+# validating repo
+
+- name: GA | Update | Prep | Checking if repository exists
+  ansible.builtin.stat:
+    path: "{{ ga_update_path_repo }}"
+  changed_when: false
+  register: local_repo
+
+- name: GA | Update | Prep | Checking if repository is valid
+  ansible.builtin.shell: "git ls-remote {{ ga_update_path_repo }} 2&> /dev/null; echo $?"
+  register: repo_exists
+  changed_when: false
+  when:
+   - local_repo.stat.exists
+   - local_repo.stat.isdir
+
+- name: GA | Update | Prep | Invalid offline repository
+  ansible.builtin.fail:
+    msg: "The provided local repository '{{ ga_update_path_repo }}' could not be verified successfully!
+    Please download the repository from a remote pc via 'git clone https://github.com/superstes/growautomation.git' and copy it to the local disk!
+    Or try using the online-update functionality."
+  when: >
+    not local_repo.stat.exists or
+    not local_repo.stat.isdir or
+    repo_exists.stdout != '0'

@@ -24,9 +24,10 @@ class PseudoServerAgent:
 
 
 def check_develop(request) -> bool:
-    server = request.META.get('wsgi.file_wrapper', None)
-    if server is not None and server.__module__ in ['django.core.servers.basehttp', 'wsgiref.util']:
-        return True
+    if request is not None:
+        server = request.META.get('wsgi.file_wrapper', None)
+        if server is not None and server.__module__ in ['django.core.servers.basehttp', 'wsgiref.util']:
+            return True
 
     return False
 

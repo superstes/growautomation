@@ -1,0 +1,12 @@
+---
+
+- name: GA | Update | Prep | Version | Release | Getting release version
+  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git describe --tags | cut -d '-' -f1"
+  register: ga_raw_release
+  changed_when: false
+
+- name: GA | Update | Prep | Version | Release | Setting release version
+  ansible.builtin.set_fact:
+    ga_update_release_new: "{{ ga_raw_release.stdout }}"
+    ga_update_type: 'release'
+  changed_when: false

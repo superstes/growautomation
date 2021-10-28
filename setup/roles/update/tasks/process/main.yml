@@ -1,0 +1,49 @@
+---
+
+- name: GA | Update | Process | Installing dependencies
+  ansible.builtin.apt:
+    name: "{{ ga_update_packages }}"
+
+- name: GA | Update | Process | Running pre-checks
+  ansible.builtin.import_tasks: process/checks.yml
+
+- name: GA | Update | Process | Backing-up current version
+  ansible.builtin.import_tasks: process/backup.yml
+
+- ansible.builtin.debug:
+    msg:
+      - '########################################'
+      - '########################################'
+      - "GrowAutomation will now be upgraded to version {{ ga_update_release_new }} - {{ ga_update_commit_new }}"
+      - '########################################'
+      - '########################################'
+
+- name: GA | Update | Process | Running update tasks
+  ansible.builtin.import_tasks: process/do.yml
+
+# todo: what if db schema changed too much? => maybe allow user to pass a 'migrate-db' flag (or something like that)
+#   if that flag is set we will:
+#   1. export the db data without 'if table does not exist' statements
+#   2. drop the db
+#   3. remove all migrations
+#   4. create the new db schema
+#   5. try to import the data and config as good as possible (data should never be a problem => config could be)
+
+- name: GA | Update | Process | Evaluating update result
+  ansible.builtin.set_fact:
+    ga_update_failed: true
+  changed_when: false
+  when: >
+    (update_remove_venv.failed is defined and update_remove_venv.failed) or
+    (update_venv.failed is defined and update_venv.failed) or
+    (update_code.failed is defined and update_code.failed) or
+    (update_code_privs.failed is defined and update_code_privs.failed) or
+    (update_code_privs_secret.failed is defined and update_code_privs_secret.failed) or
+    (update_db_schema_build.failed is defined and update_db_schema_build.failed) or
+    (update_db_schema_migrate.failed is defined and update_db_schema_migrate.failed) or
+    (update_apt is defined and update_apt.failed is defined and update_apt.failed) or
+    (update_start_svc is defined and update_start_svc.failed is defined and update_start_svc.failed)
+
+- name: GA | Update | Process | Trying to restore old version if update failed
+  ansible.builtin.import_tasks: process/restore.yml
+  when: ga_update_failed

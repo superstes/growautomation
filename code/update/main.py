@@ -40,7 +40,7 @@ class Update:
 
     def __init__(self):
         self.config = {}
-        self.ansible_repo = f"/tmp/ga/update/ansible/{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
+        self.repo = f"/tmp/ga/update/{datetime.now().strftime('%Y-%m-%d_%H-%M')}"
 
     def start(self):
         if self._execute():
@@ -72,27 +72,27 @@ class Update:
         if self.config['ga_update_path_repo'] in self.NONE_RESULTS:
             if self.config['ga_update_method'] != 'offline':
                 results.append(self._process(
-                    cmd=f"git clone https://github.com/superstes/growautomation.git --single-branch {self.ansible_repo}",
+                    cmd=f"git clone https://github.com/superstes/growautomation.git --single-branch {self.repo}",
                     msg='Downloading git repository',
                 ))
-                self.config['ga_update_path_repo'] = self.ansible_repo
+                self.config['ga_update_path_repo'] = self.repo
 
             else:
                 journal.send("ERROR: No valid repository provided and update-mode is offline. Can't continue!")
                 return False
 
         else:
-            self.ansible_repo = self.config['ga_update_path_repo']
+            self.repo = self.config['ga_update_path_repo']
 
         # NOTE: we do this since it could lead to incompatibility problems in the future if we use the newest version of the update-script
         target_version = self.config['ga_update_release'] if self.config['ga_update_type'] != 'commit' else self.config['ga_update_commit']
         results.append(self._process(
-            cmd=f"cd {self.ansible_repo} && git reset --hard {target_version}",
+            cmd=f"cd {self.repo} && git reset --hard {target_version}",
             msg='Getting correct script-version',
         ))
 
         vars_string = ' '.join([f"--extra-vars '{key}={value}'" for key, value in self.config.items()])
-        path_ansible = f"{self.ansible_repo}/setup"
+        path_ansible = f"{self.repo}/setup"
 
         results.append(self._process(
             cmd=f"cd {path_ansible} && ansible-galaxy collection install -r requirements.yml",
@@ -100,7 +100,7 @@ class Update:
         )
 
         results.append(self._process(
-            cmd=f"cd {path_ansible} && ansible-playbook update.yml {vars_string}",
+            cmd=f"cd {path_ansible} && ansible-playbook pb_update.yml {vars_string}",
             msg="Starting ansible-playbook to update GrowAutomation!")
         )
 

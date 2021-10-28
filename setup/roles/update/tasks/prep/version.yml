@@ -1,0 +1,23 @@
+---
+
+# version handling
+
+- name: GA | Update | Prep | Version | Setting target release as provided
+  ansible.builtin.set_fact:
+    ga_update_release_new: "{{ ga_update_release }}"
+  when: ga_update_type == 'release'
+
+- name: GA | Update | Prep | Version | Setting target commit as provided
+  ansible.builtin.set_fact:
+    ga_update_commit_new: "{{ ga_update_commit }}"
+  when: ga_update_type == 'commit'
+
+- name: GA | Update | Prep | Version | Release
+  ansible.builtin.import_tasks: prep/version_release.yml
+  when: ga_update_type == 'none'
+
+- name: GA | Update | Prep | Version | Git
+  ansible.builtin.import_tasks: prep/repo_version.yml
+
+- name: GA | Update | Prep | Version | After-Git
+  ansible.builtin.import_tasks: prep/version_after_git.yml

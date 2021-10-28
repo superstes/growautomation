@@ -1,6 +1,6 @@
 ---
 
-- name: GA | Update | Do | Removing old python environments
+- name: GA | Update | Process | Do | Removing old python environments
   ansible.builtin.file:
     path: "{{ venv.path }}"
     force: yes
@@ -9,12 +9,12 @@
   loop_control:
     loop_var: venv
   with_items:
-    - {path: "{{ ga_update_path_home_core }}/venv", remove: "{{ ga_remove_core_venv | default(false) }}"}
-    - {path: "{{ ga_update_path_home_web }}/venv", remove: "{{ ga_remove_web_venv | default(false) }}"}
+    - {path: "{{ ga_core_path_venv }}", remove: "{{ ga_remove_core_venv | default(false) }}"}
+    - {path: "{{ ga_web_path_venv }}", remove: "{{ ga_remove_web_venv | default(false) }}"}
   ignore_errors: true
   register: update_remove_venv
 
-- name: GA | Update | Do | Updating python environments
+- name: GA | Update | Process | Do | Updating python environments
   ansible.builtin.pip:
     name: "{{ venv.mods }}"
     virtualenv: "{{ venv.path }}"
@@ -23,12 +23,12 @@
   loop_control:
     loop_var: venv
   with_items:
-    - {path: "{{ ga_update_path_home_core }}/venv", mods: "{{ ga_core_mods }}"}
-    - {path: "{{ ga_update_path_home_web }}/venv", mods: "{{ ga_django_mods }}"}
+    - {path: "{{ ga_core_path_venv }}", mods: "{{ ga_core_mods }}"}
+    - {path: "{{ ga_web_path_venv }}", mods: "{{ ga_django_mods }}"}
   ignore_errors: true
   register: update_venv
 
-- name: GA | Update | Do | Updateing code
+- name: GA | Update | Process | Do | Updateing code
   ansible.posix.synchronize:
     src: "{{ item.src }}"
     dest: "{{ item.dst }}"
@@ -48,7 +48,7 @@
   ignore_errors: true
   register: update_code
 
-- name: GA | Update | Do | Updating privileges
+- name: GA | Update | Process | Do | Updating privileges
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
@@ -56,8 +56,8 @@
     group: "{{ item.group }}"
     recurse: yes
   with_items:
-    - {path: "{{ ga_update_path_home_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
-    - {path: "{{ ga_update_path_home_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+    - {path: "{{ ga_core_path_venv }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
+    - {path: "{{ ga_web_path_venv }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
     - {path: "{{ ga_update_path_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
     - {path: "{{ ga_update_path_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
     - {path: "{{ ga_update_path_web_static }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
@@ -67,38 +67,38 @@
   register: update_code_privs
   when: update_code.failed is undefined or not update_code.failed
 
-- name: GA | Update | Do | Setting privileges for secrets
+- name: GA | Update | Process | Do | Setting privileges for secrets
   ansible.builtin.file:
     path: "{{ item.path }}"
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
     mode: 0440
   with_items:
-    - {path: "{{ ga_update_path_core }}/core/secret/random.key", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
+    - {path: "{{ ga_update_path_core }}/core/secret/random.key", owner: "{{ ga_core_service_user }}", group: "{{ ga_service_group }}"}
   ignore_errors: true
   register: update_code_privs_secret
   when: update_code.failed is undefined or not update_code.failed
 
-- name: GA | Update | Do | Building database schema
-  ansible.builtin.shell: "source {{ ga_update_path_home_web }}/venv/bin/activate &&
-  {{ ga_update_path_home_web }}/venv/bin/python3 manage.py makemigrations"
+- name: GA | Update | Process | Do | Building database schema
+  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 manage.py makemigrations"
   args:
     executable: '/bin/bash'
     chdir: "{{ ga_update_path_web }}"
   environment:
-    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_update_path_home_web }}/venv/lib/python{{ ga_python_version }}/site-packages"
+    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
   ignore_errors: true
   register: update_db_schema_build
   when: update_code.failed is undefined or not update_code.failed
 
-- name: GA | Update | Do | Updating database schema
-  ansible.builtin.shell: "source {{ ga_update_path_home_web }}/venv/bin/activate &&
-  {{ ga_update_path_home_web }}/venv/bin/python3 manage.py migrate"
+- name: GA | Update | Process | Do | Updating database schema
+  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 manage.py migrate"
   args:
     executable: '/bin/bash'
     chdir: "{{ ga_update_path_web }}"
   environment:
-    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_update_path_home_web }}/venv/lib/python{{ ga_python_version }}/site-packages"
+    PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
     DJANGO_SETTINGS_MODULE: 'base.settings'
   ignore_errors: true
   register: update_db_schema_migrate
@@ -106,7 +106,7 @@
     - update_code.failed is undefined or not update_code.failed
     - update_db_schema_build.failed is undefined or not update_db_schema_build.failed
 
-- name: GA | Update | Do | Stopping services about to be upgraded (if online)
+- name: GA | Update | Process | Do | Stopping services about to be upgraded (if online)
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
@@ -116,7 +116,7 @@
     - 'ga_core.service'
   when: ga_update_method == 'online'
 
-- name: GA | Update | Do | Upgrading used packages (if online)
+- name: GA | Update | Process | Do | Upgrading used packages (if online)
   ansible.builtin.apt:
     name: "{{ item }}"
     state: latest
@@ -130,7 +130,7 @@
     - "{{ ga_web_packages }}"
   when: ga_update_method == 'online'
 
-- name: GA | Update | Do | Starting services (if online)
+- name: GA | Update | Process | Do | Starting services (if online)
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: started

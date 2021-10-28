@@ -1,0 +1,11 @@
+---
+
+# setting repo to target version
+
+- name: GA | Update | Prep | Repo-Version | Setting repo to target release
+  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_release_new }}"
+  when: ga_update_type == 'release'
+
+- name: GA | Update | Prep | Repo-Version | Setting repo to target commit
+  ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git reset --hard {{ ga_update_commit_new }}"
+  when: ga_update_type == 'commit'

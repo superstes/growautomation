@@ -2,15 +2,16 @@
 {% load util %}
 {% block content %}
     <h2>Status:</h2>
-    {% if status == 'Finished successfully!' %}
+    {% if status == 'Finished successfully' %}
         <div class="alert alert-success">
-    {% elif status == 'Failed!' %}
+    {% elif status == 'Failed' %}
         <div class="alert alert-danger">
     {% else %}
         <div class="alert alert-info">
     {% endif %}
-    <strong>Update {{ status }}</strong>
+    <strong>Update {{ status }}!</strong>
     </div>
+    {% include "../../warn/update_status.html" %}
     <hr>
     <h2>Log data:</h2>
     <strong>

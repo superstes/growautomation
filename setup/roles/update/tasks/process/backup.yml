@@ -1,12 +1,12 @@
 ---
 
-- name: GA | Update | Backup | Creating backup directory
+- name: GA | Update | Process | Backup | Creating backup directory
   ansible.builtin.file:
     path: "{{ ga_update_path_backup }}"
     state: directory
     mode: 0750
 
-- name: GA | Update | Backup | Backing up directories
+- name: GA | Update | Process | Backup | Backing up directories
   ansible.builtin.shell:
     cmd: "tar cf - {{ item.src }} | xz -7 -T{{ ga_update_cores }} > {{ item.dst }}"
     warn: false
@@ -14,15 +14,15 @@
     - {src: "{{ ga_update_path_core }}", dst: "{{ ga_update_path_backup }}/core.tar.xz"}
     - {src: "{{ ga_update_path_web }}", dst: "{{ ga_update_path_backup }}/web.tar.xz"}
     - {src: "{{ ga_update_path_web_static }}", dst: "{{ ga_update_path_backup }}/web_static.tar.xz"}
-    - {src: "{{ ga_update_path_home_core }}", dst: "{{ ga_update_path_backup }}/home_core.tar.xz"}
-    - {src: "{{ ga_update_path_home_web }}", dst: "{{ ga_update_path_backup }}/home_web.tar.xz"}
+    - {src: "{{ ga_core_path_venv }}", dst: "{{ ga_update_path_backup }}/home_core.tar.xz"}
+    - {src: "{{ ga_web_path_venv }}", dst: "{{ ga_update_path_backup }}/home_web.tar.xz"}
     - {src: "{{ ga_update_path_log }}", dst: "{{ ga_update_path_backup }}/log.tar.xz"}
 
-- name: GA | Update | Backup | Backing up database
-  ansible.builtin.shell: "mysqldump --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --single-transaction --force {{ ga_sql_db }} |
+- name: GA | Update | Process | Backup | Backing up database
+  ansible.builtin.shell: "mysqldump --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --force {{ ga_sql_db }} |
   xz -7 -T{{ ga_update_cores }} > {{ ga_update_path_backup }}/db.sql.xz"
 
-- name: GA | Update | Backup | Setting privileges on backup-files
+- name: GA | Update | Process | Backup | Setting privileges on backup-files
   ansible.builtin.file:
     path: "{{ ga_update_path_backup }}"
     state: directory

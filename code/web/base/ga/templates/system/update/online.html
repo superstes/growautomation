@@ -7,7 +7,7 @@
             {% csrf_token %}
             <div id="div_id_release" class="form-group">
                 <label for="id_release" class="control-label">{{ 'update_release' | form_label }}</label>
-                <select class="form-control" id="id_release" name="release">
+                <select class="form-control" id="id_release" name="release" required>
                     <option selected value="{{ current_version }}">{{ current_version }}</option>
                     {% for release in releases %}
                         <option value="{{ release }}">{{ release }}</option>
@@ -15,24 +15,12 @@
                 </select>
                 <p class="help-block">{{ 'update_release' | form_help }}</p>
             </div>
-            <div id="div_id_commit" class="form-group">
-                <label for="id_commit" class="control-label">{{ 'update_commit' | form_label }}</label>
-                <div class="">
-                    <input type="text" value="--------" name="commit" minlength="7" maxlength="40" class="form-control" id="id_commit">
-                    <p class="help-block">{{ 'update_commit' | form_help }}</p>
-                </div>
-            </div>
+            {% include "./form_commit.html" %}
             <input type="hidden" name="type" value="online" />
             {% include "../../btn/start.html" %}
         </form>
-        <br>
         {% include "../../info/update.html" %}
     {% else %}
         {% include "../../error/online_update.html" %}
     {% endif %}
-    <script>
-        function btnStartClicked() {
-           document.getElementById('downloadStarted').style.display = "block";
-        }
-    </script>
 {% endblock %}
