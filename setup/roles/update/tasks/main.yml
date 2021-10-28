@@ -7,7 +7,7 @@
   ansible.builtin.set_fact:
     ga_update_process: true
   when: |
-    ga_update_release_new is version(ga_update_release_current, '<') or
+    ga_update_release_new is version(ga_update_release_current, '>') or
     (ga_update_release_new == ga_update_release_current and ga_update_commit_new != ga_update_commit_current)
 
 - name: GA | Update | Update should not be processed

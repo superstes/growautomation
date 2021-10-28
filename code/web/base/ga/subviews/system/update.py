@@ -35,7 +35,7 @@ def update_view(request):
                             releases.append(version)
 
                 return render(request, 'system/update/online.html', context={
-                    'request': request, 'title': 'System Update', 'releases': releases, 'current_version': current_version, 'online': online, 'config': config,
+                    'request': request, 'title': 'System Update', 'releases': sorted(releases, reverse=True), 'current_version': current_version, 'online': online, 'config': config,
                 })
 
             elif config_type == 'offline':
