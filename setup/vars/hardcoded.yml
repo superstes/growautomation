@@ -70,6 +70,8 @@ ga_device_groups:
 
 ga_device_mods:
   - 'smbus'
+  - 'RPi.GPIO2'
+  - 'RPi.GPIO==0.7.1a4'  # 2021-10-29: python3.9 fails to build other version..
   - 'adafruit-circuitpython-dht'
   - 'adafruit-circuitpython-ads1x15'
   - 'adafruit-circuitpython-mcp3xxx'

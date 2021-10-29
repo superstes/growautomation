@@ -42,7 +42,10 @@
     }
     - {
       src: "{{ ga_update_path_repo }}/code/web/base/", dst: "{{ ga_update_path_web }}/",
-      opts: ['--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=base/config.py']
+      opts: [
+          '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=base/config.py',
+          '--exclude=update_schema.sh',
+      ]
     }
     - {src: "{{ ga_update_path_repo }}/code/web/base/static/", dst: "{{ ga_update_path_web_static }}/"}
   ignore_errors: true

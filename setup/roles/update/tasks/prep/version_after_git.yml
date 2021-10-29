@@ -8,7 +8,7 @@
 
 - name: GA | Update | Prep | Version | After-Git | Setting commit version
   ansible.builtin.set_fact:
-    ga_update_commit_new: "{{ ga_raw_commit.stdout }}"
+    ga_update_commit_new: "{{ ga_raw_commit.stdout[:8] }}"
   changed_when: false
   when: ga_update_type == 'release'
 
