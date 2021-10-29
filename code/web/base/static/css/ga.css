@@ -361,7 +361,7 @@ form .error-msg {
     display: grid;
     grid-auto-rows: 23vh;
     grid-auto-columns: 1fr;
-    grid-gap: var(--rad);
+    grid-gap: 7px;
 }
 
 .ga-db-preview > div {
@@ -420,7 +420,7 @@ form .error-msg {
     display: grid;
     grid-auto-rows: 23vh;
     grid-auto-columns: 1fr;
-    grid-gap: var(--rad);
+    grid-gap: 10px;
 }
 
 /* STOP charts */

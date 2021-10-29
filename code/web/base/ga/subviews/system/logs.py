@@ -72,8 +72,9 @@ def LogView(request):
     if 'log_type' in request.GET and request.GET['log_type'] in log_type_options:
         log_type = request.GET['log_type']
 
-    if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_service_options:
-        log_subtype = request.GET['log_subtype']
+    if log_type in ['Service', 'Service journal']:
+        if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_service_options:
+            log_subtype = request.GET['log_subtype']
 
     if log_type == 'Service':
         try:
@@ -111,7 +112,11 @@ def LogView(request):
         if 'log_subtype' in request.GET and request.GET['log_subtype'] in log_ga_options:
             log_subtype = request.GET['log_subtype']
 
-        log_file = log_ga_options[log_subtype]
+        try:
+            log_file = log_ga_options[log_subtype]
+
+        except KeyError:
+            log_file = log_ga_options['Core']
 
         # todo: option to view older (truncated) logs?
         log_data = str_to_list(
