@@ -33,7 +33,6 @@ from sys import exc_info as sys_exc_info
 from os import path as os_path
 from os import stat as os_stat
 from os import getuid as os_getuid
-from os import environ as os_environ
 from pathlib import Path
 import signal
 from traceback import format_exc
@@ -52,12 +51,7 @@ class Prepare:
         self.logger = None
         self.log_cache = []
 
-        if 'GA_GROUP' in os_environ:
-            group = os_environ['GA_GROUP']
-
-        else:
-            group = config.GA_GROUP
-
+        group = config.GA_GROUP
         self.uid = os_getuid()
         self.ga_gid = getgrnam(group)[2]
 

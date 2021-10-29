@@ -17,10 +17,11 @@ def init():
 # todo: integrate most used ones as controller settings with hardcoded fallback values
 
 # general settings
-GA_GROUP = 'ga'
-
 if 'GA_GROUP' in os_environ:
     GA_GROUP = os_environ['GA_GROUP']
+
+else:
+    GA_GROUP = 'ga'
 
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
 PATH_HOME_VENV = '/venv/bin'  # home prepended
