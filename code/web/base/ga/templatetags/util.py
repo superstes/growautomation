@@ -201,17 +201,9 @@ def found(data: str, search: str) -> bool:
     return False
 
 
-@register.simple_tag
-def demo_mode() -> bool:
-    if 'GA_DEMO' in os_environ:
-        return True
-
-    return False
-
-
-@register.simple_tag
-def beta_mode() -> bool:
-    if 'GA_BETA' in os_environ:
+@register.filter
+def check_mode(mode: str) -> bool:
+    if mode in os_environ:
         return True
 
     return False

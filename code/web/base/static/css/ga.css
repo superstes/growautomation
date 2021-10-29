@@ -101,6 +101,10 @@ hr {
     color: var(--tc1);
 }
 
+.ga-info-special-mode {
+    margin-top: 10vh;
+}
+
 .ga-text-responsive {
     color: var(--tc1) !important;
 }

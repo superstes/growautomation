@@ -26,19 +26,6 @@
         <br>
         <div class="ga-footer-wrapper">
             <footer class="ga-footer">
-                {% if not request|get_login_state and demo_mode %}
-                    <div class="alert alert-info">
-                        <strong>You can login with this demo user to get an overview:</strong><br>
-                        <strong>Username:</strong> demo<br>
-                        <strong>Password:</strong> Grow2021
-                    </div>
-                {% elif not request|get_login_state and beta_mode %}
-                    <div class="alert alert-info">
-                        <strong>This is the GrowAutomation Beta-System</strong><br>
-                        You can get access to this preview by supporting our cause:<br>
-                        <a href="https://www.patreon.com/growautomation/membership">Patreon</a>
-                    </div>
-                {% endif %}
                 <div class="ga-footer-text">
                     <div>
                         © 2021 Superstes | Version {% get_version %}
