@@ -11,8 +11,10 @@ ga_core_service_user: 'ga_core'
 ga_web_service_user: 'ga_web'
 ga_update_service_user: 'ga_update'
 ga_service_group: 'ga'
-ga_core_path_venv: "/home/{{ ga_core_service_user }}/venv"
-ga_web_path_venv: "/home/{{ ga_web_service_user }}/venv"
+ga_core_path_home: "/home/{{ ga_core_service_user }}"
+ga_core_path_venv: "{{ ga_core_path_home }}/venv"
+ga_web_path_home: "/home/{{ ga_core_service_user }}"
+ga_web_path_venv: "{{ ga_web_path_home }}/venv"
 
 # core
 ga_core_packages:

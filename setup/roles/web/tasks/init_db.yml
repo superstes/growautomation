@@ -29,10 +29,15 @@
     - 'create_user.py'
     - 'crypto.py'
 
-- name: GA | Web | Init | Getting encrypted password
+- name: GA | Web | Init | Getting encrypted core-password
   ansible.builtin.shell: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
   no_log: true
   register: ga_sql_pwd_core_encrypted
+
+- name: GA | Web | Init | Getting encrypted web-password
+  ansible.builtin.shell: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
+  no_log: true
+  register: ga_sql_pwd_web_encrypted
 
 - name: GA | Web | Init | Copying database initialization script
   ansible.builtin.template:
