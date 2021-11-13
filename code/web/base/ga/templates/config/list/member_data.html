@@ -19,10 +19,12 @@
         {% endfor %}
         {% if 'output' in typ %}
             <td>
-                {% if device_status|get_item:member_obj %}
+                {% if device_status|get_item:member_obj == 1 %}
                     Active
-                {% else %}
+                {% elif device_status|get_item:member_obj == 0 %}
                     Idle
+                {% else %}
+                    Unknown
                 {% endif %}
             </td>
         {% endif %}

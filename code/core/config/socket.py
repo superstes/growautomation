@@ -25,11 +25,13 @@ PACKAGE_PATH_SEPARATOR = '_GA_'
 PACKAGE_SIZE = 1024
 RECV_INTERVAL = 2
 RECV_TIMEOUT = config.AGENT.subprocess_timeout + 2  # we will need to wait longer than any action-process could run so the result can be transmitted
+NONE_RESULT = 'none'
 
-if config.SOCKET_SHUFFLE or config.SERVER.security:
-    SHUFFLE = True
-else:
-    SHUFFLE = False
+SHUFFLE = config.SOCKET_SHUFFLE
+
+# todo: will set shuffle to true even if security == 0 ?!?!
+# if config.SERVER.security == 1:
+#     SHUFFLE = True
 
 SHUFFLE_DATA = '80e7540fe29c6b88314a8083acf7110c'.encode('utf-8')
 
@@ -40,4 +42,3 @@ PATH_DEVICE_TYPES = ['input', 'output', 'connection']
 MATCH_DEVICE = f'{PATH_CORE}{SUB_PATH_DEVICE}.([0-9]{{1,10}}).(.*?)$'
 PATH_WEB = 'ga.web'
 SUB_PATHS = [SUB_PATH_DEVICE]
-

@@ -27,11 +27,13 @@ class Interact:
         self.PATH_SEP = socket_config.PACKAGE_PATH_SEPARATOR
         if self.SERVER:
             self.LOG_PREFIX = 'Server - '
+
         else:
             self.LOG_PREFIX = 'Client - '
 
         if self.SHUFFLE:
-            self.LOG(f'{self.LOG_PREFIX}Shuffling transferred data', level=7)
+            self.LOG(f'{self.LOG_PREFIX}Shuffling data!', level=6)
+            # self.LOG(f'{self.LOG_PREFIX}Shuffle config {config.SOCKET_SHUFFLE} {type(config.SOCKET_SHUFFLE)}, {config.SERVER.security} {type(config.SERVER.security)}!', level=6)
 
     def send(self, data: str) -> (bool, dict):
         try:
@@ -131,14 +133,18 @@ class Interact:
         head_str = self.HEAD.decode('utf-8')
         tail_str = self.TAIL.decode('utf-8')
 
-        if data.startswith(head_str) and data.endswith(tail_str):
+        if data == socket_config.NONE_RESULT:
+            self.LOG(f'{self.LOG_PREFIX}Received empty result!', level=3)
+
+        elif data.startswith(head_str) and data.endswith(tail_str):
             _ = data[len(head_str):-len(tail_str)].split(self.PATH_SEP)
             try:
                 return {'path': _[0], 'data': _[1]}
 
             except IndexError:
                 self.LOG(f"{self.LOG_PREFIX}Wasn't able to parse received data!", level=3)
-                self.LOG(f"{self.LOG_PREFIX}Data: \"{data}\"!", level=6)
+                data_one_line = data.replace('\n', '\\n')
+                self.LOG(f"{self.LOG_PREFIX}Data: \"{data_one_line}\"!", level=6)
 
         else:
             self.LOG(f'{self.LOG_PREFIX}Received invalid data!', level=3)
@@ -200,6 +206,11 @@ def server_thread(srv, connection, client):
 
         if data is None:
             srv.LOG(f'{srv.LOG_PREFIX}Unable to get route', level=6)
+            Interact(
+                link=connection,
+                server=True,
+                logger=srv.LOG
+            ).send(data=socket_config.NONE_RESULT)  # return none-result to client so it does not wait for a response that will never come
 
         else:
             # parsing command and executing api

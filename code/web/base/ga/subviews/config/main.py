@@ -328,7 +328,7 @@ class ConfigView:
         status = {}
 
         for device in MAIN_CONFIG[typ]['model'].objects.all():
-            status[device] = api_sock(
+            result = api_sock(
                 request=self.request,
                 sock_data={
                     'type': typ,
@@ -336,6 +336,18 @@ class ConfigView:
                     'do': 'is_active',
                 }
             )
+
+            if result is None:
+                # unknown
+                status[device] = 99
+
+            elif result is False:
+                # idle
+                status[device] = 0
+
+            else:
+                # active
+                status[device] = 1
 
         return status
 

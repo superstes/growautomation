@@ -26,12 +26,17 @@ class Go:
 
         for key, blueprint in _config.items():
             # todo: for multi-agent support we must get the right agent config
-            output_dict[key] = [blueprint(
-                setting_dict=self.supply_data[key][1][config.SUPPLY_KEY_SETTING_DICT],
-                object_id=self.supply_data[key][1][config.DB_ALL_KEY_ID],
-                name=self.supply_data[key][1][config.DB_ALL_KEY_NAME],
-                description=self.supply_data[key][1][config.DB_ALL_KEY_DESCRIPTION],
-            )]
+            try:
+                output_dict[key] = [blueprint(
+                    setting_dict=self.supply_data[key][1][config.SUPPLY_KEY_SETTING_DICT],
+                    object_id=self.supply_data[key][1][config.DB_ALL_KEY_ID],
+                    name=self.supply_data[key][1][config.DB_ALL_KEY_NAME],
+                    description=self.supply_data[key][1][config.DB_ALL_KEY_DESCRIPTION],
+                )]
+
+            except (IndexError, KeyError) as error:
+                log(f"Factory wasn't able to pull {key}-data from database! Make sure the configuration exists!", level=1)
+                raise KeyError(error)
 
         # output_dict.update({
         #     self.key_object_task: TaskFactory(

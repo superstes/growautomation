@@ -25,7 +25,7 @@ else:
 
 CRYPTO_RECOGNITION_TEXT = '#crypto-recognition'
 PATH_HOME_VENV = '/venv/bin'  # home prepended
-SOCKET_SHUFFLE = None  # if unset AGENT.security will be evaluated
+SOCKET_SHUFFLE = False  # if unset SERVER.security will be evaluated
 NONE_RESULTS = ['', 'None', None, ' ']
 CONFIG_FILE_PATH = '/core/config/file/core.conf'
 CENSOR_SYMBOL = '●'

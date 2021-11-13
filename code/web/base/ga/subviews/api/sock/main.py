@@ -11,6 +11,7 @@ from ....config.shared import LOGIN_URL
 
 init_core_config()
 from core.sock.connect import Client
+from core.config import shared
 
 
 mapping = {
