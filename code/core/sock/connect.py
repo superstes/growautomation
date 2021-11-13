@@ -15,7 +15,7 @@ from core.utils.debug import log
 
 
 class Interact:
-    def __init__(self, link, logger=log, server: bool = False):
+    def __init__(self, link, logger=log, server: bool = False, timeout: int = None):
         self.LINK = link
         self.LOG = logger
         self.BANNER = socket_config.SOCKET_BANNER_CORE
@@ -25,6 +25,7 @@ class Interact:
         self.SERVER = server
         self.SHUFFLE = socket_config.SHUFFLE
         self.PATH_SEP = socket_config.PACKAGE_PATH_SEPARATOR
+        self.TIMEOUT = timeout if timeout is not None else socket_config.RECV_TIMEOUT
         if self.SERVER:
             self.LOG_PREFIX = 'Server - '
 
@@ -94,9 +95,9 @@ class Interact:
                     # if we did not receive anything
                     self.LOG(f'{self.LOG_PREFIX}Received no data!', level=9)
 
-                    if time() > start_time + socket_config.RECV_TIMEOUT:
+                    if time() > start_time + self.TIMEOUT:
                         self.LOG(f'{self.LOG_PREFIX}Receive timeout!', level=5)
-                        return False
+                        return None
 
                     else:
                         sleep(socket_config.RECV_INTERVAL)
@@ -127,7 +128,7 @@ class Interact:
 
         except Exception as error:
             self.LOG(f"{self.LOG_PREFIX}Got error while receiving data: '{error}'", level=3)
-            return False
+            return None
 
     def _validate(self, data: str) -> (dict, None):
         head_str = self.HEAD.decode('utf-8')
@@ -162,7 +163,7 @@ class Interact:
 
 
 class Client:
-    def __init__(self, path: str, logger=log, target: str = '127.0.0.1', port: int = socket_config.SOCKET_PORT):
+    def __init__(self, path: str, logger=log, target: str = '127.0.0.1', port: int = socket_config.SOCKET_PORT, timeout: int = None):
         self.PATH = path if path.startswith('ga.') else f'{socket_config.PATH_WEB}.{path}'
         self.LINK = socket(family=AF_INET, type=SOCK_STREAM)
         self.TARGET = target
@@ -172,14 +173,15 @@ class Client:
         self.connected = False
         self.LINK.settimeout(socket_config.RECV_TIMEOUT)
         self.LOG = logger
+        self.TIMEOUT = timeout
 
     def get(self) -> (str, None):
         if self.connected or self._init():
-            return Interact(link=self.LINK, logger=self.LOG).receive()
+            return Interact(link=self.LINK, logger=self.LOG, timeout=self.TIMEOUT).receive()
 
     def post(self, data: str) -> (bool, dict):
         if self.connected or self._init():
-            return Interact(link=self.LINK, logger=self.LOG).send(data=f'{self.PATH}{self.PATH_SEP}{data}')
+            return Interact(link=self.LINK, logger=self.LOG, timeout=self.TIMEOUT).send(data=f'{self.PATH}{self.PATH_SEP}{data}')
 
     def _init(self):
         try:
@@ -189,7 +191,7 @@ class Client:
 
         except socket_error as error:
             self.LOG(f"{self.LOG_PREFIX}Got error connecting to server '{self.TARGET}': {error}", level=3)
-            return False
+            return None
 
     def __del__(self):
         self.LINK.close()

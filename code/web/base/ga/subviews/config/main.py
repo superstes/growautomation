@@ -8,7 +8,7 @@ from ...config.site import MAIN_CONFIG, MEMBER_CONFIG
 from ...utils.helper import member_pre_process
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.basic import set_key
-from ...config.shared import CENSOR_STRING, LOGIN_URL
+from ...config.shared import CENSOR_STRING, LOGIN_URL, WEBUI_SOCKET_INFO_TIMEOUT
 from ..api.sock.main import api_sock
 
 
@@ -334,7 +334,8 @@ class ConfigView:
                     'type': typ,
                     'id': device.id,
                     'do': 'is_active',
-                }
+                    'timeout': WEBUI_SOCKET_INFO_TIMEOUT,
+                },
             )
 
             if result is None:

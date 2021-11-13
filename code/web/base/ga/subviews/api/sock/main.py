@@ -31,17 +31,18 @@ def api_sock(request, sock_data: dict = None):
         develop_log(request=request, output=output, level=level)
 
     if sock_data is not None:
-        mapping_key = sock_data['type']
-        path_id = sock_data['id']
-        data = sock_data['do']
+        sock_config = sock_data
 
     else:
-        mapping_key = request.POST['type']
-        path_id = request.POST['id']
-        data = request.POST['do']
+        sock_config = request.POST
+
+    mapping_key = sock_config['type']
+    path_id = sock_config['id']
+    data = sock_config['do']
+    timeout = sock_config['timeout'] if 'timeout' in sock_config else None
 
     path = f'ga.core.{mapping[mapping_key]}.{path_id}'
-    response = Client(path=path, logger=_log).post(data)
+    response = Client(path=path, logger=_log, timeout=timeout).post(data)
     develop_log(request, output=f"Got socket response '{response}' by executing '{path} = {data}'", level=8)
 
     if type(response) == dict and 'data' in response:
