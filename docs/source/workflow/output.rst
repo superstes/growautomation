@@ -1,5 +1,7 @@
 .. _workflow-output:
 
+.. include:: ../includes/tip_links.rst
+
 ======
 Output
 ======

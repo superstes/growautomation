@@ -3,12 +3,12 @@
 .. |element| image:: ../_static/img/config/dashboard/element.svg
    :class: ga-img-basic ga-img-center
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 =========
 Dashboard
 =========
-
-.. warning::
-   Documentation is not yet finished.
 
 Description
 ***********

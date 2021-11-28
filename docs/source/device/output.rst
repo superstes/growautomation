@@ -5,10 +5,12 @@
 .. |l298n_wiring| image:: ../_static/img/devices/output/l298n_wiring.png
    :class: ga-img-center-mid ga-img-border
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ======
 Output
 ======
-
 
 Description
 ***********
@@ -21,9 +23,6 @@ Here you can find information to the implementation and maintenance of output-de
    If you have tested some on your own and want to contribute your know-how => send us the information to contact@growautomation.eu
 
    Please include at least the information you see listed in the existing devices below.
-
-.. warning::
-   Documentation is not yet finished.
 
 ----
 

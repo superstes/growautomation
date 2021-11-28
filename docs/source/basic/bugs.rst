@@ -3,6 +3,8 @@
 .. |system_export| image:: ../_static/img/basic/bugs/system_export.png
    :class: ga-img-basic ga-img-border
 
+.. include:: ../includes/tip_links.rst
+
 ====
 Bugs
 ====
@@ -37,7 +39,7 @@ Basic
 Note the following in the ticket email:
 
 - What action did you perform as the error occurred? (*if any*)
-- Export the current config and attach it to the email:
+- Export the current config and attach it to the issue/ticket:
 
   |system_export|
 
@@ -50,21 +52,25 @@ Please prepare the following:
 - Try to re-create the error
 - Copy the following logs each in a separate text file:
 
-  - core log
-  - growautomation service log
-  - growautomation service journal log
-  - device logs (*if device-logging is enabled and devices are affected*)
+  - GrowAutomation - Core
+  - Service - GrowAutomation
+  - Service journal - GrowAutomation
+  - GrowAutomation - DeviceX (*if device-logging is enabled and devices are affected*)
 
-- Send a `ticket <mailto:bugs@growautomation.eu>`_
+- Check if there are `existing issues/bugs <https://github.com/superstes/growautomation/issues>`_
+- Open a new `GitHub issue <https://github.com/superstes/growautomation/issues/new>`_ and attach the logs/config-export to it
 
 Web
 ===
 
+Please prepare the following:
+
 - Try to re-create the error
 - Copy the following logs each in a separate text file:
 
-  - web log
-  - apache-webserver service log
-  - apache-webserver service journal log
+  - GrowAutomation - Web
+  - Service - Apache webserver
+  - Service journal - Apache webserver
 
-- Send a `ticket <mailto:bugs@growautomation.eu>`_
+- Check if there are `existing issues/bugs <https://github.com/superstes/growautomation/issues>`_
+- Open a new `GitHub issue <https://github.com/superstes/growautomation/issues/new>`_ and attach the logs/config-export to it

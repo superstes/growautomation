@@ -7,10 +7,11 @@
 .. |mcp3008_pin| image:: ../_static/img/devices/connection/mcp3008_pinout.png
    :class: ga-img-right-small
 
+.. include:: ../includes/tip_links.rst
+
 ==========
 Connection
 ==========
-
 
 Description
 ***********

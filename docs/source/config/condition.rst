@@ -7,6 +7,7 @@
 .. |condition_basic| image:: ../_static/img/config/condition/basic.svg
    :class: ga-img-center-mid
 
+.. include:: ../includes/tip_links.rst
 
 =========
 Condition

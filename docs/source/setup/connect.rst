@@ -1,5 +1,7 @@
 .. _setup-connect:
 
+.. include:: ../includes/tip_links.rst
+
 =======
 Connect
 =======
@@ -58,7 +60,7 @@ This is a basic question and we came up with the following options for the answe
 Network
 *******
 
-The future **server-agent setup** (*Ticket #39*) will make wireless connections for agents easier.
+The future **server-agent setup** will make wireless connections for agents easier.
 
 Since the web user-interface will be run on the server and the agent just needs to communicate its data to the server.
 
@@ -91,11 +93,9 @@ The easiest and hardest way => *just* bury a network cable and connect the raspb
 
 This will be much work but it will work like a charm and won't make any problems.
 
-It is not possible with the :ref:`low-price setup <setup-buy-low>` since that raspberry model has no RJ45 port.
-
 SIM/LTE
 =======
 
-We have planned (*Ticket #38*) that the GrowAutomation setup should be able to work with a sim card. It should be accessible via dyn-dns over the mobile network.
+We have planned that the GrowAutomation setup should be able to work with a sim card. It should be accessible via dyn-dns over the mobile network.
 
 But this is currently **not yet possible**!

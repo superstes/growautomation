@@ -1,5 +1,8 @@
 .. _config-area:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ====
 Area
 ====
@@ -7,6 +10,3 @@ Area
 Description
 ***********
 How to configure areas to limit actors and/or conditions.
-
-.. warning::
-   Documentation is not yet finished.

@@ -1,5 +1,8 @@
 .. _config-task:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ====
 Task
 ====
@@ -7,6 +10,3 @@ Task
 Description
 ***********
 How to configure system tasks.
-
-.. warning::
-   Documentation is not yet finished.

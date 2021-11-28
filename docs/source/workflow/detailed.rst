@@ -5,6 +5,8 @@
 .. |factory| image:: ../_static/img/workflow/basic/factory.svg
    :width: 100%
 
+.. include:: ../includes/tip_links.rst
+
 ========
 Detailed
 ========

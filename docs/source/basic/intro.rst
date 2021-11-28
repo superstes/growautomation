@@ -1,41 +1,51 @@
 .. _basic-intro:
 
+
+.. include:: ../includes/tip_links.rst
+
 =====
 Intro
 =====
-
-Links
-*****
-* `Source on GitHub <https://github.com/superstes/growautomation>`_
-* `Video tutorials <https://www.youtube.com/channel/UCLJyDlo3Z6eP_X2Pw0-Z8Pw>`_
-* `Demo system <https://demo.growautomation.at/>`_
-* `Support the project => Become a patreon <https://www.patreon.com/growautomation/>`_
-
-----
 
 What is GrowAutomation?
 ***********************
 
 Aim of this project
 ===================
-* monitor grow environments
-* start actions based on conditions
-* plant monitoring to analyze success or failure
-* making setup and maintenance easier
+* helping to **optimize grow environments**
 
-  * blueprint for physical setup
+  * monitor grow environments using sensors
+  * plant monitoring to analyze success or failure
+  * automating repetitive tasks
+
+    * start actions based on conditions
+
+
+* simplifying **user experience**
+
+  * providing `a web ui <https://demo.growautomation.eu>`_ for easy maintenance and setup
+  * 'blueprints' for physical setup
   * tutorial videos
-  * passing known issues and their solutions
 
-* extension by external scripts
-* being an independent system
-* create a collection of knowledge regarding this topics
-* building a community around this ideas
+  * collecting knowledge regarding this topics
+
+    * documenting known issues and their solutions
+    * providing systems to support community knowledge-exchange
 
 
-This project is not
-===================
-* yet in a stable state
+* **customization**
+
+  * support for custom 3th-party scripts
+  * enabling users to customize many system settings to their liking
+  * defaulting to opting-out
+
+
+* being an **independent** system
+
+  * keeping the dependencies to a minimum
+  * possibility to operate as an offline system
+  * preferring opt-out for optional features
+
 
 ----
 
@@ -46,14 +56,16 @@ Features
 
   * timed loop to pull data from sensors
 
+
 * output workflow
 
   * support for **complex conditions**
-  * self-reversible actors
+  * self-reversing actors
+
 
 * **web-interface** for user interactions
 
   * configuration management
   * data visualization via **dashboard system**
   * system management
-  * mobile support
+  * smartphone/mobile support

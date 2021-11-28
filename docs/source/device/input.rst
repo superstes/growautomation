@@ -9,6 +9,8 @@
 .. |light_photo_resistance| image:: ../_static/img/devices/input/light_sensor_photo_resistance.jpg
    :class: ga-img-right-small
 
+.. include:: ../includes/tip_links.rst
+
 =====
 Input
 =====

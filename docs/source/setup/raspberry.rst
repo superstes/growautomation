@@ -1,5 +1,8 @@
 .. _setup-raspberry:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 =========
 Raspberry
 =========
@@ -12,10 +15,6 @@ Here you can find some basic setup infos.
 **This is NOT a full set** of instructions needed to setup the GrowAutomation software.
 
 There is a `setup script <https://github.com/superstes/growautomation/tree/dev/setup>`_ for exactly that purpose.
-
-
-.. warning::
-   Documentation is not yet finished.
 
 ----
 

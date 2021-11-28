@@ -1,5 +1,7 @@
 .. _workflow-input:
 
+.. include:: ../includes/tip_links.rst
+
 =====
 Input
 =====

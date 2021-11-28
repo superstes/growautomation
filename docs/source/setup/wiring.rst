@@ -1,5 +1,8 @@
 .. _setup-wiring:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ======
 Wiring
 ======
@@ -8,9 +11,6 @@ Description
 ***********
 
 How cleanly wire devices.
-
-.. warning::
-   Documentation is not yet finished.
 
 ----
 

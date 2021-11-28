@@ -1,5 +1,8 @@
 .. _config-device:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ======
 Device
 ======
@@ -7,9 +10,6 @@ Device
 Description
 ***********
 How to configure sensors for the input-workflow.
-
-.. warning::
-   Documentation is not yet finished.
 
 ----
 

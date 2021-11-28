@@ -1,5 +1,8 @@
 .. _setup-find:
 
+.. include:: ../includes/tip_links.rst
+.. include:: ../includes/warn_in_progress.rst
+
 ====
 Find
 ====
@@ -8,10 +11,6 @@ Description
 ***********
 
 How to find a raspberry on the network.
-
-
-.. warning::
-   Documentation is not yet finished.
 
 
 Scanning

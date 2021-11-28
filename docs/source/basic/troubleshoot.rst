@@ -25,6 +25,8 @@
 .. |system_log| image:: ../_static/img/basic/troubleshoot/system_log.png
    :class: ga-img-basic ga-img-border
 
+.. include:: ../includes/tip_links.rst
+
 ============
 Troubleshoot
 ============
