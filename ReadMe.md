@@ -1,6 +1,6 @@
 <br>
 <p align="center">
-  <img src="https://www.growautomation.eu/img/svg/ga02c.svg" width="65%"/>
+  <img src="https://raw.githubusercontent.com/superstes/growautomation/dev/docs/source/_static/img/ga02c.svg" width="65%"/>
 </p>
 <br><br>
 
@@ -41,7 +41,7 @@ It's simple! And should remain so if you have little time for it.
 ----
 
 ## Documentation
-<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=plastic"/>
+<img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=flat"/>
 <a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
 
 ----
@@ -60,11 +60,7 @@ Want to support the project?
 ----
 
 ## Version
-__The code is currently not in a stable state !__
-
 Version: 0.9
-
-First 'stable' release coming <strong>SOON</strong>! :D
 
 => <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
 
@@ -74,9 +70,10 @@ First 'stable' release coming <strong>SOON</strong>! :D
 
 
 ### History
-- v0.9 _(2021-09)_
+
+- v0.9 _(2021-09 - 2021-10)_
   - action-buttons in webUI => allowing to manually start/stop sensors and actors
-  - saving of action states to db (_keeping track of active actors_)
+  - saving of action states to db => keeping track of active actors
   - added basic dark-mode
 
 
@@ -115,9 +112,11 @@ First 'stable' release coming <strong>SOON</strong>! :D
 ### Planned features
 - core functionalities
   - builtin tasks
-    - notification - *get notified if the temperature is not optimal for growing*
-    - backup - *timed backup of database and logs locally or on a remote target*
-    - custom - *let the core execute custom timed tasks* (_cron-like_)
+    - notification => *get notified if the temperature is not optimal for growing*
+    - backup => *timed backup of database and logs locally or on a remote target*
+    - custom => *let the core execute custom timed tasks* (_cron-like_)
+  - simple input-device rest-api => every network-attached device can be an input
+  - providing offline documentation (_pre-build sphinx docs_)
 
 
 - documentation
@@ -132,13 +131,17 @@ First 'stable' release coming <strong>SOON</strong>! :D
 
 
 - improve user-experience
-  - installation per pre-configured image for easy setup
+  - installation using a pre-configured image - plug and play
   - implementing more input _(sensors)_, output _(actors)_ and connection devices for native support _(air speed sensor/window opener actor/analog to digital converter)_ 
 
 
 - hardware
   - integration of a scale so that the harvest can be logged
   - off-grid installation => dyndns and hardware-guide
+  - sensor-controller/sub-agent
+    - we should be able to use an ESP32/ESP8266/RaspberryPico as a wireless source for multiple sensors
+    - this would allow the coverage of multiple distributed input-areas (_p.e. multiple patches on a property_)
+    
 
 
 ### Maybe future features
