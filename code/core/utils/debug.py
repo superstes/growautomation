@@ -5,22 +5,17 @@ from core.config import shared as config
 from datetime import datetime
 from os import path as os_path
 from pathlib import Path
-from sys import platform as sys_platform
 from inspect import stack as inspect_stack
 from inspect import getfile as inspect_getfile
-
-if sys_platform != 'win32':
-    from os import getuid as os_getuid
-    from os import chmod as os_chmod
-    from os import chown as os_chown
-    from grp import getgrnam
+from os import getuid as os_getuid
+from os import chmod as os_chmod
+from os import chown as os_chown
+from grp import getgrnam
+from systemd import journal
 
 
 def now(time_format: str):
     return datetime.now().strftime(time_format)
-
-
-date_year, date_month = now("%Y"), now("%m")
 
 
 class Log:
@@ -36,18 +31,18 @@ class Log:
             self.name = inspect_getfile(inspect_stack()[1][0])
 
         self.type = typ
-        self.log_dir = f"{config.AGENT.path_log}/{self.type}/{date_year}"
+        self.log_dir = f"{config.AGENT.path_log}/{self.type}/{now('%Y')}"
         self.log_level = config.AGENT.log_level
 
         if addition is None:
-            self.log_file = f"{self.log_dir}/{date_month}_{self.type}.log"
+            self.log_file = f"{self.log_dir}/{now('%m')}_{self.type}.log"
 
         else:
-            self.log_file = f"{self.log_dir}/{date_month}_{self.type}_{addition.replace(' ', '_')}.log"
+            self.log_file = f"{self.log_dir}/{now('%m')}_{self.type}_{addition.replace(' ', '_')}.log"
 
         self.status = self._check()
 
-    def write(self, output: str, level: int = 1) -> bool:
+    def write(self, output: str, level: int = 1, system: bool = False) -> bool:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
@@ -55,6 +50,10 @@ class Log:
             return False
 
         output = self._censor(str(output))
+
+        if system:
+            journal.send(output)
+
         output_formatted = f"{datetime.now().strftime(config.LOG_TIMESTAMP_FORMAT)}{config.LOG_SEPARATOR}{self.name}{config.LOG_SEPARATOR}{output}"
         self._debugger(command=output_formatted)
 
@@ -71,9 +70,8 @@ class Log:
                 with open(self.log_file, 'a+') as logfile:
                     logfile.write('init\n')
 
-            if sys_platform != 'win32':
-                os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
-                os_chmod(path=self.log_file, mode=int(f'{config.LOG_FILE_PERMS}', base=8))
+            os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
+            os_chmod(path=self.log_file, mode=int(f'{config.LOG_FILE_PERMS}', base=8))
 
             return True
 
@@ -129,20 +127,7 @@ class MultiLog:
         return False
 
 
-class FileAndSystemd:
-    def __init__(self, log_instance):
-        self.log = log_instance
-
-    def write(self, output: str, level: int = 1) -> bool:
-        from systemd import journal
-
-        if level == 1:
-            journal.send(output)
-
-        return self.log.write(output=output, level=level)
-
-
-def log(output: str, level: int = 1, logger_instance: (Log, FileAndSystemd) = None, src_file: str = None) -> bool:
+def log(output: str, level: int = 1, logger_instance: Log = None, src_file: str = None) -> bool:
     # wrapper function so we don't need always to call the .write method
     if logger_instance is None:
         if src_file is None:
@@ -156,7 +141,7 @@ def log(output: str, level: int = 1, logger_instance: (Log, FileAndSystemd) = No
 
 def fns_log(output: str, level: int = 1) -> bool:
     _src = inspect_getfile(inspect_stack()[1][0])
-    return log(output=output, level=level, logger_instance=FileAndSystemd(Log(src_file=_src)))
+    return Log(src_file=_src).write(output=output, level=level, system=True)
 
 
 def web_log(output: str, src_file: str, level: int = 1) -> bool:
