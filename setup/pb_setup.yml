@@ -7,13 +7,19 @@
     - './vars/main.yml'
     - './vars/hardcoded.yml'
   tasks:
+    # pre tasks
+    - name: Installing script dependencies
+      ansible.builtin.apt:
+        name: "{{ ga_script_packages }}"
+        state: present
+
     - name: Checking if password file exists
       ansible.builtin.stat:
         path: "{{ ga_random_pwd_file }}"
       register: random_pwd_file
 
     - name: Generating passwords
-      block:
+      ansible.builtin.block:
         - name: Writing web-user heading to file
           ansible.builtin.lineinfile:
             line: "# database-users:"
@@ -64,7 +70,7 @@
       when: not random_pwd_file.stat.exists
 
     - name: Pulling existing passwords
-      block:
+      ansible.builtin.block:
         - name: Getting sql-core password
           ansible.builtin.shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_core | quote }}"
           register: raw_core_pwd
@@ -95,20 +101,170 @@
 
       when: random_pwd_file.stat.exists
 
-    - name: Database
-      ansible.builtin.import_role:
-        name: db
-      when:
-        - ga_sql_server == 'localhost'
-        - ga_core_install or ga_web_install
-        - ga_sql_install
-
+    # installation
     - name: GA Core
       ansible.builtin.import_role:
         name: core
       when: ga_core_install
 
-    - name: GA Web
+    - name: GA Web - Pre tasks
       ansible.builtin.import_role:
         name: web
       when: ga_web_install
+
+    # database setup
+    - name: GA Web - Database
+      ansible.builtin.import_role:
+        name: ansibleguy.infra_django_apache
+      vars:
+        django:
+          sites:
+            ga:
+              python_version: '3.9'
+              path_venv: "{{ ga_web_path_venv }}"
+              path_code: "{{ ga_web_path }}"
+              project: "base"
+              static_url: 'static'
+              serve:
+                path: "{{ ga_web_path_static }}"
+
+              user: "{{ ga_web_service_user }}"
+              group: "{{ ga_service_group }}"
+              admin: "{{ ga_web_ssl_letsencrypt_mail }}"
+              port_plain: "{{ ga_web_port_http }}"
+              port_ssl: "{{ ga_web_port_https }}"
+              domain: "{{ ga_web_dns }}"
+              aliases: "{{ ga_web_alias }}"
+              ssl:
+                mode: "{{ ga_web_ssl_mode }}"
+                cert:
+                  cn: 'GrowAutomation Certificate'
+                  org: 'GrowAutomation'
+                  country: 'AT'
+                  state: 'Styria'
+                ca:
+                  cn: 'GrowAutomation CA'
+                  org: 'GrowAutomation'
+                  country: 'AT'
+                  state: 'Styria'
+              letsencrypt:
+                email: "{{ ga_web_ssl_letsencrypt_mail }}"
+              env_pythonpath: ["{{ ga_core_path }}"]
+              migration_pre_tasks: ['systemctl stop ga_core.service']
+              migration_post_tasks: ['systemctl start ga_core.service']
+              python_modules:
+                present: "{{ ga_django_mods }}"
+              database:
+                manage: "{{ ga_sql_install }}"
+                host: "{{ ga_sql_server }}"
+                db: "{{ ga_sql_db }}"
+                user: "{{ ga_sql_user_web }}"
+                pwd: "{{ ga_sql_pwd_web }}"
+                config: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+                config_mode: "0640"
+                backup: true
+              sync_code:
+                enabled: true
+                src: "{{ ga_setup_clone_dir }}/code/web/base/"
+                dst: "{{ ga_web_path }}"
+                static_src: "{{ ga_web_path }}/static/"
+                static_dst: "{{ ga_web_path_static }}"
+      when: ga_web_install
+
+    - name: GA Core - Database
+      community.mysql.mysql_user:
+        name: "{{ ga_sql_user_core }}"
+        password: "{{ ga_sql_pwd_core }}"
+        priv: "{{ ga_sql_db + '.*:ALL' }}"
+        login_unix_socket: "{{ ga_sql_socket }}"
+      no_log: true
+      when:
+        - ga_web_install
+        - ga_core_install
+
+    - name: GA Core Database - Preparing config
+      ansible.builtin.set_fact:
+        ga_mariadb_instance: "{{ {
+          'dbs': {
+            ga_sql_db: 'present',
+          },
+          'backup': true,
+          'users': {
+            ga_sql_user_web: {
+              'priv': ga_sql_db + '.*:ALL',
+              'pwd': ga_sql_pwd_web,
+            },ansible.bu
+            ga_sql_user_core: {
+              'priv': ga_sql_db + '.*:ALL',
+              'pwd': ga_sql_pwd_core,
+            },
+          },
+          'settings': {'wait_timeout': 3600},
+          'socket': ga_sql_socket
+        } }}"
+
+    - name: GA Core Database - Setting up
+      ansible.builtin.import_role:
+        name: ansibleguy.infra_mariadb
+        vars:
+          mariadb:
+            instances:
+              ga: "{{ ga_mariadb_instance }}"
+      when:
+        - not ga_web_install
+        - ga_core_install
+        - ga_sql_install
+
+    - name: GA Web - Post tasks
+      ansible.builtin.import_role:
+        name: web
+        tasks_from: 'init_db.yml'
+      when:
+        - ga_web_install
+        - ga_web_init_db
+
+    # firewall management
+    - name: Firewall
+      ansible.builtin.block:
+      - name: GA Web/Core - Firewall
+          ansible.builtin.import_role:
+            name: ansibleguy.infra_ufw
+          vars:
+            ufw_rules:
+              GrowAutomationWeb:
+                port: "{{ ga_web_port_http }},{{ ga_web_port_https }}"
+                proto: 'tcp'
+              GrowAutomationCore:
+                port: "{{ ga_core_port_socket }}"
+                proto: 'tcp'
+                log: true
+          when:
+            - ga_web_install
+            - ga_core_install
+
+      - name: GA Web - Firewall
+        ansible.builtin.import_role:
+          name: ansibleguy.infra_ufw
+        vars:
+          ufw_rules:
+            GrowAutomationWeb:
+              port: "{{ ga_web_port_http }},{{ ga_web_port_https }}"
+              proto: 'tcp'
+        when:
+          - ga_web_install
+          - not ga_core_install
+
+      - name: GA Core - Firewall
+        ansible.builtin.import_role:
+          name: ansibleguy.infra_ufw
+        vars:
+          ufw_rules:
+            GrowAutomationCore:
+              port: "{{ ga_core_port_socket }}"
+              proto: 'tcp'
+              log: true
+        when:
+          - ga_core_install
+          - not ga_web_install
+
+      when: ga_ufw_manage

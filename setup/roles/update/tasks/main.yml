@@ -19,21 +19,41 @@
   ansible.builtin.import_tasks: process/main.yml
   when: ga_update_process
 
-- name: GA | Update | Updating version number
-  ansible.builtin.shell: "echo \"{{ item }};\" | mysql --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} {{ ga_sql_db }}"
-  with_items:
+- name: GA | Update | Updating version number (local db)
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ ga_sql_socket }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ item }}"
+  loop:
     - "update ga_systemagentmodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
     - "update ga_systemservermodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"
   when:
     - not ga_update_failed
     - ga_update_process
+    - ga_sql_server == 'localhost'
+
+- name: GA | Update | Updating version number (remote db)
+  community.mysql.mysql_query:
+    login_host: "{{ ga_sql_server }}"
+    login_port: "{{ ga_sql_port }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ item }}"
+  loop:
+    - "update ga_systemagentmodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel set version='{{ ga_update_release_new }}', version_detail='{{ ga_update_commit_new }}'"
+  when:
+    - not ga_update_failed
+    - ga_update_process
+    - ga_sql_server != 'localhost'
 
 - name: GA | Update | Restarting services
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: restarted
   when: ga_update_process
-  with_items:
+  loop:
     - 'ga_core.service'
     - 'apache2.service'
 

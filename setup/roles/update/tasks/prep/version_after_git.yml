@@ -1,12 +1,12 @@
 ---
 
-- name: GA | Update | Prep | Version | After-Git | Get commit version
+- name: GA | Update | Prep | Version | After-Git | Get commit hash
   ansible.builtin.shell: "cd {{ ga_update_path_repo }} && git log -1 | grep commit | cut -d ' ' -f2"
   changed_when: false
   register: ga_raw_commit
   when: ga_update_type == 'release'
 
-- name: GA | Update | Prep | Version | After-Git | Setting commit version
+- name: GA | Update | Prep | Version | After-Git | Setting commit hash
   ansible.builtin.set_fact:
     ga_update_commit_new: "{{ ga_raw_commit.stdout[:8] }}"
   changed_when: false

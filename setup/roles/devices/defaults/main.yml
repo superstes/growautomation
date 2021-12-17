@@ -1,5 +1,0 @@
----
-
-ga_device_raspiconfig:
-  - 'nonint do_i2c 0'
-  - 'nonint do_spi 0'

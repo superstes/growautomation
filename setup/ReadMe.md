@@ -1,6 +1,6 @@
 <br>
 <p align="center">
-  <img src="https://www.growautomation.eu/img/svg/ga02c.svg" width="50%"/>
+  <img src="https://raw.githubusercontent.com/superstes/growautomation/dev/docs/source/_static/img/ga02c.svg" width="50%"/>
 </p>
 <br><br>
 
@@ -10,7 +10,21 @@ There are basically two ways of installing the GrowAutomation software:
 
 ----
 
+### Image
+
+To install the pre-configured raspberry image you need to:
+
+* Download the image: <a href="https://drive.google.com/file/d/1MIoagaB4rKUwSbUtUW5E5ZUCCDU3k30S/view?usp=sharing">Google Drive</a>
+* Download and install the <a href="https://www.raspberrypi.com/software/">Raspberry Pi Imager</a> software on your computer (_or any other tool to flash images on a sd card_)
+* Flash the image on a sd card or <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">ssd</a>
+* <a href="https://docs.growautomation.eu/en/latest/setup/find.html">Find the device on your network</a> and start using it!
+
+
+----
+
 ### Setup script
+
+This setup option allows you to modify/configure a lot of custom settings that are pre-set in the image installation!
 
 #### Base setup
 
@@ -18,15 +32,19 @@ First you need to go through the basic setup process as described <a href="https
 
 #### Software setup
 
-The device will need internet access since the setup will download the code for you.
+For now: the device will need internet access for the setup-process to work.
 
-You can just copy the 'setup.sh' file to the target system and run it:
+We might create an offline-setup guide in the future.
+
+You need to copy the 'setup.sh' file to the target system and run it!
 
 ```bash
-$ sudo bash setup.sh
+sudo bash setup.sh
+# optional parameters:
+#   setup.sh TARGET-RELEASE(default=latest) DESTINATION-HOST(default=localhost)
 ```
 
-This script will prepare your system to run the Ansible setup tasks.
+This script will prepare your system to run the Ansible setup tasks/script.
 
 It will ask you to modify the configuration before continuing as seen here:
 
@@ -37,22 +55,23 @@ It will ask you to modify the configuration before continuing as seen here:
 This is the last time you can modify the config before the installation is started.
   You could:
   -> send this window to the background (Ctrl+Z)
-  -> make your modifications and
-  -> bring it back to the foreground (fg).
+  -> make your modifications
+  -> and bring it back to the foreground (fg).
 
 ###################################### INFO #######################################
 The following config files exist:
-  main: /tmp/ga_2021-04-11/setup/vars/main.yml
-  remote hosts (if needed):
-    - /tmp/ga_2021-04-11/setup/inventories/hosts.yml
-    - /tmp/ga_2021-04-11/setup/inventories/host_vars/$HOSTNAME.yml
+  main: /tmp/ga_2021-12-17/setup/vars/main.yml
+  remote hosts: (optional)
+    - /tmp/ga_2021-12-17/setup/inventories/hosts.yml
+    - /tmp/ga_2021-12-17/setup/inventories/host_vars/${HOSTNAME}.yml
 
-Do you want to continue? (yes/any=no)
+Do you want to continue? (yes/NO)
 ```
 
 Just put it in the background, change what you want and bring the setup back to the foreground.
 
 Type 'yes' and press enter to start the setup tasks.
+
 
 ##### Post install
 
@@ -68,15 +87,3 @@ cat /etc/.ga_setup
 Now you can access the web-interface and configure your devices.
 
 More information to the configuration can be found <a href="https://docs.growautomation.eu/en/latest/index.html">here</a>.
-
-----
-
-### Image
-
-**Currently not available**!
-
-Will be provided for later versions.
-
-You just need to flash the image on the sd-card or ssd for the raspberry and plug it in.
-
-GrowAutomation is pre-installed.

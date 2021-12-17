@@ -18,7 +18,7 @@
   ansible.builtin.user:
     name: "{{ ga_core_service_user }}"
     shell: '/usr/sbin/nologin'
-    home: "/home/{{ ga_core_service_user }}"
+    home: "{{ ga_core_path_home }}"
     groups: "{{ ga_service_group }}"
     append: yes
 
@@ -30,28 +30,27 @@
     group: "{{ ga_service_group }}"
     mode: 0755
     recurse: yes
-  with_items:
+  loop:
   - "{{ ga_core_path }}"
   - "{{ ga_core_path_log }}"
   - "{{ ga_core_path_venv }}"
 
-- name: GA | Core | Checking if repo was already cloned
-  ansible.builtin.stat:
-    path: "{{ setup_clone_dir }}"
-  register: tmp_clone_dir
-
-- name: GA | Core | Cloning ga code
-  ansible.builtin.git:
-    repo: 'https://github.com/superstes/growautomation.git'
-    dest: "{{ setup_clone_dir }}"
-    depth: 1
-    version: "{{ ga_version }}"
-  when: not tmp_clone_dir.stat.exists
-
 - name: GA | Core | Copying core-code
-  ansible.builtin.shell: "cp -r {{ setup_clone_dir }}/code/core {{ ga_core_path }} &&
-  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }}/core &&
-  chmod 775 -R {{ ga_core_path }}/core"
+  ansible.posix.synchronize:
+    src: "{{{ ga_setup_clone_dir }}/code/core"
+    dest: "{{ ga_core_path }}/"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+    rsync_opts: ['--exclude=*.cnf', '--exclude=*.key', '--exclude=__pycache__/']
+
+- name: GA | Core | Setting privileges for core code
+  ansible.builtin.file:
+    path: "{{ ga_core_path }}/core"
+    state: directory
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+    recurse: true
+    mode: 0750
 
 - name: GA | Core | Checking if random key file exists
   ansible.builtin.stat:
@@ -114,9 +113,8 @@
   ansible.builtin.systemd:
     name: 'ga_core.service'
     enabled: yes
-  notify: 'start_core_service'
+    state: started
 
 - name: GA | Configure device support
-  ansible.builtin.import_role:
-    name: devices
+  ansible.builtin.import_tasks: devices.yml
   when: ga_core_device_support

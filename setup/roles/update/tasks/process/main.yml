@@ -2,7 +2,7 @@
 
 - name: GA | Update | Process | Installing dependencies
   ansible.builtin.apt:
-    name: "{{ ga_update_packages }}"
+    name: "{{ ga_script_packages }}"
 
 - name: GA | Update | Process | Running pre-checks
   ansible.builtin.import_tasks: process/checks.yml

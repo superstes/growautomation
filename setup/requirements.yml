@@ -1,11 +1,29 @@
-# galaxy collections
-
 collections:
-  - name: ansible.posix
-    source: https://galaxy.ansible.com
+  - name: 'community.general'
+    source: 'https://galaxy.ansible.com'
 
-  - name: community.general
-    source: https://galaxy.ansible.com
+  - name: 'ansible.posix'
+    source: 'https://galaxy.ansible.com'
 
-  - name: community.mysql
-    source: https://galaxy.ansible.com
+  - name: 'community.mysql'
+    source: 'https://galaxy.ansible.com'
+
+  - name: 'community.crypto'
+    source: 'https://galaxy.ansible.com'
+
+roles:
+  - src: 'https://github.com/ansibleguy/infra_apache.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_apache'
+
+  - src: 'https://github.com/ansibleguy/infra_certs.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_certs'
+
+  - src: 'https://github.com/ansibleguy/infra_mariadb.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_mariadb'
+
+  - src: 'https://github.com/ansibleguy/infra_ufw.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_ufw'

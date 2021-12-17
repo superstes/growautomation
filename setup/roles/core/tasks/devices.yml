@@ -13,9 +13,21 @@
     state: present
 
 - name: GA | Core | Copying device-code
-  ansible.builtin.shell: "cp -r {{ setup_clone_dir }}/code/device {{ ga_core_path }} &&
-  chown -R {{ ga_core_service_user }}:{{ ga_service_group }} {{ ga_core_path }}/device &&
-  chmod 775 -R {{ ga_core_path }}/device"
+  ansible.posix.synchronize:
+    src: "{{{ ga_setup_clone_dir }}/code/device"
+    dest: "{{ ga_core_path }}/"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+    rsync_opts: ['--exclude=__pycache__/']
+
+- name: GA | Core | Setting privileges for device scripts
+  ansible.builtin.file:
+    path: "{{ ga_core_path }}/device"
+    state: directory
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+    recurse: true
+    mode: 0770
 
 - name: GA | Devices | Adding service user to groups
   ansible.builtin.user:
@@ -24,6 +36,6 @@
     append: yes
 
 - name: GA | Devices | Configuring raspi-config
-  ansible.builtin.shell: "raspi-config {{ item }}"
-  with_items: "{{ ga_device_raspiconfig }}"
+  ansible.builtin.command: "raspi-config {{ item }}"
+  loop: "{{ ga_core_raspiconfig }}"
   ignore_errors: true

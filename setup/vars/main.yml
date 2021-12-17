@@ -20,7 +20,7 @@ ga_web_users:
   # access:
   #   'r' = read-only
   #   'rw' = read-write
-ga_web_ssl_mode: 'self_signed'  # self_signed or letsencrypt
+ga_web_ssl_mode: 'ca'  # ca or letsencrypt
   # if letsencrypt is used as ssl_mode:
   #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-public-ip
   #   2. the server must have ports 80/443 publicly available
@@ -75,4 +75,4 @@ ga_sql_user_web: "{{ ga_web_service_user }}"
 ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
   # you can apply your own password => just replace the rubbish in between the double-quotes
   # random passwords can be found in the 'ga_random_pwd_file' file
-ga_sql_socket: '/var/run/mysqld/mysqld.sock'  # socket used to locally connect to database
+ga_sql_socket: '/run/mysqld/mysqld_ga.sock'  # socket used to locally connect to database

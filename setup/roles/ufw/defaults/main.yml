@@ -1,9 +1,0 @@
----
-
-ga_ufw_logging: 'off'
-
-ga_ufw_default_ipv6: 'no'
-ga_ufw_default_input: 'ACCEPT'
-ga_ufw_default_output: 'ACCEPT'
-ga_ufw_default_forward: 'DROP'
-ga_ufw_default_application: 'SKIP'

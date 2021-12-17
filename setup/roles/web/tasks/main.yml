@@ -1,11 +1,5 @@
 ---
 
-- name: GA | Web | Installing packages
-  ansible.builtin.apt:
-    name: "{{ ga_web_packages }}"
-    state: present
-  notify: 'enable_apache'
-
 - name: GA | Web | Setting system timezone
   community.general.timezone:
     name: "{{ ga_timezone }}"
@@ -19,7 +13,7 @@
   ansible.builtin.user:
     name: "{{ ga_web_service_user }}"
     shell: '/usr/sbin/nologin'
-    home: "/home/{{ ga_web_service_user }}"
+    home: "{{ ga_web_path_home }}"
     groups: "{{ ga_web_groups }}"
     append: yes
 
@@ -30,61 +24,24 @@
     owner: "{{ ga_web_service_user }}"
     group: "{{ ga_service_group }}"
     mode: 0755
-  with_items:
+  loop:
     - "{{ ga_web_path }}"
     - "{{ ga_web_path_log }}"
     - "{{ ga_web_path_static }}"
     - "{{ ga_web_path_venv }}"
 
-- name: GA | Web | Checking if repo was already cloned
-  ansible.builtin.stat:
-    path: "{{ setup_clone_dir }}"
-  register: tmp_clone_dir
+- name: GA | Web | Configuring django settings
+  ansible.builtin.lineinfile:
+    path: "{{ ga_web_path }}/base/config.py"
+    regexp: '{{ item.search }}'
+    line: '{{ item.replace }}'
+  loop: "{{ ga_django_config_replacement }}"
 
-- name: GA | Web | Cloning ga code
-  ansible.builtin.git:
-    repo: 'https://github.com/superstes/growautomation.git'
-    dest: "{{ setup_clone_dir }}"
-    depth: 1
-  when: not tmp_clone_dir.stat.exists
-  version: "{{ ga_version }}"
-
-- name: GA | Web | Copying web-code
-  ansible.builtin.shell: "cp -r {{ setup_clone_dir }}/code/web/base/* {{ ga_web_path }} &&
-  chown -R {{ ga_web_service_user }}:{{ ga_service_group }} {{ ga_web_path }} &&
-  chmod 755 -R {{ ga_web_path }}"
-
-- name: GA | Web | Moving static content
-  ansible.builtin.shell: "cp -r {{ ga_web_path }}/static/* {{ ga_web_path_static }} &&
-  rm -rf {{ ga_web_path }}/static"
-  ignore_errors: true   # when running more than once -> it will fail
-
-- name: GA | Web | Configure LetsEncrypt
-  ansible.builtin.import_role:
-    name: ssl_letsencrypt
-  when: ga_web_ssl_mode == 'letsencrypt'
-
-- name: GA | Web | Checking if web cert exists
-  ansible.builtin.stat:
-    path: "{{ ga_ssl_path_key }}"
-  register: cert_key_file
-
-- name: GA | Web | Configure SelfSign-CA
-  ansible.builtin.import_role:
-    name: ssl_selfsigned
-  when: ga_web_ssl_mode == 'self_signed' or not cert_key_file.stat.exists
-
-- name: GA | Web | Configuring apache
-  ansible.builtin.import_tasks: apache.yml
-
-- name: GA | Web | Configuring django
-  ansible.builtin.import_tasks: django.yml
-
-- name: GA | Web | Initialize database schema
-  ansible.builtin.import_tasks: init_db.yml
-  when: ga_web_init_db
-
-- name: GA | Configure UFW
-  ansible.builtin.import_role:
-    name: ufw
-  when: ga_ufw_manage
+- name: GA | Web | Adding privileges
+  ansible.builtin.template:
+    src: 'templates/etc/sudoers.d/gaweb.j2'
+    dest: '/etc/sudoers.d/gaweb'
+    owner: 'root'
+    group: 'root'
+    mode: 0440
+    validate: "/usr/sbin/visudo -cf %s"

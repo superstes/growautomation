@@ -1,3 +1,7 @@
 ---
 
 ga_core_path_log: "{{ ga_path_log }}/core"
+
+ga_core_raspiconfig:
+  - 'nonint do_i2c 0'
+  - 'nonint do_spi 0'

@@ -2,7 +2,6 @@
 # these SHOULD NOT BE MODIFIED!
 
 # basics
-ga_version: '1.0' # => pull latest version dynamically from github api
 ga_python_version: '3.9'
 ga_update_path: '/var/lib/ga_update'
 
@@ -13,29 +12,32 @@ ga_update_service_user: 'ga_update'
 ga_service_group: 'ga'
 ga_core_path_home: "/home/{{ ga_core_service_user }}"
 ga_core_path_venv: "{{ ga_core_path_home }}/venv"
-ga_web_path_home: "/home/{{ ga_core_service_user }}"
+ga_web_path_home: "/home/{{ ga_web_service_user }}"
 ga_web_path_venv: "{{ ga_web_path_home }}/venv"
+ga_update_path_home: "/home/{{ ga_update_service_user }}"
 
-# core
-ga_core_packages:
+# script
+ga_script_packages:  # ansible-script dependencies
+  - 'python3-jmespath'
   - 'git'
   - 'python3'
   - 'python3-pip'
-  - 'python3-systemd'
+  - 'rsync'
+
+# core
+ga_core_packages:
+  - 'python3-systemd'  # systemd-python dependency
   - 'systemd'
+  - 'pkg-config'  # systemd-python dependency
 
 ga_core_mods:
   - 'pycryptodome'
   - 'mysql.connector'
   - 'systemd-python'
 
-# web
-ga_web_packages:
-  - 'apache2'
-  - 'python3'
-  - 'python3-pip'
-  - 'libapache2-mod-wsgi-py3'
+ga_core_port_socket: 2048
 
+# web
 ga_django_mods:
   - 'django'
   - 'django_mysql'
@@ -56,7 +58,7 @@ ga_web_groups:
   - "{{ ga_service_group }}"
 
 # db
-ga_db_config: 'database.cnf'
+ga_sql_config: 'database.cnf'
 ga_sql_db: 'ga'
 ga_db_packages:
   - 'mariadb-server'
@@ -81,9 +83,3 @@ ga_device_mods:
 ga_device_packages:
   - 'libgpiod2'
   - 'i2c-tools'
-
-# update
-ga_update_packages:
-  - 'rsync'
-
-

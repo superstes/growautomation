@@ -14,15 +14,27 @@
     dest: '/lib/systemd/system/ga_update.service'
 
 - name: GA | Core | Update | Copying update-code
-  ansible.builtin.shell: "cp -r {{ setup_clone_dir }}/code/update/* {{ ga_update_path }} &&
-  chown -R {{ ga_update_service_user }}:{{ ga_update_service_user }} {{ ga_update_path }} &&
-  chmod -R 750 {{ ga_update_path }}"
+  ansible.posix.synchronize:
+    src: "{{{ ga_setup_clone_dir }}/code/update/"
+    dest: "{{ ga_update_path }}/"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+    rsync_opts: ['--exclude=*.cnf', '--exclude=*.key', '--exclude=__pycache__/']
+
+- name: GA | Core | Update | Setting privileges
+  ansible.builtin.file:
+    path: "{{ ga_update_path }}"
+    state: directory
+    owner: "{{ ga_update_service_user }}"
+    group: "{{ ga_update_service_user }}"
+    recurse: true
+    mode: 0750
 
 - name: GA | Core | Update | Adding service user
   ansible.builtin.user:
     name: "{{ ga_update_service_user }}"
     shell: '/usr/sbin/nologin'
-    home: "/home/{{ ga_update_service_user }}"
+    home: "{{ ga_update_path_home }}"
 
 - name: GA | Core | Update | Adding privileges
   ansible.builtin.template:

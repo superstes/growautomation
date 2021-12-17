@@ -4,4 +4,4 @@ ga_update_failed: false
 ga_remove_web_venv: false
 ga_remove_core_venv: false
 ga_update_path_backup: "/var/backups/ga/update/{{ ansible_date_time.iso8601_basic_short }}"
-ga_update_cores: "{{ ansible_processor_cores - 1 }}"
+ga_update_cores: "{% if ansible_processor_cores - 1 > 0 %}{{ ansible_processor_cores - 1 }}{% else %}1{% endif %}"

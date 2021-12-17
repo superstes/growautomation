@@ -10,7 +10,7 @@
     - './vars/hardcoded.yml'
 
   vars:
-    ga_update_cores: "{{ ansible_processor_cores - 1 }}"
+    ga_update_cores: "{% if ansible_processor_cores - 1 > 0 %}{{ ansible_processor_cores - 1 }}{% else %}1{% endif %}"
 
   vars_prompt:
     - name: ga_update_path_backup

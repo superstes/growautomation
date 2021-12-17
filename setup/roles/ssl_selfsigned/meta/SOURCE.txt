@@ -1,2 +1,0 @@
-https://github.com/ansibleguy/service-easyrsa
-Modified for usage in GrowAutomation

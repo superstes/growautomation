@@ -18,9 +18,26 @@
     - {src: "{{ ga_web_path_venv }}", dst: "{{ ga_update_path_backup }}/home_web.tar.xz"}
     - {src: "{{ ga_update_path_log }}", dst: "{{ ga_update_path_backup }}/log.tar.xz"}
 
-- name: GA | Update | Process | Backup | Backing up database
-  ansible.builtin.shell: "mysqldump --defaults-file={{ ga_update_path_web }}/{{ ga_db_config }} --force {{ ga_sql_db }} |
-  xz -7 -T{{ ga_update_cores }} > {{ ga_update_path_backup }}/db.sql.xz"
+- name: GA | Update | Process | Backup | Backing up database (local db)
+  community.mysql.mysql_db:
+    state: 'dump'
+    name: "{{ ga_sql_db }}"
+    target: "{{ ga_update_path_backup }}/db.sql.xz"
+    login_unix_socket: "{{ ga_sql_socket }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    use_shell: true
+  when: ga_sql_server == 'localhost'
+
+- name: GA | Update | Process | Backup | Backing up database (remote db)
+  community.mysql.mysql_db:
+    state: 'dump'
+    name: "{{ ga_sql_db }}"
+    target: "{{ ga_update_path_backup }}/db.sql.xz"
+    login_host: "{{ ga_sql_server }}"
+    login_port: "{{ ga_sql_port }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    use_shell: true
+  when: ga_sql_server != 'localhost'
 
 - name: GA | Update | Process | Backup | Setting privileges on backup-files
   ansible.builtin.file:

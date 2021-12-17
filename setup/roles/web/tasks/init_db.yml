@@ -1,63 +1,89 @@
 ---
 
-- name: GA | Web | Init | Building database schema
-  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
-  {{ ga_web_path_venv }}/bin/python3 manage.py makemigrations"
-  args:
-    executable: '/bin/bash'
-    chdir: "{{ ga_web_path }}"
-  environment:
-    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-
-- name: GA | Web | Init | Importing database schema
-  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
-  {{ ga_web_path_venv }}/bin/python3 manage.py migrate"
-  args:
-    executable: '/bin/bash'
-    chdir: "{{ ga_web_path }}"
-  environment:
-    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-    DJANGO_SETTINGS_MODULE: 'base.settings'
-
 - name: GA | Web | Init | Copying user/group helpers
   ansible.builtin.copy:
     src: "files/tmp/{{ item }}"
     dest: '/tmp/{{ item }}'
     mode: 0500
-  with_items:
+  loop:
     - 'create_group.py'
     - 'create_user.py'
     - 'crypto.py'
 
 - name: GA | Web | Init | Getting encrypted core-password
-  ansible.builtin.shell: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
+  ansible.builtin.command: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
   no_log: true
   register: ga_sql_pwd_core_encrypted
 
 - name: GA | Web | Init | Getting encrypted web-password
-  ansible.builtin.shell: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
+  ansible.builtin.command: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
   no_log: true
   register: ga_sql_pwd_web_encrypted
 
-- name: GA | Web | Init | Copying database initialization script
-  ansible.builtin.template:
-    src: "templates/tmp/config_init.sql.j2"
-    dest: '/tmp/config_init.sql'
-    mode: 0755
-  register: init_script
+- name: GA | Web | Init | Get commit hash
+  ansible.builtin.shell: "cd {{ ga_setup_clone_dir }} && git log -1 | grep commit | cut -d ' ' -f2"
+  changed_when: false
+  register: ga_raw_commit
 
-- name: GA | Web | Init | Executing database initialization script
-  ansible.builtin.shell: "mysql --defaults-file={{ ga_web_path }}/{{ ga_db_config }} < /tmp/config_init.sql"
-  notify: 'restart_apache'
-  when: init_script.changed
+- name: GA | Web | Init | Setting commit hash
+  ansible.builtin.set_fact:
+    ga_setup_commit: "{{ ga_raw_commit.stdout[:8] }}"
+  changed_when: false
+
+- name: GA | Web | Init | Preparing initialization script
+  ansible.builtin.set_fact:
+    ga_db_init:  # This script is used to initialize the main configuration-objects - without those the core and web-interface won't work properly
+      - "INSERT IGNORE INTO {{ ga_sql_db }}.ga_systemservermodel
+        (created, updated, name, description, path_core, path_web, 
+        path_web_static, path_home_core, path_home_web, path_log, sql_server, sql_port, sql_user, 
+        sql_secret, sql_database,
+        log_level, debug, security, timezone, web_cdn, web_warn, ga_cloud, 
+        ga_cloud_uuid, ga_cloud_token, ga_cloud_ddns, version, version_detail)
+        VALUES
+        (NOW(), NOW(), '{{ ga_core_controller_name }}', 'Server created by setup at {{ ansible_date_time.iso8601_basic_short }}', '{{ ga_core_path }}', '{{ ga_web_path }}', 
+        '{{ ga_web_path_static }}', '{{ ga_core_path_home }}', '{{ ga_web_path_home }}', '{{ ga_path_log }}', '{{ ga_sql_server }}', {{ ga_sql_port }}, '{{ ga_sql_user_web }}', 
+        '{{ ga_sql_pwd_web_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0, {% if ga_security_mode %}1{% else %}0{% endif %}, '{{ ga_timezone }}', 0, 1, 0, 
+        NULL, NULL, 0, '{{ ga_setup_release }}', '{{ ga_setup_commit }}')"
+
+      - "INSERT IGNORE INTO {{ ga_sql_db }}.ga_systemagentmodel
+        (created, updated, name, description, path_root, path_home, path_log, sql_server, 
+        sql_port, sql_user, sql_secret, sql_database,
+        log_level, debug, device_fail_count, device_fail_sleep, device_log, svc_interval_status, svc_interval_reload, subprocess_timeout, 
+        version, version_detail)
+        VALUES
+        (NOW(), NOW(), '{{ ga_core_controller_name }}', 'Agent created by setup', '{{ ga_core_path }}', '{{ ga_core_path_home }}', '{{ ga_path_log }}', '{{ ga_sql_server }}', 
+        {{ ga_sql_port }}, '{{ ga_sql_user_core }}', '{{ ga_sql_pwd_core_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0, 3, 3600, 1, 3600, 21600, 60
+        '{{ ga_setup_release }}', '{{ ga_setup_commit }}')"
+
+- name: GA | Web | Init | Executing database initialization script (local db)
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ ga_sql_socket }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ ga_db_init }}"
+    single_transaction: true
+  when: ga_sql_server == 'localhost'
+  register: init_script_local
+  ignore_errors: true  # if executed more than once -> it will fail
+
+- name: GA | Web | Init | Executing database initialization script (remote db)
+  community.mysql.mysql_query:
+    login_host: "{{ ga_sql_server }}"
+    login_port: "{{ ga_sql_port }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ ga_db_init }}"
+    single_transaction: true
+  when: ga_sql_server != 'localhost'
+  register: init_script_remote
   ignore_errors: true  # if executed more than once -> it will fail
 
 - name: GA | Web | Init | Displaying info
   ansible.builtin.debug:
     msg: "INFO: The database initialization might fail if it was already run. In that case you can ignore this error!"
-  when:
-    - init_script.failed is defined
-    - init_script.failed
+  when: >
+    (init_script_local.failed is defined and init_script_local.failed) or
+    (init_script_remote.failed is defined and init_script_remote.failed)
 
 - name: GA | Web | Init | Creating ga groups
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
@@ -70,7 +96,7 @@
     DJANGO_SETTINGS_MODULE: 'base.settings'
   loop_control:
     loop_var: group
-  with_items: "{{ ga_django_groups }}"
+  loop: "{{ ga_django_groups }}"
 
 - name: GA | Web | Init | Creating django admin
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
@@ -95,4 +121,9 @@
     DJANGO_SETTINGS_MODULE: 'base.settings'
   loop_control:
     loop_var: user
-  with_items: "{{ ga_web_users }}"
+  loop: "{{ ga_web_users }}"
+
+- name: GA | Web | Init | Restarting webserver
+  ansible.builtin.systemd:
+    name: 'apache2.service'
+    state: restarted
