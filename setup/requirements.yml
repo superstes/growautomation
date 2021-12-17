@@ -12,9 +12,13 @@ collections:
     source: 'https://galaxy.ansible.com'
 
 roles:
-  - src: 'https://github.com/ansibleguy/infra_apache.git'
+  - src: 'https://github.com/ansibleguy/linux_bootstrap.git'
     version: 'stable'
-    name: 'ansibleguy.infra_apache'
+    name: 'ansibleguy.linux_bootstrap'
+
+  - src: 'https://github.com/ansibleguy/infra_django_apache.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_django_apache'
 
   - src: 'https://github.com/ansibleguy/infra_certs.git'
     version: 'stable'

@@ -44,11 +44,10 @@ fi
 
 # downloading source code
 SETUP_DIR="/tmp/ga_$(date '+%Y-%m-%d')"
-git clone https://github.com/superstes/growautomation.git --depth 1 ${SETUP_DIR} --branch $TARGET_VERSION
+git clone https://github.com/superstes/growautomation.git --depth 1 ${SETUP_DIR} --branch ${TARGET_VERSION}
 cd $SETUP_DIR/setup
 
 # installing ansible dependencies
-mkdir $SETUP_DIR/setup/collections
 ansible-galaxy collection install -r requirements.yml
 ansible-galaxy install -r requirements.yml --roles-path $SETUP_DIR/setup/roles
 

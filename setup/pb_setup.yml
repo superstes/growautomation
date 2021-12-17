@@ -223,6 +223,34 @@
         - ga_web_install
         - ga_web_init_db
 
+    # basic system setup
+    - name: Bootstrapping
+      ansible.builtin.import_role:
+        name: ansibleguy.linux_bootstrap
+      vars:
+        configure_firewall: false  # will be done explicitly
+        configure_users: false
+        configure_ssh: false  # could be done as opt-in in the future (?)
+        # ssh_config:
+        #   port: 22
+        #   allow_root: false
+        #   auth_pwd: true
+        #   auth_pubkey: false  # ?
+        #   msg: true
+
+        configure_network: false
+        configure_auto_update: true
+        auto_update_config:
+          time: 'Sun 00:00'
+          auto_reboot: true
+          auto_reboot_with_users: false
+          auto_reboot_time: '02:00'
+          exclusions: []
+          exclude_kernel: false
+          logging: true
+          logging_verbose: true
+      when: ga_bootstrap
+
     # firewall management
     - name: Firewall
       ansible.builtin.block:
