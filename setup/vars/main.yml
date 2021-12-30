@@ -53,7 +53,7 @@ ga_core_device_log: true
 ga_web_install: true
 ga_web_path: '/var/www/ga'
 ga_web_path_static: '/var/www/ga_static'
-ga_web_ssl_selfsigned_cn: 'GrowAutomation'  # DO NOT use whitespaces !
+ga_web_ssl_selfsigned_cn: 'GA-Controller'  # DO NOT use whitespaces !
 ga_web_ssl_letsencrypt_mail: "webmaster@{{ ga_web_dns }}"  # change if you want to receive info mails
 ga_web_disable_apache_default_sites: true
 ga_web_init_db: true  # if django should initialize the database schema

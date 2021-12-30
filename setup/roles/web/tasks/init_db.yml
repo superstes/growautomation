@@ -93,7 +93,7 @@
     chdir: "{{ ga_web_path }}"
   environment:
     PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-    DJANGO_SETTINGS_MODULE: 'base.settings'
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
   loop_control:
     loop_var: group
   loop: "{{ ga_django_groups }}"
@@ -107,7 +107,7 @@
     chdir: "{{ ga_web_path }}"
   environment:
     PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-    DJANGO_SETTINGS_MODULE: 'base.settings'
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
 
 - name: GA | Web | Init | Creating ga users
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
@@ -118,7 +118,7 @@
     chdir: "{{ ga_web_path }}"
   environment:
     PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-    DJANGO_SETTINGS_MODULE: 'base.settings'
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
   loop_control:
     loop_var: user
   loop: "{{ ga_web_users }}"
@@ -127,3 +127,4 @@
   ansible.builtin.systemd:
     name: 'apache2.service'
     state: restarted
+    enabled: yes

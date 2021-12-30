@@ -26,8 +26,9 @@ ga_script_packages:  # ansible-script dependencies
 
 # core
 ga_core_packages:
+  - 'python3-virtualenv'
   - 'python3-systemd'  # systemd-python dependency
-  - 'systemd'
+  - 'systemd'  # systemd-python dependency
   - 'pkg-config'  # systemd-python dependency
 
 ga_core_mods:
@@ -38,6 +39,12 @@ ga_core_mods:
 ga_core_port_socket: 2048
 
 # web
+ga_web_packages:
+  - 'python3-virtualenv'
+  - 'python3-systemd'  # systemd-python dependency
+  - 'systemd'  # systemd-python dependency
+  - 'pkg-config'  # systemd-python dependency
+
 ga_django_mods:
   - 'django'
   - 'django_mysql'
@@ -52,10 +59,14 @@ ga_django_mods:
   - 'user-agents'
   - 'django-user-agents'
   - 'requests'
+  - 'pytz'
+  - 'systemd'
 
 ga_web_groups:
   - 'systemd-journal'
   - "{{ ga_service_group }}"
+
+ga_web_django_project: 'base'
 
 # db
 ga_sql_config: 'database.cnf'

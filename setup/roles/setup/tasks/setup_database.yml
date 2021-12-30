@@ -1,0 +1,106 @@
+---
+
+- name: GA | Setup | GA Web - Database
+  ansible.builtin.import_role:
+    name: ansibleguy.infra_django_apache
+  vars:
+    django:
+      sites:
+        ga:
+          python_version: "python{{ ga_python_version }}"
+          path_venv: "{{ ga_web_path_venv }}"
+          path_code: "{{ ga_web_path }}"
+          project: "{{ ga_web_django_project }}"
+          static_url: 'static'
+          serve:
+            path: "{{ ga_web_path_static }}"
+
+          user: "{{ ga_web_service_user }}"
+          group: "{{ ga_service_group }}"
+          admin: "{{ ga_web_ssl_letsencrypt_mail }}"
+          port_plain: "{{ ga_web_port_http }}"
+          port_ssl: "{{ ga_web_port_https }}"
+          domain: "{{ ga_web_dns }}"
+          aliases: "{{ ga_web_alias }}"
+          ssl:
+            mode: "{{ ga_web_ssl_mode }}"
+            cert:
+              cn: "{{ ga_web_ssl_selfsigned_cn }}"
+              org: 'GrowAutomation'
+              country: 'AT'
+              state: 'Styria'
+            ca:
+              cn: 'GrowAutomation CA'
+              org: 'GrowAutomation'
+              country: 'AT'
+              state: 'Styria'
+          letsencrypt:
+            email: "{{ ga_web_ssl_letsencrypt_mail }}"
+          env_pythonpath: ["{{ ga_core_path }}"]
+          migration_pre_tasks: ['systemctl stop ga_core.service']
+          migration_post_tasks: ['systemctl start ga_core.service']
+          python_modules:
+            present: "{{ ga_django_mods }}"
+          database:
+            manage: "{{ ga_sql_install }}"
+            host: "{{ ga_sql_server }}"
+            db: "{{ ga_sql_db }}"
+            user: "{{ ga_sql_user_web }}"
+            pwd: "{{ ga_sql_pwd_web }}"
+            config: "{{ ga_sql_config }}"
+            config_mode: '0640'
+            backup: true
+            update_pwd: 'always'
+  when: ga_web_install
+
+- name: GA | Setup | GA Core - Database
+  community.mysql.mysql_user:
+    name: "{{ ga_sql_user_core }}"
+    password: "{{ ga_sql_pwd_core }}"
+    priv: "{{ ga_sql_db + '.*:ALL' }}"
+    login_unix_socket: "{{ ga_sql_socket }}"
+  no_log: true
+  when:
+    - ga_web_install
+    - ga_core_install
+
+- name: GA | Setup | GA Core Database - Preparing config
+  ansible.builtin.set_fact:
+    ga_mariadb_instance: "{{ {
+      'dbs': {
+        ga_sql_db: 'present',
+      },
+      'backup': true,
+      'users': {
+        ga_sql_user_web: {
+          'priv': ga_sql_db + '.*:ALL',
+          'pwd': ga_sql_pwd_web,
+        },ansible.bu
+        ga_sql_user_core: {
+          'priv': ga_sql_db + '.*:ALL',
+          'pwd': ga_sql_pwd_core,
+        },
+      },
+      'settings': {'wait_timeout': 3600},
+      'socket': ga_sql_socket
+    } }}"
+
+- name: GA | Setup | GA Core Database - Setting up
+  ansible.builtin.import_role:
+    name: ansibleguy.infra_mariadb
+  vars:
+    mariadb:
+      instances:
+        ga: "{{ ga_mariadb_instance }}"
+  when:
+    - not ga_web_install
+    - ga_core_install
+    - ga_sql_install
+
+- name: GA | Setup | GA Web - Post tasks
+  ansible.builtin.import_role:
+    name: web
+    tasks_from: 'init_db.yml'
+  when:
+    - ga_web_install
+    - ga_web_init_db

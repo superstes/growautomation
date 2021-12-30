@@ -1,5 +1,13 @@
 ---
 
+- name: GA | Core | Update | Adding service user
+  ansible.builtin.user:
+    name: "{{ ga_update_service_user }}"
+    shell: '/usr/sbin/nologin'
+    home: "{{ ga_update_path_home }}"
+    groups: "{{ ga_service_group }}"
+    append: yes
+
 - name: GA | Core | Update | Creating directory
   ansible.builtin.file:
     path: "{{ ga_update_path }}"
@@ -15,7 +23,7 @@
 
 - name: GA | Core | Update | Copying update-code
   ansible.posix.synchronize:
-    src: "{{{ ga_setup_clone_dir }}/code/update/"
+    src: "{{ ga_setup_clone_dir }}/code/update/"
     dest: "{{ ga_update_path }}/"
     recursive: yes
     rsync_path: 'sudo rsync'

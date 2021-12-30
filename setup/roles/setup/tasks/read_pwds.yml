@@ -1,0 +1,27 @@
+---
+
+- name: GA | Setup | Getting sql-core password
+  ansible.builtin.shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_core | quote }}"
+  register: raw_core_pwd
+  when: ga_sql_pwd_core == ga_sql_pwd_random_key
+  no_log: true
+  changed_when: False
+
+- name: GA | Setup | Setting sql-core password
+  ansible.builtin.set_fact:
+    ga_sql_pwd_core: "{{ raw_core_pwd.stdout.split('=', 1)[1] }}"
+  no_log: true
+  when: ga_sql_pwd_core == ga_sql_pwd_random_key
+
+- name: GA | Setup | Getting sql-web password
+  ansible.builtin.shell: "cat {{ ga_random_pwd_file | quote }} | grep {{ ga_sql_user_web | quote }}"
+  register: raw_web_pwd
+  when: ga_sql_pwd_web == ga_sql_pwd_random_key
+  no_log: true
+  changed_when: False
+
+- name: GA | Setup | Setting sql-web password
+  ansible.builtin.set_fact:
+    ga_sql_pwd_web: "{{ raw_web_pwd.stdout.split('=', 1)[1] }}"
+  no_log: true
+  when: ga_sql_pwd_web == ga_sql_pwd_random_key

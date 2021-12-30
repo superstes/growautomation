@@ -1,5 +1,10 @@
 ---
 
+- name: GA | Web | Installing packages
+  ansible.builtin.apt:
+    name: "{{ ga_web_packages }}"
+    state: present
+
 - name: GA | Web | Setting system timezone
   community.general.timezone:
     name: "{{ ga_timezone }}"
@@ -30,9 +35,27 @@
     - "{{ ga_web_path_static }}"
     - "{{ ga_web_path_venv }}"
 
+- name: GA | Web | Copying web code
+  ansible.posix.synchronize:
+    src: "{{ ga_setup_clone_dir }}/code/web/{{ ga_web_django_project }}/"
+    dest: "{{ ga_web_path }}"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+    rsync_opts:
+      - '--exclude=*.cnf'
+      - '--exclude=*.conf'
+      - '--exclude=static/'
+
+- name: GA | Web | Copying web static-files
+  ansible.posix.synchronize:
+    src: "{{ ga_setup_clone_dir }}/code/web/{{ ga_web_django_project }}/static/"
+    dest: "{{ ga_web_path_static }}"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+
 - name: GA | Web | Configuring django settings
   ansible.builtin.lineinfile:
-    path: "{{ ga_web_path }}/base/config.py"
+    path: "{{ ga_web_path }}/{{ ga_web_django_project }}/config.py"
     regexp: '{{ item.search }}'
     line: '{{ item.replace }}'
   loop: "{{ ga_django_config_replacement }}"

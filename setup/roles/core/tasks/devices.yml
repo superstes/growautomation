@@ -9,12 +9,14 @@
   ansible.builtin.pip:
     name: "{{ ga_device_mods }}"
     virtualenv: "{{ ga_core_path_venv }}"
-    virtualenv_python: "{{ ga_python_version }}"
+    virtualenv_python: "python{{ ga_python_version }}"
+    virtualenv_command: '/usr/bin/virtualenv'
+    executable: pip3
     state: present
 
 - name: GA | Core | Copying device-code
   ansible.posix.synchronize:
-    src: "{{{ ga_setup_clone_dir }}/code/device"
+    src: "{{ ga_setup_clone_dir }}/code/device"
     dest: "{{ ga_core_path }}/"
     recursive: yes
     rsync_path: 'sudo rsync'

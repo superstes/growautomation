@@ -16,6 +16,10 @@ roles:
     version: 'stable'
     name: 'ansibleguy.linux_bootstrap'
 
+  - src: 'https://github.com/ansibleguy/linux_users.git'
+    version: 'stable'
+    name: 'ansibleguy.linux_users'
+
   - src: 'https://github.com/ansibleguy/infra_django_apache.git'
     version: 'stable'
     name: 'ansibleguy.infra_django_apache'

@@ -72,6 +72,7 @@ Just put it in the background, change what you want and bring the setup back to 
 
 Type 'yes' and press enter to start the setup tasks.
 
+After that it will ask you for a 'BECOME password' => you need to **provide the password for a user with root privileges** on the target system!
 
 ##### Post install
 

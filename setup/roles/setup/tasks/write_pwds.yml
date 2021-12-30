@@ -1,0 +1,49 @@
+---
+
+- name: GA | Setup | Writing web-user heading to file
+  ansible.builtin.lineinfile:
+    line: "=|database-users|="
+    path: "{{ ga_random_pwd_file }}"
+    state: present
+    create: yes
+
+- name: GA | Setup | Writing sql-core password to file
+  ansible.builtin.lineinfile:
+    line: "{{ ga_sql_user_core }}={{ ga_sql_pwd_core }}"
+    path: "{{ ga_random_pwd_file }}"
+    insertafter: '=|sdatabase-users|='
+    create: yes
+    state: present
+    mode: 0600
+  no_log: true
+
+- name: GA | Setup | Writing sql-web password to file
+  ansible.builtin.lineinfile:
+    line: "{{ ga_sql_user_web }}={{ ga_sql_pwd_web }}"
+    path: "{{ ga_random_pwd_file }}"
+    insertafter: '=|database-users|='
+    state: present
+  no_log: true
+
+- name: GA | Setup | Writing web-user heading to file
+  ansible.builtin.lineinfile:
+    line: "=|web-users|="
+    path: "{{ ga_random_pwd_file }}"
+    state: present
+
+- name: GA | Setup | Writing web-admin password to file
+  ansible.builtin.lineinfile:
+    line: "admin={{ ga_sql_pwd_web }}"
+    path: "{{ ga_random_pwd_file }}"
+    state: present
+    insertafter: '=|web-users|='
+  no_log: true
+
+- name: GA | Setup | Writing web-user passwords to file
+  ansible.builtin.lineinfile:
+    line: "{{ item.name }}={{ item.pwd }}"
+    path: "{{ ga_random_pwd_file }}"
+    state: present
+    insertafter: '=|web-users|='
+  no_log: true
+  with_items: "{{ ga_web_users }}"

@@ -16,7 +16,7 @@ set -e
 
 # package installation
 echo 'deb http://ppa.launchpad.net/ansible/ansible/ubuntu focal main' > /etc/apt/sources.list.d/ansible.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 93C4A3FD7BB9C367
 apt update
 apt install python3 python3-requests git --yes
 apt-get install ansible --yes

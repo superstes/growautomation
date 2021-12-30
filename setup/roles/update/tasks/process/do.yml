@@ -18,7 +18,9 @@
   ansible.builtin.pip:
     name: "{{ venv.mods }}"
     virtualenv: "{{ venv.path }}"
-    virtualenv_python: "{{ ga_python_version }}"
+    virtualenv_python: "python{{ ga_python_version }}"
+    virtualenv_command: '/usr/bin/virtualenv'
+    executable: pip3
     state: present
   loop_control:
     loop_var: venv
@@ -28,7 +30,7 @@
   ignore_errors: true
   register: update_venv
 
-- name: GA | Update | Process | Do | Updateing code
+- name: GA | Update | Process | Do | Updating code
   ansible.posix.synchronize:
     src: "{{ item.src }}"
     dest: "{{ item.dst }}"
@@ -41,13 +43,13 @@
       opts: ['--exclude=secret/*', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf']
     }
     - {
-      src: "{{ ga_update_path_repo }}/code/web/base/", dst: "{{ ga_update_path_web }}/",
+      src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/", dst: "{{ ga_update_path_web }}/",
       opts: [
-          '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', '--exclude=base/config.py',
+          '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', "--exclude={{ ga_web_django_project }}/config.py",
           '--exclude=update_schema.sh',
       ]
     }
-    - {src: "{{ ga_update_path_repo }}/code/web/base/static/", dst: "{{ ga_update_path_web_static }}/"}
+    - {src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/static/", dst: "{{ ga_update_path_web_static }}/"}
   ignore_errors: true
   register: update_code
 
@@ -102,7 +104,7 @@
     chdir: "{{ ga_update_path_web }}"
   environment:
     PYTHONPATH: "{{ ga_update_path_web }}:{{ ga_update_path_core }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
-    DJANGO_SETTINGS_MODULE: 'base.settings'
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
   ignore_errors: true
   register: update_db_schema_migrate
   when:

@@ -37,7 +37,7 @@
 
 - name: GA | Core | Copying core-code
   ansible.posix.synchronize:
-    src: "{{{ ga_setup_clone_dir }}/code/core"
+    src: "{{ ga_setup_clone_dir }}/code/core"
     dest: "{{ ga_core_path }}/"
     recursive: yes
     rsync_path: 'sudo rsync'
@@ -84,17 +84,13 @@
     owner: "{{ ga_core_service_user }}"
     group: "{{ ga_service_group }}"
 
-- name: GA | Core | Install python virtualenv
-  ansible.builtin.pip:
-    name: 'virtualenv'
-    executable: pip3
-    state: present
-
 - name: GA | Core | Install python modules into venv
   ansible.builtin.pip:
     name: "{{ ga_core_mods }}"
     virtualenv: "{{ ga_core_path_venv }}"
-    virtualenv_python: "{{ ga_python_version }}"
+    virtualenv_python: "python{{ ga_python_version }}"
+    virtualenv_command: '/usr/bin/virtualenv'
+    executable: pip3
     state: present
 
 - name: GA | Core | Adding core service file
@@ -113,7 +109,6 @@
   ansible.builtin.systemd:
     name: 'ga_core.service'
     enabled: yes
-    state: started
 
 - name: GA | Configure device support
   ansible.builtin.import_tasks: devices.yml
