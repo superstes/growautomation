@@ -46,10 +46,10 @@ supply_sql_dict = {
             'base': f"SELECT * FROM {DJANGO_PROJECT}_objectconditionmodel;",
         },
         'fields': {
-            'base': ['name', 'description', 'value', 'operator', 'check', 'period', 'period_data', 'area_id', 'input_group_id', 'input_obj_id', 'special_obj_id'],
+            'base': ['name', 'description', 'value', 'operator', 'calc', 'period', 'period_data', 'area_id', 'input_group_id', 'input_obj_id', 'special_obj_id'],
         },
         'setting_fields': {
-            'base': ['value', 'operator', 'check', 'period', 'period_data'],
+            'base': ['value', 'operator', 'calc', 'period', 'period_data'],
         },
     },
     KEY_OBJECT_CONDITION_MATCH_SPECIAL: {

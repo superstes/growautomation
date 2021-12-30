@@ -74,7 +74,7 @@ class Go:
         return result
 
     def _get_data(self) -> (float, int):
-        value_check = self.condition.check
+        value_check = self.condition.calc
         if value_check == 'min':
             data = min(self.data_list)
 

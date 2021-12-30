@@ -1,0 +1,28 @@
+{% extends "../../body.html" %}
+{% load util %}
+{% block content %}
+    {% if server.ga_cloud and server.ga_cloud_ddns %}
+        <div class="alert alert-danger">
+            To use this functionality you need to enable them first in your <a href="/config/update/systemserver/1?action=Update" >server settings</a>!
+        </div>
+    {% else %}
+        {% if records|length > 0 %}
+            Current record registered to your system:
+            {{ records[0].ddns_record }}
+
+            <form name="dyndns">
+                {% include "../../btn/update.html" %}
+                {% include "../../btn/delete.html" %}
+            </form>
+        {% else %}
+            You have not yet a record registered to your system!
+
+            <form name="dyndns">
+                {% include "../../btn/create.html" %}
+            </form>
+        {% endif %}
+        <div class="ga-sideinfo">
+            Your system id: {{ server.ga_cloud_uuid }}
+        </div>
+    {% endif %}
+{% endblock %}

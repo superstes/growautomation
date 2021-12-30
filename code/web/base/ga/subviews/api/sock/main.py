@@ -11,7 +11,6 @@ from ....config.shared import LOGIN_URL
 
 init_core_config()
 from core.sock.connect import Client
-from core.config import shared
 
 
 mapping = {
@@ -25,7 +24,7 @@ mapping = {
 
 
 @login_required
-@user_passes_test(authorized_to_write, login_url=LOGIN_URL)
+@user_passes_test(authorized_to_write, login_url=LOGIN_URL)  # todo: authorized to write is not OK for output status checks
 def api_sock(request, sock_data: dict = None):
     def _log(output: str, level: int):
         develop_log(request=request, output=output, level=level)

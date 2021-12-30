@@ -17,8 +17,8 @@ class GaConditionMatchSpecial(GaBase):
 
 
 class GaConditionMatch(GaBase):
-    setting_list = ['value', 'operator', 'period', 'period_data', 'check']
-    #   check -> how to process the data pulled from the period (max-/min-/avg-value)
+    setting_list = ['value', 'operator', 'period', 'period_data', 'calc']
+    #   calc -> how to process the data pulled from the period (max-/min-/avg-value)
     #   value -> data to compare to
     #   operator -> operator to use for data comparison
     #   period -> the time period from which to pull the data for the comparison

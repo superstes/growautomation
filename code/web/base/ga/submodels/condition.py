@@ -12,7 +12,7 @@ class ObjectSpecialConditionModel(BaseModel):
 
 
 class ObjectConditionModel(BaseModel):
-    field_list = ['name', 'description', 'input_obj', 'input_group', 'special_obj', 'area', 'value', 'operator', 'check', 'period', 'period_data']
+    field_list = ['name', 'description', 'input_obj', 'input_group', 'special_obj', 'area', 'value', 'operator', 'calc', 'period', 'period_data']
     optional_list = ['input_obj', 'input_group', 'special_obj']
     initials = 'co'
     OPERATOR_CHOICES = [
@@ -37,7 +37,7 @@ class ObjectConditionModel(BaseModel):
     area = models.ForeignKey(GroupAreaModel, on_delete=models.CASCADE, related_name=f'{initials}_fk_area', blank=True, null=True, default=None)
     value = models.CharField(max_length=50, default='value to compare')
     operator = models.CharField(max_length=3, choices=OPERATOR_CHOICES, default='=')
-    check = models.CharField(max_length=3, choices=CHECK_CHOICES, default='avg')
+    calc = models.CharField(max_length=3, choices=CHECK_CHOICES, default='avg')
     period = models.CharField(max_length=15, choices=PERIOD_CHOICES, default='time')
     period_data = models.SmallIntegerField(default=3600)
 

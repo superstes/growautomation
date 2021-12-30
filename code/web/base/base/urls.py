@@ -13,18 +13,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
-from django.conf.urls import url
+from django.urls import path, re_path
 from ga.views import view
 from ga.subviews.handlers import handler404_base
 from django.conf.urls import include
 
 urlpatterns = [
     # auth
-    url('^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
+    re_path(r'^', include('django.contrib.auth.urls')),  # redirect all to login if not logged in
     path('accounts/', include('django.contrib.auth.urls')),  # login page
     # ga
-    url(r'^$', view),
+    re_path(r'^$', view),
     path('<str:a>', view),
     path('<str:a>/', view),
     path('<str:a>/<str:b>', view),
@@ -37,5 +36,5 @@ urlpatterns = [
     path('<str:a>/<str:b>/<str:c>/<str:d>/<str:e>/', view),
 
     # fallback
-    url(r'^', handler404_base),
+    re_path(r'^', handler404_base),
 ]
