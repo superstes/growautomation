@@ -22,7 +22,7 @@ TIMEZONE_CHOICES = [(tz, tz) for tz in common_timezones]
 class SystemAgentModel(BaseModel):
     field_list = [
         'name', 'description', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database', 'log_level', 'debug', 'device_fail_count', 'device_fail_sleep', 'device_log',
-        'svc_interval_status', 'svc_interval_reload', 'subprocess_timeout'
+        'svc_interval_status', 'svc_interval_reload', 'subprocess_timeout', 'sql_socket', 'sql_service', 'sql_config',
     ]
 
     version = models.FloatField()
@@ -37,6 +37,9 @@ class SystemAgentModel(BaseModel):
     sql_user = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_USER)
     sql_secret = models.CharField(max_length=255, default='o1Qhr6zm1INEZcKjBIVB')
     sql_database = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_DB)
+    sql_socket = models.CharField(max_length=255, default=config.SYS_DEFAULT_SQL_SOCKET)
+    sql_service = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_SVC)
+    sql_config = models.CharField(max_length=255, default=config.SYS_DEFAULT_SQL_CONFIG)
 
     log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
@@ -53,7 +56,7 @@ class SystemAgentModel(BaseModel):
 class SystemServerModel(BaseModel):
     field_list = [
         'name', 'description', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database', 'log_level', 'debug', 'security', 'timezone', 'web_cdn', 'web_warn', 'ga_cloud',
-        'ga_cloud_ddns',
+        'ga_cloud_ddns', 'sql_service',
     ]
 
     version = models.FloatField()
@@ -71,6 +74,7 @@ class SystemServerModel(BaseModel):
     sql_user = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_USER)
     sql_secret = models.CharField(max_length=255, default='o1Qhr6zm1INEZcKjBIVB')
     sql_database = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_DB)
+    sql_service = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_SVC)
 
     log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)

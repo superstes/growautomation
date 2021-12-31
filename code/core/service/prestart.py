@@ -48,7 +48,6 @@ class Prepare:
         signal.signal(signal.SIGINT, self._stop)
         signal.signal(signal.SIGUSR1, self._stop)
         self.debug = False
-        self.logger = None
         self.log_cache = []
 
         group = config.GA_GROUP
@@ -61,8 +60,6 @@ class Prepare:
         if self._check_file_config():
             startup_shared_vars.init()
             if self._check_file_log():
-                from core.utils.debug import Log, FileAndSystemd
-                self.logger = FileAndSystemd(Log())
                 if self._check_networking():
                     if self._check_database():
                         if self._check_factory():
@@ -268,17 +265,18 @@ class Prepare:
         raise SystemError(msg)
 
     def _log(self, output, level: int = 1):
-        if self.logger is not None:
+        try:
+            from core.utils.debug import fns_log, log
+
             if len(self.log_cache) > 0:
-                from core.utils.debug import log
-                for _log in self.log_cache:
-                    log(output=_log['output'], level=_log['level'])
+                for msg in self.log_cache:
+                    log(output=msg['output'], level=msg['level'])
 
                 self.log_cache = []
 
-            self.logger.write(output, level=level)
+            fns_log(output=output, level=level)
 
-        else:
+        except Exception:
             self.log_cache.append({'level': level, 'output': output})
 
             if level == 1:

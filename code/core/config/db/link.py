@@ -2,7 +2,7 @@
 # gets connection settings passed from GaDataDb instance
 
 from core.utils.process import subprocess
-from core.utils.debug import log
+from core.utils.debug import log, censor
 from core.config import shared as config
 
 import mysql.connector
@@ -138,7 +138,7 @@ class Go:
         except (UnboundLocalError, AttributeError):
             pass
 
-        raise ConnectionError(msg)
+        raise ConnectionError(censor(msg))
 
     @lru_cache(maxsize=16)
     def _read_cache(self, query: str):
@@ -153,23 +153,28 @@ class Go:
     @staticmethod
     def _unix_sock():
         try:
-            sock = None
+            sock = config.AGENT.sql_socket
 
-            with open(config.MARIADB_CONFIG_FILE, 'r') as _:
-                for line in _.readlines():
-                    if line.find('socket') != -1:
-                        sock = line.split('=')[1].strip()
-                        break
+            if os_path.exists(sock):
+                return sock
 
-                if sock is None:
-                    sock = config.MARIADB_SOCKET_DEFAULT
-
-            if os_path.exists(sock) is False:
-                if subprocess(command=f"systemctl status {config.MARIADB_SVC} | grep 'Active:'").find('Active: inactive') != -1:
-                    if subprocess(command=f'systemctl start {config.MARIADB_SVC}').find('Not able to start') != -1:
+            else:
+                if subprocess(command=f"systemctl status {config.AGENT.sql_service} | grep 'Active:'").find('Active: inactive') != -1:
+                    if subprocess(command=f'systemctl start {config.AGENT.sql_service}').find('Not able to start') != -1:
                         return False
 
                     time_sleep(3)
+                    if os_path.exists(sock):
+                        return sock
+
+                    else:
+                        sock = False
+
+                        with open(config.AGENT.sql_config, 'r') as _:
+                            for line in _.readlines():
+                                if line.find('socket') != -1:
+                                    sock = line.split('=')[1].strip()
+                                    break
 
             return sock
 

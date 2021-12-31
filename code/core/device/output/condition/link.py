@@ -186,7 +186,7 @@ class Go:
         device_log(f"Condition \"{group.name}\" has the following single link members \"{slm_list}\"", add=self.name, level=8)
 
         if len(slm_list) == 0:
-            raise ValueError("It looks like you have a configuration error.")
+            raise ValueError('It looks like you have a configuration error.')
 
         return slm_list
 

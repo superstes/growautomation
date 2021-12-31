@@ -3,6 +3,8 @@
 
 from core.config.object.helper import SETTING_DICT_EXCEPTION, SETTING_DICT_ERROR, set_attribute
 
+from core.utils.debug import censor
+
 
 class GaBase(object):
     reserved = ['name', 'description', 'state', 'object_id']
@@ -51,7 +53,7 @@ class GaBaseDevice(GaBase):
         try:
             self.device_enabled = setting_dict['enabled']  # not dynamically set because of device-only attribute
         except SETTING_DICT_EXCEPTION as error_msg:
-            raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % error_msg)
+            raise SETTING_DICT_EXCEPTION(censor(SETTING_DICT_ERROR % error_msg))
 
     @property
     def enabled(self):

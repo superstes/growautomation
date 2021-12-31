@@ -19,12 +19,6 @@ def now(time_format: str):
 
 
 class Log:
-    try:
-        SECRET_DATA = [config.AGENT.sql_secret]
-
-    except AttributeError:
-        SECRET_DATA = []
-
     def __init__(self, typ: str = 'core', addition: str = None, src_file: str = None):
         self.name = src_file
         if src_file is None:
@@ -49,7 +43,7 @@ class Log:
         if config.AGENT.debug == 0 and (level > self.log_level or not self.status):
             return False
 
-        output = self._censor(str(output))
+        output = censor(str(output))
 
         if system:
             journal.send(output)
@@ -78,28 +72,6 @@ class Log:
         except PermissionError:
             print(f"LOG ERROR: Unable to access/modify log file '{self.log_file}'")
             return False
-
-    def _censor(self, output: str) -> str:
-        for setting in config.LOG_SECRET_SETTINGS:
-            if output.find(setting) != -1:
-                split_output = output.split(setting)
-                updated_list = [split_output[0]]
-
-                for data in split_output[1:]:
-                    try:
-                        updated_list.append(f"{setting}': \"{config.LOG_CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
-
-                    except IndexError:
-                        output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
-                                 f"But we were not able to safely censor it. Output was completely replaced.'"
-
-                if output.find('LOG ERROR') == -1:
-                    output = ''.join(updated_list)
-
-        for data in self.SECRET_DATA:
-            output.replace(data, config.LOG_CENSOR_OUTPUT)
-
-        return output
 
     @staticmethod
     def _debugger(command):
@@ -159,3 +131,34 @@ def device_log(output: str, add: str, level: int = 1) -> bool:
 
     else:
         return Log(src_file=_src).write(output=output, level=level)
+
+
+def censor(output: str) -> str:
+    output = str(output)
+
+    try:
+        secrets = [config.AGENT.sql_secret]
+
+    except AttributeError:
+        secrets = []
+
+    for setting in config.LOG_SECRET_SETTINGS:
+        if output.find(setting) != -1:
+            split_output = output.split(setting)
+            updated_list = [split_output[0]]
+
+            for data in split_output[1:]:
+                try:
+                    updated_list.append(f"{setting}': \"{config.LOG_CENSOR_OUTPUT}\",{data.split(',', 1)[1]}")
+
+                except IndexError:
+                    output = f"LOG ERROR: 'Output has sensitive data (\"{setting}\") in it that must be censored. " \
+                             f"But we were not able to safely censor it. Output was completely replaced.'"
+
+            if output.find('LOG ERROR') == -1:
+                output = ''.join(updated_list)
+
+    for secret in secrets:
+        output.replace(secret, config.LOG_CENSOR_OUTPUT)
+
+    return output

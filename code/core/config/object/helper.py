@@ -1,5 +1,7 @@
 # helper functions for object initialization
 
+from core.utils.debug import censor
+
 SETTING_DICT_ERROR = "The required setting %s for instance \"%s\" (id \"%s\") of the object \"%s\" was not defined " \
                      "in its settings: \"%s\""
 SETTING_DICT_EXCEPTION = KeyError
@@ -60,8 +62,7 @@ def set_attribute(setting_dict: dict, setting_list: list, instance, obj) -> None
                 setattr(instance, key, setting_dict[key])
 
     except SETTING_DICT_EXCEPTION as error_msg:
-        raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, instance.name, instance.object_id, obj,
-                                                           setting_dict))
+        raise SETTING_DICT_EXCEPTION(censor(SETTING_DICT_ERROR % (error_msg, instance.name, instance.object_id, obj, setting_dict)))
 
 
 def overwrite_inherited_attribute(child_setting_dict: dict, setting_list: list, child_instance, obj) -> None:
@@ -83,16 +84,14 @@ def overwrite_inherited_attribute(child_setting_dict: dict, setting_list: list, 
                     elif getattr(child_instance, key) == child_setting_dict[key]:
                         pass
                     else:
-                        raise AttributeError(f"Unable to set attribute since it already exists: current value \"{getattr(child_instance, key)}\", "
-                                             f"new value \"{child_setting_dict[key]}\"")
+                        raise AttributeError(censor(f"Unable to set attribute since it already exists: current value \"{getattr(child_instance, key)}\", new value \"{child_setting_dict[key]}\""))
                 except NameError:  # if it already exists as property and should be overwritten
                     setattr(child_instance, key, child_setting_dict[key])
             else:
                 set_property(obj=obj, key=key)
 
     except SETTING_DICT_EXCEPTION as error_msg:
-        raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id,
-                                                           obj, child_setting_dict))
+        raise SETTING_DICT_EXCEPTION(censor(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id, obj, child_setting_dict)))
 
 
 def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_instance, obj) -> None:
@@ -115,14 +114,12 @@ def set_inherited_attribute(child_setting_dict: dict, setting_list: list, child_
                 elif getattr(child_instance, key) == child_setting_dict[key]:
                     pass
                 else:
-                    raise AttributeError(f"Unable to set attribute since it already exists: current value \"{getattr(child_instance, key)}\", "
-                                         f"new value \"{child_setting_dict[key]}\"")
+                    raise AttributeError(censor(f"Unable to set attribute since it already exists: current value \"{getattr(child_instance, key)}\", new value \"{child_setting_dict[key]}\""))
             else:
                 raise AttributeError("Unable to set attribute since it doesn't exist on neither child nor parent!")
 
     except SETTING_DICT_EXCEPTION as error_msg:
-        raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id,
-                                                           obj, child_setting_dict))
+        raise SETTING_DICT_EXCEPTION(censor(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id, obj, child_setting_dict)))
 
 
 def set_parent_attribute(child_instance, setting_list: list, obj) -> None:
@@ -139,5 +136,4 @@ def set_parent_attribute(child_instance, setting_list: list, obj) -> None:
             set_property(obj=obj, key=key)
 
     except SETTING_DICT_EXCEPTION as error_msg:
-        raise SETTING_DICT_EXCEPTION(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id,
-                                                           obj, setting_list))
+        raise SETTING_DICT_EXCEPTION(censor(SETTING_DICT_ERROR % (error_msg, child_instance.name, child_instance.object_id, obj, setting_list)))

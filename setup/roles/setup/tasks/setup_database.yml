@@ -4,6 +4,7 @@
   ansible.builtin.import_role:
     name: ansibleguy.infra_django_apache
   vars:
+    no_prompts: 'yes'
     django:
       sites:
         ga:

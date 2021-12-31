@@ -29,7 +29,7 @@
 
 # firewall management
 - name: GA | Setup | GA Web/Core - Firewall
-  ansible.GA | Setup | builtin.import_role:
+  ansible.builtin.import_role:
     name: ansibleguy.infra_ufw
   vars:
     ufw_rules:

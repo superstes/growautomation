@@ -75,6 +75,9 @@ ga_db_packages:
   - 'mariadb-server'
   - 'mariadb-client'
   - 'python3-pymysql'
+ga_sql_socket: '/run/mysqld/mysqld_ga.sock'
+ga_sql_service: 'mariadb@ga.service'
+ga_sql_config_file: '/etc/mysql/instance.conf.d/server_ga.cnf'
 
 # devices
 ga_device_groups:

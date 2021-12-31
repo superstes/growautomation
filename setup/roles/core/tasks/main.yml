@@ -90,7 +90,6 @@
     virtualenv: "{{ ga_core_path_venv }}"
     virtualenv_python: "python{{ ga_python_version }}"
     virtualenv_command: '/usr/bin/virtualenv'
-    executable: pip3
     state: present
 
 - name: GA | Core | Adding core service file

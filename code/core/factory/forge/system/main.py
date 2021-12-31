@@ -1,6 +1,6 @@
 from core.factory import config
 from core.config.object.core.system import GaServer, GaAgent
-from core.utils.debug import log
+from core.utils.debug import log, censor
 
 
 class Go:
@@ -36,7 +36,7 @@ class Go:
 
             except (IndexError, KeyError) as error:
                 log(f"Factory wasn't able to pull {key}-data from database! Make sure the configuration exists!", level=1)
-                raise KeyError(error)
+                raise KeyError(censor(error))
 
         # output_dict.update({
         #     self.key_object_task: TaskFactory(

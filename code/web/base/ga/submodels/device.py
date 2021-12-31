@@ -3,6 +3,8 @@ from ..models import BaseDeviceObjectModel, models, BaseDeviceModel, BOOLEAN_CHO
 from .condition_min import GroupConditionModel
 
 
+# todo: replace script-fields with "models.FilePathField(path=f"{get_agent()['path_root']}/device/connection")"
+
 # connection
 
 class ObjectConnectionModel(BaseDeviceObjectModel):

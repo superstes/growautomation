@@ -37,11 +37,6 @@ SVC_WAIT_TIME = 3
 THREAD_JOIN_TIMEOUT = 5
 THREAD_DEFAULT_SLEEP_TIME = 600
 
-# db settings
-MARIADB_CONFIG_FILE = '/etc/mysql/mariadb.conf.d/50-server.cnf'
-MARIADB_SOCKET_DEFAULT = '/run/mysqld/mysqld.sock'
-MARIADB_SVC = 'mariadb.service'
-
 # log settings
 LOG_MAX_TRACEBACK_LENGTH = 5000
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S:%f'

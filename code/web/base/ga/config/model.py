@@ -14,6 +14,9 @@ SYS_DEFAULT_SQL_DB = 'ga'
 SYS_DEFAULT_TZ = 'UTC'
 SYS_DEFAULT_FAIL_COUNT = 3
 SYS_DEFAULT_FAIL_SLEEP = 3600
+SYS_DEFAULT_SQL_SOCKET = '/run/mysqld/mysqld.sock'
+SYS_DEFAULT_SQL_SVC = 'mariadb.service'
+SYS_DEFAULT_SQL_CONFIG = '/etc/mysql/mariadb.conf.d/50-server.cnf'
 
 # dashboard parameters
 DB_MAX_ROWS = 100

@@ -8,7 +8,7 @@ from core.config.object.helper import set_attribute
 class GaAgent(GaBase):
     setting_list = [
         'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database', 'log_level', 'debug', 'device_fail_count', 'device_fail_sleep', 'device_log',
-        'version', 'version_detail', 'path_root', 'path_home', 'path_log', 'svc_interval_status', 'svc_interval_reload', 'subprocess_timeout'
+        'path_root', 'path_home', 'path_log', 'svc_interval_status', 'svc_interval_reload', 'subprocess_timeout', 'version', 'version_detail',
     ]
 
     def __init__(self, setting_dict: dict, **kwargs):

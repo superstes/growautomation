@@ -5,7 +5,7 @@
 from core.config.db.link import Go as Link
 from core.config.db.check import Go as Check
 from core.config import shared as config
-from core.utils.debug import log
+from core.utils.debug import log, censor
 
 
 class GaDataDb:
@@ -50,4 +50,4 @@ class GaDataDb:
     @staticmethod
     def _error(msg):
         log(f"Received error \"{msg}\"")
-        raise ConnectionError(msg)
+        raise ConnectionError(censor(msg))
