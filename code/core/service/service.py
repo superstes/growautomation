@@ -18,7 +18,7 @@
 #     E-Mail: contact@growautomation.at
 #     Web: https://github.com/superstes/growautomation
 
-# ga_version 0.9
+# ga_version 1.0
 
 # environmental variable PYTHONPATH must be set to the growautomation root-path for imports to work
 #   (export PYTHONPATH=/var/lib/ga)

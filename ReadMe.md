@@ -60,16 +60,23 @@ Want to support the project?
 ----
 
 ## Version
-Version: 0.9
+Version: 1.0
 
 => <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
 
 ### Work in progress
-- testing and fixing output-reversal
+- updating the documentation
 - cleaning up the webUI
-
+- option to add actors to dashboard-elements => to correlate actions taken to the environmental changes
 
 ### History
+
+- v1.0 _(2021-11 - 2021-12)_
+  - refactoring setup tasks => using roles provided by <a href="https://github.com/ansibleguy">AnsibleGuy</a>
+  - creating image for easy installation
+  - update via webUI (_to specific vcs version_)
+  - stateful service reload
+
 
 - v0.9 _(2021-09 - 2021-10)_
   - action-buttons in webUI => allowing to manually start/stop sensors and actors
