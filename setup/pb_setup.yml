@@ -30,6 +30,11 @@
         tasks_from: 'read_pwds.yml'
       when: random_pwd_file.stat.exists
 
+    - name: GA | Setup | Getting version
+      ansible.builtin.import_role:
+        name: setup
+        tasks_from: 'get_version.yml'
+
     # installation
     - name: GA | Setup | GA Core
       ansible.builtin.import_role:

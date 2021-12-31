@@ -20,16 +20,6 @@
   no_log: true
   register: ga_sql_pwd_web_encrypted
 
-- name: GA | Web | Init | Get commit hash
-  ansible.builtin.shell: "cd {{ ga_setup_clone_dir }} && git log -1 | grep commit | cut -d ' ' -f2"
-  changed_when: false
-  register: ga_raw_commit
-
-- name: GA | Web | Init | Setting commit hash
-  ansible.builtin.set_fact:
-    ga_setup_commit: "{{ ga_raw_commit.stdout[:8] }}"
-  changed_when: false
-
 - name: GA | Web | Init | Preparing initialization script
   ansible.builtin.set_fact:
     ga_db_init:  # This script is used to initialize the main configuration-objects - without those the core and web-interface won't work properly

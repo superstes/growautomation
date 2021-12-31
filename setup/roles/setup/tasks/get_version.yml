@@ -1,0 +1,11 @@
+---
+
+- name: GA | Setup | Get commit hash
+  ansible.builtin.shell: "cd {{ ga_setup_clone_dir }} && git log -1 | grep commit | cut -d ' ' -f2"
+  changed_when: false
+  register: ga_raw_commit
+
+- name: GA | Setup | Setting commit hash
+  ansible.builtin.set_fact:
+    ga_setup_commit: "{{ ga_raw_commit.stdout[:8] }}"
+  changed_when: false

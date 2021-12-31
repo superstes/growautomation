@@ -21,6 +21,17 @@
     home: "{{ ga_web_path_home }}"
     groups: "{{ ga_web_groups }}"
     append: yes
+  ignore_errors: true
+  register: ga_web_user_raw
+
+- name: GA | Web | Adding service user to groups
+  ansible.builtin.user:
+    name: "{{ ga_web_service_user }}"
+    groups: "{{ ga_web_groups }}"
+    append: yes
+  when:
+    - ga_web_user_raw.failed is defined
+    - ga_web_user_raw.failed
 
 - name: GA | Web | Creating directories
   ansible.builtin.file:
