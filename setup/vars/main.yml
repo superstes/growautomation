@@ -1,6 +1,10 @@
 ---
 
 ga_random_pwd_file: '/etc/.ga_setup'
+ga_tmp_pwd_file_django_user: '/tmp/.ga_django_user'
+ga_tmp_pwd_file_django_guest: '/tmp/.ga_django_guest'
+ga_tmp_pwd_file_sql_core: '/tmp/.ga_core'
+ga_tmp_pwd_file_sql_web: '/tmp/.ga_web'
 
 # !! IMPORTANT NOTICE !!
 # These are the MUST CHANGE settings:
@@ -12,8 +16,8 @@ ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timez
 ga_web_dns: 'ga.lan'  # if you want to access the web-interface by name
 ga_web_alias: []  # list of dns-aliases
 ga_web_users:
-  - {name: 'user', access: 'rw', pwd: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"}  # !! PLEASE CHANGE THE PASSWORD !!
-  - {name: 'view', access: 'r', pwd: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"}
+  - {name: 'user', access: 'rw', pwd: "{{ lookup('password', ga_tmp_pwd_file_django_user + ' chars=ascii_letters,digits length=20') }}"}  # !! PLEASE CHANGE THE PASSWORD !!
+  - {name: 'view', access: 'r', pwd: "{{ lookup('password', ga_tmp_pwd_file_django_guest + ' chars=ascii_letters,digits length=20') }}"}
   # passwords
   #   You can set your own password and add your own users => just replace the stuff in between the double-quotes
   #   random passwords can be found in the 'ga_random_pwd_file' file
@@ -69,11 +73,11 @@ ga_sql_user_host: 'localhost'
   # needs to be changed if a remote database server is used
 ga_sql_user_core: "{{ ga_core_service_user }}"
 # adding punctuation-characters to the sql-passwords might break the sql-syntax => stick to ascii+digits
-ga_sql_pwd_core: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
+ga_sql_pwd_core: "{{ lookup('password', ga_tmp_pwd_file_sql_core + ' chars=ascii_letters,digits length=20') }}"
   # you can apply your own password => just replace the rubbish in between the double-quotes
   # random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_user_web: "{{ ga_web_service_user }}"
-ga_sql_pwd_web: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=20') }}"
+ga_sql_pwd_web: "{{ lookup('password', ga_tmp_pwd_file_sql_web + ' chars=ascii_letters,digits length=20') }}"
   # you can apply your own password => just replace the rubbish in between the double-quotes
   # random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_socket: '/run/mysqld/mysqld_ga.sock'  # socket used to locally connect to database

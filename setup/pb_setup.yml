@@ -57,3 +57,14 @@
       ansible.builtin.import_role:
         name: setup
         tasks_from: 'setup_system.yml'
+
+    # cleanup
+    - name: GA | Setup | Cleaning up temporary password files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ga_tmp_pwd_file_sql_core }}"
+        - "{{ ga_tmp_pwd_file_sql_web }}"
+        - "{{ ga_tmp_pwd_file_django_user }}"
+        - "{{ ga_tmp_pwd_file_django_guest }}"

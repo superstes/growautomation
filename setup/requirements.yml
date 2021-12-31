@@ -24,6 +24,10 @@ roles:
     version: 'stable'
     name: 'ansibleguy.infra_django_apache'
 
+  - src: 'https://github.com/ansibleguy/infra_apache.git'
+    version: 'stable'
+    name: 'ansibleguy.infra_apache'
+
   - src: 'https://github.com/ansibleguy/infra_certs.git'
     version: 'stable'
     name: 'ansibleguy.infra_certs'

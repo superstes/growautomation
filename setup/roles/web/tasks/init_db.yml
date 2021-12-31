@@ -11,12 +11,12 @@
     - 'crypto.py'
 
 - name: GA | Web | Init | Getting encrypted core-password
-  ansible.builtin.command: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
+  ansible.builtin.command: "{{ ga_web_path_venv }}/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
   no_log: true
   register: ga_sql_pwd_core_encrypted
 
 - name: GA | Web | Init | Getting encrypted web-password
-  ansible.builtin.command: "/usr/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
+  ansible.builtin.command: "{{ ga_web_path_venv }}/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
   no_log: true
   register: ga_sql_pwd_web_encrypted
 
@@ -52,14 +52,14 @@
         version, version_detail)
         VALUES
         (NOW(), NOW(), '{{ ga_core_controller_name }}', 'Agent created by setup', '{{ ga_core_path }}', '{{ ga_core_path_home }}', '{{ ga_path_log }}', '{{ ga_sql_server }}', 
-        {{ ga_sql_port }}, '{{ ga_sql_user_core }}', '{{ ga_sql_pwd_core_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0, 3, 3600, 1, 3600, 21600, 60
+        {{ ga_sql_port }}, '{{ ga_sql_user_core }}', '{{ ga_sql_pwd_core_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0, 3, 3600, 1, 3600, 21600, 60,
         '{{ ga_setup_release }}', '{{ ga_setup_commit }}')"
 
 - name: GA | Web | Init | Executing database initialization script (local db)
   community.mysql.mysql_query:
     login_unix_socket: "{{ ga_sql_socket }}"
     login_db: "{{ ga_sql_db }}"
-    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    config_file: "{{ ga_web_path }}/{{ ga_sql_config }}"
     query: "{{ ga_db_init }}"
     single_transaction: true
   when: ga_sql_server == 'localhost'
@@ -71,7 +71,7 @@
     login_host: "{{ ga_sql_server }}"
     login_port: "{{ ga_sql_port }}"
     login_db: "{{ ga_sql_db }}"
-    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    config_file: "{{ ga_web_path }}/{{ ga_sql_config }}"
     query: "{{ ga_db_init }}"
     single_transaction: true
   when: ga_sql_server != 'localhost'
@@ -108,6 +108,7 @@
   environment:
     PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
     DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
+  no_log: true
 
 - name: GA | Web | Init | Creating ga users
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
@@ -122,6 +123,7 @@
   loop_control:
     loop_var: user
   loop: "{{ ga_web_users }}"
+  no_log: true
 
 - name: GA | Web | Init | Restarting webserver
   ansible.builtin.systemd:

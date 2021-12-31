@@ -1,6 +1,6 @@
 ---
 
-- name: GA | Setup | GA Web - Database
+- name: GA Web - Database
   ansible.builtin.import_role:
     name: ansibleguy.infra_django_apache
   vars:
@@ -10,7 +10,7 @@
           python_version: "python{{ ga_python_version }}"
           path_venv: "{{ ga_web_path_venv }}"
           path_code: "{{ ga_web_path }}"
-          project: "{{ ga_web_django_project }}"
+          project: "base"
           static_url: 'static'
           serve:
             path: "{{ ga_web_path_static }}"
@@ -25,7 +25,7 @@
           ssl:
             mode: "{{ ga_web_ssl_mode }}"
             cert:
-              cn: "{{ ga_web_ssl_selfsigned_cn }}"
+              cn: 'GrowAutomation Certificate'
               org: 'GrowAutomation'
               country: 'AT'
               state: 'Styria'
@@ -48,7 +48,7 @@
             user: "{{ ga_sql_user_web }}"
             pwd: "{{ ga_sql_pwd_web }}"
             config: "{{ ga_sql_config }}"
-            config_mode: '0640'
+            config_mode: "0640"
             backup: true
             update_pwd: 'always'
   when: ga_web_install
@@ -64,34 +64,30 @@
     - ga_web_install
     - ga_core_install
 
-- name: GA | Setup | GA Core Database - Preparing config
-  ansible.builtin.set_fact:
-    ga_mariadb_instance: "{{ {
-      'dbs': {
-        ga_sql_db: 'present',
-      },
-      'backup': true,
-      'users': {
-        ga_sql_user_web: {
-          'priv': ga_sql_db + '.*:ALL',
-          'pwd': ga_sql_pwd_web,
-        },ansible.bu
-        ga_sql_user_core: {
-          'priv': ga_sql_db + '.*:ALL',
-          'pwd': ga_sql_pwd_core,
-        },
-      },
-      'settings': {'wait_timeout': 3600},
-      'socket': ga_sql_socket
-    } }}"
-
-- name: GA | Setup | GA Core Database - Setting up
+- name: GA | Setup | GA Core Database
   ansible.builtin.import_role:
     name: ansibleguy.infra_mariadb
   vars:
     mariadb:
       instances:
-        ga: "{{ ga_mariadb_instance }}"
+        ga: "{{ {
+          'dbs': {
+            ga_sql_db: 'present',
+          },
+          'backup': true,
+          'users': {
+            ga_sql_user_web: {
+              'priv': ga_sql_db + '.*:ALL',
+              'pwd': ga_sql_pwd_web,
+            },
+            ga_sql_user_core: {
+              'priv': ga_sql_db + '.*:ALL',
+              'pwd': ga_sql_pwd_core,
+            },
+          },
+          'settings': {'wait_timeout': 3600},
+          'socket': ga_sql_socket,
+        } }}"
   when:
     - not ga_web_install
     - ga_core_install
