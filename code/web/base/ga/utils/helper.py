@@ -1,6 +1,6 @@
 from inspect import stack as inspect_stack
 from inspect import getfile as inspect_getfile
-from django.db.utils import OperationalError
+from django.db.utils import OperationalError, ProgrammingError
 
 from core.utils.process import subprocess
 from core.utils.debug import web_log
@@ -16,7 +16,7 @@ ALL_DEVICE_TYPES.extend(DEVICE_TYPES)
 
 
 class PseudoServerAgent:
-    # needed for migrations on the agent/server models
+    # needed for migrations on the agent/server models and setup (no system tables exist or are unusable)
     def __init__(self):
         self.subprocess_timeout = 60
         self.security = 1
@@ -39,7 +39,7 @@ def get_server() -> (SystemServerModel, None):
     except IndexError:
         return None
 
-    except OperationalError:
+    except (OperationalError, ProgrammingError):
         return PseudoServerAgent()
 
 
@@ -54,7 +54,7 @@ def get_agent(name: str = None) -> (SystemAgentModel, None):
     except IndexError:
         return None
 
-    except OperationalError:
+    except (OperationalError, ProgrammingError):
         return PseudoServerAgent()
 
 
