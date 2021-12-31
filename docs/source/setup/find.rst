@@ -68,4 +68,10 @@ If the raspberry pi is connected to the same network as your computer you can ju
 
       .. code-block:: bash
 
+        $ sudo apt install nmap -y
         $ sudo nmap -sS -p 22 192.168.1.0/24
+
+        # or if you want to connect to the device the 'dirty way':
+        $ sudo apt install nmap sshpass -y
+        $ eval "sshpass -p 'raspberry' ssh -o StrictHostKeyChecking=no pi@`sudo nmap -PE 192.168.1.0/24 -T4 -p22 | grep 'report for' | cut -d ' ' -f5` -p22"
+        # this one will not work if more than one device has port 22 open in the scanned range
