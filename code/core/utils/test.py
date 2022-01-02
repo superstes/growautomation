@@ -5,7 +5,6 @@ from core.config import shared as config
 
 
 def test_tcp_stream(host: str, port: int, timeout: int = 5, out_error: bool = False) -> (bool, tuple):
-    error = None
     tcp_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_stream.settimeout(timeout)
 
@@ -19,15 +18,15 @@ def test_tcp_stream(host: str, port: int, timeout: int = 5, out_error: bool = Fa
     sleep(0.2)
     tcp_stream.close()
 
-    if out_error:
+    try:
         if error not in config.NONE_RESULTS:
-            return False, error
-        else:
+            if out_error:
+                return False, error
+
+            return False
+
+    except UnboundLocalError:  # setting 'error' to None initially doesn't seem to work for some reason (?)
+        if out_error:
             return True, None
 
-    else:
-        if error not in config.NONE_RESULTS:
-            return False
-        else:
-            return True
-
+        return True

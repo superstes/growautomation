@@ -48,6 +48,7 @@ git clone https://github.com/superstes/growautomation.git --depth 1 ${SETUP_DIR}
 cd $SETUP_DIR/setup
 
 # installing ansible dependencies
+rm -rf /usr/lib/python3/dist-packages/ansible_collections  # removing unused ansible collections (~500MB..)
 ansible-galaxy collection install -r requirements.yml
 ansible-galaxy install -r requirements.yml --roles-path $SETUP_DIR/setup/roles
 

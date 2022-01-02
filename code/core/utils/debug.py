@@ -12,6 +12,7 @@ from os import chmod as os_chmod
 from os import chown as os_chown
 from grp import getgrnam
 from systemd import journal
+from time import sleep
 
 
 def now(time_format: str):
@@ -49,7 +50,7 @@ class Log:
             journal.send(output)
 
         output_formatted = f"{datetime.now().strftime(config.LOG_TIMESTAMP_FORMAT)}{config.LOG_SEPARATOR}{self.name}{config.LOG_SEPARATOR}{output}"
-        self._debugger(command=output_formatted)
+        self._debugger(msg=output_formatted)
 
         with open(self.log_file, 'a+') as logfile:
             logfile.write(f"{level}{config.LOG_SEPARATOR}{output_formatted}\n")
@@ -60,23 +61,31 @@ class Log:
         try:
             if not os_path.exists(self.log_file):
                 Path(self.log_dir).mkdir(parents=True, exist_ok=True)
+                sleep(0.1)
+                os_chown(path=self.log_dir, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
+                os_chmod(path=self.log_dir, mode=int(f'{config.LOG_DIR_PERMS}', base=8))
 
                 with open(self.log_file, 'a+') as logfile:
                     logfile.write('init\n')
 
-            os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
-            os_chmod(path=self.log_file, mode=int(f'{config.LOG_FILE_PERMS}', base=8))
+            try:
+                os_chown(path=self.log_file, uid=os_getuid(), gid=getgrnam(config.GA_GROUP)[2])
+                os_chmod(path=self.log_file, mode=int(f'{config.LOG_FILE_PERMS}', base=8))
+
+            except PermissionError:
+                # if web tries to change core log-file permissions
+                pass
 
             return True
 
-        except PermissionError:
-            print(f"LOG ERROR: Unable to access/modify log file '{self.log_file}'")
+        except PermissionError as error:
+            print(f"LOG ERROR: {censor(error)}")
             return False
 
     @staticmethod
-    def _debugger(command):
+    def _debugger(msg):
         if config.AGENT.debug == 1:
-            print(f'DEBUG: {command}')
+            print(f'DEBUG: {censor(msg)}')
             return True
 
         else:
@@ -133,7 +142,7 @@ def device_log(output: str, add: str, level: int = 1) -> bool:
         return Log(src_file=_src).write(output=output, level=level)
 
 
-def censor(output: str) -> str:
+def censor(output) -> str:
     output = str(output)
 
     try:

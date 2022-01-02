@@ -24,16 +24,16 @@
 
 - name: GA | Core | Creating core directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
     owner: "{{ ga_core_service_user }}"
     group: "{{ ga_service_group }}"
-    mode: 0755
+    mode: "{{ item.mode }}"
     recurse: yes
   loop:
-  - "{{ ga_core_path }}"
-  - "{{ ga_core_path_log }}"
-  - "{{ ga_core_path_venv }}"
+  - {path: "{{ ga_core_path }}", mode: 0755}
+  - {path: "{{ ga_core_path_log }}", mode: 0775}
+  - {path: "{{ ga_core_path_venv }}", mode: 0750}
 
 - name: GA | Core | Copying core-code
   ansible.posix.synchronize:

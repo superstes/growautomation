@@ -53,6 +53,7 @@
                     Service will NOT start on system boot
                 </div>
             {% endif %}
+            <div class="ga-sideinfo">Current service: '{{ service_value }}'</div>
             <br>
             <a href='/system/service/?service_name={{ service_name }}' class="btn btn-info">Refresh</a>
         {% endif %}
