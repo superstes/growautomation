@@ -56,7 +56,7 @@ class SystemAgentModel(BaseModel):
 class SystemServerModel(BaseModel):
     field_list = [
         'name', 'description', 'sql_server', 'sql_port', 'sql_user', 'sql_secret', 'sql_database', 'log_level', 'debug', 'security', 'timezone', 'web_cdn', 'web_warn', 'ga_cloud',
-        'ga_cloud_ddns', 'sql_service',
+        'ga_cloud_ddns', 'sql_service', 'letsencrypt'
     ]
 
     version = models.FloatField()
@@ -88,6 +88,8 @@ class SystemServerModel(BaseModel):
     ga_cloud_uuid = models.UUIDField(unique=True, blank=True, null=True, default=None)
     ga_cloud_token = models.TextField(max_length=16384, blank=True, null=True, default=None)
     ga_cloud_ddns = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
+
+    letsencrypt = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
 
 
 class ObjectTaskModel(BaseModel):

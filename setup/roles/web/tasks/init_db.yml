@@ -28,12 +28,12 @@
         path_web_static, path_home_core, path_home_web, path_log, sql_server, sql_port, sql_user, 
         sql_secret, sql_database,
         log_level, debug, security, timezone, web_cdn, web_warn, ga_cloud, 
-        ga_cloud_uuid, ga_cloud_token, ga_cloud_ddns, version, version_detail, sql_service)
+        ga_cloud_uuid, ga_cloud_token, ga_cloud_ddns, version, version_detail, sql_service, letsencrypt)
         VALUES
         (NOW(), NOW(), '{{ ga_core_controller_name }}', 'Server created by setup at {{ ansible_date_time.iso8601_basic_short }}', '{{ ga_core_path }}', '{{ ga_web_path }}', 
         '{{ ga_web_path_static }}', '{{ ga_core_path_home }}', '{{ ga_web_path_home }}', '{{ ga_path_log }}', '{{ ga_sql_server }}', {{ ga_sql_port }}, '{{ ga_sql_user_web }}', 
         '{{ ga_sql_pwd_web_encrypted.stdout }}', '{{ ga_sql_db }}', {{ ga_log_level }}, 0, {% if ga_security_mode %}1{% else %}0{% endif %}, '{{ ga_timezone }}', 0, 1, 0, 
-        NULL, NULL, 0, '{{ ga_setup_release }}', '{{ ga_setup_commit }}', '{{ ga_sql_service }}')"
+        NULL, NULL, 0, '{{ ga_setup_release }}', '{{ ga_setup_commit }}', '{{ ga_sql_service }}', {% if ga_web_ssl_mode == 'letsencrypt' %}1{% else %}0{% endif %})"
 
       - "INSERT IGNORE INTO {{ ga_sql_db }}.ga_systemagentmodel
         (created, updated, name, description, path_root, path_home, path_log, sql_server, 

@@ -21,12 +21,14 @@ def LogView(request):
 
     log_type_options = ['Service', 'Service journal', 'GrowAutomation']
     log_service_options = {
-        'GrowAutomation': 'ga_core.service',
-        'Apache webserver': 'apache2.service',
-        'Mariadb database': 'mariadb.service',
-        'LetsEncrypt renewal': 'ga_web_certRenewal.service',
-        'GrowAutomation Update': 'ga_update.service',
+        'GrowAutomation': config.CORE_SERVICE,
+        'Webserver': 'apache2.service',
+        'Database': get_server_config(setting='sql_service'),
+        'GrowAutomation Update': config.UPDATE_SERVICE,
     }
+
+    if get_server_config(setting='letsencrypt'):
+        log_service_options.update({'Certificate renewal': config.LE_RENEWAL_SERVICE})
 
     if develop:
         device_log_list = ['02_device_test1.log', '02_device_earth_humidity.log', '']

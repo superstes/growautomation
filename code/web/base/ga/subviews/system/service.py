@@ -5,7 +5,7 @@ from time import sleep
 
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.basic import get_time_difference
-from ...utils.helper import develop_subprocess, develop_log
+from ...utils.helper import develop_subprocess, develop_log, get_server_config
 from ..handlers import Pseudo404
 from ...config import shared as config
 
@@ -21,13 +21,13 @@ TITLE = 'System service'
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def ServiceView(request):
     service_name_options = {
-        'GrowAutomation': 'ga_core.service',
-        'Apache webserver': 'apache2.service',
-        'Mariadb database': 'mariadb.service',
-        'LetsEncrypt renewal': 'ga_web_certRenewal.timer',
-        'GrowAutomation Update': config.UPDATE_SERVICE,
+        'GrowAutomation': config.CORE_SERVICE,
+        'Webserver': 'apache2.service',
+        'Database': get_server_config(setting='sql_service'),
     }
-    non_stop_services = ['Apache webserver', 'Mariadb database']
+    non_stop_services = ['Webserver', 'Database']
+    if get_server_config(setting='letsencrypt'):
+        service_name_options.update({'Certificate renewal': config.LE_RENEWAL_SERVICE})
 
     service_name = 'GrowAutomation'
     service_status = None
