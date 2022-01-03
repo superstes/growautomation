@@ -1,4 +1,7 @@
 from datetime import datetime
+
+from packaging.version import parse as parse_version
+from packaging.version import Version
 from pytz import timezone as pytz_timezone
 
 from .helper import get_server_config
@@ -64,3 +67,6 @@ def get_time_difference(time_data: str, time_format: str) -> int:
 
     return int(difference.total_seconds())
 
+
+def fmt_version(v: (str, float)) -> Version:
+    return parse_version(str(v))

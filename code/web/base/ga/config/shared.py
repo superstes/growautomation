@@ -4,7 +4,6 @@ from django.conf import settings
 DATETIME_TS_FORMAT = '%Y-%m-%d %H:%M:%S'
 CENSOR_SYMBOL = '●'
 CENSOR_STRING = CENSOR_SYMBOL * 12
-VERSION = 0.9
 SQL_CONFIG_FILE = f'{settings.BASE_DIR}/database.cnf'
 NONE_RESULTS = ['', 'None', None, ' ']
 CORE_SERVICE = 'ga_core.service'

@@ -9,7 +9,7 @@ from ...user import authorized_to_read, authorized_to_write
 from ..handlers import Pseudo404
 from ...config import shared as config
 from ...utils.helper import get_server_config, web_subprocess
-from ...utils.basic import str_to_list
+from ...utils.basic import str_to_list, fmt_version
 
 FORCE_UPDATE = False
 
@@ -31,7 +31,7 @@ def update_view(request):
                     for tag in requests.get('https://api.github.com/repos/superstes/growautomation/tags').json():
                         version = tag['name']
 
-                        if float(version) > float(current_version):
+                        if fmt_version(version) > fmt_version(current_version):
                             releases.append(version)
 
                 return render(request, 'system/update/online.html', context={
@@ -73,7 +73,7 @@ def update_start(request, current_version):
             update_type = 'release'
 
             # checking if release version is valid (if possible for current scope)
-            if float(update_release) <= float(current_version):
+            if fmt_version(update_release) <= fmt_version(current_version):
                 raise KeyError('Got unsupported target version!')
 
         else:
