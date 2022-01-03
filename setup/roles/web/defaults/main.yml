@@ -35,5 +35,3 @@ ga_django_groups:
   - 'ga_read'
   - 'ga_user'
   - 'ga_write'
-
-ga_django_superuser: 'admin'

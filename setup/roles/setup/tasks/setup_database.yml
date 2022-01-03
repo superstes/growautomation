@@ -38,8 +38,8 @@
           letsencrypt:
             email: "{{ ga_web_ssl_letsencrypt_mail }}"
           env_pythonpath: ["{{ ga_core_path }}"]
-          migration_pre_tasks: ['systemctl stop ga_core.service']
-          migration_post_tasks: ['systemctl start ga_core.service']
+          migration_pre_tasks: ["systemctl stop {{ ga_core_service }}"]
+          migration_post_tasks: ["systemctl start {{ ga_core_service }}"]
           python_modules:
             present: "{{ ga_django_mods }}"
           database:
@@ -59,6 +59,7 @@
     name: "{{ ga_sql_user_core }}"
     password: "{{ ga_sql_pwd_core }}"
     priv: "{{ ga_sql_db + '.*:ALL' }}"
+    state: 'present'
     login_unix_socket: "{{ ga_sql_socket }}"
   no_log: true
   when:

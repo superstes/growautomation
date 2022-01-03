@@ -54,7 +54,7 @@
 
     - name: GA | Setup | Starting core service
       ansible.builtin.systemd:
-        name: 'ga_core.service'
+        name: "{{ ga_core_service }}"
         state: started
 
     # basic system setup

@@ -2,17 +2,17 @@
 
 set -e
 
-# GrowAutomation setup script
+# GrowAutomation script to update credentials
 
 # just copy this script to the target system and execute it
 
 # written for debian/ubuntu
-# will start setup via ansible playbook
 # config changes:
 #   ga-settings can be changed by modifying the file ./vars/main.yml (before you run the installation script)
 #   if you want to install it on a remote system =>
 #     1. add your target host as an ansible host under './inventories/hosts.yml' and './inventories/host_vars/$HOSTNAME.yml' (you can copy the 'tmpl' host)
 #     2. run this script with the same host as argument (must be exactly the same as in the inventory)
+
 
 # package installation
 echo 'deb http://ppa.launchpad.net/ansible/ansible/ubuntu focal main' > /etc/apt/sources.list.d/ansible.list
@@ -55,28 +55,5 @@ rm -rf /usr/lib/python3/dist-packages/ansible_collections  # removing unused ans
 ansible-galaxy collection install -r requirements.yml
 ansible-galaxy install -r requirements.yml --roles-path $SETUP_DIR/setup/roles
 
-echo ''
-echo '###################################################################################'
-echo '##################################### WARNING #####################################'
-echo '###################################################################################'
-echo 'This is the last time you can modify the config before the installation is started.'
-echo '  You could:'
-echo '  -> send this window to the background (Ctrl+Z)'
-echo '  -> make your modifications'
-echo '  -> and bring it back to the foreground (fg).'
-echo ''
-echo '###################################### INFO #######################################'
-echo 'The following config files exist:'
-echo "  main: ${SETUP_DIR}/setup/vars/main.yml"
-echo '  remote hosts: (optional)'
-echo "    - ${SETUP_DIR}/setup/inventories/hosts.yml"
-echo "    - ${SETUP_DIR}/setup/inventories/host_vars/\${HOSTNAME}.yml"
-echo ''
-echo 'Do you want to continue? (yes/NO)'
-
-read config_done
-if [ $config_done == 'yes' ]; then
-  ansible-playbook -K -i inventories/hosts.yml pb_setup.yml --limit ${TARGET_HOST} --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
-else
-  echo 'User chose to stop the setup! Exiting!'
-fi
+# running ansible playbook
+ansible-playbook -K -i inventories/hosts.yml pb_creds.yml --limit ${TARGET_HOST} --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"

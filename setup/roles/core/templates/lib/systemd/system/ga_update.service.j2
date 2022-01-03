@@ -2,7 +2,7 @@
 Description=GrowAutomation Update Service
 Documentation=https://docs.growautomation.eu
 Documentation=https://github.com/superstes/growautomation
-After=mariadb.service
+After={{ ga_sql_service }}
 
 [Service]
 Type=oneshot

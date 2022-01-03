@@ -1,0 +1,144 @@
+---
+
+- name: GA | Update PWDs | Copying scripts
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/roles/web/files/tmp/{{ item }}"
+    dest: '/tmp/{{ item }}'
+    mode: 0500
+  loop:
+    - 'update_user.py'
+    - 'crypto.py'
+
+- name: GA | Update PWDs | Updating database credentials
+  community.mysql.mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.pwd }}"
+    update_password: 'always'
+    state: 'present'
+    login_unix_socket: "{{ ga_sql_socket }}"
+  no_log: true
+  loop:
+    - {user: "{{ ga_sql_user_core }}", pwd: "{{ ga_sql_pwd_core }}"}
+    - {user: "{{ ga_sql_user_web }}", pwd: "{{ ga_sql_pwd_web }}"}
+
+- name: GA | Update PWDs | Updating django database config-file
+  ansible.builtin.lineinfile:
+    regexp: '^password'
+    line: "password = {{ ga_sql_pwd_web }}"
+    path: "{{ ga_web_path }}/{{ ga_sql_config }}"
+    state: present
+    mode: 0440
+    owner: "{{ ga_sql_user_web }}"
+    group: "{{ ga_sql_user_web }}"
+  no_log: true
+
+- name: GA | Update PWDs | Copying core config-file updater script
+  ansible.builtin.copy:
+    src: "files/tmp/update_core_config.py"
+    dest: '/tmp/update_core_config.py'
+    mode: 0500
+
+- name: GA | Update PWDs | Updating core config-file
+  ansible.builtin.shell: "source {{ ga_core_path_venv }}/bin/activate &&
+  {{ ga_core_path_venv }}/bin/python3 /tmp/update_core_config.py {{ ga_sql_pwd_core | quote }}"
+  args:
+    executable: '/bin/bash'
+  environment:
+    PYTHONPATH: "{{ ga_core_path }}"
+  no_log: true
+
+- name: GA | Update PWDs | Updating web admin password
+  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 /tmp/update_user.py {{ ga_django_superuser | quote }} {{ ga_sql_pwd_web | quote }}"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
+  no_log: true
+
+- name: GA | Update PWDs | Updating web passwords
+  ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
+  {{ ga_web_path_venv }}/bin/python3 /tmp/update_user.py {{ user.name | quote }} {{ user.pwd | quote }}"
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path }}"
+  environment:
+    PYTHONPATH: "{{ ga_web_path }}:{{ ga_core_path }}:{{ ga_web_path_venv }}/lib/python{{ ga_python_version }}/site-packages"
+    DJANGO_SETTINGS_MODULE: "{{ ga_web_django_project }}.settings"
+  loop_control:
+    loop_var: user
+  loop: "{{ ga_web_users }}"
+  no_log: true
+
+- name: GA | Update PWDs | Setting random django secret-key
+  ansible.builtin.lineinfile:
+    path: "{{ ga_web_path }}/{{ ga_web_django_project }}/config.py"
+    regexp: "^SECRET_KEY"
+    line: "SECRET_KEY = '{{ lookup('password', '/dev/null chars=ascii_letters,digits length=50') }}'"
+
+- name: GA | Update PWDs | Removing random encryption key
+  ansible.builtin.file:
+    path: "{{ ga_core_path }}/core/secret/random.key"
+    state: absent
+
+- name: GA | Update PWDs | Generating random encryption key
+  ansible.builtin.lineinfile:
+    line: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=50') }}"
+    path: "{{ ga_core_path }}/core/secret/random.key"
+    state: present
+    create: yes
+    mode: 0440
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
+  no_log: true
+
+- name: GA | Update PWDs | Getting encrypted core-password
+  ansible.builtin.command: "{{ ga_core_path_venv }}/bin/python3 /tmp/crypto.py encrypt {{ ga_sql_pwd_core | quote }}"
+  environment:
+    PYTHONPATH: "{{ ga_core_path }}"
+  no_log: true
+  register: ga_sql_pwd_core_encrypted
+
+- name: GA | Update PWDs | Getting encrypted web-password
+  ansible.builtin.command: "{{ ga_core_path_venv }}/bin/python3 /tmp/crypto.py encrypt {{ ga_sql_pwd_web | quote }}"
+  environment:
+    PYTHONPATH: "{{ ga_core_path }}"
+  no_log: true
+  register: ga_sql_pwd_web_encrypted
+
+- name: GA | Update PWDs | Preparing sql queries to update passwords
+  ansible.builtin.set_fact:
+    ga_db_update:  # This script is used to initialize the main configuration-objects - without those the core and web-interface won't work properly
+      - "UPDATE {{ ga_sql_db }}.ga_systemservermodel SET sql_secret = '{{ ga_sql_pwd_web_encrypted.stdout }}'"
+      - "UPDATE {{ ga_sql_db }}.ga_systemagentmodel SET sql_secret = '{{ ga_sql_pwd_core_encrypted.stdout }}'"
+
+- name: GA | Update PWDs | Executing database initialization script (local db)
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ ga_sql_socket }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_web_path }}/{{ ga_sql_config }}"
+    query: "{{ ga_db_update }}"
+    single_transaction: true
+  when: ga_sql_server == 'localhost'
+  register: init_script_local
+
+- name: GA | Update PWDs | Executing database initialization script (remote db)
+  community.mysql.mysql_query:
+    login_host: "{{ ga_sql_server }}"
+    login_port: "{{ ga_sql_port }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_web_path }}/{{ ga_sql_config }}"
+    query: "{{ ga_db_update }}"
+    single_transaction: true
+  when: ga_sql_server != 'localhost'
+  register: init_script_remote
+
+- name: GA | Update PWDs | Restarting services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - 'apache2.service'
+    - "{{ ga_core_service }}"

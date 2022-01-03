@@ -19,7 +19,7 @@
 - name: GA | Core | Update | Adding update service file
   ansible.builtin.template:
     src: 'templates/lib/systemd/system/ga_update.service.j2'
-    dest: '/lib/systemd/system/ga_update.service'
+    dest: "/lib/systemd/system/{{ ga_update_service }}"
 
 - name: GA | Core | Update | Copying update-code
   ansible.posix.synchronize:

@@ -11,12 +11,16 @@
     - 'crypto.py'
 
 - name: GA | Web | Init | Getting encrypted core-password
-  ansible.builtin.command: "{{ ga_web_path_venv }}/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_core | quote }}"
+  ansible.builtin.command: "{{ ga_core_path_venv }}/bin/python3 /tmp/crypto.py encrypt {{ ga_sql_pwd_core | quote }}"
+  environment:
+    PYTHONPATH: "{{ ga_core_path }}"
   no_log: true
   register: ga_sql_pwd_core_encrypted
 
 - name: GA | Web | Init | Getting encrypted web-password
-  ansible.builtin.command: "{{ ga_web_path_venv }}/bin/python3 /tmp/crypto.py {{ ga_core_path | quote }} encrypt {{ ga_sql_pwd_web | quote }}"
+  ansible.builtin.command: "{{ ga_core_path_venv }}/bin/python3 /tmp/crypto.py encrypt {{ ga_sql_pwd_web | quote }}"
+  environment:
+    PYTHONPATH: "{{ ga_core_path }}"
   no_log: true
   register: ga_sql_pwd_web_encrypted
 

@@ -2,16 +2,16 @@ Cmnd_Alias GA_WEB = \
   /bin/systemctl start apache2.service, \
   /bin/systemctl reload apache2.service, \
   /bin/systemctl restart apache2.service, \
-  /bin/systemctl start mariadb.service, \
-  /bin/systemctl reload mariadb.service, \
-  /bin/systemctl restart mariadb.service, \
-  /bin/systemctl start ga_core.service, \
-  /bin/systemctl reload ga_core.service, \
-  /bin/systemctl restart ga_core.service, \
-  /bin/systemctl stop ga_core.service , \
-  /bin/systemctl start ga_update.service, \
-  /bin/systemctl reload ga_web_certRenewal.service, \
-  /bin/systemctl restart ga_web_certRenewal.service, \
-  /bin/systemctl stop ga_web_certRenewal.service
+  /bin/systemctl start {{ ga_sql_service }}, \
+  /bin/systemctl reload {{ ga_sql_service }}, \
+  /bin/systemctl restart {{ ga_sql_service }}, \
+  /bin/systemctl start {{ ga_core_service }}, \
+  /bin/systemctl reload {{ ga_core_service }}, \
+  /bin/systemctl restart {{ ga_core_service }}, \
+  /bin/systemctl stop {{ ga_core_service }} , \
+  /bin/systemctl start {{ ga_update_service }}, \
+  /bin/systemctl reload {{ ga_web_letsencrypt_service }}, \
+  /bin/systemctl restart {{ ga_web_letsencrypt_service }}, \
+  /bin/systemctl stop {{ ga_web_letsencrypt_service }}
 
 {{ ga_web_service_user }} ALL=(ALL) NOPASSWD: GA_WEB

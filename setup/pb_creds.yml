@@ -1,0 +1,39 @@
+---
+
+- name: Changing GrowAutomation Credentials
+  hosts: all
+  become: true
+  vars_files:
+    - './vars/main.yml'
+    - './vars/hardcoded.yml'
+  tasks:
+    # pre tasks
+    - name: GA | Setup | Installing script dependencies
+      ansible.builtin.apt:
+        name: "{{ ga_script_packages }}"
+        state: present
+
+    # password tasks
+    - name: GA | Setup | Moving old password file
+      ansible.builtin.command: "mv {{ ga_random_pwd_file }} {{ ga_random_pwd_file }}_{{ ansible_date_time.iso8601_basic_short }}"
+
+    - name: GA | Setup | Generating passwords
+      ansible.builtin.import_role:
+        name: setup
+        tasks_from: 'write_pwds.yml'
+
+    - name: GA | Setup | Updating passwords
+      ansible.builtin.import_role:
+        name: setup
+        tasks_from: 'update_pwds.yml'
+
+    # cleanup
+    - name: GA | Setup | Cleaning up temporary password files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ga_tmp_pwd_file_sql_core }}"
+        - "{{ ga_tmp_pwd_file_sql_web }}"
+        - "{{ ga_tmp_pwd_file_django_user }}"
+        - "{{ ga_tmp_pwd_file_django_guest }}"

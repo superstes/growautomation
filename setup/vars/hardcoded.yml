@@ -37,6 +37,8 @@ ga_core_mods:
   - 'systemd-python'
 
 ga_core_port_socket: 2048
+ga_core_service: 'ga_core.service'
+ga_update_service: 'ga_update.service'
 
 # web
 ga_web_packages:
@@ -61,12 +63,15 @@ ga_django_mods:
   - 'requests'
   - 'pytz'
   - 'systemd'
+  - 'packaging'
 
 ga_web_groups:
   - 'systemd-journal'
   - "{{ ga_service_group }}"
 
 ga_web_django_project: 'base'
+ga_web_letsencrypt_service: 'ga_web_certRenewal.service'
+ga_django_superuser: 'admin'
 
 # db
 ga_sql_config: 'database.cnf'

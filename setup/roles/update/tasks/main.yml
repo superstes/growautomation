@@ -54,7 +54,7 @@
     state: restarted
   when: ga_update_process
   loop:
-    - 'ga_core.service'
+    - "{{ ga_core_service }}"
     - 'apache2.service'
 
 - ansible.builtin.debug:

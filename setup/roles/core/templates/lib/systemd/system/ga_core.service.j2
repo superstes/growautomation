@@ -2,7 +2,7 @@
 Description=GrowAutomation Service
 Documentation=https://docs.growautomation.eu
 Documentation=https://github.com/superstes/growautomation
-After=mariadb.service
+After={{ ga_sql_service }}
 StartLimitBurst=10
 StartLimitIntervalSec=630
 

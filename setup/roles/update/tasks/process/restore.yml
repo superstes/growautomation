@@ -29,7 +29,7 @@
 
 - name: GA | Update | Process | Restore | Stopping core service
   ansible.builtin.systemd:
-    name: 'ga_core.service'
+    name: "{{ ga_core_service }}"
     state: stopped
   when: ga_backup_ok
 
@@ -83,6 +83,6 @@
 
 - name: GA | Update | Process | Restore | Starting core service
   ansible.builtin.systemd:
-    name: 'ga_core.service'
+    name: "{{ ga_core_service }}"
     state: started
   when: ga_backup_ok

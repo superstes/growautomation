@@ -31,9 +31,9 @@
     mode: "{{ item.mode }}"
     recurse: yes
   loop:
-  - {path: "{{ ga_core_path }}", mode: 0755}
-  - {path: "{{ ga_core_path_log }}", mode: 0775}
-  - {path: "{{ ga_core_path_venv }}", mode: 0750}
+  - {path: "{{ ga_core_path }}", mode: '0755'}
+  - {path: "{{ ga_core_path_log }}", mode: '0775'}
+  - {path: "{{ ga_core_path_venv }}", mode: '0750'}
 
 - name: GA | Core | Copying core-code
   ansible.posix.synchronize:
@@ -42,6 +42,13 @@
     recursive: yes
     rsync_path: 'sudo rsync'
     rsync_opts: ['--exclude=*.cnf', '--exclude=*.key', '--exclude=__pycache__/']
+
+- name: GA | Core | Copying setup-scripts
+  ansible.posix.synchronize:
+    src: "{{ ga_setup_clone_dir }}/setup"
+    dest: "{{ ga_core_path }}/"
+    recursive: yes
+    rsync_path: 'sudo rsync'
 
 - name: GA | Core | Setting privileges for core code
   ansible.builtin.file:
@@ -95,7 +102,7 @@
 - name: GA | Core | Adding core service file
   ansible.builtin.template:
     src: 'templates/lib/systemd/system/ga_core.service.j2'
-    dest: '/lib/systemd/system/ga_core.service'
+    dest: "/lib/systemd/system/{{ ga_core_service }}"
 
 - name: GA | Core | Configuring update prerequisits
   ansible.builtin.import_tasks: update.yml
@@ -106,7 +113,7 @@
 
 - name: GA | Core | Enabling service
   ansible.builtin.systemd:
-    name: 'ga_core.service'
+    name: "{{ ga_core_service }}"
     enabled: yes
 
 - name: GA | Configure device support
