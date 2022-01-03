@@ -101,7 +101,7 @@ class Prepare:
                     'path': f'{ga_root_path}/core/config/file/core.conf',
                     'type': 'text',
                     'access': 'rw',
-                    'perms': 640,
+                    'perms': 600,
                     'owner': self.uid,
                     'group': self.ga_gid,
                     'exists': True,
