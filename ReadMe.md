@@ -50,7 +50,7 @@ It's simple! And should remain so if you have little time for it.
 <a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
 
 ### Found bugs?
-Just open a github issue!
+Follow the <a href="https://docs.growautomation.eu/en/latest/basic/troubleshoot.html">troubleshooting guide</a> and/or <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug reporting guide</a>!
 
 ### Support
 Want to support the project?

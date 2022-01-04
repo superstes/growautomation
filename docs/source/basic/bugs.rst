@@ -11,7 +11,7 @@ Bugs
 
 **When you encounter errors** you can check out our :ref:`troubleshooting guide <basic-troubleshoot>`.
 
-If you could not resolve your problem by troubleshooting you can submit a bug ticket per email.
+If you could not resolve your problem by troubleshooting you can submit a bug ticket as described below.
 
 -----
 
@@ -36,7 +36,7 @@ Before continuing => you need to know what's the source of the error. As describ
 Basic
 =====
 
-Note the following in the ticket email:
+Note the following in the ticket:
 
 - What action did you perform as the error occurred? (*if any*)
 - Export the current config and attach it to the issue/ticket:
@@ -69,8 +69,8 @@ Please prepare the following:
 - Copy the following logs each in a separate text file:
 
   - GrowAutomation - Web
-  - Service - Apache webserver
-  - Service journal - Apache webserver
+  - Service - Webserver
+  - Service journal - Webserver
 
 - Check if there are `existing issues/bugs <https://github.com/superstes/growautomation/issues>`_
 - Open a new `GitHub issue <https://github.com/superstes/growautomation/issues/new>`_ and attach the logs/config-export to it

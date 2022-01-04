@@ -4,6 +4,8 @@
    :width: 100%
 .. |factory| image:: ../_static/img/workflow/basic/factory.svg
    :width: 100%
+.. |update| image:: ../_static/img/workflow/basic/update.svg
+   :width: 100%
 
 .. include:: ../includes/tip_links.rst
 
@@ -24,19 +26,22 @@ Core
 
 This workflow is responsible for the core functionalities of GrowAutomation.
 
-Visualization
-=============
 |core|
 
 ----
 
 Factory
-*******
-
-This is not really a workflow.
+=======
 
 It shows the objects used for config-management by the core modules.
 
-Visualization
-=============
 |factory|
+
+----
+
+Update
+******
+
+How the update is done.
+
+|update|
