@@ -49,6 +49,7 @@
       ]
     }
     - {src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/static/", dst: "{{ ga_update_path_web_static }}/"}
+    - {src: "{{ ga_update_path_repo }}/setup", dst: "{{ ga_core_path }}/"}
   ignore_errors: true
   register: update_code
 

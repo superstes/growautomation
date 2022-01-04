@@ -32,7 +32,8 @@ To install the pre-configured raspberry image you need to:
     ```
     The '**user**' password is for the web-ui login!
   * **You should delete this file** after you saved your passwords safely!
-* Start using it!
+* Now you can access the web-interface and configure your devices. More information to the configuration can be found <a href="https://docs.growautomation.eu/en/latest/index.html">here</a>.
+
 
 
 ----

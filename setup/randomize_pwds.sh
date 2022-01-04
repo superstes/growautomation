@@ -56,4 +56,4 @@ ansible-galaxy collection install -r requirements.yml
 ansible-galaxy install -r requirements.yml --roles-path $SETUP_DIR/setup/roles
 
 # running ansible playbook
-ansible-playbook -K -i inventories/hosts.yml pb_creds.yml --limit ${TARGET_HOST} --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
+ansible-playbook -K -i inventories/hosts.yml pb_creds.yml --limit ${TARGET_HOST} --extra-vars "ga_setup_clone_dir=${SETUP_DIR}"
