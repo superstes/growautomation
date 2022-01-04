@@ -13,8 +13,8 @@ from ...config import shared as config
 SYSTEMCTL = '/bin/systemctl'
 SHELL_SERVICE_STATUS = f"{SYSTEMCTL} is-active %s"
 SHELL_SERVICE_ENABLED = f"{SYSTEMCTL} is-enabled %s"
-SHELL_SERVICE_ACTIVE_TIMESTAMP = f"{SYSTEMCTL} show -p ActiveEnterTimestamp --value %s"
-SHELL_SERVICE_INACTIVE_TIMESTAMP = f"{SYSTEMCTL} show -p InactiveEnterTimestamp --value %s"
+SHELL_SERVICE_ACTIVE_TIMESTAMP = f"{SYSTEMCTL} show --property=ActiveEnterTimestamp %s"
+SHELL_SERVICE_INACTIVE_TIMESTAMP = f"{SYSTEMCTL} show --property=InactiveEnterTimestamp %s"
 TITLE = 'System service'
 
 

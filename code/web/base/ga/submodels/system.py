@@ -25,7 +25,7 @@ class SystemAgentModel(BaseModel):
         'svc_interval_status', 'svc_interval_reload', 'subprocess_timeout', 'sql_socket', 'sql_service', 'sql_config',
     ]
 
-    version = models.FloatField()
+    version = models.CharField(max_length=16)
     version_detail = models.CharField(max_length=64)
 
     path_root = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
@@ -59,7 +59,7 @@ class SystemServerModel(BaseModel):
         'ga_cloud_ddns', 'sql_service', 'letsencrypt'
     ]
 
-    version = models.FloatField()
+    version = models.CharField(max_length=16)
     version_detail = models.CharField(max_length=64)
 
     path_core = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
