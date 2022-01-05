@@ -133,6 +133,7 @@ Version: 1.0
 
 
 - webUI improvements
+  - user management (_password change, user settings, add/delete users_)
   - actors in dashboard elements => when was an action taken; when was it reversed
   - using AJAX for dynamic data refreshment and workflow optimizations
 

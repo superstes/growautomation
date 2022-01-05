@@ -95,7 +95,7 @@
 - name: GA | Web | Init | Creating django admin
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
   {{ ga_web_path_venv }}/bin/python3 /tmp/create_user.py {{ ga_django_superuser | quote }} {{ ga_sql_pwd_web | quote }} {{ ga_web_dns | quote }}
-  \"ga_user,ga_read,ga_write\" 1"
+  \"ga_user,ga_read,ga_write,ga_admin\" 1"
   args:
     executable: '/bin/bash'
     chdir: "{{ ga_web_path }}"

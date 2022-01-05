@@ -240,3 +240,19 @@ def form_help(key: str) -> str:
 @register.filter
 def form_label(key: str) -> str:
     return LABEL_DICT[key]
+
+
+@register.filter
+def intersects(l1: list, l2: list) -> bool:
+    intersect = [value for value in l1 if value in l2]
+    return True if len(intersect) > 0 else False
+
+
+@register.filter
+def all_groups(obj) -> list:
+    return [g.name for g in obj.all()]
+
+
+@register.simple_tag
+def censored() -> str:
+    return config.CENSOR_STRING

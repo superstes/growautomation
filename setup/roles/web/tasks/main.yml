@@ -64,6 +64,17 @@
     recursive: yes
     rsync_path: 'sudo rsync'
 
+- name: GA | Web | Setting privileges
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "{{ ga_web_service_user }}"
+    group: "{{ ga_service_group }}"
+    recurse: true
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ ga_web_path }}", mode: '0750' }
+    - { path: "{{ ga_web_path_static }}", mode: '0755' }
+
 - name: GA | Web | Configuring django settings
   ansible.builtin.lineinfile:
     path: "{{ ga_web_path }}/{{ ga_web_django_project }}/config.py"

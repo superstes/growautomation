@@ -18,6 +18,7 @@ from .subviews.data.dashboard.main import DashboardView
 from .subviews.system.export import export_view
 from .subviews.system.config import system_config_view
 from .subviews.system.update import update_view, update_status_view
+from .subviews.system.users import UserMgmt
 from .config.shared import LOGIN_URL
 
 
@@ -27,6 +28,9 @@ def view(request, **kwargs):
 
 class GaView:
     def start(self, request, a: str = None, b: str = None, c: str = None, d: str = None, e: str = None):
+        if request.method not in ['GET', 'POST']:
+            return handler404(f"Got unsupported method: '{request.method}'!")
+
         try:
             if a == 'denied':
                 return self.denied(request=request)
@@ -112,6 +116,9 @@ class GaView:
 
         elif typ == 'config':
             return logout_check(request=request, default=system_config_view(request=request))
+
+        elif typ == 'user':
+            return logout_check(request=request, default=UserMgmt(request=request).go())
 
         elif typ == 'update':
             if sub_type is not None and sub_type == 'status':

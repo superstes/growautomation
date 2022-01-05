@@ -16,7 +16,8 @@ DENIED_API_URL = '/api/denied/'
 GA_USER_GROUP = 'ga_user'
 GA_READ_GROUP = 'ga_read'
 GA_WRITE_GROUP = 'ga_write'
-GA_ADMIN_GROUP = 'ga_admin'
+# GA_ADMIN_GROUP = 'ga_admin'
+GA_ADMIN_USER = 'admin'
 
 # log settings
 LOG_MAX_TRACEBACK_LENGTH = 5000

@@ -19,6 +19,7 @@ NAVIGATION = {
             'Service': '/system/service/',  # status and restart of service(s)
             'Logs': '/system/log/',  # read various log files
             'Scripts': '/system/script/',  # upload or delete scripts
+            'Users': '/system/user/',  # add, modify or delete users
             'Update': '/system/update/',
             'Backup': {
                 'Config': '/system/export/config/',   # download db dump of config
