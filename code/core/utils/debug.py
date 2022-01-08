@@ -52,7 +52,7 @@ class Log:
         output_formatted = f"{datetime.now().strftime(config.LOG_TIMESTAMP_FORMAT)}{config.LOG_SEPARATOR}{self.name}{config.LOG_SEPARATOR}{output}"
         self._debugger(msg=output_formatted)
 
-        with open(self.log_file, 'a+') as logfile:
+        with open(self.log_file, 'a+', encoding='utf-8') as logfile:
             logfile.write(f"{level}{config.LOG_SEPARATOR}{output_formatted}\n")
 
         return True

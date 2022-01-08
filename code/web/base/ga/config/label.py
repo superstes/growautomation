@@ -123,7 +123,7 @@ HELP_DICT = {
     'unit': 'Unit of data (p.e. %, RH) [can be empty, max length 15]',
     'datatype': 'Type of data received from the input script [max length 50]',
     # 'data': 'Data',
-    'connection': 'Connection port (p.e. GPIO or downlink pin) [max length 50]',
+    'connection': 'Connection port (p.e. GPIO or downlink pin) [max length 255]',
     'downlink': 'Downlink device (needed if p.e. analog to digital conversion is done via an intermediate device) [can be empty]',
     'value': 'Value to compare the input data to [max length 50]',
     'operator': 'Operator used for comparison',

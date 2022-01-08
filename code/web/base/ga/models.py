@@ -48,7 +48,7 @@ class BaseDeviceModel(BaseModel):
 
 
 class BaseDeviceObjectModel(BaseDeviceModel):
-    connection = models.CharField(max_length=50)  # label Connection information [p.e. gpio pin]
+    connection = models.CharField(max_length=255)  # label Connection information [p.e. gpio pin]
 
     class Meta:
         abstract = True

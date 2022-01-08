@@ -85,14 +85,24 @@ class Go:
         if params_dict is None or not self._reverse_check:
             return None
 
-        command = "%s %s/%s/%s \"%s\" \"%s\"" % (
-            params_dict['bin'],
-            config.AGENT.path_root,
-            config.DEVICE_SCRIPT_PATH % self.script_dir,
-            params_dict['script'],
-            params_dict['arg'],
-            str(json_dumps(config_dict)).replace("\"", "\\\"")
-        )
+        if params_dict['script'] in config.NONE_RESULTS:
+            command = "%s/%s/%s \"%s\" \"%s\"" % (
+                config.AGENT.path_root,
+                config.DEVICE_SCRIPT_PATH % self.script_dir,
+                params_dict['bin'],
+                params_dict['arg'],
+                str(json_dumps(config_dict)).replace("\"", "\\\"")
+            )
+
+        else:
+            command = "%s %s/%s/%s \"%s\" \"%s\"" % (
+                params_dict['bin'],
+                config.AGENT.path_root,
+                config.DEVICE_SCRIPT_PATH % self.script_dir,
+                params_dict['script'],
+                params_dict['arg'],
+                str(json_dumps(config_dict)).replace("\"", "\\\"")
+            )
 
         result, error = subprocess(command=command, out_error=True)
 
@@ -167,8 +177,8 @@ class Go:
             else:
                 device_log(f"Device \"{self.instance.name}\" is either not reversible or not active", add=self.name, level=7)
 
-        if params_dict['script'] in config.NONE_RESULTS or params_dict['bin'] in config.NONE_RESULTS:  # it should only be possible to be NoneType-None
-            device_log(f"No script or binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
+        if params_dict['bin'] in config.NONE_RESULTS:  # it should only be possible to be NoneType-None
+            device_log(f"No binary provided to execute for device \"{self.instance.name}\"", add=self.name, level=2)
             return None
 
         return params_dict
