@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of GrowAutomation
-#     Copyright (C) 2021  René Pascal Rath
+#     Copyright (C) 2022  René Pascal Rath
 #
 #     GrowAutomation is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
