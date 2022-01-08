@@ -97,56 +97,57 @@
                         </td>
                     </tr>
                 {% endif %}
-                {% if user_create %}
-                    <tr>
-                        <td colspan="100%">
-                            <form class="ga-form-inline" method="post" action="/system/user/">
-                                {% csrf_token %}
-                                <div class="row">
-                                    <div class="col">
-                                        <label>Username:
-                                            <input class="form-control" type="text" name="name" autocapitalize="none" autocomplete="username" maxlength="150" required>
-                                        </label>
-                                    </div>
-                                    <div class="col">
-                                        <label>E-Mail:
-                                            <input class="form-control" type="text" name="email" autocapitalize="none" autocomplete="username" maxlength="75" required>
-                                        </label>
-                                    </div>
-                                    <div class="col">
-                                        <label>Password:
-                                            <input class="form-control" type="password" name="password" autocomplete="current-password" maxlength="128" required>
-                                        </label>
-                                    </div>
-                                    <div class="col">
-                                        <label>Privileges:
-                                            <select class="form-control" name="privileges" required>
-                                            <option selected>{% get_empty %}</option>
-                                            {% for group, value in GA_GROUPS.items %}
-                                                <option value="{{ group }}">{{ value.pretty }}</option>
-                                            {% endfor %}
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <input type="hidden" name="do" value="update" />
-                                    <input type="hidden" name="current_name" value="{{ user.username }}" />
-                                    {% include "../btn/save.html" %}
-                                </div>
-                            </form>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <form class="ga-form-inline" method="get" action="/system/user/">
-                                <label>Create user:
-                                    <input type="hidden" name="do" value="create" />
-                                    {% include "../btn/create.html" %}
-                                </label>
-                            </form>
-                        </td>
-                    </tr>
-                {% endif %}
             {% endfor %}
+            {% if create_user %}
+                <tr>
+                    <td colspan="100%">
+                        <form class="ga-form-inline" method="post" action="/system/user/">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col">
+                                    <label>Username:
+                                        <input class="form-control" type="text" name="name" autocapitalize="none" autocomplete="username" maxlength="150" required>
+                                    </label>
+                                </div>
+                                <div class="col">
+                                    <label>E-Mail:
+                                        <input class="form-control" type="text" name="email" autocapitalize="none" autocomplete="username" maxlength="75" required>
+                                    </label>
+                                </div>
+                                <div class="col">
+                                    <label>Password:
+                                        <input class="form-control" type="password" name="password" autocomplete="current-password" maxlength="128" required>
+                                    </label>
+                                </div>
+                                <div class="col">
+                                    <label>Privileges:
+                                        <select class="form-control" name="privileges" required>
+                                        <option selected>{% get_empty %}</option>
+                                        {% for group, value in GA_GROUPS.items %}
+                                            <option value="{{ group }}">{{ value.pretty }}</option>
+                                        {% endfor %}
+                                        </select>
+                                    </label>
+                                </div>
+                                <input type="hidden" name="do" value="create" />
+                                <input type="hidden" name="current_name" value="{{ user.username }}" />
+                                {% include "../btn/save.html" %}
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="100%">
+                        <form class="ga-form-inline" method="get" action="/system/user/">
+                            <label>Create user:
+                                <input type="hidden" name="do" value="create" />
+                                {% include "../btn/add.html" %}
+                            </label>
+                        </form>
+                    </td>
+                </tr>
+            {% endif %}
         </table>
     </div>
 {% endblock %}

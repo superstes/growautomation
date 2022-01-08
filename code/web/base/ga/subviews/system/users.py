@@ -56,6 +56,10 @@ class UserMgmt:
         users = User.objects.all().exclude(username=config.GA_ADMIN_USER)
 
         update_user = None
+        create_user = False
+
+        if 'do' in self.request.GET and self.request.GET['do'] == 'create':
+            create_user = True
 
         for user in users:
             if 'do' in self.request.GET and self.request.GET['do'] == 'update' \
@@ -65,7 +69,7 @@ class UserMgmt:
 
         return render(self.request, 'system/users.html', context={
             'request': self.request, 'title': TITLE, 'users': users, 'GA_GROUPS': self.GA_GROUPS, 'action_msg': msg, 'action_msg_style': msg_style,
-            'update_user': update_user,
+            'update_user': update_user, 'create_user': create_user,
         })
 
     @method_user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
