@@ -28,7 +28,7 @@ This setup option allows you to modify/configure a lot of custom settings that a
 
 #### Base setup
 
-First you need to go through the basic setup process as described <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html">here</a>
+First you need to go through the basic setup process as described <a href="https://docs.growautomation.eu/en/latest/setup/2-raspberry.html">here</a>
 
 #### Software setup
 
