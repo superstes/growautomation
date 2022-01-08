@@ -1,7 +1,7 @@
 .. _setup-post-setup:
 
 .. |users| image:: ../_static/img/setup/post-setup/users.png
-   :width: 100%
+   :class: ga-img-center
 
 .. include:: ../includes/tip_links.rst
 
@@ -48,4 +48,4 @@ Basic tasks
 
 6. Now you can configure your devices and start using the GrowAutomation software!
 
-  More information to the configuration can be found :ref:`here <config-device-input>`.
+  More information to the configuration can be found :ref:`here <config-device>`.

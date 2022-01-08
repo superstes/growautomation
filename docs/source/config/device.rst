@@ -1,7 +1,6 @@
 .. _config-device:
 
 .. include:: ../includes/tip_links.rst
-.. include:: ../includes/warn_in_progress.rst
 
 ======
 Device
@@ -18,6 +17,8 @@ Basic
 
 How the basic device config is structured.
 
+.. include:: ../includes/warn_in_progress.rst
+
 ----
 
 .. _config-device-input:
@@ -28,6 +29,8 @@ Input
 :ref:`What are input devices <device-input>`
 
 Special config for input devices.
+
+.. include:: ../includes/warn_in_progress.rst
 
 ----
 
@@ -40,6 +43,8 @@ Output
 
 Special config for output devices.
 
+.. include:: ../includes/warn_in_progress.rst
+
 ----
 
 .. _config-device-connection:
@@ -50,3 +55,5 @@ Connection
 :ref:`What are connection devices <device-connection>`
 
 Special config for connection devices.
+
+.. include:: ../includes/warn_in_progress.rst

@@ -1,5 +1,5 @@
 project = 'GrowAutomation'
-copyright = '2021, Superstes'
+copyright = '2022, Superstes'
 author = 'Superstes'
 extensions = ['sphinx_rtd_theme']
 templates_path = ['_templates']

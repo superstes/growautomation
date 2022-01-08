@@ -36,3 +36,6 @@ Index
    :maxdepth: 1
 
    setup/*
+
+
+.. include:: ./includes/tip_links.rst

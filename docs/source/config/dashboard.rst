@@ -4,7 +4,6 @@
    :class: ga-img-basic ga-img-center
 
 .. include:: ../includes/tip_links.rst
-.. include:: ../includes/warn_in_progress.rst
 
 =========
 Dashboard
@@ -19,6 +18,8 @@ Dashboards
 
 How to create a dashboard and configure its grid-system.
 
+.. include:: ../includes/warn_in_progress.rst
+
 Elements
 ********
 
@@ -26,12 +27,18 @@ Elements
 
 How to create a dashboard element.
 
+.. include:: ../includes/warn_in_progress.rst
+
 Graphs
 ======
 
 How to create a graph prototype.
 
+.. include:: ../includes/warn_in_progress.rst
+
 Datasets
 ========
 
 How to create a dataset.
+
+.. include:: ../includes/warn_in_progress.rst

@@ -16,23 +16,8 @@ To install the pre-configured raspberry image you need to:
 
 * Download the image: <a href="https://drive.google.com/file/d/1MIoagaB4rKUwSbUtUW5E5ZUCCDU3k30S/view?usp=sharing">Google Drive</a>
 * Download and install the <a href="https://www.raspberrypi.com/software/">Raspberry Pi Imager</a> software on your computer (_or any other tool to flash images on a sd card_)
-* Flash the image on a sd card or <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">ssd</a>
-* <a href="https://docs.growautomation.eu/en/latest/setup/find.html">Find the device on your network</a>
-* Connect to the device over ssh => the default **password** is: '**Gr0w21736!**'
-* Run the password-randomization-script for more security:
-  * ```bash
-    sudo bash /var/lib/ga/setup/randomize_pwds.sh
-    ```
-  * After that it will ask you for a 'BECOME password' => this is the password you used to connect to the device (_see above_)!
-
-* Get the configured passwords:
-  * ```bash
-    sudo cat /etc/.ga_setup
-    # sudo rm /etc/.ga_setup  # to delete the file
-    ```
-    The '**user**' password is for the web-ui login!
-  * **You should delete this file** after you saved your passwords safely!
-* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">post-setup guide</a> for further ToDos.
+* Flash the image on a sd card or <a href="https://docs.growautomation.eu/en/latest/setup/2-raspberry.html#ssd">ssd</a>
+* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/6-post-setup.html">post-setup guide</a> for further ToDos.
 
 
 ----
@@ -91,4 +76,4 @@ After that it will ask you for a 'BECOME password' => you need to **provide the 
 
 ##### Post install
 
-* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">post-setup guide</a> for further ToDos.
+* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/6-post-setup.html">post-setup guide</a> for further ToDos.

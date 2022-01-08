@@ -112,14 +112,14 @@ We had good experiences with these ones:
   * `TPLink TL-WA860RE <https://www.amazon.de/dp/B00K11UHVA/ref=emc_b_5_i>`_
 
 LAN
-===
+---
 
 The easiest and hardest way => *just* bury a network cable and connect the raspberry directly to your existing network.
 
 This will be much work but it will work like a charm and won't make any problems.
 
 SIM/LTE
-=======
+-------
 
 We have planned that the GrowAutomation setup should be able to work with a sim card. It should be accessible via dyn-dns over the mobile network.
 
