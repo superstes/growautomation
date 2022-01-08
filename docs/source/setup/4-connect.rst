@@ -2,19 +2,45 @@
 
 .. include:: ../includes/tip_links.rst
 
-=======
-Connect
+==========
+4. Connect
+==========
+
+.. _setup-connect-ssh:
+
+SSH
+***
+
+How to connect to a raspberry via ssh.
+
+Windows
 =======
 
-Description
-***********
+If you have Windows 10 or higher => you can use the native PowerShell SSH-Client to connect.
 
-Options how to connect your GrowAutomation setup to power and a network (*for your access*).
+For earlier versions you will need to download a tool like `Putty <https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe>`_.
+
+
+
+Linux
+=====
+
+Every linux distribution I know has a SSH-Client pre-installed - therefore you just need to open a terminal to use it.
+
 
 ----
 
+Physical
+********
+
+Description
+===========
+
+Options how to connect your GrowAutomation setup to power and a network (*for your access*).
+
+
 DISCLAIMER
-**********
+==========
 
 All the links for mentioned products are from amazon.
 
@@ -22,12 +48,11 @@ This is mainly because of convenience.
 
 You **WILL GET** those products for a **better price somewhere else**.
 
-----
 
 .. _setup-connect-power:
 
 Power
-*****
+=====
 
 **How to power it?**
 
@@ -58,7 +83,7 @@ This is a basic question and we came up with the following options for the answe
 .. _setup-connect-network:
 
 Network
-*******
+=======
 
 The future **server-agent setup** will make wireless connections for agents easier.
 
@@ -66,7 +91,7 @@ Since the web user-interface will be run on the server and the agent just needs 
 
 
 WLAN
-====
+----
 
 If you have an existing WIFI network you could just connect the raspberry to it.
 

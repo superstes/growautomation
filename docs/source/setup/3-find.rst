@@ -3,9 +3,9 @@
 .. include:: ../includes/tip_links.rst
 .. include:: ../includes/warn_in_progress.rst
 
-====
-Find
-====
+=======
+3. Find
+=======
 
 Description
 ***********

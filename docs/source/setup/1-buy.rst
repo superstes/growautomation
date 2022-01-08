@@ -2,9 +2,9 @@
 
 .. include:: ../includes/tip_links.rst
 
-===
-Buy
-===
+======
+1. Buy
+======
 
 Description
 ***********

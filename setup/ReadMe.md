@@ -32,8 +32,7 @@ To install the pre-configured raspberry image you need to:
     ```
     The '**user**' password is for the web-ui login!
   * **You should delete this file** after you saved your passwords safely!
-* Now you can access the web-interface and configure your devices. More information to the configuration can be found <a href="https://docs.growautomation.eu/en/latest/index.html">here</a>.
-
+* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">post-setup guide</a> for further ToDos.
 
 
 ----
@@ -92,15 +91,4 @@ After that it will ask you for a 'BECOME password' => you need to **provide the 
 
 ##### Post install
 
-If you haven't set custom passwords -> you can find the randomly generated one's like this:
-
-```bash
-sudo cat /etc/.ga_setup
-# sudo rm /etc/.ga_setup  # to delete the file
-```
-
-**You should delete this file** after you saved your passwords safely!
-
-Now you can access the web-interface and configure your devices.
-
-More information to the configuration can be found <a href="https://docs.growautomation.eu/en/latest/index.html">here</a>.
+* Look into the <a href="https://docs.growautomation.eu/en/latest/setup/raspberry.html#ssd">post-setup guide</a> for further ToDos.

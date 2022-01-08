@@ -71,11 +71,12 @@ Version: 1.0
 
 ### History
 
-- v1.0 _(2021-11 - 2021-12)_
+- v1.0 _(2021-11 - 2022-02)_
   - refactoring setup tasks => using roles provided by <a href="https://github.com/ansibleguy">AnsibleGuy</a>
   - creating image for easy installation
   - update via webUI (_to specific vcs version_)
   - stateful service reload
+  - user management from webUI
 
 
 - v0.9 _(2021-09 - 2021-10)_
