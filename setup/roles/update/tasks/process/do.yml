@@ -119,13 +119,52 @@
     - update_code.failed is undefined or not update_code.failed
     - update_db_schema_build.failed is undefined or not update_db_schema_build.failed
 
-- name: GA | Update | Process | Do | Updating core config file
+- name: GA | Update | Process | Do | Copying core config-file updater script
   ansible.builtin.copy:
-    src: '{{ playbook_dir }}/roles/setup/files/tmp/update_core_config.py'
-    dest: "{{ ga_core_path }}/core/config/file/core.conf"
-    mode: 0600
-    owner: "{{ ga_core_service_user }}"
-    group: "{{ ga_service_group }}"
+    src: "{{ playbook_dir }}/roles/setup/files/tmp/update_core_config.py"
+    dest: '/tmp/update_core_config.py'
+    mode: 0500
+
+- name: GA | Update | Process | Do | Updating values in core config-file (1/2)
+  ansible.builtin.shell: "source {{ ga_core_path_venv }}/bin/activate &&
+  {{ ga_core_path_venv }}/bin/python3 /tmp/update_core_config.py {{ item.key | quote }} {{ item.value | quote }}"
+  args:
+    executable: '/bin/bash'
+  environment:
+    PYTHONPATH: "{{ ga_update_path_core }}"
+  with_dict: "{{ ga_settings.agent.overwrite }}"
+
+- name: GA | Update | Process | Do | Updating values in core config-file (2/2)
+  ansible.builtin.shell: "source {{ ga_core_path_venv }}/bin/activate &&
+  {{ ga_core_path_venv }}/bin/python3 /tmp/update_core_config.py {{ item.key | quote }} {{ item.value | quote }} default"
+  args:
+    executable: '/bin/bash'
+  environment:
+    PYTHONPATH: "{{ ga_update_path_core }}"
+  with_dict: "{{ ga_settings.agent.default }}"
+
+- name: GA | Update | Process | Do | Updating system-config in db (local db)
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ ga_sql_socket }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ item }}"
+  loop:
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+  when: ga_sql_server == 'localhost'
+
+- name: GA | Update | Process | Do | Updating system-config in db (remote db)
+  community.mysql.mysql_query:
+    login_host: "{{ ga_sql_server }}"
+    login_port: "{{ ga_sql_port }}"
+    login_db: "{{ ga_sql_db }}"
+    config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
+    query: "{{ item }}"
+  loop:
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+  when: ga_sql_server != 'localhost'
 
 - name: GA | Update | Process | Do | Stopping services about to be upgraded (if online)
   ansible.builtin.systemd:

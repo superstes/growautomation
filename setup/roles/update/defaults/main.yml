@@ -5,3 +5,58 @@ ga_remove_web_venv: false
 ga_remove_core_venv: false
 ga_update_path_backup: "/var/backups/ga/update/{{ ansible_date_time.iso8601_basic_short }}"
 ga_update_cores: "{% if ansible_processor_cores - 1 > 0 %}{{ ansible_processor_cores - 1 }}{% else %}1{% endif %}"
+
+ga_settings:
+  server:
+    overwrite:
+      letsencrypt: "{% if ga_web_ssl_mode == 'letsencrypt' %}1{% else %}0{% endif %}"
+      version: "{{ ga_setup_release }}"
+      version_detail: "{{ ga_setup_commit }}"
+
+#    default:
+#      name: "{{ ga_core_controller_name }}"
+#      description: "Server created by setup at {{ ansible_date_time.iso8601_basic_short }}"
+#      path_core: "{{ ga_update_path_core }}"
+#      path_web: "{{ ga_update_path_web }}"
+#      path_web_static: "{{ ga_update_path_web_static }}"
+#      path_web_docs: "{{ ga_update_path_web_docs }}"
+#      path_home_core: "{{ ga_core_path_home }}"
+#      path_home_web: "{{ ga_web_path_home }}"
+#      path_log: "{{ ga_update_path_log }}"
+#      sql_server: "{{ ga_sql_server }}"
+#      sql_port: "{{ ga_sql_port }}"
+#      sql_user: "{{ ga_sql_user_web }}"
+#      sql_database: "{{ ga_sql_db }}"
+#      sql_service: "{{ ga_sql_service }}"
+#      log_level: "{{ ga_log_level }}"
+#      security: "{% if ga_security_mode %}1{% else %}0{% endif %}"
+#      timezone: "{{ ga_timezone }}"
+
+  agent:
+    overwrite:
+      version: "{{ ga_setup_release }}"
+      version_detail: "{{ ga_setup_commit }}"
+
+    default:
+      name: "{{ ga_core_controller_name }}"
+      description: "Agent created by setup at {{ ansible_date_time.iso8601_basic_short }}"
+      path_root: "{{ ga_update_path_core }}"
+      path_home: "{{ ga_core_path_home }}"
+      path_log: "{{ ga_update_path_log }}"
+      sql_server: "{{ ga_sql_server }}"
+      sql_port: "{{ ga_sql_port }}"
+      sql_user: "{{ ga_sql_user_core }}"
+      sql_database: "{{ ga_sql_db }}"
+      sql_socket: "{{ ga_sql_socket }}"
+      sql_service: "{{ ga_sql_service }}"
+      sql_config: "{{ ga_sql_config_file }}"
+      # needed for the core prestart:
+      debug: 0
+      log_level: "{{ ga_log_level }}"
+      svc_interval_status: 3600
+      svc_interval_reload: 21600
+      subprocess_timeout: 60
+      device_fail_count: 5
+      device_fail_sleep: 1800
+      device_log: 1
+      

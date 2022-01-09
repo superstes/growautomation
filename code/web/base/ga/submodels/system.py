@@ -41,7 +41,7 @@ class SystemAgentModel(BaseModel):
     sql_service = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_SVC)
     sql_config = models.CharField(max_length=255, default=config.SYS_DEFAULT_SQL_CONFIG)
 
-    log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
+    log_level = models.PositiveSmallIntegerField(default=5, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
 
     device_fail_count = models.PositiveSmallIntegerField(default=config.SYS_DEFAULT_FAIL_COUNT)
@@ -77,7 +77,7 @@ class SystemServerModel(BaseModel):
     sql_database = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_DB)
     sql_service = models.CharField(max_length=50, default=config.SYS_DEFAULT_SQL_SVC)
 
-    log_level = models.PositiveSmallIntegerField(default=2, choices=LOG_LEVEL_CHOICES)
+    log_level = models.PositiveSmallIntegerField(default=5, choices=LOG_LEVEL_CHOICES)
     debug = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     security = models.BooleanField(choices=BOOLEAN_CHOICES, default=False)
     timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default=config.SYS_DEFAULT_TZ)

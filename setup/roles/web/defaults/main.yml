@@ -36,3 +36,44 @@ ga_django_groups:
   - 'ga_user'
   - 'ga_write'
   - 'ga_admin'
+
+ga_settings:
+  server:
+    name: "'{{ ga_core_controller_name }}'"
+    description: "'Server created by setup at {{ ansible_date_time.iso8601_basic_short }}'"
+    path_core: "'{{ ga_core_path }}'"
+    path_web: "'{{ ga_web_path }}'"
+    path_web_static: "'{{ ga_web_path_static }}'"
+    path_web_docs: "'{{ ga_web_path_docs }}'"
+    path_home_core: "'{{ ga_core_path_home }}'"
+    path_home_web: "'{{ ga_web_path_home }}'"
+    path_log: "'{{ ga_path_log }}'"
+    sql_server: "'{{ ga_sql_server }}'"
+    sql_port: "{{ ga_sql_port }}"
+    sql_user: "'{{ ga_sql_user_web }}'"
+    sql_database: "'{{ ga_sql_db }}'"
+    sql_service: "'{{ ga_sql_service }}'"
+    # sql_secret: "'{{ ga_sql_pwd_web }}'"  # to be encrypted
+    log_level: "{{ ga_log_level }}"
+    security: "{% if ga_security_mode %}1{% else %}0{% endif %}"
+    timezone: "'{{ ga_timezone }}'"
+    version: "'{{ ga_setup_release }}'"
+    version_detail: "'{{ ga_setup_commit }}'"
+    letsencrypt: "{% if ga_web_ssl_mode == 'letsencrypt' %}1{% else %}0{% endif %}"
+
+  agent:
+    name: "'{{ ga_core_controller_name }}'"
+    description: "'Agent created by setup at {{ ansible_date_time.iso8601_basic_short }}'"
+    path_root: "'{{ ga_core_path }}'"
+    path_home: "'{{ ga_core_path_home }}'"
+    path_log: "'{{ ga_path_log }}'"
+    sql_server: "'{{ ga_sql_server }}'"
+    sql_port: "{{ ga_sql_port }}"
+    sql_user: "'{{ ga_sql_user_core }}'"
+    sql_database: "'{{ ga_sql_db }}'"
+    sql_socket: "'{{ ga_sql_socket }}'"
+    sql_service: "'{{ ga_sql_service }}'"
+    sql_config: "'{{ ga_sql_config_file }}'"
+    # sql_secret: "'{{ ga_sql_pwd_core }}'"  # to be encrypted
+    version: "'{{ ga_setup_release }}'"
+    version_detail: "'{{ ga_setup_commit }}'"
