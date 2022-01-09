@@ -51,7 +51,7 @@ NAVIGATION = {
         },
         'DOC': {
             'element': '<i class="fas fa-book fa-2x ga-nav-right-icon" title="Documentation"></i>',
-            'url': 'https://docs.growautomation.eu',
+            'url': '/docs/',
             'login': False,
         },
         'LO': {

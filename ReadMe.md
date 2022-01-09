@@ -77,6 +77,7 @@ Version: 1.0
   - update via webUI (_to specific vcs version_)
   - stateful service reload
   - user management from webUI
+  - local build of sphinx-docs
 
 
 - v0.9 _(2021-09 - 2021-10)_

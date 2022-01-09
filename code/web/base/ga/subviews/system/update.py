@@ -91,6 +91,7 @@ def update_start(request, current_version):
                 f"ga_update_path_core={get_server_config(setting='path_core')}\n"
                 f"ga_update_path_web={get_server_config(setting='path_web')}\n"
                 f"ga_update_path_web_static={get_server_config(setting='path_web_static')}\n"
+                f"ga_update_path_web_docs={get_server_config(setting='path_web_docs')}\n"
                 f"ga_update_path_log={get_server_config(setting='path_log')}\n"
             )
 

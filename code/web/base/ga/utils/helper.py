@@ -20,7 +20,8 @@ class PseudoServerAgent:
     def __init__(self):
         self.subprocess_timeout = 60
         self.security = 1
-        self.version = 'UPDATE'
+        self.version = 'DATABASE ERROR'
+        self.version_detail = '| CHECK SCHEMA'
 
 
 def check_develop(request) -> bool:

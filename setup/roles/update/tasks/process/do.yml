@@ -49,6 +49,7 @@
       ]
     }
     - {src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/static/", dst: "{{ ga_update_path_web_static }}/"}
+    - {src: "{{ ga_update_path_repo }}/docs/", dst: "{{ ga_update_path_web_docs }}/"}
     - {src: "{{ ga_update_path_repo }}/setup", dst: "{{ ga_core_path }}/"}
   ignore_errors: true
   register: update_code
@@ -56,16 +57,17 @@
 - name: GA | Update | Process | Do | Updating privileges
   ansible.builtin.file:
     path: "{{ item.path }}"
-    state: directory
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
+    mode: "{{ item.mode | default('0755') }}"
     recurse: yes
   with_items:
-    - {path: "{{ ga_core_path_venv }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
-    - {path: "{{ ga_web_path_venv }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
-    - {path: "{{ ga_update_path_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}"}
-    - {path: "{{ ga_update_path_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+    - {path: "{{ ga_core_path_venv }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}", mode: '0750'}
+    - {path: "{{ ga_web_path_venv }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}", mode: '0750'}
+    - {path: "{{ ga_update_path_core }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_core_service_user }}", mode: '0750'}
+    - {path: "{{ ga_update_path_web }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}", mode: '0750'}
     - {path: "{{ ga_update_path_web_static }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
+    - {path: "{{ ga_update_path_web_docs }}/", owner: "{{ ga_web_service_user }}", group: "{{ ga_web_service_user }}"}
     - {path: "{{ ga_update_path_log }}/", owner: "{{ ga_core_service_user }}", group: "{{ ga_service_group }}"}
     - {path: "{{ ga_update_path_log }}/web/", owner: "{{ ga_web_service_user }}", group: "{{ ga_service_group }}"}
   ignore_errors: true
@@ -83,6 +85,12 @@
   ignore_errors: true
   register: update_code_privs_secret
   when: update_code.failed is undefined or not update_code.failed
+
+- name: GA | Update | Process | Do | Building docs html
+  ansible.builtin.shell: './html.sh'
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_update_path_web_docs }}"
 
 - name: GA | Update | Process | Do | Building database schema
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
@@ -110,6 +118,14 @@
   when:
     - update_code.failed is undefined or not update_code.failed
     - update_db_schema_build.failed is undefined or not update_db_schema_build.failed
+
+- name: GA | Update | Process | Do | Updating core config file
+  ansible.builtin.copy:
+    src: '{{ playbook_dir }}/roles/setup/files/tmp/update_core_config.py'
+    dest: "{{ ga_core_path }}/core/config/file/core.conf"
+    mode: 0600
+    owner: "{{ ga_core_service_user }}"
+    group: "{{ ga_service_group }}"
 
 - name: GA | Update | Process | Do | Stopping services about to be upgraded (if online)
   ansible.builtin.systemd:

@@ -65,6 +65,7 @@ class SystemServerModel(BaseModel):
     path_core = models.CharField(max_length=255, default=config.SYS_DEFAULT_ROOT_PATH)
     path_web = models.CharField(max_length=255, default=config.SYS_DEFAULT_WEB_ROOT_PATH)
     path_web_static = models.CharField(max_length=255, default=config.SYS_DEFAULT_WEB_STATIC_PATH)
+    path_web_docs = models.CharField(max_length=255, default=config.SYS_DEFAULT_WEB_DOCS_PATH)
     path_home_core = models.CharField(max_length=255, default=config.SYS_DEFAULT_HOME_CORE_PATH)
     path_home_web = models.CharField(max_length=255, default=config.SYS_DEFAULT_HOME_WEB_PATH)
     path_log = models.CharField(max_length=255, default=config.SYS_DEFAULT_LOG_PATH)

@@ -46,6 +46,8 @@ ga_web_packages:
   - 'python3-systemd'  # systemd-python dependency
   - 'systemd'  # systemd-python dependency
   - 'pkg-config'  # systemd-python dependency
+  - 'python3-sphinx'  # docs
+  - 'python3-sphinx-rtd-theme'  # docs
 
 ga_django_mods:
   - 'django'

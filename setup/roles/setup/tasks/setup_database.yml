@@ -52,6 +52,9 @@
             config_mode: "0640"
             backup: true
             update_pwd: 'always'
+          config_additions:
+            - 'Alias "/docs" "{{ ga_web_path_docs }}/build"'
+            - 'DirectoryIndex index.html'
   when: ga_web_install
 
 - name: GA | Setup | GA Core - Database

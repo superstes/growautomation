@@ -5,6 +5,7 @@
 SYS_DEFAULT_ROOT_PATH = '/var/lib/ga'
 SYS_DEFAULT_WEB_ROOT_PATH = '/var/www/ga'
 SYS_DEFAULT_WEB_STATIC_PATH = '/var/www/ga_static'
+SYS_DEFAULT_WEB_DOCS_PATH = '/var/www/ga_docs'
 SYS_DEFAULT_HOME_CORE_PATH = '/home/ga_core'
 SYS_DEFAULT_HOME_WEB_PATH = '/home/ga_web'
 SYS_DEFAULT_LOG_PATH = '/var/log/ga'

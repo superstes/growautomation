@@ -43,6 +43,7 @@
   loop:
     - { path: "{{ ga_web_path }}", mode: '0755' }
     - { path: "{{ ga_web_path_static }}", mode: '0755' }
+    - { path: "{{ ga_web_path_docs }}", mode: '0755' }
     - { path: "{{ ga_web_path_log }}", mode: '0775' }
     - { path: "{{ ga_web_path_venv }}", mode: '0750' }
 
@@ -64,16 +65,35 @@
     recursive: yes
     rsync_path: 'sudo rsync'
 
+- name: GA | Web | Copying docs
+  ansible.posix.synchronize:
+    src: "{{ ga_setup_clone_dir }}/docs/"
+    dest: "{{ ga_web_path_docs }}"
+    recursive: yes
+    rsync_path: 'sudo rsync'
+
+- name: GA | Web | Preparing docs script
+  ansible.builtin.file:
+    path: "{{ ga_web_path_docs }}/html.sh"
+    mode: 0755
+
+- name: GA | Web | Building docs html
+  ansible.builtin.shell: './html.sh'
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_web_path_docs }}"
+
 - name: GA | Web | Setting privileges
   ansible.builtin.file:
     path: "{{ item.path }}"
     owner: "{{ ga_web_service_user }}"
     group: "{{ ga_service_group }}"
     recurse: true
-    mode: "{{ item.mode }}"
+    mode: "{{ item.mode | default('0755') }}"
   loop:
-    - { path: "{{ ga_web_path }}", mode: '0750' }
-    - { path: "{{ ga_web_path_static }}", mode: '0755' }
+    - {path: "{{ ga_web_path }}"}
+    - {path: "{{ ga_web_path_static }}"}
+    - {path: "{{ ga_web_path_docs }}", mode: '0755'}
 
 - name: GA | Web | Configuring django settings
   ansible.builtin.lineinfile:
