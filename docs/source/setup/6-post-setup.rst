@@ -1,7 +1,7 @@
 .. _setup-post-setup:
 
 .. |users| image:: ../_static/img/setup/post-setup/users.png
-   :class: ga-img-center
+   :class: ga-img-center ga-img-border
 
 .. include:: ../includes/tip_links.rst
 

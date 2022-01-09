@@ -69,7 +69,7 @@ Config
 Device model
 ^^^^^^^^^^^^
 
-* Script: L298N.py
+* Script: `L298N.py <https://github.com/superstes/growautomation/blob/dev/code/device/output/L298N.py>`_
 * Script argument: forward
 * Reverse script argument: reverse
 * Reverse type: condition or time

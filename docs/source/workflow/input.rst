@@ -11,7 +11,7 @@ Description
 
 Inputs are used to **gather sensor data**.
 
-The data collection is done in a **time interval** :ref:`as configured <config-device-input>`.
+The data collection is done in a **time interval** :ref:`as configured <config-device>`.
 
 This data inserted and stored in the database.
 

@@ -1,7 +1,7 @@
 .. _config-script:
 
 .. |list| image:: ../_static/img/config/script/list.png
-   :class: ga-img-basic ga-img-center
+   :class: ga-img-basic ga-img-center ga-img-border
 
 .. include:: ../includes/tip_links.rst
 
@@ -72,7 +72,7 @@ Per example:
   python3 cpu_temp.py
   > {"data": "12.60"}
 
-In python3 this can be done like this:
+In python3 it can be done like this:
 
 .. code-block:: python3
 
@@ -138,7 +138,7 @@ Whenever you need to pass:
 
 You can use the **device-connection** setting.
 
-This setting can be either hold one **single value** or **key-value pairs** and will be passed as JSON to the script.
+This setting can either hold one **single value** or **key-value pairs** and will be passed in JSON-format to the script.
 
 Single value
 ^^^^^^^^^^^^
@@ -149,6 +149,7 @@ Per example:
 
   # configured script: 'dht22.py'
   # configured argument: 'temperature'
+  # configured device-connection: '4'
 
   # command to be executed by the core:
   python3 dht22.py temperature "{\"connection\": 4}"
@@ -171,7 +172,7 @@ Per example:
   # command to be executed to stop the actor:
   python3 L298N.py reverse "{\"connection\": {\"fwd\": \"19\", \"rev\": \"26\", \"time\": \"20\"}}"
 
-The script can then load that config - in python3 this can be done like this:
+The script can then load that config - in python3 it can be done like this:
 
 .. code-block:: python3
 

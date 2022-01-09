@@ -72,7 +72,7 @@ Config
 Device model
 ^^^^^^^^^^^^
 
-* Script: dht22.py
+* Script: `dht22.py <https://github.com/superstes/growautomation/blob/dev/code/device/input/dht22.py>`_
 * Script argument: temperature or humidity
 * Data unit: °C
 * Data type: FLOAT
@@ -318,3 +318,41 @@ Issues
 **You could**:
 
 Turn on the energy supply to the sensor only at the moment you want to read its measurement (*per example with a relay*). This would slow the electrolysis down.
+
+----
+
+Raspberry CPU Temperature
+=========================
+
+Tags
+----
+
+* **NATIVE**
+
+Dependencies
+------------
+
+* **privileges**
+
+  * executing user must be a member of group **video** (*usermod -a -G video USERNAME*)
+
+Config
+------
+
+Device model
+^^^^^^^^^^^^
+
+* Script: `cpu_temp.py <https://github.com/superstes/growautomation/blob/dev/code/device/input/cpu_temp.py>`_
+* Data unit: °C
+* Data type: FLOAT
+* Timer: Measurement interval in seconds
+
+Device
+^^^^^^
+
+* Connection: NONE
+
+Issues
+------
+
+No known issues.

@@ -80,7 +80,7 @@ Config
 Device model
 ^^^^^^^^^^^^
 
-* Script: ads1115.py
+* Script: `ads1115.py <https://github.com/superstes/growautomation/blob/dev/code/device/connection/ads1115.py>`_
 
 Device
 ^^^^^^
@@ -175,7 +175,7 @@ Config
 Device model
 ^^^^^^^^^^^^
 
-* Script: mcp3008.py
+* Script: `mcp3008.py <https://github.com/superstes/growautomation/blob/dev/code/device/connection/mcp3008.py>`_
 * Script argument: spi number
 
   * If empty => the default spi will be used
