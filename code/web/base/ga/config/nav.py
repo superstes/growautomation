@@ -46,7 +46,7 @@ NAVIGATION = {
         },
         'BUG': {
             'element': '<i class="fas fa-bug fa-2x ga-nav-right-icon" title="Report bug"></i>',
-            'url': 'https://docs.growautomation.eu/en/latest/basic/bugs.html',
+            'url': '/docs/basic/bugs.html',
             'login': False,
         },
         'DOC': {

@@ -24,26 +24,26 @@ Aim of this project
 * simplifying **user experience**
 
   * providing `a web ui <https://demo.growautomation.eu>`_ for easy maintenance and setup
-  * 'blueprints' for physical setup
+  * :ref:`'blueprints' for physical setup <setup-wiring>`
   * tutorial videos
 
   * collecting knowledge regarding this topics
 
-    * documenting known issues and their solutions
-    * providing systems to support community knowledge-exchange
+    * documenting :ref:`known issues and their solutions <basic-troubleshoot>`
+    * providing `systems to support community knowledge-exchange <https://community.growautomation.eu>`_
 
 
 * **customization**
 
-  * support for custom 3th-party scripts
-  * enabling users to customize many system settings to their liking
-  * defaulting to opting-out
+  * support for :ref:`custom 3th-party scripts <config-script>`
+  * providing a simple but customizable :ref:`dashboard-system <config-dashboard>` to visualize your data
+  * enabling users to :ref:`customize many system settings <config-system>` to their liking
 
 
 * being an **independent** system
 
   * keeping the dependencies to a minimum
-  * possibility to operate as an offline system
+  * possible to operate as an offline system
   * preferring opt-out for optional features
 
 
@@ -52,20 +52,20 @@ Aim of this project
 Features
 ********
 * support for **custom scripts** used in the input and output workflows
-* input workflow
+* :ref:`input workflow <workflow-input>`
 
   * timed loop to pull data from sensors
 
 
-* output workflow
+* :ref:`output workflow <workflow-output>`
 
-  * support for **complex conditions**
-  * self-reversing actors
+  * support for :ref:`**complex conditions** <config-condition>`
+  * :ref:`self-reversing actors <config-device-output>`
 
 
-* **web-interface** for user interactions
+* `**web-interface** <https://demo.growautomation.eu>`_ for user interactions
 
   * configuration management
-  * data visualization via **dashboard system**
+  * data visualization via :ref:`**dashboard system** <config-dashboard>`
   * system management
   * smartphone/mobile support

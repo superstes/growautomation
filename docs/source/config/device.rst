@@ -65,6 +65,8 @@ It should look like this when you've finished you configuration:
 
 ----
 
+.. _config-device-output:
+
 Output
 ******
 
