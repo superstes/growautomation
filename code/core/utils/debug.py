@@ -125,8 +125,9 @@ def fns_log(output: str, level: int = 1) -> bool:
     return Log(src_file=_src).write(output=output, level=level, system=True)
 
 
-def web_log(output: str, src_file: str, level: int = 1) -> bool:
-    return Log(typ='web', src_file=src_file).write(output=output, level=level)
+def web_log(output: str, level: int = 1) -> bool:
+    _src = inspect_getfile(inspect_stack()[1][0])
+    return Log(typ='web', src_file=_src).write(output=output, level=level)
 
 
 def device_log(output: str, add: str, level: int = 1) -> bool:

@@ -8,8 +8,8 @@ from subprocess import PIPE as subprocess_pipe
 from subprocess import TimeoutExpired
 
 
-def subprocess(command: (list, str), out_error: bool = False):
-    log(f"Executing command \"{command}\"", level=2)
+def subprocess(command: (list, str), out_error: bool = False, logger=log):
+    logger(f"Executing command \"{command}\"", level=2)
 
     if type(command) != list:
         command = [command]
@@ -32,12 +32,12 @@ def subprocess(command: (list, str), out_error: bool = False):
 
     if exit_code == 0 and stderr in config.NONE_RESULTS:
         stderr = None
-        if not log(f"Got output by processing command \"{command}\": \"{stdout}\"", level=7):
-            log(f"Process output: \"{stdout}\"", level=6)
+        if not logger(f"Got output by processing command \"{command}\": \"{stdout}\"", level=7):
+            logger(f"Process output: \"{stdout}\"", level=6)
 
     else:
-        log(f"Got error while processing command \"{command}\": "
-            f"exit-code {exit_code} - \"{stderr}\" | output: \"{stdout}\"", level=2)
+        logger(f"Got error while processing command \"{command}\": "
+               f"exit-code {exit_code} - \"{stderr}\" | output: \"{stdout}\"", level=2)
 
     if out_error:
         return stdout, stderr

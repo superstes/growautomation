@@ -125,7 +125,7 @@ class Prepare:
                     'path': f'{config.AGENT.path_log}/core/{datetime.now().strftime("%Y")}/{datetime.now().strftime("%m")}_core.log',
                     'type': 'text',
                     'access': 'rw',
-                    'perms': 644,
+                    'perms': 664,
                     'owner': self.uid,
                     'group': self.ga_gid,
                     'exists': False,
