@@ -124,7 +124,7 @@
                                         <select class="form-control" name="privileges" required>
                                         <option selected>{% get_empty %}</option>
                                         {% for group, value in GA_GROUPS.items %}
-                                            <option value="{{ group }}">{{ value.pretty }}</option>
+                                            <option value="{{ value.pretty }}">{{ value.pretty }}</option>
                                         {% endfor %}
                                         </select>
                                     </label>

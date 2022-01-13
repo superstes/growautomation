@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 
 from ...forms import LABEL_DICT, HELP_DICT
-from ...subviews.handlers import Pseudo404
+from ...subviews.handlers import Pseudo404, Pseudo500
 from ...utils.auth import method_user_passes_test
 from ...utils.web import redirect_if_hidden
 from ...config.site import MAIN_CONFIG, MEMBER_CONFIG
@@ -46,6 +46,7 @@ class ConfigView:
             'id': f"Item with id {self.uid} does not exist",
             'method': f"Action '{self.action}' not supported for current method",
             'type': f"Data type '{self.type}' does not exist",
+            'config': f'Got invalid config!',
         }
         self.model, self.form = None, None
         self.data = request.GET
@@ -313,6 +314,8 @@ class ConfigView:
         if form.is_valid():
             form.save()
             return redirect(self.post_redirect)
+
+        raise Pseudo500(ga={'request': self.request, 'msg': self.error_msgs['config']})
 
     def _post_delete(self):
         try:

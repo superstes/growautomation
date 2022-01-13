@@ -3,8 +3,10 @@ from traceback import format_exc
 from django.shortcuts import render
 from django.http import JsonResponse
 
+from core.utils.debug import web_log
+
 from ..config.shared import LOG_MAX_TRACEBACK_LENGTH
-from ..utils.helper import get_server_config, develop_log
+from ..utils.helper import get_server_config
 
 
 class PseudoException(Exception):
@@ -49,10 +51,10 @@ def input_check(exc) -> dict:
 
 def handler_log(output: dict, status: int):
     if output['request'] is None:
-        develop_log(request=output['request'], output=f"Got error {status} - {output['msg']}")
+        web_log(output=f"Got error {status} - {output['msg']}")
 
     else:
-        develop_log(request=output['request'], output=f"{output['request'].build_absolute_uri()} - Got error {status} - {output['msg']}")
+        web_log(output=f"{output['request'].build_absolute_uri()} - Got error {status} - {output['msg']}")
 
 
 def handler400_api(msg=None):
@@ -97,7 +99,7 @@ def handler500(exc):
     handler_log(output=output, status=500)
 
     if get_server_config(setting='security') == 0:
-        develop_log(request=output['request'], output=f"{format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)}", level=2)
+        web_log(output=f"{format_exc(limit=LOG_MAX_TRACEBACK_LENGTH)}", level=2)
 
     return render(output['request'], '500.html', context={'request': output['request'], 'error_msg': output['msg']})
 

@@ -1,5 +1,3 @@
-from inspect import stack as inspect_stack
-from inspect import getfile as inspect_getfile
 from django.db.utils import OperationalError, ProgrammingError
 
 from core.utils.process import subprocess
@@ -22,15 +20,6 @@ class PseudoServerAgent:
         self.security = 1
         self.version = 'DATABASE ERROR'
         self.version_detail = '| CHECK SCHEMA'
-
-
-def check_develop(request) -> bool:
-    if request is not None:
-        server = request.META.get('wsgi.file_wrapper', None)
-        if server is not None and server.__module__ in ['django.core.servers.basehttp', 'wsgiref.util']:
-            return True
-
-    return False
 
 
 def get_server() -> (SystemServerModel, None):
@@ -79,20 +68,7 @@ def init_core_config():
 
 def web_subprocess(command: str, out_error: bool = False) -> str:
     init_core_config()
-    return subprocess(command=command, out_error=out_error)
-
-
-def develop_subprocess(request, command: str, develop: (str, list) = None) -> str:
-    if check_develop(request):
-        return develop
-
-    return web_subprocess(command)
-
-
-def develop_log(request, output: str, level: int = 1) -> None:
-    _src = inspect_getfile(inspect_stack()[1][0])
-    if not check_develop(request):
-        web_log(output=output, level=level, src_file=_src)
+    return subprocess(command=command, out_error=out_error, logger=web_log)
 
 
 def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):

@@ -5,7 +5,7 @@ from os import listdir as os_listdir
 
 from ...user import authorized_to_read
 from ...utils.basic import str_to_list
-from ...utils.helper import check_develop, get_server_config, develop_subprocess
+from ...utils.helper import get_server_config, web_subprocess
 from ...config import shared as config
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
@@ -14,7 +14,6 @@ TITLE = 'System logs'
 
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def LogView(request):
-    develop = check_develop(request)
     date_year = datetime.now().strftime('%Y')
     date_month = datetime.now().strftime('%m')
     path_log = get_server_config(setting='path_log')
@@ -30,15 +29,11 @@ def LogView(request):
     if get_server_config(setting='letsencrypt'):
         log_service_options.update({'Certificate renewal': config.LE_RENEWAL_SERVICE})
 
-    if develop:
-        device_log_list = ['02_device_test1.log', '02_device_earth_humidity.log', '']
+    try:
+        device_log_list = os_listdir(f"{path_log}/device/{date_year}/")
 
-    else:
-        try:
-            device_log_list = os_listdir(f"{path_log}/device/{date_year}/")
-
-        except FileNotFoundError:
-            device_log_list = []
+    except FileNotFoundError:
+        device_log_list = []
 
     log_ga_options = {
         'Core': f"{path_log}/core/{date_year}/{date_month}_core.log",
@@ -86,11 +81,7 @@ def LogView(request):
             log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
-            develop_subprocess(
-                request,
-                command=config.LOG_SERVICE_LOG_STATUS % log_service_value,
-                develop=['Test output1', 'Helloo', "Third time's a charm"]
-            )
+            web_subprocess(command=config.LOG_SERVICE_LOG_STATUS % log_service_value)
         )
 
     elif log_type == 'Service journal':
@@ -101,11 +92,7 @@ def LogView(request):
             log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
-            develop_subprocess(
-                request,
-                command=config.LOG_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count),
-                develop=['Test output2', 'Helloo', "Third time's a charm"]
-            )
+            web_subprocess(command=config.LOG_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count))
         )
 
     elif log_type == 'GrowAutomation':
@@ -122,11 +109,7 @@ def LogView(request):
 
         # todo: option to view older (truncated) logs?
         log_data = str_to_list(
-            develop_subprocess(
-                request,
-                command=f"tail -n {log_entry_count} {log_file}",
-                develop=['Test output3', 'Helloo', "Third time's a charm"]
-            ),
+            web_subprocess(command=f"tail -n {log_entry_count} {log_file}"),
             reverse=True
         )
 

@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 from ...user import authorized_to_read, authorized_to_write
 from ..handlers import Pseudo404
 from ...config import shared as config
-from ...utils.helper import develop_log
+from core.utils.debug import web_log
 
 
 TITLE = 'System users'
@@ -119,8 +119,7 @@ class UserMgmt:
             msg_style = 'success'
 
         except Exception as error:
-            develop_log(
-                request=self.request,
+            web_log(
                 output=f"User '{self.request.POST['name']}' could not be added to a group! It could be that the group does not exist! Error: {error}",
                 level=3
             )

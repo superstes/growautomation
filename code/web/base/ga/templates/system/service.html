@@ -83,8 +83,12 @@
         </form>
         <form class="ga-form-inline" method="post" action="/system/service/?service_name={{ service_name }}">
             {% csrf_token %}
-            {% if service_status == 'active' and request.user|authorized_to_write %}
-                <input type="submit" value="Restart" class="btn btn-warning"/>
+            {% if request.user|authorized_to_write %}
+                {% if service_status == 'active' or service_name == 'Webserver' %}
+                    <input type="submit" value="Restart" class="btn btn-warning"/>
+                {% else %}
+                    <input type="submit" value="Restart" class="btn btn-warning" disabled/>
+                {% endif %}
             {% else %}
                 <input type="submit" value="Restart" class="btn btn-warning" disabled/>
             {% endif %}

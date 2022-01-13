@@ -5,7 +5,7 @@ from datetime import datetime
 from os import path as os_path
 
 from ...user import authorized_to_write
-from ...utils.helper import get_server_config, develop_subprocess
+from ...utils.helper import get_server_config, web_subprocess
 from ...subviews.handlers import Pseudo404
 from ...config import shared as config
 
@@ -63,13 +63,11 @@ def export_view(request, process: str):
     else:
         raise Pseudo404(ga={'request': request, 'msg': f"Unsupported export type '{process}'!"})
 
-    develop_subprocess(
-        request,
+    web_subprocess(
         command=f"mysqldump --defaults-file={config.SQL_CONFIG_FILE} {dump_db} --single-transaction "
                 f"{' '.join(include_tables)}"
                 f"{' --ignore-table=ga.'.join(exclude_tables)} | "
-                f"xz -7 > {dump_file_path}",
-        develop='Skipping dump in development environment!'
+                f"xz -7 > {dump_file_path}"
     )
 
     if os_path.exists(dump_file_path):

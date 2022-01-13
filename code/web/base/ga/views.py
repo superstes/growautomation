@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 
+from core.utils.debug import web_log
+
 from .subviews.config.main import ConfigView
 from .utils.auth import logout_check
-from .utils.helper import develop_log
 from .user import authorized_to_access
 from .subviews.handlers import handler403, handler404, handler403_api, handler404_api, handler500
 from .subviews.handlers import Pseudo403, Pseudo404, Pseudo500
@@ -23,7 +24,12 @@ from .config.shared import LOGIN_URL
 
 
 def view(request, **kwargs):
-    return GaView().start(request=request, **kwargs)
+    response = GaView().start(request=request, **kwargs)
+
+    if response is None:
+        return handler500(f"Maybe invalid user-input or a BUG: Got NONE-response for request '{request.method} => {request.build_absolute_uri()}'")
+
+    return response
 
 
 class GaView:
@@ -167,7 +173,7 @@ class GaView:
     @staticmethod
     def denied(request):
         error_source_url = request.build_absolute_uri(request.META['QUERY_STRING'].split('=', 1)[1])
-        develop_log(request=request, output=f"{error_source_url} - Got error 403 - Access denied for user \"{request.user}\"")
+        web_log(output=f"{error_source_url} - Got error 403 - Access denied for user \"{request.user}\"")
         return logout_check(request=request, default=handler403(request))
 
     @staticmethod
@@ -187,11 +193,11 @@ class GaView:
         elif typ == 'sock':
             return api_sock(request=request)
 
-        develop_log(request=request, output=f"{request.build_absolute_uri()} - Got error 404 - api not implemented")
+        web_log(output=f"{request.build_absolute_uri()} - Got error 404 - api not implemented")
         return handler404_api()
 
     @staticmethod
     def api_denied(request):
         error_source_url = request.build_absolute_uri(request.META['QUERY_STRING'].split('=', 1)[1])
-        develop_log(request=request, output=f"{error_source_url} - Got error 403 - api access denied")
+        web_log(output=f"{error_source_url} - Got error 403 - api access denied")
         return handler403_api()

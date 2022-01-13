@@ -4,7 +4,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from json import loads as json_loads
 from json import JSONDecodeError
 
-from ....utils.helper import init_core_config, develop_log
+from core.utils.debug import web_log
+
+from ....utils.helper import init_core_config
 from ....utils.web import append_to_url
 from ....user import authorized_to_write
 from ....config.shared import LOGIN_URL
@@ -27,7 +29,7 @@ mapping = {
 @user_passes_test(authorized_to_write, login_url=LOGIN_URL)  # todo: authorized to write is not OK for output status checks
 def api_sock(request, sock_data: dict = None):
     def _log(output: str, level: int):
-        develop_log(request=request, output=output, level=level)
+        web_log(output=output, level=level)
 
     if sock_data is not None:
         sock_config = sock_data
@@ -42,7 +44,7 @@ def api_sock(request, sock_data: dict = None):
 
     path = f'ga.core.{mapping[mapping_key]}.{path_id}'
     response = Client(path=path, logger=_log, timeout=timeout).post(data)
-    develop_log(request, output=f"Got socket response '{response}' by executing '{path} = {data}'", level=8)
+    web_log(output=f"Got socket response '{response}' by executing '{path} = {data}'", level=8)
 
     if type(response) == dict and 'data' in response:
         response = response['data']
@@ -53,7 +55,7 @@ def api_sock(request, sock_data: dict = None):
     except (AttributeError, TypeError, JSONDecodeError):
         pass
 
-    develop_log(request, output=f"Got socket response '{response}' (parsed) by executing '{path} = {data}'", level=6)
+    web_log(output=f"Got socket response '{response}' (parsed) by executing '{path} = {data}'", level=6)
 
     if sock_data is None and 'HTTP_REFERER' in request.META and request.META['HTTP_REFERER'].find('/config/') != -1:
         result = 'Action failed!'

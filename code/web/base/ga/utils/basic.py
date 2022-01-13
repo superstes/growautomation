@@ -12,6 +12,9 @@ def str_to_list(data: (list, str), reverse: bool = False) -> list:
     if type(data) == str:
         _ = data.split('\n')
 
+    elif data is None:
+        _ = []
+
     else:
         _ = data
 
