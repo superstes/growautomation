@@ -1,28 +1,4 @@
 #crypto-recognition
-path_root={{ ga_core_path }}
-path_log={{ ga_path_log }}
-path_backup={{ ga_path_backup }}
-path_home={{ ga_core_path_home }}
-sql_server={{ ga_sql_server }}
-sql_port={{ ga_sql_port }}
-sql_user={{ ga_core_service_user }}
-sql_secret={{ ga_sql_pwd_core }}
-sql_database={{ ga_sql_db }}
-sql_socket={{ ga_sql_socket }}
-sql_service={{ ga_sql_service }}
-sql_config={{ ga_sql_config_file }}
-log_level={{ ga_log_level }}
-timezone={{ ga_timezone }}
-name={{ ga_core_controller_name }}
-security={% if ga_security_mode %}1{% else %}0{% endif %}
-
-device_log={% if ga_core_device_log %}1{% else %}0{% endif %}
-
-version={{ ga_setup_release }}
-version_detail={{ ga_setup_commit }}
-device_fail_count=3
-device_fail_sleep=3600
-debug=0
-svc_interval_status=3600
-svc_interval_reload=21600
-subprocess_timeout=60
+{% for setting, value in ga_settings.items %}
+{{ setting }}={{ value }}
+{% endfor %}

@@ -40,7 +40,7 @@ ga_django_groups:
 ga_settings:
   server:
     name: "'{{ ga_core_controller_name }}'"
-    description: "'Server created by setup at {{ ansible_date_time.iso8601_basic_short }}'"
+    description: "'Server created by setup at {{ ansible_date_time.iso8601 }}'"
     path_core: "'{{ ga_core_path }}'"
     path_web: "'{{ ga_web_path }}'"
     path_web_static: "'{{ ga_web_path_static }}'"
@@ -63,7 +63,7 @@ ga_settings:
 
   agent:
     name: "'{{ ga_core_controller_name }}'"
-    description: "'Agent created by setup at {{ ansible_date_time.iso8601_basic_short }}'"
+    description: "'Agent created by setup at {{ ansible_date_time.iso8601 }}'"
     path_root: "'{{ ga_core_path }}'"
     path_home: "'{{ ga_core_path_home }}'"
     path_log: "'{{ ga_path_log }}'"
@@ -77,3 +77,10 @@ ga_settings:
     # sql_secret: "'{{ ga_sql_pwd_core }}'"  # to be encrypted
     version: "'{{ ga_setup_release }}'"
     version_detail: "'{{ ga_setup_commit }}'"
+    log_level: "{{ ga_log_level }}"
+    device_fail_count: "{{ ga_shared_settings.device_fail_count }}"
+    device_fail_sleep: "{{ ga_shared_settings.device_fail_sleep }}"
+    debug: "{{ ga_shared_settings.debug }}"
+    svc_interval_status: "{{ ga_shared_settings.svc_interval_status }}"
+    svc_interval_reload: "{{ ga_shared_settings.svc_interval_reload }}"
+    subprocess_timeout: "{{ ga_shared_settings.subprocess_timeout }}"

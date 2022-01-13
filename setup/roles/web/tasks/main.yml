@@ -72,7 +72,7 @@
     recursive: yes
     rsync_path: 'sudo rsync'
 
-- name: GA | Web | Preparing docs script
+- name: GA | Web | Preparing docs building-script
   ansible.builtin.file:
     path: "{{ ga_web_path_docs }}/html.sh"
     mode: 0755

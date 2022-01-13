@@ -39,7 +39,7 @@ ga_settings:
 
     default:
       name: "{{ ga_core_controller_name }}"
-      description: "Agent created by setup at {{ ansible_date_time.iso8601_basic_short }}"
+      description: "Agent created by setup at {{ ansible_date_time.iso8601 }}"
       path_root: "{{ ga_update_path_core }}"
       path_home: "{{ ga_core_path_home }}"
       path_log: "{{ ga_update_path_log }}"

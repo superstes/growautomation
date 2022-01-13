@@ -4,6 +4,13 @@
 # basics
 ga_python_version: '3.9'
 ga_update_path: '/var/lib/ga_update'
+ga_shared_settings:
+  device_fail_count: 3
+  device_fail_sleep: 1800
+  debug: 0
+  svc_interval_status: 10800
+  svc_interval_reload: 86400
+  subprocess_timeout: 60
 
 # users
 ga_core_service_user: 'ga_core'

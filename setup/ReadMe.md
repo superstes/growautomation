@@ -36,12 +36,16 @@ For now: the device will need internet access for the setup-process to work.
 
 We might create an offline-setup guide in the future.
 
-You need to copy the 'setup.sh' file to the target system and run it!
+Run the following command on your raspberry:
 
 ```bash
-sudo bash setup.sh
-# optional parameters:
-#   setup.sh TARGET-RELEASE(default=latest) DESTINATION-HOST(default=localhost)
+curl -s https://raw.githubusercontent.com/superstes/growautomation/dev/setup/setup.sh | sudo bash
+```
+
+ELSE: if you want to modify the release or run the script on a remote host, you will have to do it this way:
+```bash
+wget https://raw.githubusercontent.com/superstes/growautomation/dev/setup/setup.sh -O /tmp/setup.sh
+sudo bash /tmp/setup.sh TARGET-RELEASE(default=latest) DESTINATION-HOST(default=localhost)
 ```
 
 This script will prepare your system to run the Ansible setup tasks/script.
@@ -60,10 +64,10 @@ This is the last time you can modify the config before the installation is start
 
 ###################################### INFO #######################################
 The following config files exist:
-  main: /tmp/ga_2021-12-17/setup/vars/main.yml
+  main: /tmp/ga_2022-01-13/setup/vars/main.yml
   remote hosts: (optional)
-    - /tmp/ga_2021-12-17/setup/inventories/hosts.yml
-    - /tmp/ga_2021-12-17/setup/inventories/host_vars/${HOSTNAME}.yml
+    - /tmp/ga_2022-01-13/setup/inventories/hosts.yml
+    - /tmp/ga_2022-01-13/setup/inventories/host_vars/${HOSTNAME}.yml
 
 Do you want to continue? (yes/NO)
 ```

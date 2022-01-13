@@ -34,12 +34,12 @@
     src: "{{ item.src }}"
     dest: "{{ item.dst }}"
     recursive: yes
-    delete: yes
+    delete: "{{ item.del | default('yes') }}"
     rsync_opts: "{{ item.opts | default([]) }}"
   with_items:
     - {
       src: "{{ ga_update_path_repo }}/code/", dst: "{{ ga_update_path_core }}/",
-      opts: ['--exclude=secret/*', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf']
+      opts: ['--exclude=secret/*', '--exclude=device/', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf']
     }
     - {
       src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/", dst: "{{ ga_update_path_web }}/",
@@ -49,10 +49,22 @@
       ]
     }
     - {src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/static/", dst: "{{ ga_update_path_web_static }}/"}
+    - {src: "{{ ga_update_path_repo }}/code/device/", dst: "{{ ga_update_path_core }}/device/", del: 'no'}
     - {src: "{{ ga_update_path_repo }}/docs/", dst: "{{ ga_update_path_web_docs }}/"}
     - {src: "{{ ga_update_path_repo }}/setup", dst: "{{ ga_core_path }}/"}
   ignore_errors: true
   register: update_code
+
+- name: GA | Update | Process | Do | Preparing docs building-script
+  ansible.builtin.file:
+    path: "{{ ga_update_path_web_docs }}/html.sh"
+    mode: 0755
+
+- name: GA | Update | Process | Do | Building docs html
+  ansible.builtin.shell: './html.sh'
+  args:
+    executable: '/bin/bash'
+    chdir: "{{ ga_update_path_web_docs }}"
 
 - name: GA | Update | Process | Do | Updating privileges
   ansible.builtin.file:
@@ -81,16 +93,10 @@
     group: "{{ item.group }}"
     mode: 0440
   with_items:
-    - {path: "{{ ga_update_path_core }}/core/secret/random.key", owner: "{{ ga_core_service_user }}", group: "{{ ga_service_group }}"}
+    - {path: "{{ ga_update_path_core }}/core/secret/random.key", owner: "{{ ga_core_service_ user }}", group: "{{ ga_service_group }}"}
   ignore_errors: true
   register: update_code_privs_secret
   when: update_code.failed is undefined or not update_code.failed
-
-- name: GA | Update | Process | Do | Building docs html
-  ansible.builtin.shell: './html.sh'
-  args:
-    executable: '/bin/bash'
-    chdir: "{{ ga_update_path_web_docs }}"
 
 - name: GA | Update | Process | Do | Building database schema
   ansible.builtin.shell: "source {{ ga_web_path_venv }}/bin/activate &&
