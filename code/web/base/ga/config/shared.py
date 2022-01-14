@@ -9,9 +9,11 @@ NONE_RESULTS = ['', 'None', None, ' ']
 CORE_SERVICE = 'ga_core.service'
 LE_RENEWAL_SERVICE = 'ga_web_certRenewal.service'
 DEFAULT_PROCESS_TIMEOUT = 3
+CENSOR_IPS = True
 
 # privileges
 LOGIN_URL = '/accounts/login/'
+LOGOUT_URL = '/logout/'
 DENIED_URL = '/denied/'
 DENIED_API_URL = '/api/denied/'
 GA_USER_GROUP = 'ga_user'

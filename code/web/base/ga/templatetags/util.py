@@ -137,7 +137,7 @@ def security_mode():
 
 @register.filter
 def client_is_public(request):
-    client_ip = get_client_ip(request)
+    client_ip = get_client_ip(request, censor_character='0')
     ip_is_public = not IPAddress(client_ip).is_reserved()
     return ip_is_public
 

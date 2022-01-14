@@ -2,6 +2,8 @@ from urllib.parse import urlencode
 
 from django.shortcuts import redirect
 
+from ..config.shared import CENSOR_IPS
+
 
 def get_form_prefill(request):
     form_prefill = {}
@@ -20,16 +22,19 @@ def get_url_divider(url: str):
         return '/'
 
 
-def get_client_ip(request):
+def get_client_ip(request, censor: bool = CENSOR_IPS, censor_character: str = 'X'):
     ip_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+
     if ip_forwarded:
         client_ip = ip_forwarded.split(',')[0]
+
     else:
         client_ip = request.META.get('REMOTE_ADDR')
 
-    censored_client_ip = f"{client_ip.rsplit('.', 1)[0]}.0"
+    if censor:
+        client_ip = f"{client_ip.rsplit('.', 1)[0]}.{censor_character}"
 
-    return censored_client_ip
+    return client_ip
 
 
 def get_as_string(get_params: dict, add: bool = False) -> str:

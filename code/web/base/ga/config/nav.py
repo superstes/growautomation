@@ -1,3 +1,4 @@
+from .shared import LOGOUT_URL
 
 NAVIGATION = {
     'left': {
@@ -56,7 +57,7 @@ NAVIGATION = {
         },
         'LO': {
             'element': '<i class="fas fa-sign-out-alt fa-2x ga-nav-right-icon ga-nav-right-icon-logout" title="Logout"></i>',
-            'url': '/logout/',
+            'url': LOGOUT_URL,
             'login': True,
         },
     }

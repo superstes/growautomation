@@ -1,12 +1,15 @@
 from django.shortcuts import render
-from ...utils.auth import method_user_passes_test
 from django.contrib.auth.models import User, Group
 from django.db.utils import IntegrityError
+from django.shortcuts import redirect
+
+from core.utils.debug import web_log
 
 from ...user import authorized_to_read, authorized_to_write
 from ..handlers import Pseudo404
 from ...config import shared as config
-from core.utils.debug import web_log
+from ...utils.web import get_client_ip
+from ...utils.auth import method_user_passes_test
 
 
 TITLE = 'System users'
@@ -88,6 +91,7 @@ class UserMgmt:
                 if privs.find(value['pretty']) != -1:
                     user.groups.add(Group.objects.get(name=grp))
 
+            self._log_action(action='created')
             return self._list(msg=f"User '{self.request.POST['name']}' successfully created!")
 
         except IntegrityError:
@@ -102,7 +106,7 @@ class UserMgmt:
         pwd = self.request.POST['password']
 
         if pwd != ' ' and pwd != config.CENSOR_STRING:
-            user.set_password(password=pwd)
+            user.set_password(pwd)
 
         user.groups.add(Group.objects.get(name=config.GA_USER_GROUP))
 
@@ -115,6 +119,7 @@ class UserMgmt:
                 else:
                     user.groups.remove(grp_obj)
 
+            self._log_action(action='updated')
             msg = f"User '{self.request.POST['name']}' successfully updated!"
             msg_style = 'success'
 
@@ -127,13 +132,27 @@ class UserMgmt:
             msg_style = 'warning'
 
         user.save()
+
+        if self.request.POST['name'] == str(self.request.user):
+            return redirect(config.LOGOUT_URL)
+
         return self._list(msg=msg, msg_style=msg_style)
 
     @method_user_passes_test(authorized_to_write, login_url=config.DENIED_URL)
     def _delete(self):
+        if self.request.POST['name'] == str(self.request.user):
+            return self._list(msg='You cannot delete the user you are currently logged-in with!', msg_style='danger')
+
         if len(User.objects.all()) > 2:
             User.objects.get(username=self.request.POST['name']).delete()
+            self._log_action(action='deleted', level=2)
             return self._list(msg=f"User '{self.request.POST['name']}' successfully deleted!")
 
         else:
             return self._list(msg=f"It seems only this user exists => you cannot delete this one!", msg_style='warning')
+
+    def _log_action(self, action: str, level: int = 3):
+        web_log(
+            output=f"User '{self.request.POST['name']}' was {action} by user '{self.request.user}' from client ip '{get_client_ip(self.request)}'",
+            level=level,
+        )
