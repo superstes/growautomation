@@ -11,8 +11,6 @@ from ...config import shared as config
 from ...utils.helper import get_server_config, web_subprocess
 from ...utils.basic import str_to_list, fmt_version
 
-FORCE_UPDATE = False
-
 
 @user_passes_test(authorized_to_read, login_url=config.DENIED_URL)
 def update_view(request):
@@ -96,7 +94,7 @@ def update_start(request, current_version):
             )
 
         def start():
-            web_subprocess(f'sudo systemctl start {config.UPDATE_SERVICE}.service')
+            web_subprocess(command=f'sudo systemctl start {config.UPDATE_SERVICE}.service', timeout=5)
 
         Thread(target=start()).start()
         return redirect('/system/update/status/')

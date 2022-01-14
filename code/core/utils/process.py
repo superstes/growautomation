@@ -3,25 +3,32 @@
 from core.utils.debug import log
 from core.config import shared as config
 
-from subprocess import Popen as subprocess_popen
-from subprocess import PIPE as subprocess_pipe
+from subprocess import Popen as subprocessPopen
+from subprocess import PIPE as SUBPROCESS_PIPE
 from subprocess import TimeoutExpired
 
 
-def subprocess(command: (list, str), out_error: bool = False, logger=log):
+def subprocess(command: (list, str), timeout: int, out_error: bool = False, logger=log):
     logger(f"Executing command \"{command}\"", level=2)
+
+    if timeout is None:
+        timeout = config.AGENT.subprocess_timeout
+
+    elif timeout < config.MINIMAL_PROCESS_TIMEOUT:
+        logger(f"Got invalid value for process timeout - this might be a configuration issue: '{timeout}'")
+        timeout = config.MINIMAL_PROCESS_TIMEOUT
 
     if type(command) != list:
         command = [command]
 
     try:
-        proc = subprocess_popen(
+        proc = subprocessPopen(
             command,
             shell=True,
-            stdout=subprocess_pipe,
-            stderr=subprocess_pipe
+            stdout=SUBPROCESS_PIPE,
+            stderr=SUBPROCESS_PIPE
         )
-        stdout_bytes, stderr_bytes = proc.communicate(timeout=config.AGENT.subprocess_timeout)
+        stdout_bytes, stderr_bytes = proc.communicate(timeout=timeout)
         stdout, stderr = stdout_bytes.decode('utf-8').strip(), stderr_bytes.decode('utf-8').strip()
         exit_code = proc.returncode
 

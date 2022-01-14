@@ -7,6 +7,7 @@ from ..models import SystemServerModel, SystemAgentModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
+from ..config.shared import DEFAULT_PROCESS_TIMEOUT
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 ALL_DEVICE_TYPES = [GroupInputModel, GroupOutputModel, GroupConnectionModel]
@@ -66,9 +67,9 @@ def init_core_config():
     init(agent_obj=get_agent(), server_obj=get_server())
 
 
-def web_subprocess(command: str, out_error: bool = False) -> str:
+def web_subprocess(command: str, out_error: bool = False, timeout: int = DEFAULT_PROCESS_TIMEOUT) -> str:
     init_core_config()
-    return subprocess(command=command, out_error=out_error, logger=web_log)
+    return subprocess(command=command, out_error=out_error, logger=web_log, timeout=timeout)
 
 
 def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):

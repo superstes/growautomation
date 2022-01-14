@@ -27,7 +27,10 @@ def view(request, **kwargs):
     response = GaView().start(request=request, **kwargs)
 
     if response is None:
-        return handler500(f"Maybe invalid user-input or a BUG: Got NONE-response for request '{request.method} => {request.build_absolute_uri()}'")
+        return handler500({
+            'request': request,
+            'msg': f"Maybe invalid user-input or a BUG: Got NONE-response for request '{request.method} => {request.build_absolute_uri()}'"
+        })
 
     return response
 

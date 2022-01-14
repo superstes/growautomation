@@ -48,9 +48,9 @@ class SystemAgentModel(BaseModel):
     device_fail_sleep = models.PositiveSmallIntegerField(default=config.SYS_DEFAULT_FAIL_SLEEP)
     device_log = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
 
-    svc_interval_status = models.PositiveSmallIntegerField(default=3600)
-    svc_interval_reload = models.PositiveSmallIntegerField(default=21600)
-    subprocess_timeout = models.PositiveSmallIntegerField(default=60)
+    svc_interval_status = models.PositiveSmallIntegerField(default=3600, validators=[MinValueValidator(60)])
+    svc_interval_reload = models.PositiveSmallIntegerField(default=21600, validators=[MinValueValidator(300)])
+    subprocess_timeout = models.PositiveSmallIntegerField(default=60, validators=[MaxValueValidator(3600), MinValueValidator(1)])
 
 
 class SystemServerModel(BaseModel):

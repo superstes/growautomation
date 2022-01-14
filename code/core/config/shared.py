@@ -29,6 +29,7 @@ SOCKET_SHUFFLE = False  # if unset SERVER.security will be evaluated
 NONE_RESULTS = ['', 'None', None, ' ']
 CONFIG_FILE_PATH = '/core/config/file/core.conf'
 CENSOR_SYMBOL = '●'
+MINIMAL_PROCESS_TIMEOUT = 2
 
 # service settings
 SVC_LOOP_INTERVAL = 60

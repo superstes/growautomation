@@ -8,6 +8,7 @@ SQL_CONFIG_FILE = f'{settings.BASE_DIR}/database.cnf'
 NONE_RESULTS = ['', 'None', None, ' ']
 CORE_SERVICE = 'ga_core.service'
 LE_RENEWAL_SERVICE = 'ga_web_certRenewal.service'
+DEFAULT_PROCESS_TIMEOUT = 3
 
 # privileges
 LOGIN_URL = '/accounts/login/'

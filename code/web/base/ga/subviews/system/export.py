@@ -17,6 +17,7 @@ def export_view(request, process: str):
     dump_db = get_server_config(setting='sql_database')
     include_tables = []
     exclude_tables = []
+    dump_timeout = 600
 
     if process == 'config':
         exclude_tables = [
@@ -67,7 +68,8 @@ def export_view(request, process: str):
         command=f"mysqldump --defaults-file={config.SQL_CONFIG_FILE} {dump_db} --single-transaction "
                 f"{' '.join(include_tables)}"
                 f"{' --ignore-table=ga.'.join(exclude_tables)} | "
-                f"xz -7 > {dump_file_path}"
+                f"xz -7 > {dump_file_path}",
+        timeout=dump_timeout,
     )
 
     if os_path.exists(dump_file_path):
