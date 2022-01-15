@@ -1,8 +1,8 @@
 from datetime import datetime
-
 from packaging.version import parse as parse_version
 from packaging.version import Version
 from pytz import timezone as pytz_timezone
+from pytz import utc as pytz_utc
 
 from .helper import get_server_config
 from ..config.shared import DATETIME_TS_FORMAT
@@ -35,29 +35,24 @@ def set_key(search, param: str) -> bool:
     return not empty_key(search=search, param=param)
 
 
-def add_timezone(request, datetime_obj: datetime, tz: str = None, ctz: str = None) -> datetime:
-    if ctz is None:
-        # takes A LOT of time if done in a loop
-        ctz = get_server_config(setting='timezone')
-
-    if tz is not None:
-        _tz_aware = datetime_obj.replace(tzinfo=pytz_timezone(tz))
-        output = _tz_aware.astimezone(pytz_timezone(ctz))
+def add_timezone(dt: datetime) -> datetime:
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+        return dt.replace(tzinfo=pytz_timezone(get_server_config(setting='timezone')))
 
     else:
-        output = datetime_obj.replace(tzinfo=pytz_timezone(ctz))
+        # utc is used in storage by django
+        return dt.replace(tzinfo=pytz_utc).astimezone(pytz_timezone(get_server_config(setting='timezone')))
 
-    return output
 
-
-def get_datetime_w_tz(request, dt_str: str) -> (None, datetime):  # str datetime to tz-aware datetime obj
-    if type(dt_str) != str:
-        return None
-
+def get_dt_w_tz(naive: (str, datetime, None) = None) -> (datetime, None):
     try:
-        _ts_wo_tz = datetime.strptime(dt_str, DATETIME_TS_FORMAT)
-        ts_w_tz = add_timezone(request, datetime_obj=_ts_wo_tz)
-        return ts_w_tz
+        if naive is None:
+            return add_timezone(dt=datetime.now())
+
+        elif type(naive) == str:
+            naive = datetime.strptime(naive, DATETIME_TS_FORMAT)
+
+        return add_timezone(dt=naive)
 
     except ValueError:
         return None

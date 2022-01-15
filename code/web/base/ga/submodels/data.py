@@ -15,15 +15,21 @@ CHART_TYPE_CHOICES = [
 ]
 
 
-class InputDataModel(SuperBareModel):
+class InputDataModel(models.Model):
     field_list = ['data', 'obj']
 
     data = models.CharField(max_length=50)
-    obj = models.ForeignKey(ObjectInputModel, on_delete=models.CASCADE, related_name='id_fk_obj')
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    obj = models.ForeignKey(ObjectInputModel, on_delete=models.CASCADE, related_name='id_fk_obj', db_index=True)
     # todo: value-type mapping?
 
     def __str__(self):
         return f"Input data of device {self.obj.name}: {self.data}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['created', 'obj']),
+        ]
 
 
 class ChartGraphModel(BaseModel):

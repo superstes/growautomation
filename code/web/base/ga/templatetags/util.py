@@ -91,8 +91,7 @@ def authorized_to_write(user):
 
 @register.filter
 def get_full_uri(request):
-    full_uri = request.build_absolute_uri()
-    return full_uri
+    return request.build_absolute_uri()
 
 
 @register.filter

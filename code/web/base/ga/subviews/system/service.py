@@ -7,6 +7,7 @@ from core.utils.debug import web_log
 from ...user import authorized_to_read, authorized_to_write
 from ...utils.basic import get_time_difference
 from ...utils.helper import web_subprocess, get_server_config
+from ...utils.web import get_client_ip
 from ..handlers import Pseudo404
 from ...config import shared as config
 
@@ -87,7 +88,7 @@ def service_action(request, service: str):
     if action in ['start', 'stop', 'reload', 'restart']:
         web_log(
             output=f"{request.META['PATH_INFO']} - action \"{action} service {service}\" "
-                   f"was executed by user {request.user} from remote ip {request.META['REMOTE_ADDR']}"
+                   f"was executed by user {request.user} from remote ip {get_client_ip(request)}"
         )
         web_subprocess(command=f"sudo {SYSTEMCTL} {action} {service}")
         sleep(1)

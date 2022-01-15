@@ -87,20 +87,8 @@ def api_chart(request):
                 return data_dict['data']
 
         elif chart_type == 'dbe':
-            dataset_list = []
-
-            for link in ChartDatasetLinkModel.objects.all():
-                if link.group.id == chart_id:
-                    dataset_list.append(link.obj.id)
-
-            graph_id = None
-
-            for link in ChartGraphLinkModel.objects.all():
-                if link.group.id == chart_id:
-                    graph_id = link.obj.id
-
-            data_dict['dataset'] = dataset_list
-            data_dict['graph'] = graph_id
+            data_dict['dataset'] = [link.obj.id for link in ChartDatasetLinkModel.objects.filter(group__id=chart_id)]
+            data_dict['graph'] = ChartGraphLinkModel.objects.filter(group__id=chart_id)[0].obj.id
 
         return JsonResponse(data={
             'chart_id': int(chart_id), 'data_dict': data_dict,

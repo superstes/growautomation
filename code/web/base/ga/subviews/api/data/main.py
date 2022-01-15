@@ -1,12 +1,12 @@
 from django.http import JsonResponse
-from datetime import datetime, timedelta
+from datetime import timedelta
 from math import ceil
-from pytz import utc as pytz_utc
+from django.db.models import QuerySet
 
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
-from ....utils.basic import add_timezone, get_datetime_w_tz
-from ....utils.helper import get_device_parent_setting, get_instance_from_id, get_server_config
+from ....utils.basic import get_dt_w_tz
+from ....utils.helper import get_device_parent_setting, get_instance_from_id, profiler
 from ....utils.auth import method_user_passes_test
 from ....user import authorized_to_read
 from ....config import shared as config
@@ -88,28 +88,24 @@ class ApiData:
             else:
                 max_data_points = config.DB_MAX_DATA_POINTS_SHORT_MOBILE
 
-        self._add_measurement('Pulling data')
-        data_list = InputDataModel.objects.filter(
+        query_result = InputDataModel.objects.filter(
             created__gte=start_ts,
             created__lte=stop_ts,
             obj=input_obj
-        ).order_by('-created')
+        ).order_by('-created').values(
+            'created', 'data',
+        )
 
-        self._add_measurement('Preparing data')
-        data_dict = self._prepare_data(data_list=data_list, data_type=data_type)
-
-        self._add_measurement('Thinning data')
-        if len(data_dict) > max_data_points:
-            data_dict = self._thin_out_data_points(data_dict, wanted=max_data_points)
-
-        self._add_measurement('Post processing')
-        xy_data_list = []
-        for time, data in data_dict.items():
-            xy_data_list.append({'x': time, 'y': data})
+        query_result = self._prepare_data(query_result=self._thin_out_data_points(
+            query_result,
+            wanted=max_data_points,
+            existing=query_result.count(),
+            data_type=data_type
+        ))
 
         json_dict = {
             'device_id': int(self.input_id), 'device_name': input_obj.name, 'data_unit': data_unit, 'data_type': data_type, 'error': self.error,
-            'xy_data': xy_data_list, 'measurement': self.measurement,
+            'xy_data': query_result, 'measurement': self.measurement,
         }
 
         if self.return_dict:
@@ -118,71 +114,75 @@ class ApiData:
         else:
             return JsonResponse(data=json_dict)
 
-    def _add_measurement(self, msg: str):
-        # for troubleshooting
-        self.measurement.append(f'{datetime.now().strftime(self.MEASURE_TS_FORMAT)} | {msg}')
-
     @classmethod
-    def _thin_out_data_points(cls, data_dict: dict, wanted: int, function: str = 'avg') -> dict:
+    def _thin_out_data_points(cls, query_result: QuerySet, wanted: int, existing: int, calc: str = 'avg', data_type: str = 'float') -> dict:
         """
-        :param data_dict: {time: data}
+        :param query_result: QuerySet({created: _, data: _})
         :param wanted: Data points wanted
-        :param function: Function to apply to the filtered data points
+        :param calc: Function to apply to the filtered data points
         :return: filtered data
         :rtype: dict
         """
+        interval = ceil(existing / wanted)
+        calc = calc if calc in cls.THIN_OUT_FUNCTIONS else 'avg'
+        calc_datatypes = [int, float]
 
-        data_point_count = len(data_dict)
-        interval = ceil(data_point_count / wanted)
-        thin_out_function = function if function in cls.THIN_OUT_FUNCTIONS else 'avg'
+        if data_type == 'int':
+            data_type = int
+
+        elif data_type == 'bool':
+            data_type = bool
+
+        elif data_type == 'str':
+            data_type = str
+
+        else:
+            data_type = float
 
         filtered = {}
         counter = 0
         tmp = {}
-        for key, value in data_dict.items():
-            if counter % interval == 0 and len(tmp) != 0:
-                if thin_out_function == 'avg':
-                    index = ceil(len(tmp) / 2)
-                    filtered[list(tmp.keys())[index]] = "{:.2f}".format(sum(tmp.values()) / len(tmp))
 
-                elif thin_out_function == 'max':
-                    max_val = max(tmp.values())
-                    filtered[[key for key, val in tmp.items() if val == max_val][0]] = max_val
+        for dataset in query_result:
+            if counter % interval == 0 and counter != 0:
+                if data_type in calc_datatypes:
+                    if calc == 'avg':
+                        index = ceil(counter / 2)
+                        filtered[list(tmp.keys())[index]] = "{:.2f}".format(sum(tmp.values()) / counter)
 
-                elif thin_out_function == 'min':
-                    min_val = min(tmp.values())
-                    filtered[[key for key, val in tmp.items() if val == min_val][0]] = min_val
+                    elif calc == 'max':
+                        max_val = max(tmp.values())
+                        filtered[[time for time, data in tmp.items() if data == max_val][0]] = max_val
 
-                tmp = {}
+                    else:
+                        min_val = min(tmp.values())
+                        filtered[[time for time, data in tmp.items() if data == min_val][0]] = min_val
+
+                    tmp = {}
+                    counter = 0
+
+                else:
+                    filtered[dataset['created']] = data_type(dataset['data'])
+
+            if data_type in calc_datatypes:
+                tmp[dataset['created']] = data_type(dataset['data'])
 
             counter += 1
-            tmp[key] = value
 
         return filtered
 
-    def _prepare_data(self, data_list, data_type: str) -> dict:
-        out_dict = {}
-
-        if data_type == 'float':
-            typ = float
-
-        elif data_type == 'int':
-            typ = int
-
-        elif data_type == 'bool':
-            typ = bool
-
-        else:
-            typ = str
-
-        own_tz = get_server_config(setting='timezone')
-        for data_obj in data_list:
-            # converting datetime to utc millisecond-timestamp since that is the default time-format in chartjs
-            tz_aware_dt = add_timezone(request=self.request, datetime_obj=data_obj.created, tz=own_tz, ctz=own_tz)
-            ts_milli_utc = round(tz_aware_dt.astimezone(pytz_utc).timestamp() * 1000)
-            out_dict[ts_milli_utc] = typ(data_obj.data)
-
-        return out_dict
+    @staticmethod
+    def _prepare_data(query_result: dict) -> list:
+        # conversions for usage with chartjs:
+        #   1. datetime to utc millisecond-timestamp
+        #   2. data to x/y format
+        return [
+            {
+                'x': round(time.timestamp() * 1000),
+                'y': data
+             }
+            for time, data in query_result.items()
+        ]
 
     def _get_time(self):
         start_ts, _start_ts = None, None
@@ -192,11 +192,7 @@ class ApiData:
         if 'stop_ts' in self.data:
             _stop_ts = self.data['stop_ts']
 
-        if _stop_ts is not None:
-            stop_ts = get_datetime_w_tz(self.request, dt_str=_stop_ts)
-
-        else:
-            stop_ts = add_timezone(self.request, datetime_obj=datetime.now())
+        stop_ts = get_dt_w_tz(naive=_stop_ts)
 
         if 'period' in self.data and 'period_data' in self.data:
             # todo: support for 'last week' etc. (period=d,data=7,shift=d,shift_data:7)  => Ticket#33
@@ -223,10 +219,7 @@ class ApiData:
 
         else:
             if 'start_ts' in self.data:
-                _start_ts = self.data['start_ts']
-
-            if _start_ts is not None:
-                start_ts = get_datetime_w_tz(self.request, dt_str=_start_ts)
+                start_ts = get_dt_w_tz(naive=self.data['start_ts'])
 
         if start_ts is None:
             return handler400_api(msg='No supported time period provided')

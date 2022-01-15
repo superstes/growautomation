@@ -43,6 +43,28 @@
                 {% endfor %}
             </select>
         {% endif %}
+        {% if log_type == 'GrowAutomation' %}
+            <label for="log_year">Logs of year</label>
+            <select class="form-control" id="log_year" name="log_year" >
+                {% for option in log_years %}
+                    {% if option == date_year %}
+                        <option selected value="{{ option }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <label for="log_month">Logs of month</label>
+            <select class="form-control" id="log_month" name="log_month" >
+                {% for option in log_months %}
+                    {% if option == date_month %}
+                        <option selected value="{{ option }}">{{ option }}</option>
+                    {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        {% endif %}
         {% if log_type is not None and log_subtype is not None %}
             {% include "../miniform/reload_time.html" %}
         {% endif %}

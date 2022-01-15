@@ -24,10 +24,12 @@ class UserMgmt:
         config.GA_WRITE_GROUP: {
             'privs': 'WRITE',
             'pretty': 'READ+WRITE',
+            'staff': True,
         },
         config.GA_READ_GROUP: {
             'privs': 'READ',
             'pretty': 'READ',
+            'staff': False,
         },
     }
 
@@ -90,6 +92,8 @@ class UserMgmt:
             for grp, value in self.GA_GROUPS.items():
                 if privs.find(value['pretty']) != -1:
                     user.groups.add(Group.objects.get(name=grp))
+                    if value['staff']:
+                        user.is_staff = True
 
             self._log_action(action='created')
             return self._list(msg=f"User '{self.request.POST['name']}' successfully created!")
@@ -115,6 +119,8 @@ class UserMgmt:
                 grp_obj = Group.objects.get(name=grp)
                 if privs.find(value['pretty']) != -1:
                     user.groups.add(grp_obj)
+                    if value['staff']:
+                        user.is_staff = True
 
                 else:
                     user.groups.remove(grp_obj)

@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from ....user import authorized_to_read
 from ....models import InputDataModel, ObjectInputModel
-from ....utils.basic import get_datetime_w_tz
+from ....utils.basic import get_dt_w_tz
 from ....utils.helper import get_device_parent_setting
 from ....config import shared as config
 
@@ -25,10 +25,10 @@ def DataListView(request):
     result_count = config.WEBUI_DEFAULT_DATA_TABLE_ROWS
 
     if 'start_ts' in request.GET:
-        start_ts = get_datetime_w_tz(request, dt_str=request.GET['start_ts'])
+        start_ts = get_dt_w_tz(naive=request.GET['start_ts'])
 
         if 'stop_ts' in request.GET:
-            _stop_ts = get_datetime_w_tz(request, dt_str=request.GET['stop_ts'])
+            _stop_ts = get_dt_w_tz(naive=request.GET['stop_ts'])
 
             if _stop_ts is not None:
                 if _stop_ts > start_ts:

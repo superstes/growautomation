@@ -32,7 +32,8 @@ def get_client_ip(request, censor: bool = CENSOR_IPS, censor_character: str = 'X
         client_ip = request.META.get('REMOTE_ADDR')
 
     if censor:
-        client_ip = f"{client_ip.rsplit('.', 1)[0]}.{censor_character}"
+        uc, c = client_ip.rsplit('.', 1)
+        client_ip = f"{uc}.{censor_character * len(c)}"
 
     return client_ip
 

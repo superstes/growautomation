@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 
-from ....utils.basic import get_datetime_w_tz, set_key
+from ....utils.basic import get_dt_w_tz, set_key
 from ....utils.helper import error_formatter
 from ....utils.web import get_form_prefill
 from ....utils.auth import method_user_passes_test
@@ -69,10 +69,10 @@ class Chart:
                 input_device = data['input_device']
 
             if set_key(data, param='start_ts'):
-                start_ts = get_datetime_w_tz(self.request, dt_str=data['start_ts'])
+                start_ts = get_dt_w_tz(naive=data['start_ts'])
 
                 if set_key(data, param='stop_ts'):
-                    _stop_ts = get_datetime_w_tz(self.request, dt_str=data['stop_ts'])
+                    _stop_ts = get_dt_w_tz(naive=data['stop_ts'])
 
                     if _stop_ts is not None:
                         if _stop_ts > start_ts:
