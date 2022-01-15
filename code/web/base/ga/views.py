@@ -21,18 +21,7 @@ from .subviews.system.config import system_config_view
 from .subviews.system.update import update_view, update_status_view
 from .subviews.system.users import UserMgmt
 from .config.shared import LOGIN_URL
-
-
-def view(request, **kwargs):
-    response = GaView().start(request=request, **kwargs)
-
-    if response is None:
-        return handler500({
-            'request': request,
-            'msg': f"Maybe invalid user-input or a BUG: Got NONE-response for request '{request.method} => {request.build_absolute_uri()}'"
-        })
-
-    return response
+from .utils.helper import get_server_config, profiler
 
 
 class GaView:
@@ -204,3 +193,22 @@ class GaView:
         error_source_url = request.build_absolute_uri(request.META['QUERY_STRING'].split('=', 1)[1])
         web_log(output=f"{error_source_url} - Got error 403 - api access denied")
         return handler403_api()
+
+
+def view(request, **kwargs):
+    if get_server_config('debug'):
+        response = profiler(
+            check=GaView().start, kwargs={'request': request, **kwargs},
+            log_msg=f"Profiling for request '{request.method} => {request.build_absolute_uri()}'"
+        )
+
+    else:
+        response = GaView().start(request=request, **kwargs)
+
+    if response is None:
+        return handler500({
+            'request': request,
+            'msg': f"Maybe invalid user-input or a BUG: Got NONE-response for request '{request.method} => {request.build_absolute_uri()}'"
+        })
+
+    return response

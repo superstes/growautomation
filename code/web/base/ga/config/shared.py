@@ -10,6 +10,7 @@ CORE_SERVICE = 'ga_core.service'
 LE_RENEWAL_SERVICE = 'ga_web_certRenewal.service'
 DEFAULT_PROCESS_TIMEOUT = 3
 CENSOR_IPS = True
+DEBUG_PROFILE_TOP_N = 15
 
 # privileges
 LOGIN_URL = '/accounts/login/'

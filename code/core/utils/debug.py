@@ -20,7 +20,7 @@ def now(time_format: str):
 
 
 class Log:
-    def __init__(self, typ: str = None, addition: str = None, src_file: str = None):
+    def __init__(self, typ: str = None, addition: str = None, src_file: str = None, debug: (int, bool) = None):
         if typ is None:
             typ = 'core'
 
@@ -29,6 +29,16 @@ class Log:
 
         else:
             self.name = src_file
+
+        if debug is None:
+            self.debug = True if config.AGENT.debug == 1 else False
+
+        else:
+            if type(debug) == bool:
+                self.debug = debug
+
+            else:
+                self.debug = True if debug == 1 else False
 
         self.log_dir = f"{config.AGENT.path_log}/{typ}/{now('%Y')}"
         self.log_level = config.AGENT.log_level
@@ -45,7 +55,7 @@ class Log:
         # log levels:
         #   0 = no; 1 = important error; 2 = errors; 3 = important warning; 4 = warning;
         #   5 = unimportant warning; 6 = info; 7 = unimportant info; 8 = random; 9 = wtf
-        if config.AGENT.debug == 0 and (level > self.log_level or not self.status):
+        if not self.debug and (level > self.log_level or not self.status):
             return False
 
         output = censor(str(output))
@@ -86,9 +96,8 @@ class Log:
             print(f"LOG ERROR: {censor(error)}")
             return False
 
-    @staticmethod
-    def _debugger(msg):
-        if config.AGENT.debug == 1:
+    def _debugger(self, msg):
+        if self.debug:
             print(f'DEBUG: {censor(msg)}')
             return True
 
@@ -131,7 +140,8 @@ def fns_log(output: str, level: int = 1) -> bool:
 
 def web_log(output: str, level: int = 1) -> bool:
     _src = inspect_getfile(inspect_stack()[1][0])
-    return Log(typ='web', src_file=_src).write(output=output, level=level)
+    debug = config.SERVER.debug
+    return Log(typ='web', src_file=_src, debug=debug).write(output=output, level=level)
 
 
 def device_log(output: str, add: str, level: int = 1) -> bool:

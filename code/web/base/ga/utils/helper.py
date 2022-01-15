@@ -1,5 +1,6 @@
 from django.db.utils import OperationalError, ProgrammingError
 from os import path as os_path
+from functools import lru_cache
 
 from core.utils.process import subprocess
 from core.utils.debug import web_log
@@ -8,7 +9,7 @@ from ..models import SystemServerModel, SystemAgentModel
 from ..models import ObjectInputModel, ObjectOutputModel, ObjectConnectionModel
 from ..models import GroupInputModel, GroupOutputModel, GroupConnectionModel
 from ..models import MemberInputModel, MemberOutputModel, MemberConnectionModel
-from ..config.shared import DEFAULT_PROCESS_TIMEOUT
+from ..config.shared import DEFAULT_PROCESS_TIMEOUT, DEBUG_PROFILE_TOP_N
 
 DEVICE_TYPES = [ObjectInputModel, ObjectOutputModel, ObjectConnectionModel]
 ALL_DEVICE_TYPES = [GroupInputModel, GroupOutputModel, GroupConnectionModel]
@@ -24,6 +25,7 @@ class PseudoServerAgent:
         self.version_detail = '| CHECK SCHEMA'
 
 
+@lru_cache(maxsize=32)
 def get_server() -> (SystemServerModel, None):
     try:
         return SystemServerModel.objects.all()[0]
@@ -35,6 +37,7 @@ def get_server() -> (SystemServerModel, None):
         return PseudoServerAgent()
 
 
+@lru_cache(maxsize=32)
 def get_agent(name: str = None) -> (SystemAgentModel, None):
     try:
         if name is None:
@@ -50,14 +53,17 @@ def get_agent(name: str = None) -> (SystemAgentModel, None):
         return PseudoServerAgent()
 
 
+@lru_cache(maxsize=32)
 def get_agent_config(setting: str):
     return getattr(get_agent(), setting)
 
 
+@lru_cache(maxsize=32)
 def get_server_config(setting: str):
     return getattr(get_server(), setting)
 
 
+@lru_cache(maxsize=32)
 def get_script_dir(typ) -> str:
     path_root = get_agent_config(setting='path_root')
     return f"{path_root}/device/{typ.lower()}"
@@ -162,6 +168,35 @@ def error_formatter(form_error, fallback: str = 'Failed to save form') -> str:
 def read_last_lines(file: str, n: int) -> list:
     if os_path.isfile(file):
         with open(file, 'r', encoding='utf-8') as _:
-            return _.readlines()[-n:]
-
+            lines = _.readlines()[-n:]
+            output = [line for line in lines]
+            output.reverse()  # show last on top
+            return output
     return []
+
+
+def profiler(check, log_msg: str = '', log: bool = True, kwargs: dict = None, sort: str = 'tottime'):
+    # note: https://stackoverflow.com/questions/10326936/sort-cprofile-output-by-percall-when-profiling-a-python-script
+    from cProfile import Profile
+    from pstats import Stats
+    from io import StringIO
+
+    _ = Profile()
+    _.enable()
+
+    if kwargs is None:
+        kwargs = {}
+
+    check_response = check(**kwargs)
+
+    _.disable()
+    result = StringIO()
+    Stats(_, stream=result).sort_stats(sort).print_stats(DEBUG_PROFILE_TOP_N)
+    cleaned_result = result.getvalue().splitlines()[:-1]
+    del cleaned_result[1:5]
+    cleaned_result = '\n'.join(cleaned_result)
+
+    if log:
+        web_log(output=f"{log_msg}:\n{cleaned_result}", level=8)
+
+    return check_response
