@@ -5,7 +5,7 @@ from os import listdir as os_listdir
 
 from ...user import authorized_to_read
 from ...utils.basic import str_to_list
-from ...utils.helper import get_server_config, web_subprocess
+from ...utils.helper import get_server_config, web_subprocess, read_last_lines
 from ...config import shared as config
 
 # need to add www-data to systemd-journal group (usermod -a -G systemd-journal www-data)
@@ -81,7 +81,7 @@ def LogView(request):
             log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
-            web_subprocess(command=config.LOG_SERVICE_LOG_STATUS % log_service_value)
+            web_subprocess(command=config.LOG_SERVICE_LOG_STATUS % log_service_value, log_stdout=False)
         )
 
     elif log_type == 'Service journal':
@@ -92,7 +92,7 @@ def LogView(request):
             log_service_value = log_service_options['GrowAutomation']
 
         log_data = str_to_list(
-            web_subprocess(command=config.LOG_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count))
+            web_subprocess(command=config.LOG_SERVICE_LOG_JOURNAL % (log_service_value, log_entry_count), log_stdout=False)
         )
 
     elif log_type == 'GrowAutomation':
@@ -108,10 +108,7 @@ def LogView(request):
             log_file = log_ga_options['Core']
 
         # todo: option to view older (truncated) logs?
-        log_data = str_to_list(
-            web_subprocess(command=f"tail -n {log_entry_count} {log_file}"),
-            reverse=True
-        )
+        log_data = read_last_lines(file=log_file, n=log_entry_count)
 
     else:
         log_subtype_options = log_service_options

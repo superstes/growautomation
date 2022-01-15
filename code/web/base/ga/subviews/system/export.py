@@ -70,6 +70,7 @@ def export_view(request, process: str):
                 f"{' --ignore-table=ga.'.join(exclude_tables)} | "
                 f"xz -7 > {dump_file_path}",
         timeout=dump_timeout,
+        log_stdout=False,
     )
 
     if os_path.exists(dump_file_path):

@@ -20,20 +20,24 @@ def now(time_format: str):
 
 
 class Log:
-    def __init__(self, typ: str = 'core', addition: str = None, src_file: str = None):
-        self.name = src_file
+    def __init__(self, typ: str = None, addition: str = None, src_file: str = None):
+        if typ is None:
+            typ = 'core'
+
         if src_file is None:
             self.name = inspect_getfile(inspect_stack()[1][0])
 
-        self.type = typ
-        self.log_dir = f"{config.AGENT.path_log}/{self.type}/{now('%Y')}"
+        else:
+            self.name = src_file
+
+        self.log_dir = f"{config.AGENT.path_log}/{typ}/{now('%Y')}"
         self.log_level = config.AGENT.log_level
 
         if addition is None:
-            self.log_file = f"{self.log_dir}/{now('%m')}_{self.type}.log"
+            self.log_file = f"{self.log_dir}/{now('%m')}_{typ}.log"
 
         else:
-            self.log_file = f"{self.log_dir}/{now('%m')}_{self.type}_{addition.replace(' ', '_')}.log"
+            self.log_file = f"{self.log_dir}/{now('%m')}_{typ}_{addition.replace(' ', '_')}.log"
 
         self.status = self._check()
 

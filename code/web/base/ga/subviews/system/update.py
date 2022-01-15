@@ -94,7 +94,7 @@ def update_start(request, current_version):
             )
 
         def start():
-            web_subprocess(command=f'sudo systemctl start {config.UPDATE_SERVICE}.service', timeout=5)
+            web_subprocess(command=f'sudo systemctl start {config.UPDATE_SERVICE}.service', timeout=5, log_stdout=False)
 
         Thread(target=start()).start()
         return redirect('/system/update/status/')
@@ -108,8 +108,8 @@ def update_status_view(request):
     status = 'Running'
     reload_time = 5
     redirect_time = 30
-    log_data = str_to_list(web_subprocess(f"{config.LOG_SERVICE_LOG_STATUS % config.UPDATE_SERVICE} | grep ' {config.UPDATE_SERVICE}\\['"))
-    update_status = web_subprocess(command=f"systemctl is-active {config.UPDATE_SERVICE}.service")
+    log_data = str_to_list(web_subprocess(command=f"{config.LOG_SERVICE_LOG_STATUS % config.UPDATE_SERVICE} | grep ' {config.UPDATE_SERVICE}\\['", log_stdout=False))
+    update_status = web_subprocess(command=f"systemctl is-active {config.UPDATE_SERVICE}.service", log_stdout=False)
 
     if update_status.find('activating') == -1:
         reload_time = 0

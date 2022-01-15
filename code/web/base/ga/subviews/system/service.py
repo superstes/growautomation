@@ -49,8 +49,8 @@ def ServiceView(request):
         if reload_time is None:
             reload_time = config.WEBUI_DEFAULT_REFRESH_SECS
 
-        service_status = web_subprocess(command=SHELL_SERVICE_STATUS % service_value)
-        service_enabled = web_subprocess(command=SHELL_SERVICE_ENABLED % service_value)
+        service_status = web_subprocess(command=SHELL_SERVICE_STATUS % service_value, log_stdout=False)
+        service_enabled = web_subprocess(command=SHELL_SERVICE_ENABLED % service_value, log_stdout=False)
 
         # get status times
         if service_status == 'active':
@@ -59,7 +59,7 @@ def ServiceView(request):
         else:
             status_command = SHELL_SERVICE_INACTIVE_TIMESTAMP
 
-        service_status_time = web_subprocess(command=status_command % service_value)
+        service_status_time = web_subprocess(command=status_command % service_value, log_stdout=False)
 
         if service_status_time not in config.NONE_RESULTS:
             service_runtime = get_time_difference(service_status_time.rsplit(' ', 1)[0], f'%a {config.DATETIME_TS_FORMAT}')

@@ -1,4 +1,5 @@
 from django.db.utils import OperationalError, ProgrammingError
+from os import path as os_path
 
 from core.utils.process import subprocess
 from core.utils.debug import web_log
@@ -67,9 +68,9 @@ def init_core_config():
     init(agent_obj=get_agent(), server_obj=get_server())
 
 
-def web_subprocess(command: str, out_error: bool = False, timeout: int = DEFAULT_PROCESS_TIMEOUT) -> str:
+def web_subprocess(command: str, out_error: bool = False, timeout: int = DEFAULT_PROCESS_TIMEOUT, log_stdout: bool = True) -> str:
     init_core_config()
-    return subprocess(command=command, out_error=out_error, logger=web_log, timeout=timeout)
+    return subprocess(command=command, out_error=out_error, logger=web_log, timeout=timeout, log_stdout=log_stdout)
 
 
 def get_instance_from_id(typ, obj: (str, int), force_id: bool = False):
@@ -156,3 +157,11 @@ def error_formatter(form_error, fallback: str = 'Failed to save form') -> str:
 
     except IndexError:
         return fallback
+
+
+def read_last_lines(file: str, n: int) -> list:
+    if os_path.isfile(file):
+        with open(file, 'r', encoding='utf-8') as _:
+            return _.readlines()[-n:]
+
+    return []
