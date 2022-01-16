@@ -113,7 +113,8 @@ echo ''
 echo 'Do you want to continue? (yes/NO)'
 
 read ask_config
-if [ "$ask_config" == 'yes' ]; then
+if [ "$ask_config" == 'yes' ]
+then
   echo ''
   echo '### STARTING SETUP ###'
   echo ''
@@ -130,7 +131,8 @@ if [ "$ask_config" == 'yes' ]; then
 
   echo 'Do you want to display the generated password? (yes/NO)'
   read ask_pwds
-  if [ "$ask_pwds" == 'yes' ]; then
+  if [ "$ask_pwds" == 'yes' ]
+  then
     echo ''
     echo '### BEGIN PASSWORDS ###'
     echo ''
@@ -152,7 +154,8 @@ fi
 echo ''
 echo '### EXITING SETUP-SCRIPT ###'
 
-if [ "$ask_reboot" == 'yes' ]; then
+if [ "$ask_reboot" == 'yes' ]
+then
   echo ''
   echo '### REBOOTING SYSTEM ###'
   sleep 3

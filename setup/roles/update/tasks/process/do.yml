@@ -156,8 +156,8 @@
     config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
     query: "{{ item }}"
   loop:
-    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
   when: ga_sql_server == 'localhost'
 
 - name: GA | Update | Process | Do | Updating system-config in db (remote db)
@@ -168,8 +168,8 @@
     config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
     query: "{{ item }}"
   loop:
-    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
   when: ga_sql_server != 'localhost'
 
 - name: GA | Update | Process | Do | Stopping services about to be upgraded (if online)

@@ -2,6 +2,8 @@
 
 .. |users| image:: ../_static/img/setup/post-setup/users.png
    :class: ga-img-center ga-img-border
+.. |script_end| image:: ../_static/img/setup/post-setup/script_end.png
+   :class: ga-img-center ga-img-border
 
 .. include:: ../includes/tip_links.rst
 
@@ -24,28 +26,38 @@ Basic tasks
 
   If you have used the installation image the password to connect should be: **Gr0w21736!**
 
-2. If you have used the installation image - you should run the password randomization script:
+2. Get information to access the controller
 
-  .. code-block:: bash
+2.1. If you have used the **installation image**:
 
-    sudo bash /var/lib/ga/setup/randomize_pwds.sh
+  * you should run the password randomization script:
 
-3. You need to retrieve your passwords:
+    .. code-block:: bash
 
-  .. code-block:: bash
+      sudo bash /var/lib/ga/setup/randomize_pwds.sh
 
-    sudo cat /etc/.ga_setup
-    # after that you should remove the password file
-    sudo rm /etc/.ga_setup
+  * you need to retrieve your passwords:
 
-4. Login into the web user-interface using the retrieved password:
+    .. code-block:: bash
+
+      sudo cat /etc/.ga_setup
+      # after that you should remove the password file
+      sudo rm /etc/.ga_setup
+
+2.2. If you have run the **setup script**:
+
+  * The setup script should have displayed the URL and passwords for you to access the controller!
+
+    |script_end|
+
+3. Login into the web user-interface using the retrieved password:
 
   Open the URL https://${IP} - in which '${IP}' is the address you found using the :ref:`find guide <setup-find>`
 
-5. You can now manage the users using the 'System - Users' site.
+4. You can now manage the users using the 'System - Users' site. (*change passwords and so on*)
 
   |users|
 
-6. Now you can configure your devices and start using the GrowAutomation software!
+5. Now you can configure your devices and start using the GrowAutomation software!
 
   More information to the configuration can be found :ref:`here <config-device>`.

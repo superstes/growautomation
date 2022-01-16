@@ -42,7 +42,7 @@ Run the following command on your raspberry:
 curl -s https://raw.githubusercontent.com/superstes/growautomation/dev/setup/setup.sh | sudo bash
 ```
 
-ELSE: if you want to modify the release or run the script on a remote host, you will have to do it this way:
+ELSE: if you want to modify the release or run the script on a remote host (*untested*), you will have to do it this way:
 ```bash
 wget https://raw.githubusercontent.com/superstes/growautomation/dev/setup/setup.sh -O /tmp/setup.sh
 sudo bash /tmp/setup.sh TARGET-RELEASE(default=latest) DESTINATION-HOST(default=localhost)
