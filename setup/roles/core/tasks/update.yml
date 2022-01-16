@@ -28,6 +28,7 @@
     recursive: yes
     rsync_path: 'sudo rsync'
     rsync_opts: ['--exclude=*.cnf', '--exclude=*.key', '--exclude=__pycache__/']
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Core | Update | Setting privileges
   ansible.builtin.file:

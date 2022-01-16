@@ -36,6 +36,7 @@
     recursive: yes
     delete: "{{ item.del | default('yes') }}"
     rsync_opts: "{{ item.opts | default([]) }}"
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
   with_items:
     - {
       src: "{{ ga_update_path_repo }}/code/", dst: "{{ ga_update_path_core }}/",

@@ -111,9 +111,8 @@ echo '  remote hosts: (optional)'
 echo "    - ${SETUP_DIR}/setup/inventories/hosts.yml"
 echo "    - ${SETUP_DIR}/setup/inventories/host_vars/remote.yml"
 echo ''
-echo 'Do you want to continue? (YES/no)'
 
-read -r ask_config
+read -p 'Do you want to continue? (YES/no): ' -r ask_config
 if [ "$ask_config" != 'no' ]; then
   echo ''
   echo '### STARTING SETUP ###'
@@ -133,8 +132,7 @@ if [ "$ask_config" != 'no' ]; then
   echo "You might want to open the GrowAutomation web-interface in your browser: https://${IP}"
   echo ''
 
-  echo 'Do you want to display the generated password? (YES/no)'
-  read -r ask_pwds
+  read -p 'Do you want to display the generated password? (YES/no): ' -r ask_pwds
   if [ "$ask_pwds" != 'no' ]; then
     echo ''
     echo '### BEGIN PASSWORDS ###'
@@ -146,8 +144,7 @@ if [ "$ask_config" != 'no' ]; then
   fi
 
   echo ''
-  echo 'You should reboot the device now. Proceed? (YES/no)'
-  read -r ask_reboot
+  read -p 'You should reboot the device now. Proceed? (YES/no): ' -r ask_reboot
 
 else
   ask_reboot='no'

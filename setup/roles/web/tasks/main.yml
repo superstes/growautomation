@@ -57,6 +57,7 @@
       - '--exclude=*.cnf'
       - '--exclude=*.conf'
       - '--exclude=static/'
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Web | Copying web static-files
   ansible.posix.synchronize:
@@ -64,6 +65,7 @@
     dest: "{{ ga_web_path_static }}"
     recursive: yes
     rsync_path: 'sudo rsync'
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Web | Copying docs
   ansible.posix.synchronize:
@@ -71,6 +73,7 @@
     dest: "{{ ga_web_path_docs }}"
     recursive: yes
     rsync_path: 'sudo rsync'
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Web | Preparing docs building-script
   ansible.builtin.file:

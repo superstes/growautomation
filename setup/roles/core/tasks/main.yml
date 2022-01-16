@@ -42,6 +42,7 @@
     recursive: yes
     rsync_path: 'sudo rsync'
     rsync_opts: ['--exclude=*.cnf', '--exclude=*.key', '--exclude=__pycache__/']
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Core | Copying setup-scripts
   ansible.posix.synchronize:
@@ -49,6 +50,7 @@
     dest: "{{ ga_core_path }}/"
     recursive: yes
     rsync_path: 'sudo rsync'
+    dest_port: "{{ ansible_port | default(ga_ssh.port) }}"
 
 - name: GA | Core | Setting privileges for core code
   ansible.builtin.file:

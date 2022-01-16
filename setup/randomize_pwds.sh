@@ -107,8 +107,7 @@ echo ''
 echo '### FINISHED SCRIPT ###'
 echo ''
 
-echo 'Do you want to display the generated password? (YES/no)'
-read -r ask_pwds
+read -p 'Do you want to display the generated password? (YES/no): ' -r ask_pwds
 if [ "$ask_pwds" != 'no' ]; then
   echo ''
   echo '### BEGIN PASSWORDS ###'
