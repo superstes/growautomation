@@ -45,7 +45,7 @@ curl -s https://raw.githubusercontent.com/superstes/growautomation/dev/setup/set
 ELSE: if you want to modify the release or run the script on a remote host (*untested*), you will have to do it this way:
 ```bash
 wget https://raw.githubusercontent.com/superstes/growautomation/dev/setup/setup.sh -O /tmp/setup.sh
-sudo bash /tmp/setup.sh TARGET-RELEASE(default=latest) DESTINATION-HOST(default=localhost)
+sudo bash /tmp/setup.sh TARGET-RELEASE(default=latest) remote(default=localhost)
 ```
 
 This script will prepare your system to run the Ansible setup tasks/script.
@@ -64,20 +64,19 @@ This is the last time you can modify the config before the installation is start
 
 ###################################### INFO #######################################
 The following config files exist:
-  main: /tmp/ga_2022-01-13/setup/vars/main.yml
-  remote hosts: (optional)
-    - /tmp/ga_2022-01-13/setup/inventories/hosts.yml
-    - /tmp/ga_2022-01-13/setup/inventories/host_vars/${HOSTNAME}.yml
+  main: /tmp/ga_YYYY-MM-DD/setup/vars/main.yml
+  remote host: (optional)
+    - /tmp/ga_YYYY-MM-DD/setup/inventories/hosts.yml
+    - /tmp/ga_YYYY-MM-DD/setup/inventories/host_vars/remote.yml
 
-Do you want to continue? (yes/NO)
+Do you want to continue? (YES/no)
 ```
+Some settings will **have to be modified**!
 
 Just put it in the background, change what you want and bring the setup back to the foreground.
 
 Type 'yes' and press enter to start the setup tasks.
 
-After that it will ask you for a 'BECOME password' => you need to **provide the password for a user with root privileges** on the target system! (_Default = 'raspberry'_)
-
-##### Post install
+#### Post install
 
 * Look into the <a href="https://docs.growautomation.eu/en/latest/setup/6-post-setup.html">post-setup guide</a> for further ToDos.

@@ -1,4 +1,0 @@
----
-
-ansible_host: 'IP-ADDR or DNS-NAME'
-ansible_port: 22  # ssh port

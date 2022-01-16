@@ -114,7 +114,7 @@
       - "UPDATE {{ ga_sql_db }}.ga_systemservermodel SET sql_secret = '{{ ga_sql_pwd_web_encrypted.stdout }}'"
       - "UPDATE {{ ga_sql_db }}.ga_systemagentmodel SET sql_secret = '{{ ga_sql_pwd_core_encrypted.stdout }}'"
 
-- name: GA | Update PWDs | Executing database initialization script (local db)
+- name: GA | Update PWDs | Updating credentials saved in database (local db)
   community.mysql.mysql_query:
     login_unix_socket: "{{ ga_sql_socket }}"
     login_db: "{{ ga_sql_db }}"
@@ -124,7 +124,7 @@
   when: ga_sql_server == 'localhost'
   register: init_script_local
 
-- name: GA | Update PWDs | Executing database initialization script (remote db)
+- name: GA | Update PWDs | Updating credentials saved in database (remote db)
   community.mysql.mysql_query:
     login_host: "{{ ga_sql_server }}"
     login_port: "{{ ga_sql_port }}"

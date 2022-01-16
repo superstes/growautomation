@@ -68,7 +68,7 @@ fi
 if [ -z "$2" ]; then
   TARGET_HOST='localhost'
 else
-  TARGET_HOST=$2
+  TARGET_HOST='remote'
 fi
 
 if [ "$TARGET_HOST" != 'localhost' ]; then
@@ -109,18 +109,18 @@ echo 'The following config files exist:'
 echo "  main: ${SETUP_DIR}/setup/vars/main.yml"
 echo '  remote hosts: (optional)'
 echo "    - ${SETUP_DIR}/setup/inventories/hosts.yml"
-echo "    - ${SETUP_DIR}/setup/inventories/host_vars/\${HOSTNAME}.yml"
+echo "    - ${SETUP_DIR}/setup/inventories/host_vars/remote.yml"
 echo ''
-echo 'Do you want to continue? (yes/NO)'
+echo 'Do you want to continue? (YES/no)'
 
 read -r ask_config
-if [ "$ask_config" == 'yes' ]; then
+if [ "$ask_config" != 'no' ]; then
   echo ''
   echo '### STARTING SETUP ###'
   echo ''
 
   if [ "$TARGET_HOST" != 'localhost' ]; then
-    ansible-playbook -K -i inventories/hosts.yml pb_setup.yml --limit "${TARGET_HOST}" --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
+    ansible-playbook -i inventories/hosts.yml pb_setup.yml --limit "${TARGET_HOST}" --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
   else
     ansible-playbook -c local -i inventories/hosts.yml pb_setup.yml --limit "${TARGET_HOST}" --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
   fi
