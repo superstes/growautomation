@@ -68,7 +68,7 @@ def ServiceView(request):
     else:
         service_name = request.POST['service_name']
 
-        if service_runtime is not None and service_runtime > config.WEBUI_SVC_ACTION_COOLDOWN and 'service_action' in request.POST:
+        if 'service_action' in request.POST:
             service_action(request=request, service=service_value)
 
         return redirect(f"/system/service/?service_name={service_name.replace(' ', '+')}")
