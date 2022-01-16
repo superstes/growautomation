@@ -45,6 +45,11 @@ ga_ufw_allow_ssh: true
 ga_log_level: 5
 ga_security_mode: false
 ga_bootstrap: true  # if some basic system setup-tasks should be performed (auto updates)
+ga_ssh:
+  configure: true
+  port: 22
+  auth_pwd: true
+  auth_pubkey: false
 
 # ga core
 ga_core_install: true

@@ -54,7 +54,8 @@ apt install python3 python3-requests git --yes
 apt-get install ansible --yes
 
 # provided config
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
+  # shellcheck disable=SC2006
   TARGET_VERSION=`python3 <<EOF
 from requests import get
 print(get('https://api.github.com/repos/superstes/growautomation/tags').json()[0]['name'])
@@ -64,13 +65,13 @@ else
   TARGET_VERSION=$1
 fi
 
-if [ -z $2 ]; then
+if [ -z "$2" ]; then
   TARGET_HOST='localhost'
 else
   TARGET_HOST=$2
 fi
 
-if [ $TARGET_HOST != 'localhost' ]; then
+if [ "$TARGET_HOST" != 'localhost' ]; then
   apt install sshpass --yes
 fi
 
@@ -81,9 +82,9 @@ then
   echo ''
   echo '### DOWNLOADING CODE ###'
   echo ''
-  git -c advice.detachedHead=false clone https://github.com/superstes/growautomation.git --depth 1 ${SETUP_DIR} --branch ${TARGET_VERSION}
+  git -c advice.detachedHead=false clone https://github.com/superstes/growautomation.git --depth 1 "${SETUP_DIR}" --branch "${TARGET_VERSION}"
 fi
-cd $SETUP_DIR/setup
+cd "$SETUP_DIR/setup"
 
 # installing ansible dependencies
 echo ''
@@ -91,7 +92,7 @@ echo '### DOWNLOADING ANSIBLE DEPENDENCIES ###'
 echo ''
 rm -rf /usr/lib/python3/dist-packages/ansible_collections  # removing unused ansible collections (~500MB..)
 ansible-galaxy collection install -r requirements.yml
-ansible-galaxy install -r requirements.yml --roles-path $SETUP_DIR/setup/roles
+ansible-galaxy install -r requirements.yml --roles-path "$SETUP_DIR/setup/roles"
 
 echo ''
 echo '###########################################################################'
@@ -112,27 +113,29 @@ echo "    - ${SETUP_DIR}/setup/inventories/host_vars/\${HOSTNAME}.yml"
 echo ''
 echo 'Do you want to continue? (yes/NO)'
 
-read ask_config
-if [ "$ask_config" == 'yes' ]
-then
+read -r ask_config
+if [ "$ask_config" == 'yes' ]; then
   echo ''
   echo '### STARTING SETUP ###'
   echo ''
 
-  ansible-playbook -K -i inventories/hosts.yml pb_setup.yml --limit ${TARGET_HOST} --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
+  if [ "$TARGET_HOST" != 'localhost' ]; then
+    ansible-playbook -K -i inventories/hosts.yml pb_setup.yml --limit "${TARGET_HOST}" --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
+  else
+    ansible-playbook -c local -i inventories/hosts.yml pb_setup.yml --limit "${TARGET_HOST}" --extra-vars "ga_setup_clone_dir=${SETUP_DIR}" --extra-vars "ga_setup_release=${TARGET_VERSION}"
+  fi
 
   echo ''
   echo '### FINISHED SETUP ###'
   echo ''
 
-  IP=`hostname -I`
+  IP=$(hostname -I)
   echo "You might want to open the GrowAutomation web-interface in your browser: https://${IP}"
   echo ''
 
-  echo 'Do you want to display the generated password? (yes/NO)'
-  read ask_pwds
-  if [ "$ask_pwds" == 'yes' ]
-  then
+  echo 'Do you want to display the generated password? (YES/no)'
+  read -r ask_pwds
+  if [ "$ask_pwds" != 'no' ]; then
     echo ''
     echo '### BEGIN PASSWORDS ###'
     echo ''
@@ -143,8 +146,8 @@ then
   fi
 
   echo ''
-  echo 'You should reboot the device now. Proceed? (yes/NO)'
-  read ask_reboot
+  echo 'You should reboot the device now. Proceed? (YES/no)'
+  read -r ask_reboot
 
 else
   ask_reboot='no'
@@ -154,8 +157,7 @@ fi
 echo ''
 echo '### EXITING SETUP-SCRIPT ###'
 
-if [ "$ask_reboot" == 'yes' ]
-then
+if [ "$ask_reboot" != 'no' ]; then
   echo ''
   echo '### REBOOTING SYSTEM ###'
   sleep 3

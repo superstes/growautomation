@@ -81,6 +81,8 @@ ga_web_groups:
 ga_web_django_project: 'base'
 ga_web_letsencrypt_service: 'ga_web_certRenewal.service'
 ga_django_superuser: 'admin'
+ga_web_port_http: 80
+ga_web_port_https: 443
 
 # db
 ga_sql_config: 'database.cnf'

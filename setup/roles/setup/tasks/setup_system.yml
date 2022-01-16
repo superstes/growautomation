@@ -6,13 +6,20 @@
   vars:
     configure_firewall: false  # will be done explicitly
     configure_users: false
-    configure_ssh: false  # could be done as opt-in in the future (?)
-    # ssh_config:
-    #   port: 22
-    #   allow_root: false
-    #   auth_pwd: true
-    #   auth_pubkey: false  # ?
-    #   msg: true
+    configure_ssh: "{{ ga_ssh.configure }}"  # could be done as opt-in in the future (?)
+    ssh_config:
+      port: "{{ ga_ssh.port }}"
+      allow_root: false
+      auth_pwd: "{{ ga_ssh.auth_pwd }}"
+      auth_pubkey: "{{ ga_ssh.auth_pubkey }}"
+      msg: true
+      welcome_msg:
+        - '-----------------------------------------'
+        - '| Welcome to this GrowAutomation server |'
+        - '|    Your activities  will be logged    |'
+        - '|           Keep on  growing!           |'
+        - '-----------------------------------------'
+    ansible_port: "{{ ga_ssh.port }}"
 
     configure_network: false
     configure_auto_update: true

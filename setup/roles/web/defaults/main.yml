@@ -7,8 +7,6 @@ ga_ssl_path_fullchain: "/etc/ssl/certs/{{ ga_web_dns }}.fullchain.pem"
 
 ga_web_path_log: "{{ ga_path_log }}/web"
 ga_web_key: "{{ ga_web_dns | replace('.', '_') }}"
-ga_web_port_http: 80
-ga_web_port_https: 443
 ga_web_autoindex: false
 
 ga_apache_config_additions:
