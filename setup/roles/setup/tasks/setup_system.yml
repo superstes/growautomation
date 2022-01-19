@@ -4,34 +4,35 @@
   ansible.builtin.import_role:
     name: ansibleguy.linux_bootstrap
   vars:
-    configure_firewall: false  # will be done explicitly
-    configure_users: false
-    configure_ssh: "{{ ga_ssh.configure }}"  # could be done as opt-in in the future (?)
-    ssh_config:
-      port: "{{ ga_ssh.port }}"
-      allow_root: false
-      auth_pwd: "{{ ga_ssh.auth_pwd }}"
-      auth_pubkey: "{{ ga_ssh.auth_pubkey }}"
-      msg: true
-      welcome_msg:
-        - '-----------------------------------------'
-        - '| Welcome to this GrowAutomation server |'
-        - '|    Your activities  will be logged    |'
-        - '|           Keep on  growing!           |'
-        - '-----------------------------------------'
     ansible_port: "{{ ga_ssh.port }}"
+    bootstrap:
+      configure_firewall: false  # will be done explicitly
+      configure_users: false
+      configure_network: false
 
-    configure_network: false
-    configure_auto_update: true
-    auto_update_config:
-      time: 'Sun 00:00'
-      auto_reboot: true
-      auto_reboot_with_users: false
-      auto_reboot_time: '02:00'
-      exclusions: []
-      exclude_kernel: false
-      logging: true
-      logging_verbose: true
+      ssh:
+        configure: "{{ ga_ssh.configure }}"
+        port: "{{ ga_ssh.port }}"
+        allow_root: false
+        auth_pwd: "{{ ga_ssh.auth_pwd }}"
+        auth_pubkey: "{{ ga_ssh.auth_pubkey }}"
+        msg: true
+        welcome_msg:
+          - '-----------------------------------------'
+          - '| Welcome to this GrowAutomation server |'
+          - '|    Your activities  will be logged    |'
+          - '|           Keep on  growing!           |'
+          - '-----------------------------------------'
+
+      auto_update:
+        enable: "{{ ga_system_auto_update }}"
+        time: 'Sun 00:00'
+        auto_reboot: true
+        auto_reboot_with_users: false
+        auto_reboot_time: '02:00'
+        exclusions: []
+        logging_verbose: true
+
   when: ga_bootstrap
 
 # firewall management

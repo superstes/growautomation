@@ -50,6 +50,7 @@ ga_ssh:
   port: 22
   auth_pwd: true
   auth_pubkey: false
+ga_system_auto_update: true
 
 # ga core
 ga_core_install: true
