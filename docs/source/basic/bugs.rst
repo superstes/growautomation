@@ -13,6 +13,8 @@ Bugs
 
 If you could not resolve your problem by troubleshooting you can submit a bug ticket as described below.
 
+**If you are reading this documentation on your local controller** (*offline*) => this information might be out-of-date. Please refer to the `online documentation <https://docs.growautomation.eu/en/latest/basic/bugs.html>`_
+
 -----
 
 Support

@@ -36,6 +36,8 @@ Check
 
 Here's a little checklist of what to check when you run into errors.
 
+**If you are reading this documentation on your local controller** (*offline*) => this information might be out-of-date. Please refer to the `online documentation <https://docs.growautomation.eu/en/latest/basic/troubleshoot.html>`_
+
 
 First
 =====
