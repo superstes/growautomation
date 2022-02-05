@@ -5,7 +5,7 @@
   register: raw_core_pwd
   when: ga_sql_pwd_core == ga_sql_pwd_random_key
   no_log: true
-  changed_when: False
+  changed_when: false
 
 - name: GA | Setup | Setting sql-core password
   ansible.builtin.set_fact:
@@ -18,7 +18,7 @@
   register: raw_web_pwd
   when: ga_sql_pwd_web == ga_sql_pwd_random_key
   no_log: true
-  changed_when: False
+  changed_when: false
 
 - name: GA | Setup | Setting sql-web password
   ansible.builtin.set_fact:

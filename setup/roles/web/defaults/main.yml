@@ -14,10 +14,10 @@ ga_apache_config_additions:
   ServerSignature: 'Off'
 
 ga_apache_envvar_replacement:
-  - { search: '^export APACHE_RUN_USER',
-      replace: "export APACHE_RUN_USER={{ ga_web_service_user }}" }
-  - { search: '^export APACHE_RUN_GROUP',
-      replace: "export APACHE_RUN_GROUP={{ ga_web_service_user }}" }
+  - {search: '^export APACHE_RUN_USER',
+     replace: "export APACHE_RUN_USER={{ ga_web_service_user }}"}
+  - {search: '^export APACHE_RUN_GROUP',
+     replace: "export APACHE_RUN_GROUP={{ ga_web_service_user }}"}
 
 ga_django_config_replacement:
   - {search: '^DEBUG = True$',

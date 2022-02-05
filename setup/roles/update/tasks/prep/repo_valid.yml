@@ -13,8 +13,8 @@
   register: repo_exists
   changed_when: false
   when:
-   - local_repo.stat.exists
-   - local_repo.stat.isdir
+    - local_repo.stat.exists
+    - local_repo.stat.isdir
 
 - name: GA | Update | Prep | Invalid offline repository
   ansible.builtin.fail:

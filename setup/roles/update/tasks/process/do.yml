@@ -40,13 +40,26 @@
   with_items:
     - {
       src: "{{ ga_update_path_repo }}/code/", dst: "{{ ga_update_path_core }}/",
-      opts: ['--exclude=secret/*', '--exclude=device/', '--exclude=web/', '--exclude=update/', '--exclude=__pycache__/', '--exclude=*.conf', '--exclude=*.cnf']
+      opts: [
+        '--exclude=secret/*',
+        '--exclude=device/',
+        '--exclude=web/',
+        '--exclude=update/',
+        '--exclude=__pycache__/',
+        '--exclude=*.conf',
+        '--exclude=*.cnf'
+      ]
     }
     - {
       src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/", dst: "{{ ga_update_path_web }}/",
       opts: [
-          '--exclude=*.cnf', '--exclude=*.conf', '--exclude=migrations/*', '--exclude=__pycache__/', '--exclude=static/', "--exclude={{ ga_web_django_project }}/config.py",
-          '--exclude=update_schema.sh',
+        '--exclude=*.cnf',
+        '--exclude=*.conf',
+        '--exclude=migrations/*',
+        '--exclude=__pycache__/',
+        '--exclude=static/',
+        "--exclude={{ ga_web_django_project }}/config.py",
+        '--exclude=update_schema.sh',
       ]
     }
     - {src: "{{ ga_update_path_repo }}/code/web/{{ ga_web_django_project }}/static/", dst: "{{ ga_update_path_web_static }}/"}
@@ -157,8 +170,12 @@
     config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
     query: "{{ item }}"
   loop:
-    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}
+    {{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}
+    {% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}
+    {{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}
+    {% endfor %}"
   when: ga_sql_server == 'localhost'
 
 - name: GA | Update | Process | Do | Updating system-config in db (remote db)
@@ -169,8 +186,12 @@
     config_file: "{{ ga_update_path_web }}/{{ ga_sql_config }}"
     query: "{{ item }}"
   loop:
-    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
-    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}{{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}"
+    - "update ga_systemagentmodel {% for setting, value in ga_settings.agent.overwrite.items() %}
+    {{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}
+    {% endfor %}"  # todo: once there is support for multiple agents we will need to target the update-cmd
+    - "update ga_systemservermodel {% for setting, value in ga_settings.server.overwrite.items() %}
+    {{ setting }}='{{ value }}'{% if not loop.last %}, {% endif %}
+    {% endfor %}"
   when: ga_sql_server != 'localhost'
 
 - name: GA | Update | Process | Do | Stopping services about to be upgraded (if online)

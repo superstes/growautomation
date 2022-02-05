@@ -13,24 +13,24 @@ ga_settings:
       version: "{{ ga_setup_release }}"
       version_detail: "{{ ga_setup_commit }}"
 
-#    default:
-#      name: "{{ ga_core_controller_name }}"
-#      description: "Server created by setup at {{ ansible_date_time.iso8601_basic_short }}"
-#      path_core: "{{ ga_update_path_core }}"
-#      path_web: "{{ ga_update_path_web }}"
-#      path_web_static: "{{ ga_update_path_web_static }}"
-#      path_web_docs: "{{ ga_update_path_web_docs }}"
-#      path_home_core: "{{ ga_core_path_home }}"
-#      path_home_web: "{{ ga_web_path_home }}"
-#      path_log: "{{ ga_update_path_log }}"
-#      sql_server: "{{ ga_sql_server }}"
-#      sql_port: "{{ ga_sql_port }}"
-#      sql_user: "{{ ga_sql_user_web }}"
-#      sql_database: "{{ ga_sql_db }}"
-#      sql_service: "{{ ga_sql_service }}"
-#      log_level: "{{ ga_log_level }}"
-#      security: "{% if ga_security_mode %}1{% else %}0{% endif %}"
-#      timezone: "{{ ga_timezone }}"
+  #    default:
+  #      name: "{{ ga_core_controller_name }}"
+  #      description: "Server created by setup at {{ ansible_date_time.iso8601_basic_short }}"
+  #      path_core: "{{ ga_update_path_core }}"
+  #      path_web: "{{ ga_update_path_web }}"
+  #      path_web_static: "{{ ga_update_path_web_static }}"
+  #      path_web_docs: "{{ ga_update_path_web_docs }}"
+  #      path_home_core: "{{ ga_core_path_home }}"
+  #      path_home_web: "{{ ga_web_path_home }}"
+  #      path_log: "{{ ga_update_path_log }}"
+  #      sql_server: "{{ ga_sql_server }}"
+  #      sql_port: "{{ ga_sql_port }}"
+  #      sql_user: "{{ ga_sql_user_web }}"
+  #      sql_database: "{{ ga_sql_db }}"
+  #      sql_service: "{{ ga_sql_service }}"
+  #      log_level: "{{ ga_log_level }}"
+  #      security: "{% if ga_security_mode %}1{% else %}0{% endif %}"
+  #      timezone: "{{ ga_timezone }}"
 
   agent:
     overwrite:
@@ -59,4 +59,3 @@ ga_settings:
       device_fail_count: 5
       device_fail_sleep: 1800
       device_log: 1
-      

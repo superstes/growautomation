@@ -41,11 +41,11 @@
     group: "{{ ga_service_group }}"
     mode: "{{ item.mode }}"
   loop:
-    - { path: "{{ ga_web_path }}", mode: '0755' }
-    - { path: "{{ ga_web_path_static }}", mode: '0755' }
-    - { path: "{{ ga_web_path_docs }}", mode: '0755' }
-    - { path: "{{ ga_web_path_log }}", mode: '0775' }
-    - { path: "{{ ga_web_path_venv }}", mode: '0750' }
+    - {path: "{{ ga_web_path }}", mode: '0755'}
+    - {path: "{{ ga_web_path_static }}", mode: '0755'}
+    - {path: "{{ ga_web_path_docs }}", mode: '0755'}
+    - {path: "{{ ga_web_path_log }}", mode: '0775'}
+    - {path: "{{ ga_web_path_venv }}", mode: '0750'}
 
 - name: GA | Web | Copying web code
   ansible.posix.synchronize:

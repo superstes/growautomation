@@ -31,9 +31,9 @@
     mode: "{{ item.mode | default('0755') }}"
     recurse: yes
   loop:
-  - {path: "{{ ga_core_path }}", mode: '0750'}
-  - {path: "{{ ga_core_path_log }}"}
-  - {path: "{{ ga_core_path_venv }}", mode: '0750'}
+    - {path: "{{ ga_core_path }}", mode: '0750'}
+    - {path: "{{ ga_core_path_log }}"}
+    - {path: "{{ ga_core_path_venv }}", mode: '0750'}
 
 - name: GA | Core | Copying core-code
   ansible.posix.synchronize:

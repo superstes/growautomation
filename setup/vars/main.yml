@@ -16,7 +16,8 @@ ga_timezone: 'Europe/Vienna'  # supported timezones are listed in '_common_timez
 ga_web_dns: 'ga.lan'  # if you want to access the web-interface by name
 ga_web_alias: []  # list of dns-aliases
 ga_web_users:
-  - {name: 'user', access: 'rw', pwd: "{{ lookup('password', ga_tmp_pwd_file_django_user + ' chars=ascii_letters,digits length=20') }}"}  # !! PLEASE CHANGE THE PASSWORD !!
+  - {name: 'user', access: 'rw', pwd: "{{ lookup('password', ga_tmp_pwd_file_django_user + ' chars=ascii_letters,digits length=20') }}"}
+  # !! PLEASE CHANGE THE PASSWORD !!
   - {name: 'view', access: 'r', pwd: "{{ lookup('password', ga_tmp_pwd_file_django_guest + ' chars=ascii_letters,digits length=20') }}"}
   # passwords
   #   You can set your own password and add your own users => just replace the stuff in between the double-quotes
@@ -25,10 +26,10 @@ ga_web_users:
   #   'r' = read-only
   #   'rw' = read-write
 ga_web_ssl_mode: 'ca'  # ca or letsencrypt
-  # if letsencrypt is used as ssl_mode:
-  #   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-public-ip
-  #   2. the server must have ports 80/443 publicly available
-  #   (for details see => https://letsencrypt.org/docs/)
+# if letsencrypt is used as ssl_mode:
+#   1. dns-name and -aliases MUST BE PUBLIC, VALID and set to the server-public-ip
+#   2. the server must have ports 80/443 publicly available
+#   (for details see => https://letsencrypt.org/docs/)
 
 ###############################################################################################
 
@@ -76,15 +77,15 @@ ga_sql_server: 'localhost'
 ga_sql_port: 3306
 ga_sql_pwd_random_key: 'WILL_BE_RANDOM'
 ga_sql_user_host: 'localhost'
-  # host that will be used for sql user creation -> login will be restricted on this host
-  # needs to be changed if a remote database server is used
+# host that will be used for sql user creation -> login will be restricted on this host
+# needs to be changed if a remote database server is used
 ga_sql_user_core: "{{ ga_core_service_user }}"
 # adding punctuation-characters to the sql-passwords might break the sql-syntax => stick to ascii+digits
 ga_sql_pwd_core: "{{ lookup('password', ga_tmp_pwd_file_sql_core + ' chars=ascii_letters,digits length=20') }}"
-  # you can apply your own password => just replace the rubbish in between the double-quotes
-  # random passwords can be found in the 'ga_random_pwd_file' file
+# you can apply your own password => just replace the rubbish in between the double-quotes
+# random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_user_web: "{{ ga_web_service_user }}"
 ga_sql_pwd_web: "{{ lookup('password', ga_tmp_pwd_file_sql_web + ' chars=ascii_letters,digits length=20') }}"
-  # you can apply your own password => just replace the rubbish in between the double-quotes
-  # random passwords can be found in the 'ga_random_pwd_file' file
+# you can apply your own password => just replace the rubbish in between the double-quotes
+# random passwords can be found in the 'ga_random_pwd_file' file
 ga_sql_socket: '/run/mysqld/mysqld_ga.sock'  # socket used to locally connect to database

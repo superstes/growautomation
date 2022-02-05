@@ -30,12 +30,20 @@
       - "INSERT IGNORE INTO {{ ga_sql_db }}.ga_systemservermodel
         (created, updated, sql_secret, {% for setting in ga_settings.server.keys() %}{{ setting }}{% if not loop.last %}, {% endif %}{% endfor %})
         VALUES
-        (NOW(), NOW(), '{{ ga_sql_pwd_web_encrypted.stdout }}', {% for value in ga_settings.server.values() %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %})"
+        (NOW(), NOW(), '{{ ga_sql_pwd_web_encrypted.stdout }}',
+        {% for value in ga_settings.server.values() %}
+        {{ value }}{% if not loop.last %}, {% endif %}
+        {% endfor %})"
 
       - "INSERT IGNORE INTO {{ ga_sql_db }}.ga_systemagentmodel
-        (created, updated, sql_secret, {% for setting in ga_settings.agent.keys() %}{{ setting }}{% if not loop.last %}, {% endif %}{% endfor %})
+        (created, updated, sql_secret,
+        {% for setting in ga_settings.agent.keys() %}
+        {{ setting }}{% if not loop.last %}, {% endif %}
+        {% endfor %})
         VALUES
-        (NOW(), NOW(), '{{ ga_sql_pwd_core_encrypted.stdout }}', {% for value in ga_settings.agent.values() %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %})"
+        (NOW(), NOW(), '{{ ga_sql_pwd_core_encrypted.stdout }}', {% for value in ga_settings.agent.values() %}
+        {{ value }}{% if not loop.last %}, {% endif %}
+        {% endfor %})"
 
 - name: GA | Web | Init | Executing database initialization script (local db)
   community.mysql.mysql_query:
