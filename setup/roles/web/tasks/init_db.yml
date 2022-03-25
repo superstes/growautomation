@@ -4,6 +4,8 @@
   ansible.builtin.copy:
     src: "files/tmp/{{ item }}"
     dest: '/tmp/{{ item }}'
+    owner: 'root'
+    group: 'root'
     mode: 0500
   loop:
     - 'create_group.py'

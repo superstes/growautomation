@@ -105,16 +105,16 @@
   ansible.builtin.template:
     src: 'templates/lib/systemd/system/ga_core.service.j2'
     dest: "/lib/systemd/system/{{ ga_core_service }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
 
 - name: GA | Core | Configuring update prerequisits
   ansible.builtin.import_tasks: update.yml
 
-- name: GA | Core | Reloading systemd
+- name: GA | Core | Reloading / Enabling systemd
   ansible.builtin.systemd:
     daemon_reload: yes
-
-- name: GA | Core | Enabling service
-  ansible.builtin.systemd:
     name: "{{ ga_core_service }}"
     enabled: yes
 

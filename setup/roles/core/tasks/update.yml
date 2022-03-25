@@ -20,6 +20,9 @@
   ansible.builtin.template:
     src: 'templates/lib/systemd/system/ga_update.service.j2'
     dest: "/lib/systemd/system/{{ ga_update_service }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
 
 - name: GA | Core | Update | Copying update-code
   ansible.posix.synchronize:

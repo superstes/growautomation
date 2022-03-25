@@ -4,6 +4,8 @@
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/roles/web/files/tmp/{{ item }}"
     dest: '/tmp/{{ item }}'
+    owner: 'root'
+    group: 'root'
     mode: 0500
   loop:
     - 'update_user.py'
@@ -37,6 +39,8 @@
     src: 'files/tmp/update_core_config.py'
     dest: '/tmp/update_core_config.py'
     mode: 0500
+    owner: 'root'
+    group: 'root'
 
 - name: GA | Update PWDs | Updating core config-file
   ansible.builtin.shell: "source {{ ga_core_path_venv }}/bin/activate &&
