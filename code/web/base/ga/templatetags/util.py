@@ -1,5 +1,5 @@
 from django import template
-from netaddr import IPAddress
+from ipaddress import ip_address
 from datetime import datetime, timedelta
 from random import randint
 from sys import exc_info as sys_exc_info
@@ -136,9 +136,7 @@ def security_mode():
 
 @register.filter
 def client_is_public(request):
-    client_ip = get_client_ip(request, censor_character='0')
-    ip_is_public = not IPAddress(client_ip).is_reserved()
-    return ip_is_public
+    return ip_address(get_client_ip(request, censor_character='0')).is_global()
 
 
 @register.filter

@@ -6,7 +6,7 @@ from django.db.models import QuerySet
 from ....models import InputDataModel, ObjectInputModel, GroupInputModel
 from ...handlers import handler400_api, handler500_api
 from ....utils.basic import get_dt_w_tz
-from ....utils.helper import get_device_parent_setting, get_instance_from_id, profiler
+from ....utils.helper import get_device_parent_setting, get_instance_from_id
 from ....utils.auth import method_user_passes_test
 from ....user import authorized_to_read
 from ....config import shared as config

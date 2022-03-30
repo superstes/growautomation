@@ -62,7 +62,6 @@ ga_django_mods:
   - 'django'
   - 'django_mysql'
   - 'mysqlclient'
-  - 'netaddr'
   - 'pycryptodome'
   - 'django-forms-bootstrap'
   - 'django-bootstrap4'
