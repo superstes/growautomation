@@ -92,7 +92,7 @@ class Loop:
         for job in self.jobs:
             job.start()
 
-    def add_thread(self, sleep_time: int, thread_data, description: str, once: bool = False, daemon: bool = True):
+    def add_thread(self, sleep_time: int, thread_data, description: str, once: bool = False):
         log(f"Adding thread for \"{description}\" with interval \"{sleep_time}\"", level=7)
         self.thread_nr += 1
 
@@ -107,7 +107,6 @@ class Loop:
                         loop_instance=self,
                         once=True,
                         description=description,
-                        daemon=daemon,
                         name=f"Thread #{self.thread_nr}",
                     )
                 )
@@ -120,26 +119,21 @@ class Loop:
                         loop_instance=self,
                         once=once,
                         description=description,
-                        daemon=daemon,
                         name=f"Thread #{self.thread_nr}",
                     )
                 )
             return function
         return decorator
 
-    def _block_root_process(self) -> None:
-        while True:
-            try:
-                time_sleep(1)
-
-            except KeyboardInterrupt:
-                self.stop()
-
     def stop(self) -> bool:
         log('Stopping all threads', level=6)
 
-        for job in self.jobs:
-            job.stop()
+        job_list = list(self.jobs)
+        job_count = len(job_list)
+        for i in range(job_count):
+            _ = job_list[i]
+            self.jobs.remove(_)
+            del _
 
         log('All threads stopped. Exiting loop', level=3)
         return True
@@ -174,3 +168,6 @@ class Loop:
     def list(self) -> list:
         log('Returning thread list', level=8)
         return [job.data for job in self.jobs]
+
+    def __del__(self):
+        self.stop()

@@ -184,7 +184,6 @@ class Service:
             thread_data=instance,
             description=instance.name,
             once=once,
-            daemon=True,
         )
         def thread_task(data):
             decision(instance=data, settings=settings)

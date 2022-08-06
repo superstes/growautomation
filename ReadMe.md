@@ -52,11 +52,6 @@ It's simple! And should remain so if you have little time for it.
 ### Found bugs?
 Follow the <a href="https://docs.growautomation.eu/en/latest/basic/troubleshoot.html">troubleshooting guide</a> and/or <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug reporting guide</a>!
 
-### Support
-Want to support the project?
-
-<a href="https://www.patreon.com/growautomation">Become a patron</a>
-
 ----
 
 ## Version

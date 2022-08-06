@@ -40,9 +40,9 @@ NAVIGATION = {
             'url': 'https://github.com/superstes/growautomation',
             'login': False,
         },
-        'PT': {
+        'DON': {
             'element': '<i class="fas fa-coins fa-2x ga-nav-right-icon" title="Donate"></i>',
-            'url': 'https://www.patreon.com/growautomation/membership',
+            'url': 'https://github.com/sponsors/superstes',
             'login': False,
         },
         'BUG': {

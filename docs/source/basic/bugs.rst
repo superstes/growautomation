@@ -26,7 +26,7 @@ Since we have limited time we cannot operate a basic technical support.
 
 Therefore a community portal will be created to build a knowledge-base: `Community (not yet online) <https://community.growautomation.eu/>`_
 
-**If you want to support our efforts** => consider `becoming a patreon <https://www.patreon.com/growautomation/>`_
+**If you want to support our efforts** => consider `becoming a sponsor <https://github.com/sponsors/superstes>`_
 
 -----
 
