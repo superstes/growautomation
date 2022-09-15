@@ -4,15 +4,19 @@
 </p>
 <br><br>
 
-The goal is to automate activities related to the cultivation of plants.
+----
 
-And thus to minimize the associated repetitive tasks and optimize the process.
+## This project will not be developed further!
 
-It's simple! And should remain so if you have little time for it.
+I used this project to learn programming.
+
+But nowadays, I have other ongoing projects.
+
+Feel free to play around with it.
 
 ----
 
-## But what can it do?
+## What can it do?
 
 ### It provides:
 * Simplified use of a <b>raspberry pi</b>
@@ -42,27 +46,18 @@ It's simple! And should remain so if you have little time for it.
 
 ## Documentation
 <img src="https://readthedocs.org/projects/growautomation/badge/?version=latest&style=flat"/>
+
 <a href="https://docs.growautomation.eu">docs.growautomation.eu</a>
 
 ----
 
-## Contact
-<a href="mailto:contact@growautomation.eu">contact@growautomation.eu</a>
-
 ### Found bugs?
-Follow the <a href="https://docs.growautomation.eu/en/latest/basic/troubleshoot.html">troubleshooting guide</a> and/or <a href="https://docs.growautomation.eu/en/latest/basic/bugs.html">bug reporting guide</a>!
+Follow the <a href="https://docs.growautomation.eu/en/latest/basic/troubleshoot.html">troubleshooting guide</a>
 
 ----
 
 ## Version
 Version: 1.0
-
-=> <a href="https://demo.growautomation.at/">DEMO</a> at its current state _(bugs included.. (; )_
-
-### Work in progress
-- updating the documentation
-- cleaning up the webUI
-- option to add actors to dashboard-elements => to correlate actions taken to the environmental changes
 
 ### History
 
